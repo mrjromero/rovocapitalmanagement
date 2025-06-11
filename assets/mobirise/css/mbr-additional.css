@@ -1028,6 +1028,11 @@ img,
     border-right: none;
   }
 }
+@media (min-width: 767px) {
+  .cid-uMqkh8AIMH .navbar-caption {
+    padding-left: 2rem;
+  }
+}
 @media (max-width: 767px) {
   .cid-uMqkh8AIMH .nav-dropdown {
     padding-bottom: 0.5rem;
@@ -1166,11 +1171,6 @@ img,
 }
 .cid-uMqkh8AIMH .navbar.collapsed.opened .dropdown-menu {
   top: 0;
-}
-@media (min-width: 992px) {
-  .cid-uMqkh8AIMH .navbar.collapsed.opened:not(.navbar-short) .navbar-collapse {
-    max-height: calc(98.5vh - 3rem);
-  }
 }
 .cid-uMqkh8AIMH .navbar.collapsed .dropdown-menu .dropdown-submenu {
   left: 0 !important;
