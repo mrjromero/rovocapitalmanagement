@@ -1,0 +1,296 @@
+html_content = """
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Capital Velocity | Equity Curve Simulator</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #0f172a;
+            --accent: #3b82f6;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, system-ui, sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            margin: 0;
+            padding: 40px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 2rem;
+        }
+
+        @media (max-width: 800px) {
+            .container { grid-template-columns: 1fr; }
+        }
+
+        .sidebar {
+            background: var(--card-bg);
+            padding: 2rem;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border);
+            height: fit-content;
+        }
+
+        .main-content {
+            background: var(--card-bg);
+            padding: 2rem;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+        }
+
+        h1 { font-size: 1.5rem; margin-bottom: 1.5rem; color: var(--primary); }
+
+        .input-group { margin-bottom: 1.25rem; }
+        label { display: block; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.4rem; }
+        input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 1rem;
+            box-sizing: border-box;
+            background: #fafafa;
+        }
+        input:focus { outline: none; border-color: var(--accent); background: #fff; }
+
+        button {
+            width: 100%;
+            background: var(--primary);
+            color: white;
+            padding: 1rem;
+            border: none;
+            border-radius: 10px;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 1rem;
+            transition: opacity 0.2s;
+        }
+        button:hover { opacity: 0.9; }
+
+        .chart-container {
+            flex-grow: 1;
+            min-height: 350px;
+            margin-top: 2rem;
+        }
+
+        .summary-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: #eff6ff;
+            padding: 1rem;
+            border-radius: 10px;
+            text-align: center;
+        }
+        .stat-val { display: block; font-size: 1.25rem; font-weight: 800; color: var(--accent); }
+        .stat-lab { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="sidebar">
+        <h1>Parameters</h1>
+        
+        <div class="input-group">
+            <label>Starting Equity ($)</label>
+            <input type="number" id="equity" value="100000">
+        </div>
+
+        <div class="input-group">
+            <label>Monthly Contribution ($)</label>
+            <input type="number" id="pmt" value="20000">
+        </div>
+
+        <div class="input-group">
+            <label>Target DTA %</label>
+            <input type="number" id="dta" value="30">
+        </div>
+
+        <div class="input-group">
+            <label>Asset Yield % (Divs)</label>
+            <input type="number" id="yield" value="12">
+        </div>
+
+        <div class="input-group">
+            <label>Asset Growth % (NAV)</label>
+            <input type="number" id="growth" value="3">
+        </div>
+
+        <div class="input-group">
+            <label>Margin Interest %</label>
+            <input type="number" id="intRate" value="6.5">
+        </div>
+
+        <div class="input-group">
+            <label>Years to Simulate</label>
+            <input type="number" id="years" value="5">
+        </div>
+
+        <button onclick="simulate()">Generate Curve</button>
+    </div>
+
+    <div class="main-content">
+        <div class="summary-stats">
+            <div class="stat-card">
+                <span class="stat-lab">Ending Equity</span>
+                <span class="stat-val" id="resFinal">$0</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-lab">Total Contributed</span>
+                <span class="stat-val" id="resContrib">$0</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-lab">Leverage (L)</span>
+                <span class="stat-val" id="resL">1.00x</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-lab">Annualized ROE</span>
+                <span class="stat-val" id="resROE">0%</span>
+            </div>
+        </div>
+
+        <div class="chart-container">
+            <canvas id="equityChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<script>
+    let myChart = null;
+
+    function simulate() {
+        const E0 = parseFloat(document.getElementById('equity').value) || 0;
+        const PMT = parseFloat(document.getElementById('pmt').value) || 0;
+        const DTA = (parseFloat(document.getElementById('dta').value) || 0) / 100;
+        const Y = (parseFloat(document.getElementById('yield').value) || 0) / 100;
+        const G = (parseFloat(document.getElementById('growth').value) || 0) / 100;
+        const i = (parseFloat(document.getElementById('intRate').value) || 0) / 100;
+        const years = parseFloat(document.getElementById('years').value) || 1;
+        
+        const n = 12; // Standardizing to monthly cycles for the curve
+        const totalCycles = years * n;
+
+        // 1. Leverage Multiplier
+        const L = DTA < 1 ? 1 / (1 - DTA) : 1;
+
+        // 2. Monthly Rate (r)
+        const totalReturn = Y + G;
+        const r = ((totalReturn * L) - (i * (L - 1))) / n;
+
+        // 3. Calculation Loop for the Chart
+        let currentEquity = E0;
+        let dataPoints = [E0];
+        let labels = ["Start"];
+        let totalContrib = E0;
+
+        for (let t = 1; t <= totalCycles; t++) {
+            currentEquity = (currentEquity * (1 + r)) + PMT;
+            totalContrib += PMT;
+            
+            // Log points every month or quarterly if long duration
+            if (years <= 2 || t % 3 === 0 || t === totalCycles) {
+                dataPoints.push(currentEquity.toFixed(2));
+                const yearLabel = (t / 12).toFixed(1);
+                labels.push("Yr " + yearLabel);
+            }
+        }
+
+        // 4. Update Stats
+        const roe = totalContrib > 0 ? ((currentEquity - totalContrib) / totalContrib) * 100 : 0;
+        const annualROE = (Math.pow(1 + (roe/100), 1/years) - 1) * 100;
+
+        document.getElementById('resFinal').innerText = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(currentEquity);
+        document.getElementById('resContrib').innerText = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(totalContrib);
+        document.getElementById('resL').innerText = L.toFixed(2) + 'x';
+        document.getElementById('resROE').innerText = annualROE.toFixed(2) + '%';
+
+        // 5. Render Chart
+        renderChart(labels, dataPoints);
+    }
+
+    function renderChart(labels, data) {
+        const ctx = document.getElementById('equityChart').getContext('2d');
+        
+        if (myChart) {
+            myChart.destroy();
+        }
+
+        myChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Net Equity ($)',
+                    data: data,
+                    borderColor: '#3b82f6',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.3,
+                    pointRadius: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        ticks: {
+                            callback: function(value) {
+                                return '$' + value.toLocaleString();
+                            }
+                        }
+                    }
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return 'Equity: $' + parseFloat(context.raw).toLocaleString();
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // Initial run
+    window.onload = simulate;
+</script>
+
+</body>
+</html>
+"""
+
+with open("capital-velocity-equity-curve.html", "w") as f:
+    f.write(html_content)
+
