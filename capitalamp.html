@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Capital Velocity & Leverage Simulator</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --panel-bg: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent: #3b82f6;
+            --accent-hover: #2563eb;
+            --border: #334155;
+            --success: #10b981;
+            --danger: #ef4444;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .container {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 20px;
+            max-width: 1400px;
+            width: 100%;
+        }
+        .panel {
+            background-color: var(--panel-bg);
+            padding: 24px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        h2 { margin-top: 0; font-size: 1.25rem; color: var(--text-main); border-bottom: 1px solid var(--border); padding-bottom: 12px; }
+        .input-group { margin-bottom: 16px; }
+        label { display: block; font-size: 0.875rem; color: var(--text-muted); margin-bottom: 6px; }
+        input {
+            width: 100%;
+            padding: 10px;
+            background-color: var(--bg-color);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-main);
+            font-family: monospace;
+            box-sizing: border-box;
+        }
+        input:focus { outline: none; border-color: var(--accent); }
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            margin-top: 10px;
+        }
+        button:hover { background-color: var(--accent-hover); }
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        .metric-card {
+            background-color: var(--panel-bg);
+            padding: 16px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            text-align: center;
+        }
+        .metric-title { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+        .metric-value { font-size: 1.5rem; font-weight: bold; margin-top: 8px; font-family: monospace; }
+        .good-metric { color: var(--success); }
+        .warn-metric { color: var(--danger); }
+        canvas { width: 100% !important; height: 500px !important; }
+        
+        @media (max-width: 900px) {
+            .container { grid-template-columns: 1fr; }
+            .metrics-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="panel">
+            <h2>Simulation Parameters</h2>
+            
+            <div class="input-group">
+                <label>Starting Capital ($)</label>
+                <input type="number" id="startCapital" value="100000" step="1000">
+            </div>
+            
+            <div class="input-group">
+                <label>Monthly Contribution ($)</label>
+                <input type="number" id="monthlyContribution" value="1000" step="100">
+            </div>
+
+            <div class="input-group">
+                <label>Target DTA (%)</label>
+                <input type="number" id="dta" value="30" step="1" max="99">
+            </div>
+            
+            <div class="input-group">
+                <label>Portfolio Yield (%) Annual</label>
+                <input type="number" id="yield" value="9.0" step="0.1">
+            </div>
+
+            <div class="input-group">
+                <label>Margin Rate (%) Annual</label>
+                <input type="number" id="marginRate" value="6.0" step="0.1">
+            </div>
+            
+            <div class="input-group">
+                <label>Portfolio Appreciation (%) Annual</label>
+                <input type="number" id="appreciation" value="0.0" step="0.1">
+            </div>
+
+            <div class="input-group">
+                <label>Maintenance Requirement (%)</label>
+                <input type="number" id="maintReq" value="25" step="1">
+            </div>
+            
+            <div class="input-group">
+                <label>Simulation Time (Months)</label>
+                <input type="number" id="months" value="120" step="12">
+            </div>
+
+            <button onclick="runSimulation()">Calculate Curve</button>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 20px;">
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-title">Final Equity</div>
+                    <div class="metric-value" id="outEquity">$0</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-title">Final Total Assets</div>
+                    <div class="metric-value" id="outAssets">$0</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-title">Final Monthly Income</div>
+                    <div class="metric-value good-metric" id="outIncome">$0</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-title">Final DSCR</div>
+                    <div class="metric-value" id="outDSCR">0.0x</div>
+                </div>
+            </div>
+            
+            <div class="panel">
+                <canvas id="compoundingChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let chartInstance = null;
+
+        function formatCurrency(value) {
+            return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(value);
+        }
+
+        function runSimulation() {
+            // Fetch inputs
+            const P = parseFloat(document.getElementById('startCapital').value);
+            const monthlyCont = parseFloat(document.getElementById('monthlyContribution').value);
+            const targetDTA = parseFloat(document.getElementById('dta').value) / 100;
+            const annYield = parseFloat(document.getElementById('yield').value) / 100;
+            const annMargin = parseFloat(document.getElementById('marginRate').value) / 100;
+            const annAppreciation = parseFloat(document.getElementById('appreciation').value) / 100;
+            const maintReq = parseFloat(document.getElementById('maintReq').value) / 100;
+            const months = parseInt(document.getElementById('months').value);
+
+            // Monthly rates
+            const moYield = annYield / 12;
+            const moMargin = annMargin / 12;
+            const moAppreciation = annAppreciation / 12;
+
+            // Leverage math limits
+            if (targetDTA >= 1.0) {
+                alert("DTA must be strictly less than 100%");
+                return;
+            }
+
+            // Tracking arrays for the chart
+            let labels = [];
+            let equityData = [];
+            let assetData = [];
+            let debtData = [];
+
+            let currentEquity = P;
+            let currentAssets = 0;
+            let currentDebt = 0;
+            
+            let finalMonthlyIncome = 0;
+            let finalMonthlyInterest = 0;
+
+            for (let i = 0; i <= months; i++) {
+                labels.push(`Month ${i}`);
+
+                // 1. Rebalance: Expand or contract balance sheet to meet target DTA
+                currentDebt = currentEquity * (targetDTA / (1 - targetDTA));
+                currentAssets = currentEquity + currentDebt;
+
+                // Store data state at start of month
+                equityData.push(currentEquity);
+                assetData.push(currentAssets);
+                debtData.push(currentDebt);
+
+                // 2. Generate yields and expenses for the month
+                let income = currentAssets * moYield;
+                let interest = currentDebt * moMargin;
+                let appreciation = currentAssets * moAppreciation;
+                
+                // Track for final metrics output
+                if (i === months) {
+                    finalMonthlyIncome = income;
+                    finalMonthlyInterest = interest;
+                }
+
+                // 3. Reinvest (Positive Carry + Appreciation + Contributions)
+                let netCashflow = income - interest;
+                currentEquity += (netCashflow + appreciation + monthlyCont);
+            }
+
+            // Update DOM Metrics
+            document.getElementById('outEquity').innerText = formatCurrency(equityData[months]);
+            document.getElementById('outAssets').innerText = formatCurrency(assetData[months]);
+            document.getElementById('outIncome').innerText = formatCurrency(finalMonthlyIncome);
+            
+            const dscr = finalMonthlyInterest > 0 ? (finalMonthlyIncome / finalMonthlyInterest).toFixed(2) : '∞';
+            const dscrEl = document.getElementById('outDSCR');
+            dscrEl.innerText = `${dscr}x`;
+            dscrEl.className = `metric-value ${dscr < 1.5 ? 'warn-metric' : 'good-metric'}`;
+
+            // Update Chart
+            const ctx = document.getElementById('compoundingChart').getContext('2d');
+            
+            if (chartInstance) {
+                chartInstance.destroy();
+            }
+
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Total Assets',
+                            data: assetData,
+                            borderColor: '#3b82f6',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            borderWidth: 2,
+                            fill: true,
+                            pointRadius: 0
+                        },
+                        {
+                            label: 'Base Equity',
+                            data: equityData,
+                            borderColor: '#10b981',
+                            backgroundColor: 'transparent',
+                            borderWidth: 2,
+                            borderDash: [5, 5],
+                            fill: false,
+                            pointRadius: 0
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': ' + formatCurrency(context.raw);
+                                }
+                            }
+                        },
+                        legend: { labels: { color: '#f8fafc' } }
+                    },
+                    scales: {
+                        y: {
+                            ticks: {
+                                color: '#94a3b8',
+                                callback: function(value) { return '$' + (value / 1000) + 'k'; }
+                            },
+                            grid: { color: '#334155' }
+                        },
+                        x: {
+                            ticks: { color: '#94a3b8', maxTicksLimit: 12 },
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Run once on load
+        window.onload = runSimulation;
+    </script>
+</body>
+</html>
