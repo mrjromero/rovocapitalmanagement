@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Margin Call DTA Simulator</title>
+    <style>
+        :root {
+            --safe-color: #3b82f6; /* Blue */
+            --danger-color: #ef4444; /* Red */
+            --bg-color: #f3f4f6;
+            --card-bg: #ffffff;
+            --text-main: #1f2937;
+            --text-muted: #6b7280;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            padding: 2rem;
+            margin: 0;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            width: 100%;
+            max-width: 600px;
+            padding: 2rem;
+        }
+
+        h2 {
+            margin-top: 0;
+            margin-bottom: 1.5rem;
+            font-size: 1.5rem;
+            border-bottom: 2px solid var(--bg-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .control-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .control-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        .value-display {
+            color: var(--text-muted);
+            font-weight: 400;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            background: #e5e7eb;
+            border-radius: 8px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--safe-color);
+            cursor: pointer;
+        }
+
+        .visual-area {
+            margin-top: 2.5rem;
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+
+        .bar-container {
+            height: 32px;
+            background: #e5e7eb;
+            border-radius: 16px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .dta-bar {
+            height: 100%;
+            width: 20%;
+            background-color: var(--safe-color);
+            transition: width 0.2s ease, background-color 0.2s ease;
+        }
+
+        .maintenance-line {
+            position: absolute;
+            top: -10px;
+            bottom: -10px;
+            width: 3px;
+            background-color: var(--danger-color);
+            z-index: 10;
+            transition: left 0.2s ease;
+        }
+
+        .maintenance-label {
+            position: absolute;
+            top: -30px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            color: var(--danger-color);
+            transform: translateX(-50%);
+            white-space: nowrap;
+            transition: left 0.2s ease;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-top: 2rem;
+            text-align: center;
+        }
+
+        .stat-box {
+            background: var(--bg-color);
+            padding: 1rem;
+            border-radius: 8px;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-value {
+            font-size: 1.25rem;
+            font-weight: bold;
+        }
+
+        .alert {
+            display: none;
+            background-color: #fef2f2;
+            border: 1px solid #f87171;
+            color: #b91c1c;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 1.5rem;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .alert.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <h2>Margin Call Simulator</h2>
+
+        <div class="control-group">
+            <div class="control-header">
+                <span>Starting Debt-to-Asset (DTA)</span>
+                <span class="value-display"><span id="startingDtaVal">20</span>%</span>
+            </div>
+            <input type="range" id="startingDta" min="5" max="50" value="20" step="1">
+        </div>
+
+        <div class="control-group">
+            <div class="control-header">
+                <span>Market Drawdown</span>
+                <span class="value-display"><span id="marketDropVal">0</span>%</span>
+            </div>
+            <input type="range" id="marketDrop" min="0" max="60" value="0" step="1">
+        </div>
+
+        <div class="control-group">
+            <div class="control-header">
+                <span>Broker Maintenance Threshold</span>
+                <span class="value-display"><span id="maintenanceVal">50</span>%</span>
+            </div>
+            <input type="range" id="maintenance" min="25" max="75" value="50" step="1">
+        </div>
+
+        <div class="visual-area">
+            <div class="maintenance-label" id="maintenanceLabel" style="left: 50%;">Maintenance Margin</div>
+            <div class="maintenance-line" id="maintenanceLine" style="left: 50%;"></div>
+            <div class="bar-container">
+                <div class="dta-bar" id="dtaBar"></div>
+            </div>
+        </div>
+
+        <div class="alert" id="marginCallAlert">
+            ⚠️ MARGIN CALL TRIGGERED! <br>
+            <span style="font-size: 0.9rem; font-weight: normal;">Your DTA has exceeded the broker's maintenance threshold. Forced liquidation imminent.</span>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-box">
+                <div class="stat-label">Asset Value</div>
+                <div class="stat-value" id="assetDisplay">$100,000</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Fixed Debt</div>
+                <div class="stat-value" id="debtDisplay">$20,000</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Current DTA</div>
+                <div class="stat-value" id="currentDtaDisplay">20.0%</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const inputs = {
+            startingDta: document.getElementById('startingDta'),
+            marketDrop: document.getElementById('marketDrop'),
+            maintenance: document.getElementById('maintenance')
+        };
+        
+        const displays = {
+            startingDtaVal: document.getElementById('startingDtaVal'),
+            marketDropVal: document.getElementById('marketDropVal'),
+            maintenanceVal: document.getElementById('maintenanceVal'),
+            assetDisplay: document.getElementById('assetDisplay'),
+            debtDisplay: document.getElementById('debtDisplay'),
+            currentDtaDisplay: document.getElementById('currentDtaDisplay')
+        };
+
+        const visuals = {
+            dtaBar: document.getElementById('dtaBar'),
+            maintenanceLine: document.getElementById('maintenanceLine'),
+            maintenanceLabel: document.getElementById('maintenanceLabel'),
+            marginCallAlert: document.getElementById('marginCallAlert')
+        };
+
+        const INITIAL_PORTFOLIO_VALUE = 100000; // $100k base for easy math
+
+        function formatCurrency(number) {
+            return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(number);
+        }
+
+        function calculate() {
+            // Get values
+            const startDta = parseFloat(inputs.startingDta.value);
+            const drop = parseFloat(inputs.marketDrop.value);
+            const threshold = parseFloat(inputs.maintenance.value);
+
+            // Update Input Labels
+            displays.startingDtaVal.innerText = startDta;
+            displays.marketDropVal.innerText = drop;
+            displays.maintenanceVal.innerText = threshold;
+
+            // Math execution
+            const initialDebt = INITIAL_PORTFOLIO_VALUE * (startDta / 100);
+            const currentAssets = INITIAL_PORTFOLIO_VALUE * (1 - (drop / 100));
+            
+            // Avoid division by zero if assets drop to 0
+            let currentDta = 0;
+            if (currentAssets > 0) {
+                currentDta = (initialDebt / currentAssets) * 100;
+            } else {
+                currentDta = 100; // Max out at 100%
+            }
+
+            // Update Stats Display
+            displays.assetDisplay.innerText = formatCurrency(currentAssets);
+            displays.debtDisplay.innerText = formatCurrency(initialDebt);
+            displays.currentDtaDisplay.innerText = currentDta.toFixed(1) + '%';
+
+            // Update Visuals
+            const visualDta = Math.min(currentDta, 100); // Cap bar at 100% width
+            visuals.dtaBar.style.width = visualDta + '%';
+            visuals.maintenanceLine.style.left = threshold + '%';
+            visuals.maintenanceLabel.style.left = threshold + '%';
+
+            // Margin Call Check
+            if (currentDta >= threshold) {
+                visuals.dtaBar.style.backgroundColor = 'var(--danger-color)';
+                visuals.marginCallAlert.classList.add('active');
+            } else {
+                visuals.dtaBar.style.backgroundColor = 'var(--safe-color)';
+                visuals.marginCallAlert.classList.remove('active');
+            }
+        }
+
+        // Add event listeners to sliders
+        inputs.startingDta.addEventListener('input', calculate);
+        inputs.marketDrop.addEventListener('input', calculate);
+        inputs.maintenance.addEventListener('input', calculate);
+
+        // Initial calculation on load
+        calculate();
+    </script>
+</body>
+</html>
