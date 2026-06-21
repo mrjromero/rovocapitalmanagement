@@ -517,7 +517,7 @@
         </div>
 
         <div class="input-group">
-            <label for="dta-input">Debt-to-Asset (DTA) Ratio [Macro Leverage]</label>
+            <label for="dta-input">Debt-to-Asset (DTA) Ratio [Leverage]</label>
             <div class="input-wrapper">
                 <input type="number" id="dta-input" step="0.01" min="0" max="100" placeholder="20.00">
                 <span class="unit">%</span>
@@ -525,7 +525,7 @@
         </div>
 
         <div class="input-group">
-            <label for="util-input">Margin Utilization Rate [Dashboard Capacity]</label>
+            <label for="util-input">Margin Utilization Rate [Capacity]</label>
             <div class="input-wrapper">
                 <input type="number" id="util-input" step="0.01" min="0" max="100" placeholder="40.00">
                 <span class="unit">%</span>
@@ -559,7 +559,7 @@
             <ul class="instructions-list">
                 <li><strong>Withdrawal Limit Dependency (Cash Extraction):</strong> Automated rules treat sweeps as capital extractions. Because the cash leaves the portfolio shell, the maximum transfer size is strictly capped by your <strong>Available for Withdrawal</strong> credit limit.</li>
                 <li><strong>Reinvestment Rules Ignored:</strong> The expanded internal buying power ("Available to Invest") is completely bypassed by Smart Transfers since no balancing stock collateral is added duly to the account.</li>
-                <li><strong>How to Calibrate:</strong> Keep the toggle set to <strong>Withdrawal Basis</strong>. Input different target cash sweep amounts as simulated debt into Card 2 to see exactly what your dashboard <strong>Margin Utilization Rate</strong> and macro <strong>DTA</strong> will look like post-transfer, ensuring your automated rules never cross critical risk limits.</li>
+                <li><strong>How to use for Smart Transfer calculations:</strong> Keep the toggle set to <strong>Withdrawal Basis</strong>. Input different target cash sweep amounts as simulated debt into Card 2 to see exactly what your dashboard <strong>Margin Utilization Rate</strong> and overall <strong>DTA</strong> will look like post-transfer, ensuring your automated rules never cross critical risk limits. You may also change the simulator to the desired <strong>DTA</strong> or <strong>Margin Utilization</strong> Rate to convert the values bi-directionally.</li>
             </ul>
         </div>
     </div>
