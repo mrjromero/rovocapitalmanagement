@@ -258,21 +258,23 @@
 <body>
 
 <div class="wrapper">
+    <!-- COLLAPSIBLE ACCORDION QUICK START GUIDE -->
     <details class="card" open>
-        <summary>💡 Quick Start Guide &amp; Purpose</summary>
+        <summary>💡 Quick Start Guide &amp; Glossary</summary>
         <div class="accordion-content">
             <div class="instructions-text">
                 <p><strong>What is this tool?</strong><br>
-                This calculator helps you connect what you borrow compared to your actual account value (your true debt level) with what M1 displays on your screen (your utilization rate).</p>
+                This calculator bridges the gap between your portfolio's underlying <strong>Macro Leverage (Debt-to-Asset / DTA Ratio)</strong> and your M1 screen's visible <strong>Capacity Metric (Margin Utilization Rate)</strong>.</p>
                 <p><strong>Why does M1 have two different modes?</strong><br>
-                M1 calculates your limits differently based on where borrowed money goes:
+                The platform calculates your borrow boundaries using two distinct risk frameworks:
                 </p>
-                <p>• <strong>Withdrawal Basis:</strong> Use this when taking cash out or setting up automatic <strong>Smart Transfers</strong>. Because cash leaves your account, M1 sets a tighter spending limit.</p>
-                <p>• <strong>Reinvestment Basis:</strong> Use this only when buying more stocks inside M1. M1 gives you a higher spending limit here because the new stocks you buy serve as fresh backup for the loan.</p>
+                <p>• <strong>Withdrawal Basis (Cash Extraction Framework):</strong> Use this when taking physical cash out of the account or modeling automated <strong>Smart Transfer Rules</strong>. Because cash leaves the shell entirely, M1 enforces a strict, rigid credit ceiling.</p>
+                <p>• <strong>Reinvestment Basis (Collateralized Buying Power):</strong> Use this only when using margin to buy more stocks inside M1. The platform extends an augmented credit line because the newly bought shares stay inside the account as extra backup collateral.</p>
             </div>
         </div>
     </details>
 
+    <!-- CARD 1: CURRENT DASHBOARD METRICS -->
     <div class="card">
         <div class="card-title">1. Current M1 Dashboard Metrics</div>
         
@@ -282,7 +284,7 @@
         </div>
 
         <div class="input-group">
-            <label for="cal-value">Account Value</label>
+            <label for="cal-value">Account Value (Total Assets)</label>
             <div class="input-wrapper">
                 <span class="unit">$</span>
                 <input type="number" id="cal-value" step="0.01" value="100000.00">
@@ -290,7 +292,7 @@
         </div>
 
         <div class="input-group">
-            <label for="cal-borrowed">Total Borrowed</label>
+            <label for="cal-borrowed">Total Borrowed (Margin Loan Balance)</label>
             <div class="input-wrapper">
                 <span class="unit">$</span>
                 <input type="number" id="cal-borrowed" step="0.01" value="20000.00">
@@ -310,38 +312,43 @@
         </div>
     </div>
 
+    <!-- CARD 2: SIMULATOR WORKSTATION -->
     <div class="card">
         <div class="card-title">2. Leverage &amp; Utilization Simulator</div>
 
+        <!-- Debt-to-Asset Input -->
         <div class="input-group">
-            <label for="dta-input">Debt-to-Asset (DTA) Ratio</label>
+            <label for="dta-input">Debt-to-Asset (DTA) Ratio [Macro Leverage]</label>
             <div class="input-wrapper">
                 <input type="number" id="dta-input" step="0.01" min="0" max="100" placeholder="20.00">
                 <span class="unit">%</span>
             </div>
         </div>
 
+        <!-- Margin Utilization Input -->
         <div class="input-group">
-            <label for="util-input">Margin Utilization Rate</label>
+            <label for="util-input">Margin Utilization Rate [Dashboard Capacity]</label>
             <div class="input-wrapper">
                 <input type="number" id="util-input" step="0.01" min="0" max="100" placeholder="40.00">
                 <span class="unit">%</span>
             </div>
         </div>
 
+        <!-- Context Guardrail Notice Element -->
         <div id="context-indicator" class="context-badge context-withdrawal">
             Active Framework: <strong>Withdrawal Utilization</strong>
         </div>
     </div>
 
+    <!-- CARD 3: AUTOMATION GUARDRAILS -->
     <div class="card">
         <div class="card-title">3. Smart Transfer Guide &amp; Guardrails</div>
         <div class="instructions-text">
-            <p>M1 Smart Transfers are strictly triggered by <strong>cash balance thresholds</strong> (dollar targets) rather than percentage parameters. However, when an automation rule executes a sweep from your line of credit, it is governed by specific structural guardrails:</p>
+            <p>M1 Smart Transfers are strictly triggered by <strong>cash balance thresholds</strong> (fixed dollar boundaries) rather than percentage parameters. However, when an automation rule executes a sweep from your credit line, it is governed by specific structural guardrails:</p>
             <ul class="instructions-list">
-                <li><strong>Withdrawal Limit Dependency:</strong> Automated rules treat sweeps as cash extractions. Because the capital leaves the portfolio shell, the transfer size is explicitly constrained by your <strong>Available for Withdrawal</strong> credit limit.</li>
-                <li><strong>Reinvestment Rules Ignored:</strong> The expanded "Available to Invest" buying power is completely bypassed by Smart Transfers since no new balancing asset collateral is added.</li>
-                <li><strong>How to Calibrate:</strong> Keep the toggle set to <strong>Withdrawal Basis</strong>. Input different target cash sweep amounts as simulated debt into the converter to determine exactly what your dashboard <strong>Margin Utilization Rate</strong> and macro <strong>DTA</strong> will look like post-transfer, helping you ensure your automated rules never cross critical risk boundaries.</li>
+                <li><strong>Withdrawal Limit Dependency (Cash Extraction):</strong> Automated rules treat sweeps as capital extractions. Because the cash leaves the portfolio shell, the maximum transfer size is strictly capped by your <strong>Available for Withdrawal</strong> credit limit.</li>
+                <li><strong>Reinvestment Rules Ignored:</strong> The expanded internal buying power ("Available to Invest") is completely bypassed by Smart Transfers since no balancing stock collateral is added to the account.</li>
+                <li><strong>How to Calibrate:</strong> Keep the toggle set to <strong>Withdrawal Basis</strong>. Input different target cash sweep amounts as simulated debt into Card 2 to see exactly what your dashboard <strong>Margin Utilization Rate</strong> and macro <strong>DTA</strong> will look like post-transfer, ensuring your automated rules never cross critical risk limits.</li>
             </ul>
         </div>
     </div>
@@ -379,7 +386,7 @@
             calCreditLimit.value = snapshotValues.withdrawal;
             
             contextIndicator.className = "context-badge context-withdrawal";
-            contextIndicator.innerHTML = "Active Framework: <strong>Withdrawal Utilization</strong>";
+            contextIndicator.innerHTML = "Active Framework: <strong>Withdrawal Utilization Framework</strong>";
         } else {
             btnReinvest.classList.add('active');
             btnWithdraw.classList.remove('active');
@@ -387,7 +394,7 @@
             calCreditLimit.value = snapshotValues.reinvestment;
             
             contextIndicator.className = "context-badge context-reinvestment";
-            contextIndicator.innerHTML = "⚠️ <strong>Warning:</strong> Reinvestment Basis Active. Switch calibration back to <strong>Withdrawal Basis</strong> if organizing metrics for M1 Smart Transfer rules.";
+            contextIndicator.innerHTML = "⚠️ <strong>Warning:</strong> Reinvestment Basis (Collateralized Framework) Active. Switch calibration back to <strong>Withdrawal Basis</strong> if organizing metrics for M1 Smart Transfer rules.";
         }
         recalibrateSystem();
     }
