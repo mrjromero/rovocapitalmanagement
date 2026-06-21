@@ -76,6 +76,38 @@
             font-size: 0.85rem;
         }
 
+        /* Segmented Toggle Control Layout */
+        .toggle-container {
+            display: flex;
+            background-color: var(--bg-main);
+            padding: 0.25rem;
+            border-radius: 8px;
+            margin-bottom: 1.25rem;
+            border: 1px solid var(--border);
+        }
+
+        .toggle-btn {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            padding: 0.5rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+        }
+
+        .toggle-btn.active {
+            background-color: var(--bg-input);
+            color: var(--text-main);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            border: 1px solid rgba(56, 189, 248, 0.2);
+        }
+
         .input-group {
             display: flex;
             flex-direction: column;
@@ -157,6 +189,11 @@
     <div class="card">
         <div class="card-title">1. M1 Live Dashboard Calibration</div>
         
+        <div class="toggle-container">
+            <button class="toggle-btn active" id="mode-withdraw" onclick="setMode('withdrawal')">Withdrawed Capital</button>
+            <button class="toggle-btn" id="mode-reinvest" onclick="setMode('reinvestment')">Reinvested Capital</button>
+        </div>
+
         <div class="input-group">
             <label for="cal-value">Account Value</label>
             <div class="input-wrapper">
@@ -174,7 +211,7 @@
         </div>
 
         <div class="input-group">
-            <label for="cal-credit-limit">Credit Limit (Max Borrow Line)</label>
+            <label id="credit-limit-label" for="cal-credit-limit">Withdrawal Credit Limit</label>
             <div class="input-wrapper">
                 <span class="unit">$</span>
                 <input type="number" id="cal-credit-limit" step="0.01" value="9618.63">
@@ -213,39 +250,79 @@
 </div>
 
 <script>
-    // Calibration Elements
+    // Calibration Nodes
     const calValue = document.getElementById('cal-value');
     const calBorrowed = document.getElementById('cal-borrowed');
     const calCreditLimit = document.getElementById('cal-credit-limit');
+    const creditLimitLabel = document.getElementById('credit-limit-label');
     const factorReadout = document.getElementById('factor-readout');
+    
+    // Toggle Buttons
+    const btnWithdraw = document.getElementById('mode-withdraw');
+    const btnReinvest = document.getElementById('mode-reinvest');
 
-    // Converter Elements
+    // Converter Nodes
     const dtaInput = document.getElementById('dta-input');
     const utilInput = document.getElementById('util-input');
 
-    // State variable for the dynamically derived factor
+    // State Engine
+    let activeMode = 'withdrawal'; 
     let calibrationFactor = 0.50;
 
-    function recalibrateSystem() {
+    // Hardcoded cache points directly matching user spreadsheet state changes
+    const snapshotValues = {
+        withdrawal: 9618.63,
+        reinvestment: 12403.93
+    };
+
+    function setMode(mode) {
+        activeMode = mode;
+        
+        if (mode === 'withdrawal') {
+            btnWithdraw.classList.add('active');
+            btnReinvest.classList.remove('active');
+            creditLimitLabel.textContent = "Withdrawal Credit Limit";
+            calCreditLimit.value = snapshotValues.withdrawal;
+        } else {
+            btnReinvest.classList.add('active');
+            btnWithdraw.classList.remove('active');
+            creditLimitLabel.textContent = "Reinvestment Credit Limit";
+            calCreditLimit.value = snapshotValues.reinvestment;
+        }
+        recalibrateSystem();
+    }
+
+    function recalibrateSystem(e) {
         const value = parseFloat(calValue.value);
+        const borrowed = parseFloat(calBorrowed.value);
         const creditLimit = parseFloat(calCreditLimit.value);
 
+        // Cache manual context adjustments inside current active type
+        if (!isNaN(creditLimit)) {
+            snapshotValues[activeMode] = creditLimit;
+        }
+
         if (value > 0 && !isNaN(creditLimit)) {
-            // Capacity factor is now directly derived straight from the credit limit line
+            // Recalculate capacity engine dynamically
             calibrationFactor = creditLimit / value;
 
-            // Render precise platform max limit metric
             const maxBorrowCapacityLimit = (calibrationFactor * 100).toFixed(4);
-            factorReadout.textContent = `Derived Max Borrow Limit: ${maxBorrowCapacityLimit}%`;
+            factorReadout.textContent = `Derived Max Borrow Limit (${activeMode}): ${maxBorrowCapacityLimit}%`;
             
-            // Refresh translation calculation fields
-            convertFromDTA();
+            // Auto-synchronize values back to the core converter layout 
+            if (!e || e.target.id.startsWith('cal-') || e.target.id.startsWith('mode-')) {
+                if (!isNaN(borrowed)) {
+                    const liveDta = (borrowed / value) * 100;
+                    dtaInput.value = liveDta.toFixed(2);
+                    convertFromDTA();
+                }
+            }
         } else {
             factorReadout.textContent = "Invalid Calibration Inputs";
         }
     }
 
-    // Conversion: Util = DTA / Factor
+    // Conversion Framework Logic Links
     function convertFromDTA() {
         const dta = parseFloat(dtaInput.value);
         if (!isNaN(dta) && calibrationFactor > 0) {
@@ -255,7 +332,6 @@
         }
     }
 
-    // Conversion: DTA = Util * Factor
     function convertFromUtil() {
         const util = parseFloat(utilInput.value);
         if (!isNaN(util)) {
@@ -265,17 +341,15 @@
         }
     }
 
-    // Listeners for Calibration Fields
+    // Input listeners mapping 
     calValue.addEventListener('input', recalibrateSystem);
     calBorrowed.addEventListener('input', recalibrateSystem);
     calCreditLimit.addEventListener('input', recalibrateSystem);
 
-    // Listeners for Conversion Workstation
     dtaInput.addEventListener('input', convertFromDTA);
     utilInput.addEventListener('input', convertFromUtil);
 
-    // Initialize layout defaults
-    dtaInput.value = "36.00";
+    // Bootstrap run
     recalibrateSystem();
 </script>
 
