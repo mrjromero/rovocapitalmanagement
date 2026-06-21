@@ -14,7 +14,6 @@
             --accent-green: #11b981;
             --accent-blue: #38bdf8;
             --accent-warning: #fbbf24;
-            --accent-danger: #ef4444;
             --border: #2d415a;
         }
 
@@ -62,6 +61,7 @@
             padding-bottom: 0.5rem;
         }
 
+        /* Collapsible Accordion Style Rules */
         details.card {
             padding: 0;
             overflow: hidden;
@@ -132,12 +132,6 @@
             color: var(--text-main);
             box-shadow: 0 2px 4px rgba(0,0,0,0.2);
             border: 1px solid rgba(56, 189, 248, 0.2);
-        }
-
-        .grid-2 {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1rem;
         }
 
         .input-group {
@@ -239,63 +233,6 @@
             color: var(--accent-warning);
         }
 
-        .health-display-container {
-            text-align: center;
-            margin: 1.5rem 0 0.5rem 0;
-            padding: 1.25rem;
-            background-color: rgba(11, 19, 31, 0.4);
-            border: 1px dashed var(--border);
-            border-radius: 10px;
-        }
-
-        .health-headline {
-            font-size: 0.75rem;
-            font-weight: 700;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-            margin-bottom: 0.7rem;
-        }
-
-        .health-percentage {
-            font-size: 2.5rem;
-            font-weight: 800;
-            line-height: 1;
-            margin-bottom: 0.5rem;
-            transition: color 0.2s ease;
-        }
-
-        .health-bar-bg {
-            height: 8px;
-            background: linear-gradient(to right, var(--accent-danger) 20%, var(--accent-warning) 50%, var(--accent-green) 80%);
-            border-radius: 4px;
-            margin: 0.75rem 0;
-            position: relative;
-        }
-
-        .health-bar-indicator {
-            width: 4px;
-            height: 16px;
-            background-color: var(--text-main);
-            border: 1px solid var(--bg-main);
-            position: absolute;
-            top: -4px;
-            border-radius: 2px;
-            transform: translateX(-50%);
-            transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .health-summary-text {
-            font-size: 0.88rem;
-            color: var(--text-muted);
-            line-height: 1.4;
-            margin-top: 0.75rem;
-        }
-
-        .health-summary-text strong {
-            color: var(--text-main);
-        }
-
         .instructions-text {
             font-size: 0.85rem;
             color: var(--text-muted);
@@ -321,6 +258,7 @@
 <body>
 
 <div class="wrapper">
+    <!-- COLLAPSIBLE ACCORDION QUICK START GUIDE -->
     <details class="card" open>
         <summary>💡 Quick Start Guide &amp; Glossary</summary>
         <div class="accordion-content">
@@ -336,6 +274,7 @@
         </div>
     </details>
 
+    <!-- CARD 1: CURRENT DASHBOARD METRICS -->
     <div class="card">
         <div class="card-title">1. Current M1 Dashboard Metrics</div>
         
@@ -352,20 +291,11 @@
             </div>
         </div>
 
-        <div class="grid-2">
-            <div class="input-group">
-                <label for="cal-borrowed">Total Borrowed</label>
-                <div class="input-wrapper">
-                    <span class="unit">$</span>
-                    <input type="number" id="cal-borrowed" step="0.01" value="20000.00">
-                </div>
-            </div>
-            <div class="input-group">
-                <label for="cal-mmr">Position MMR</label>
-                <div class="input-wrapper">
-                    <input type="number" id="cal-mmr" step="1" min="20" max="100" value="25">
-                    <span class="unit">%</span>
-                </div>
+        <div class="input-group">
+            <label for="cal-borrowed">Total Borrowed (Margin Loan Balance)</label>
+            <div class="input-wrapper">
+                <span class="unit">$</span>
+                <input type="number" id="cal-borrowed" step="0.01" value="20000.00">
             </div>
         </div>
 
@@ -382,9 +312,11 @@
         </div>
     </div>
 
+    <!-- CARD 2: SIMULATOR WORKSTATION -->
     <div class="card">
         <div class="card-title">2. Leverage &amp; Utilization Simulator</div>
 
+        <!-- Debt-to-Asset Input -->
         <div class="input-group">
             <label for="dta-input">Debt-to-Asset (DTA) Ratio [Macro Leverage]</label>
             <div class="input-wrapper">
@@ -393,6 +325,7 @@
             </div>
         </div>
 
+        <!-- Margin Utilization Input -->
         <div class="input-group">
             <label for="util-input">Margin Utilization Rate [Dashboard Capacity]</label>
             <div class="input-wrapper">
@@ -401,24 +334,13 @@
             </div>
         </div>
 
+        <!-- Context Guardrail Notice Element -->
         <div id="context-indicator" class="context-badge context-withdrawal">
-            Active Framework: Withdrawal Utilization
-        </div>
-
-        <div class="health-display-container">
-            <div class="health-headline">Cushion to Margin Call</div>
-            <div class="health-percentage" id="health-percentage-display">100%</div>
-            
-            <div class="health-bar-bg">
-                <div class="health-bar-indicator" id="health-indicator-dot"></div>
-            </div>
-            
-            <div class="health-summary-text" id="health-summary-explanation">
-                The value of your investments would have to drop <strong>--</strong> to face a margin call.
-            </div>
+            Active Framework: <strong>Withdrawal Utilization</strong>
         </div>
     </div>
 
+    <!-- CARD 3: AUTOMATION GUARDRAILS -->
     <div class="card">
         <div class="card-title">3. Smart Transfer Guide &amp; Guardrails</div>
         <div class="instructions-text">
@@ -433,32 +355,23 @@
 </div>
 
 <script>
-    // Calibration Variables
-    var calValue = document.getElementById('cal-value');
-    var calBorrowed = document.getElementById('cal-borrowed');
-    var calMmr = document.getElementById('cal-mmr');
-    var calCreditLimit = document.getElementById('cal-credit-limit');
-    var creditLimitLabel = document.getElementById('credit-limit-label');
-    var factorReadout = document.getElementById('factor-readout');
-    var contextIndicator = document.getElementById('context-indicator');
+    const calValue = document.getElementById('cal-value');
+    const calBorrowed = document.getElementById('cal-borrowed');
+    const calCreditLimit = document.getElementById('cal-credit-limit');
+    const creditLimitLabel = document.getElementById('credit-limit-label');
+    const factorReadout = document.getElementById('factor-readout');
+    const contextIndicator = document.getElementById('context-indicator');
     
-    var btnWithdraw = document.getElementById('mode-withdraw');
-    var btnReinvest = document.getElementById('mode-reinvest');
+    const btnWithdraw = document.getElementById('mode-withdraw');
+    const btnReinvest = document.getElementById('mode-reinvest');
 
-    // Simulator Variables
-    var dtaInput = document.getElementById('dta-input');
-    var utilInput = document.getElementById('util-input');
+    const dtaInput = document.getElementById('dta-input');
+    const utilInput = document.getElementById('util-input');
 
-    // Margin Health Elements
-    var healthPercentDisplay = document.getElementById('health-percentage-display');
-    var healthIndicatorDot = document.getElementById('health-indicator-dot');
-    var healthSummaryExplanation = document.getElementById('health-summary-explanation');
+    let activeMode = 'withdrawal'; 
+    let calibrationFactor = 0.50;
 
-    // State Architecture
-    var activeMode = 'withdrawal'; 
-    var calibrationFactor = 0.50;
-
-    var snapshotValues = {
+    const snapshotValues = {
         withdrawal: 50000.00,
         reinvestment: 65000.00
     };
@@ -481,15 +394,15 @@
             calCreditLimit.value = snapshotValues.reinvestment;
             
             contextIndicator.className = "context-badge context-reinvestment";
-            contextIndicator.innerHTML = "⚠️ <strong>Warning:</strong> Reinvestment Basis Active. Switch calibration back to <strong>Withdrawal Basis</strong> if organizing metrics for M1 Smart Transfer rules.";
+            contextIndicator.innerHTML = "⚠️ <strong>Warning:</strong> Reinvestment Basis (Collateralized Framework) Active. Switch calibration back to <strong>Withdrawal Basis</strong> if organizing metrics for M1 Smart Transfer rules.";
         }
         recalibrateSystem();
     }
 
     function recalibrateSystem(e) {
-        var value = parseFloat(calValue.value);
-        var borrowed = parseFloat(calBorrowed.value);
-        var creditLimit = parseFloat(calCreditLimit.value);
+        const value = parseFloat(calValue.value);
+        const borrowed = parseFloat(calBorrowed.value);
+        const creditLimit = parseFloat(calCreditLimit.value);
 
         if (!isNaN(creditLimit)) {
             snapshotValues[activeMode] = creditLimit;
@@ -497,95 +410,45 @@
 
         if (value > 0 && !isNaN(creditLimit)) {
             calibrationFactor = creditLimit / value;
-            var maxBorrowCapacityLimit = (calibrationFactor * 100).toFixed(4);
-            factorReadout.textContent = "Derived Max Borrow Limit (" + activeMode + "): " + maxBorrowCapacityLimit + "%";
+            const maxBorrowCapacityLimit = (calibrationFactor * 100).toFixed(4);
+            factorReadout.textContent = `Derived Max Borrow Limit (${activeMode}): ${maxBorrowCapacityLimit}%`;
             
             if (!e || e.target.id.startsWith('cal-') || e.target.id.startsWith('mode-')) {
                 if (!isNaN(borrowed)) {
-                    var liveDta = (borrowed / value) * 100;
+                    const liveDta = (borrowed / value) * 100;
                     dtaInput.value = liveDta.toFixed(2);
-                    calculateDerivedMetrics('dta');
+                    convertFromDTA();
                 }
-            } else {
-                calculateMarginHealth();
             }
         } else {
             factorReadout.textContent = "Invalid Calibration Inputs";
         }
     }
 
-    // Bi-directional engine core
-    function calculateDerivedMetrics(source) {
-        if (source === 'dta') {
-            var dta = parseFloat(dtaInput.value);
-            if (!isNaN(dta) && calibrationFactor > 0) {
-                utilInput.value = (dta / calibrationFactor).toFixed(2);
-            } else {
-                utilInput.value = '';
-            }
+    function convertFromDTA() {
+        const dta = parseFloat(dtaInput.value);
+        if (!isNaN(dta) && calibrationFactor > 0) {
+            utilInput.value = (dta / calibrationFactor).toFixed(2);
         } else {
-            var util = parseFloat(utilInput.value);
-            if (!isNaN(util)) {
-                dtaInput.value = (util * calibrationFactor).toFixed(2);
-            } else {
-                dtaInput.value = '';
-            }
-        }
-        calculateMarginHealth();
-    }
-
-    // Volatility Cushion & Risk Gauge Logic Loop
-    function calculateMarginHealth() {
-        var value = parseFloat(calValue.value) || 0;
-        var mmr = (parseFloat(calMmr.value) || 25) / 100;
-        var dta = (parseFloat(dtaInput.value) || 0) / 100;
-        
-        var simulatedDebt = value * dta;
-
-        if (value <= 0 || simulatedDebt <= 0) {
-            healthPercentDisplay.textContent = "100%";
-            healthPercentDisplay.style.color = "var(--accent-green)";
-            healthIndicatorDot.style.left = "100%";
-            healthSummaryExplanation.innerHTML = "Portfolio is <strong>fully unleveraged</strong>. There is no active liquidation vector.";
-            return;
-        }
-
-        var liquidationFloor = simulatedDebt / (1 - mmr);
-        var dollarCushion = value - liquidationFloor;
-        var percentageCushion = (dollarCushion / value) * 100;
-
-        if (percentageCushion <= 0) {
-            healthPercentDisplay.textContent = "0.00%";
-            healthPercentDisplay.style.color = "var(--accent-danger)";
-            healthIndicatorDot.style.left = "0%";
-            healthSummaryExplanation.innerHTML = "⚠️ <strong>MARGIN CALL ACTIVE:</strong> Simulated position has breached the maintenance threshold.";
-        } else {
-            healthPercentDisplay.textContent = percentageCushion.toFixed(2) + "%";
-            
-            var indicatorPosition = Math.min(Math.max(percentageCushion, 0), 100);
-            healthIndicatorDot.style.left = indicatorPosition + "%";
-
-            if (percentageCushion > 45) {
-                healthPercentDisplay.style.color = "var(--accent-green)";
-            } else if (percentageCushion > 20) {
-                healthPercentDisplay.style.color = "var(--accent-warning)";
-            } else {
-                healthPercentDisplay.style.color = "var(--accent-danger)";
-            }
-
-            var formattedDollarCushion = dollarCushion.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
-            healthSummaryExplanation.innerHTML = "The value of your investments would have to drop <strong>" + percentageCushion.toFixed(2) + "% ($" + formattedDollarCushion + ")</strong> to face a margin call.";
+            utilInput.value = '';
         }
     }
 
-    // Wiring UI input hooks
+    function convertFromUtil() {
+        const util = parseFloat(utilInput.value);
+        if (!isNaN(util)) {
+            dtaInput.value = (util * calibrationFactor).toFixed(2);
+        } else {
+            dtaInput.value = '';
+        }
+    }
+
     calValue.addEventListener('input', recalibrateSystem);
     calBorrowed.addEventListener('input', recalibrateSystem);
-    calMmr.addEventListener('input', recalibrateSystem);
     calCreditLimit.addEventListener('input', recalibrateSystem);
 
-    dtaInput.addEventListener('input', function() { calculateDerivedMetrics('dta'); });
-    utilInput.addEventListener('input', function() { calculateDerivedMetrics('util'); });
+    dtaInput.addEventListener('input', convertFromDTA);
+    utilInput.addEventListener('input', convertFromUtil);
 
     recalibrateSystem();
 </script>
