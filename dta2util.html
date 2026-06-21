@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>M1 Calibrated Capacity Converter</title>
+    <title>M1 Margin Utilization Tool</title>
     <style>
         :root {
             --bg-main: #0b131f;
@@ -155,13 +155,13 @@
 
 <div class="wrapper">
     <div class="card">
-        <div class="card-title">1. M1 Live Dashboard Calibration</div>
+        <div class="card-title">1. M1 Margin Metrics</div>
         
         <div class="input-group">
             <label for="cal-value">Account Value</label>
             <div class="input-wrapper">
                 <span class="unit">$</span>
-                <input type="number" id="cal-value" step="0.01" value="179659.19">
+                <input type="number" id="cal-value" step="0.01" value="10000">
             </div>
         </div>
 
@@ -169,7 +169,7 @@
             <label for="cal-borrowed">Total Borrowed</label>
             <div class="input-wrapper">
                 <span class="unit">$</span>
-                <input type="number" id="cal-borrowed" step="0.01" value="49757.09">
+                <input type="number" id="cal-borrowed" step="0.01" value="5000">
             </div>
         </div>
 
@@ -177,7 +177,7 @@
             <label for="cal-avail-withdraw">Avail. to Borrow (Withdraw)</label>
             <div class="input-wrapper">
                 <span class="unit">$</span>
-                <input type="number" id="cal-avail-withdraw" step="0.01" value="39471.10">
+                <input type="number" id="cal-avail-withdraw" step="0.01" value="0.00">
             </div>
         </div>
 
@@ -188,7 +188,7 @@
 
     <div class="card">
         <header>
-            <h1>Calibrated Margin Converter</h1>
+            <h1>DTA / Utilization</h1>
             <p>Direct Bi-Directional Conversion Calculator</p>
         </header>
 
@@ -224,7 +224,7 @@
     const utilInput = document.getElementById('util-input');
 
     // State variable for the dynamically derived factor
-    let calibrationFactor = 0.496772;
+    let calibrationFactor = 0.50;
 
     function recalibrateSystem() {
         const value = parseFloat(calValue.value);
