@@ -211,6 +211,7 @@
             color: var(--accent-blue);
             text-align: center;
             margin-top: 1rem;
+            line-height: 1.5;
         }
 
         .context-badge {
@@ -315,7 +316,7 @@
 <body>
 
 <div class="wrapper">
-    <details class="card" closed>
+    <details class="card" open>
         <summary>💡 Quick Start Guide (click to expand)</summary>
         <div class="accordion-content">
             <div class="instructions-text">
@@ -355,10 +356,10 @@
         </div>
 
         <div class="input-group">
-            <label for="cal-mmr">Position MMR</label>
+            <label for="cal-req-equity">Required Equity (From M1 Screen)</label>
             <div class="input-wrapper">
-                <input type="number" id="cal-mmr" step="1" min="20" max="100" value="25">
-                <span class="unit">%</span>
+                <span class="unit">$</span>
+                <input type="number" id="cal-req-equity" step="0.01" value="25000.00">
             </div>
         </div>
 
@@ -371,7 +372,8 @@
         </div>
 
         <div class="derived-factor-banner" id="factor-readout">
-            Derived Capacity Limit: --
+            Derived Capacity Limit: --<br>
+            Derived Blended Portfolio MMR: --
         </div>
     </div>
 
@@ -429,7 +431,7 @@
     // Calibration Variables
     const calValue = document.getElementById('cal-value');
     const calBorrowed = document.getElementById('cal-borrowed');
-    const calMmr = document.getElementById('cal-mmr');
+    const calReqEquity = document.getElementById('cal-req-equity');
     const calCreditLimit = document.getElementById('cal-credit-limit');
     const creditLimitLabel = document.getElementById('credit-limit-label');
     const factorReadout = document.getElementById('factor-readout');
@@ -482,6 +484,7 @@
     function recalibrateSystem(e) {
         const value = parseFloat(calValue.value);
         const borrowed = parseFloat(calBorrowed.value);
+        const reqEquity = parseFloat(calReqEquity.value);
         const creditLimit = parseFloat(calCreditLimit.value);
 
         if (!isNaN(creditLimit)) {
@@ -491,7 +494,13 @@
         if (value > 0 && !isNaN(creditLimit)) {
             calibrationFactor = creditLimit / value;
             const maxBorrowCapacityLimit = (calibrationFactor * 100).toFixed(4);
-            factorReadout.textContent = `Derived Max Borrow Limit (${activeMode}): ${maxBorrowCapacityLimit}%`;
+            
+            // Reverse engineer true Blended MMR percentage
+            const blendedMmrPercent = !isNaN(reqEquity) ? (reqEquity / value) * 100 : 25.00;
+            
+            // Render dual-layer dashboard feedback metrics
+            factorReadout.innerHTML = "Derived Max Borrow Limit (" + activeMode + "): " + maxBorrowCapacityLimit + "%<br>" +
+                                      "Derived Blended Portfolio MMR: " + blendedMmrPercent.toFixed(2) + "%";
             
             if (!e || e.target.id.startsWith('cal-') || e.target.id.startsWith('mode-')) {
                 if (!isNaN(borrowed)) {
@@ -503,7 +512,7 @@
                 calculateMarginHealth();
             }
         } else {
-            factorReadout.textContent = "Invalid Calibration Inputs";
+            factorReadout.innerHTML = "Invalid Calibration Inputs";
         }
     }
 
@@ -530,14 +539,16 @@
     // Volatility Cushion & Risk Gauge Logic Loop
     function calculateMarginHealth() {
         const value = parseFloat(calValue.value) || 0;
-        const mmr = (parseFloat(calMmr.value) || 25) / 100;
+        const reqEquity = parseFloat(calReqEquity.value) || 0;
         const dta = (parseFloat(dtaInput.value) || 0) / 100;
+        
+        // Reverse-engineered dynamic MMR ratio
+        const mmr = value > 0 ? (reqEquity / value) : 0.25;
         
         // Compute active simulated debt burden
         const simulatedDebt = value * dta;
 
         if (value <= 0 || simulatedDebt <= 0) {
-            // Unleveraged safe state handling
             healthPercentDisplay.textContent = "100%";
             healthPercentDisplay.style.color = "var(--accent-green)";
             healthIndicatorDot.style.left = "100%";
@@ -575,14 +586,14 @@
             }
 
             const formattedDollarCushion = dollarCushion.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
-            healthSummaryExplanation.innerHTML = `The value of your investments would have to drop <strong>${percentageCushion.toFixed(2)}% ($${formattedDollarCushion})</strong> to face a margin call.`;
+            healthSummaryExplanation.innerHTML = "The value of your investments would have to drop <strong>" + percentageCushion.toFixed(2) + "% ($" + formattedDollarCushion + ")</strong> to face a margin call.";
         }
     }
 
     // Wiring UI input hooks
     calValue.addEventListener('input', recalibrateSystem);
     calBorrowed.addEventListener('input', recalibrateSystem);
-    calMmr.addEventListener('input', recalibrateSystem);
+    calReqEquity.addEventListener('input', recalibrateSystem);
     calCreditLimit.addEventListener('input', recalibrateSystem);
 
     dtaInput.addEventListener('input', () => calculateDerivedMetrics('dta'));
