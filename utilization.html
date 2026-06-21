@@ -65,6 +65,10 @@
             margin-bottom: 1.5rem;
         }
 
+        .input-group:last-of-type {
+            margin-bottom: 0;
+        }
+
         label {
             font-size: 0.85rem;
             font-weight: 600;
@@ -116,26 +120,6 @@
             width: 20px;
             text-align: right;
         }
-
-        .calibration-box {
-            background-color: rgba(15, 23, 42, 0.6);
-            border: 1px dashed var(--border);
-            border-radius: 8px;
-            padding: 1rem;
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            line-height: 1.4;
-        }
-
-        .calibration-box strong {
-            color: var(--text-main);
-        }
-
-        .divider {
-            height: 1px;
-            background-color: var(--border);
-            margin: 1.5rem 0;
-        }
     </style>
 </head>
 <body>
@@ -163,23 +147,13 @@
             <span class="unit">%</span>
         </div>
     </div>
-
-    <div class="divider"></div>
-
-    <!-- Calibration Summary Readout -->
-    <div class="calibration-box">
-        <strong>Fixed Calibration Metrics:</strong><br>
-        • Scaled Borrow Limit Factor: 49.6772%<br>
-        • Baseline Reference: $49,757.09 Borrowed / $179,659.19 Assets<br>
-        • Max Credit Capacity Limit: $89,228.19
-    </div>
 </div>
 
 <script>
     const dtaInput = document.getElementById('dta-input');
     const utilInput = document.getElementById('util-input');
 
-    // Derived precisely from the user calibration points: 27.70% / 55.76%
+    // Derived precisely from the calibration points: 27.70% / 55.76%
     const CALIBRATION_FACTOR = 27.70 / 55.76; 
 
     // Conversion: Util = DTA / Factor
@@ -207,7 +181,7 @@
     utilInput.addEventListener('input', convertFromUtil);
 
     // Initialize layout with the requested default 20.00% DTA
-    dtaInput.value = "20.00";
+    dtaInput.value = "20";
     convertFromDTA();
 </script>
 
