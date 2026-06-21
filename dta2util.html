@@ -3,19 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>M1 Leverage Simulator & Smart Transfer Guardrails</title>
+    <title>Leverage Guardrail Workstation</title>
     <style>
         :root {
-            --bg-main: #0b131f;
-            --bg-card: #152232;
-            --bg-input: #22344a;
-            --text-main: #ffffff;
-            --text-muted: #8da2bb;
-            --accent-green: #11b981;
-            --accent-blue: #38bdf8;
-            --accent-warning: #fbbf24;
-            --accent-danger: #ef4444;
-            --border: #2d415a;
+            /* Fynanc Signature High-Contrast Dashboard Palette */
+            --bg-main: #060b13;       /* Deep obsidian canvas background */
+            --bg-card: #101726;       /* Clean dark card containers */
+            --bg-input: #1b263b;      /* Contrasting input well backgrounds */
+            --text-main: #ffffff;     /* High-visibility primary text */
+            --text-muted: #94a3b8;    /* Slate secondary text */
+            --accent-brand: #ff6b00;   /* Signature Fynanc vibrant orange */
+            --accent-blue: #00d2ff;    /* Tech electric blue indicators */
+            --accent-green: #10b981;   /* Metric safety green */
+            --accent-warning: #eab308; /* Balanced alert amber */
+            --accent-danger: #ef4444;  /* Liquidation warning red */
+            --border: #24334d;        /* Defined card and divider lines */
         }
 
         * {
@@ -43,49 +45,70 @@
             gap: 1.5rem;
         }
 
+        .app-header {
+            text-align: center;
+            margin-bottom: 0.5rem;
+            padding: 0 0.5rem;
+        }
+
+        .app-header h1 {
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: var(--text-main);
+            letter-spacing: -0.02em;
+            margin-bottom: 0.35rem;
+        }
+
+        .app-header p {
+            font-size: 0.88rem;
+            color: var(--accent-brand);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
         .card {
             background-color: var(--bg-card);
             border: 1px solid var(--border);
-            border-radius: 12px;
+            border-radius: 8px;
             padding: 1.75rem;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
         }
 
         .card-title {
-            font-size: 0.95rem;
+            font-size: 0.9rem;
             font-weight: 700;
             color: var(--accent-blue);
             text-transform: uppercase;
-            letter-spacing: 0.05em;
+            letter-spacing: 0.06em;
             margin-bottom: 1.25rem;
             border-bottom: 1px solid var(--border);
-            padding-bottom: 0.5rem;
+            padding-bottom: 0.6rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
 
-        /* State Indicator Badge Rules */
         .status-badge {
-            font-size: 0.68rem;
+            font-size: 0.65rem;
             font-weight: 800;
             text-transform: uppercase;
             letter-spacing: 0.06em;
-            padding: 0.2rem 0.5rem;
+            padding: 0.25rem 0.6rem;
             border-radius: 4px;
             transition: all 0.2s ease;
         }
 
         .status-live {
-            background-color: rgba(17, 185, 129, 0.1);
+            background-color: rgba(16, 185, 129, 0.12);
             border: 1px solid var(--accent-green);
             color: var(--accent-green);
         }
 
         .status-simulated {
-            background-color: rgba(251, 191, 36, 0.1);
-            border: 1px solid var(--accent-warning);
-            color: var(--accent-warning);
+            background-color: rgba(255, 107, 0, 0.12);
+            border: 1px solid var(--accent-brand);
+            color: var(--accent-brand);
         }
 
         details.card {
@@ -96,11 +119,11 @@
         summary {
             list-style: none;
             padding: 1.5rem 1.75rem;
-            font-size: 0.95rem;
+            font-size: 0.9rem;
             font-weight: 700;
-            color: var(--accent-warning);
+            color: var(--accent-brand);
             text-transform: uppercase;
-            letter-spacing: 0.05em;
+            letter-spacing: 0.06em;
             cursor: pointer;
             user-select: none;
             display: flex;
@@ -125,15 +148,15 @@
 
         .accordion-content {
             padding: 0 1.75rem 1.75rem 1.75rem;
-            border-top: 1px solid rgba(45, 65, 90, 0.4);
+            border-top: 1px solid var(--border);
             padding-top: 1.25rem;
         }
 
         .toggle-container {
             display: flex;
             background-color: var(--bg-main);
-            padding: 0.25rem;
-            border-radius: 8px;
+            padding: 0.3rem;
+            border-radius: 6px;
             margin-bottom: 1.25rem;
             border: 1px solid var(--border);
         }
@@ -143,21 +166,20 @@
             background: transparent;
             border: none;
             color: var(--text-muted);
-            padding: 0.5rem;
-            font-size: 0.85rem;
-            font-weight: 600;
-            border-radius: 6px;
+            padding: 0.55rem;
+            font-size: 0.8rem;
+            font-weight: 700;
+            border-radius: 4px;
             cursor: pointer;
             transition: all 0.2s ease;
             text-transform: uppercase;
-            letter-spacing: 0.02em;
+            letter-spacing: 0.04em;
         }
 
         .toggle-btn.active {
-            background-color: var(--bg-input);
+            background-color: var(--accent-brand);
             color: var(--text-main);
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-            border: 1px solid rgba(56, 189, 248, 0.2);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
         }
 
         .input-group {
@@ -172,11 +194,11 @@
         }
 
         label {
-            font-size: 0.8rem;
-            font-weight: 600;
+            font-size: 0.75rem;
+            font-weight: 700;
             color: var(--text-muted);
             text-transform: uppercase;
-            letter-spacing: 0.03em;
+            letter-spacing: 0.04em;
         }
 
         .input-wrapper {
@@ -184,30 +206,32 @@
             align-items: center;
             background-color: var(--bg-input);
             border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 0.6rem 0.8rem;
-            transition: border-color 0.15s ease;
+            border-radius: 6px;
+            padding: 0.65rem 0.85rem;
+            transition: all 0.15s ease;
         }
 
         .input-wrapper:focus-within {
-            border-color: var(--accent-green);
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 1px var(--accent-blue);
         }
 
         .input-wrapper input {
             background: transparent;
             border: none;
             color: var(--text-main);
-            font-size: 1.15rem;
+            font-size: 1.2rem;
             width: 100%;
             outline: none;
             font-weight: 600;
             text-align: right;
             padding-right: 0.4rem;
+            letter-spacing: 0.02em;
         }
 
         .input-wrapper input::placeholder {
             color: var(--text-muted);
-            opacity: 0.4;
+            opacity: 0.3;
         }
 
         .input-wrapper input::-webkit-outer-spin-button,
@@ -221,37 +245,38 @@
 
         .input-wrapper .unit {
             color: var(--text-muted);
-            font-weight: 600;
+            font-weight: 700;
             font-size: 1rem;
             min-width: 15px;
             text-align: right;
         }
 
         .derived-factor-banner {
-            background: rgba(56, 189, 248, 0.08);
-            border: 1px dashed rgba(56, 189, 248, 0.3);
-            border-radius: 8px;
-            padding: 0.75rem;
+            background: rgba(0, 210, 255, 0.05);
+            border: 1px solid rgba(0, 210, 255, 0.25);
+            border-radius: 6px;
+            padding: 0.85rem;
             font-family: monospace;
-            font-size: 0.8rem;
+            font-size: 0.82rem;
+            font-weight: 600;
             color: var(--accent-blue);
             text-align: center;
             margin-top: 1rem;
-            line-height: 1.5;
+            line-height: 1.6;
         }
 
         .reset-btn {
             background: transparent;
             border: 1px solid var(--border);
             color: var(--text-muted);
-            padding: 0.5rem;
-            font-size: 0.8rem;
+            padding: 0.55rem;
+            font-size: 0.78rem;
             font-weight: 700;
             border-radius: 6px;
             cursor: pointer;
             transition: all 0.2s ease;
             text-transform: uppercase;
-            letter-spacing: 0.03em;
+            letter-spacing: 0.04em;
             margin-top: 1rem;
             width: 100%;
         }
@@ -259,36 +284,36 @@
         .reset-btn:hover {
             border-color: var(--accent-danger);
             color: var(--accent-danger);
-            background: rgba(239, 68, 68, 0.05);
+            background: rgba(239, 68, 68, 0.06);
         }
 
         .context-badge {
             font-size: 0.85rem;
             margin-top: 1.25rem;
-            padding: 0.75rem 1rem;
-            border-radius: 8px;
+            padding: 0.8rem 1rem;
+            border-radius: 6px;
             line-height: 1.4;
         }
 
         .context-withdrawal {
-            background-color: rgba(56, 189, 248, 0.06);
-            border: 1px solid rgba(56, 189, 248, 0.2);
+            background-color: rgba(0, 210, 255, 0.05);
+            border: 1px solid rgba(0, 210, 255, 0.2);
             color: var(--accent-blue);
         }
 
         .context-reinvestment {
-            background-color: rgba(245, 158, 11, 0.08);
-            border: 1px dashed rgba(245, 158, 11, 0.4);
-            color: var(--accent-warning);
+            background-color: rgba(255, 107, 0, 0.05);
+            border: 1px dashed rgba(255, 107, 0, 0.35);
+            color: var(--accent-brand);
         }
 
         .health-display-container {
             text-align: center;
             margin: 1.5rem 0 0.5rem 0;
-            padding: 1.25rem;
-            background-color: rgba(11, 19, 31, 0.4);
+            padding: 1.35rem;
+            background-color: rgba(6, 11, 19, 0.5);
             border: 1px dashed var(--border);
-            border-radius: 10px;
+            border-radius: 8px;
         }
 
         .health-headline {
@@ -301,24 +326,25 @@
         }
 
         .health-percentage {
-            font-size: 2.5rem;
+            font-size: 2.6rem;
             font-weight: 800;
             line-height: 1;
             margin-bottom: 0.5rem;
             transition: color 0.2s ease;
+            letter-spacing: -0.02em;
         }
 
         .health-bar-bg {
-            height: 8px;
+            height: 6px;
             background: linear-gradient(to right, var(--accent-danger) 20%, var(--accent-warning) 50%, var(--accent-green) 80%);
-            border-radius: 4px;
-            margin: 0.75rem 0;
+            border-radius: 3px;
+            margin: 0.85rem 0;
             position: relative;
         }
 
         .health-bar-indicator {
             width: 4px;
-            height: 16px;
+            height: 14px;
             background-color: var(--text-main);
             border: 1px solid var(--bg-main);
             position: absolute;
@@ -332,7 +358,7 @@
             font-size: 0.88rem;
             color: var(--text-muted);
             line-height: 1.4;
-            margin-top: 0.75rem;
+            margin-top: 0.8rem;
         }
 
         .health-summary-text strong {
@@ -342,7 +368,7 @@
         .instructions-text {
             font-size: 0.85rem;
             color: var(--text-muted);
-            line-height: 1.5;
+            line-height: 1.55;
         }
 
         .instructions-text p {
@@ -364,9 +390,15 @@
 <body>
 
 <div class="wrapper">
+    <!-- BRAND HEADER COMPONENT -->
+    <div class="app-header">
+        <h1>Leverage Guardrail Workstation</h1>
+        <p>M1 Smart Transfer Risk Framework &amp; Simulator</p>
+    </div>
+
     <!-- COLLAPSIBLE ACCORDION QUICK START GUIDE -->
-    <details class="card" closed>
-        <summary>💡 Quick Start Guide (click to expand)</summary>
+    <details class="card" open>
+        <summary>💡 Quick Start Guide &amp; Glossary</summary>
         <div class="accordion-content">
             <div class="instructions-text">
                 <p><strong>What is this tool?</strong><br>
@@ -431,7 +463,6 @@
 
     <!-- CARD 2: SIMULATOR & HEALTH WORKSTATION -->
     <div class="card">
-        <!-- REFACTORED TITLE CONTAINER WITH DYNAMIC BADGE SLOT -->
         <div class="card-title">
             <span>2. Leverage &amp; Utilization Simulator</span>
             <span id="sim-status-badge" class="status-badge status-live">Live Baseline</span>
@@ -613,7 +644,6 @@
         const mmr = value > 0 ? (reqEquity / value) : 0.25;
         const simulatedDebt = value * dta;
 
-        // Dynamic State Variance Checker Execution Loop
         const baselineDta = value > 0 ? (borrowed / value) * 100 : 0;
         const currentSimDta = dta * 100;
         const isSimulated = Math.abs(currentSimDta - baselineDta) > 0.01;
@@ -659,7 +689,6 @@
 
             const formattedDollarCushion = dollarCushion.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
             
-            // Context-Specific Language Optimization Output
             if (isSimulated) {
                 healthSummaryExplanation.innerHTML = "Under this <strong>simulated scenario</strong>, your investments would have to drop <strong>" + percentageCushion.toFixed(2) + "% ($" + formattedDollarCushion + ")</strong> to face a margin call.";
             } else {
