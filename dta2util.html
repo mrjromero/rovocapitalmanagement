@@ -3,38 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Leverage Guardrail Workstation</title>
+    <title>M1 Leverage Simulator & Smart Transfer Guardrails</title>
     <style>
+        /* Typography Imports From Target Stylesheet */
+        @import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&display=swap");
+        @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap");
+        @import url("https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;600;700&display=swap");
+
+        /* Embedded Variable Engine Context */
         :root {
-            /* Fynanc Signature High-Contrast Dashboard Palette */
-            --bg-main: #060b13;       /* Deep obsidian canvas background */
-            --bg-card: #101726;       /* Clean dark card containers */
-            --bg-input: #1b263b;      /* Contrasting input well backgrounds */
-            --text-main: #ffffff;     /* High-visibility primary text */
-            --text-muted: #94a3b8;    /* Slate secondary text */
-            --accent-brand: #ff6b00;   /* Signature Fynanc vibrant orange */
-            --accent-blue: #00d2ff;    /* Tech electric blue indicators */
-            --accent-green: #10b981;   /* Metric safety green */
-            --accent-warning: #eab308; /* Balanced alert amber */
-            --accent-danger: #ef4444;  /* Liquidation warning red */
-            --border: #24334d;        /* Defined card and divider lines */
+            --bg-main: #f5f5f5;
+            --bg-card: #ffffff;
+            --bg-input: #ffffff;
+            --bg-toggle: #f0f0f1;
+            --text-main: #0d1728;
+            --text-muted: #595959;
+            --accent-green: #00b5ae;
+            --accent-blue: #1b4a7b;
+            --accent-warning: #e4bd52;
+            --accent-danger: #b50007;
+            --accent-alert: #ff7f50;
+            --border-dominant: #dfdfe6;
+            --border-soft: #eeeef2;
+            --border-focus: #8fa7de;
+            --card-shadow: 0 4px 20px rgba(38, 91, 140, 0.06);
+            --inner-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
         }
 
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            font-family: "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         }
 
         body {
             background-color: var(--bg-main);
             color: var(--text-main);
-            padding: 2rem;
+            padding: 2rem 1rem;
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
 
         .wrapper {
@@ -45,6 +57,7 @@
             gap: 1.5rem;
         }
 
+        /* App Main Top Branding Header */
         .app-header {
             text-align: center;
             margin-bottom: 0.5rem;
@@ -52,8 +65,9 @@
         }
 
         .app-header h1 {
+            font-family: "Poppins", sans-serif;
             font-size: 1.6rem;
-            font-weight: 800;
+            font-weight: 600;
             color: var(--text-main);
             letter-spacing: -0.02em;
             margin-bottom: 0.35rem;
@@ -61,56 +75,59 @@
 
         .app-header p {
             font-size: 0.88rem;
-            color: var(--accent-brand);
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            font-weight: 400;
+            line-height: 1.4;
         }
 
+        /* Institutional Structural Cards */
         .card {
             background-color: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 8px;
+            border: 1px solid var(--border-dominant);
+            border-radius: 16px;
             padding: 1.75rem;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+            box-shadow: var(--card-shadow);
         }
 
         .card-title {
-            font-size: 0.9rem;
-            font-weight: 700;
-            color: var(--accent-blue);
+            font-family: "Poppins", sans-serif;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text-main);
             text-transform: uppercase;
-            letter-spacing: 0.06em;
+            letter-spacing: 0.05em;
             margin-bottom: 1.25rem;
-            border-bottom: 1px solid var(--border);
+            border-bottom: 1px solid var(--border-soft);
             padding-bottom: 0.6rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
 
+        /* Status Badges */
         .status-badge {
-            font-size: 0.65rem;
-            font-weight: 800;
+            font-size: 0.68rem;
+            font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.06em;
             padding: 0.25rem 0.6rem;
             border-radius: 4px;
-            transition: all 0.2s ease;
+            font-family: "Poppins", sans-serif;
         }
 
         .status-live {
-            background-color: rgba(16, 185, 129, 0.12);
+            background-color: rgba(0, 181, 174, 0.1);
             border: 1px solid var(--accent-green);
             color: var(--accent-green);
         }
 
         .status-simulated {
-            background-color: rgba(255, 107, 0, 0.12);
-            border: 1px solid var(--accent-brand);
-            color: var(--accent-brand);
+            background-color: rgba(255, 127, 80, 0.1);
+            border: 1px solid var(--accent-alert);
+            color: var(--accent-alert);
         }
 
+        /* Collapsible Glossary Accordion */
         details.card {
             padding: 0;
             overflow: hidden;
@@ -118,12 +135,13 @@
 
         summary {
             list-style: none;
-            padding: 1.5rem 1.75rem;
+            padding: 1.25rem 1.75rem;
+            font-family: "Poppins", sans-serif;
             font-size: 0.9rem;
-            font-weight: 700;
-            color: var(--accent-brand);
+            font-weight: 600;
+            color: var(--accent-blue);
             text-transform: uppercase;
-            letter-spacing: 0.06em;
+            letter-spacing: 0.05em;
             cursor: pointer;
             user-select: none;
             display: flex;
@@ -137,7 +155,7 @@
 
         summary::after {
             content: '▼';
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             color: var(--text-muted);
             transition: transform 0.2s ease;
         }
@@ -147,18 +165,20 @@
         }
 
         .accordion-content {
-            padding: 0 1.75rem 1.75rem 1.75rem;
-            border-top: 1px solid var(--border);
+            padding: 0 1.75rem 1.5rem 1.75rem;
+            border-top: 1px solid var(--border-soft);
             padding-top: 1.25rem;
         }
 
+        /* Segmented Horizontal Toggle Interface */
         .toggle-container {
             display: flex;
-            background-color: var(--bg-main);
-            padding: 0.3rem;
-            border-radius: 6px;
+            background-color: var(--bg-toggle);
+            padding: 2px;
+            border-radius: 8px;
             margin-bottom: 1.25rem;
-            border: 1px solid var(--border);
+            height: 40px;
+            box-shadow: inset 0 0.5px 2px rgba(0,0,0,0.05);
         }
 
         .toggle-btn {
@@ -166,22 +186,26 @@
             background: transparent;
             border: none;
             color: var(--text-muted);
-            padding: 0.55rem;
-            font-size: 0.8rem;
-            font-weight: 700;
-            border-radius: 4px;
+            padding: 0.5rem;
+            font-family: "DM Sans", sans-serif;
+            font-size: 0.85rem;
+            font-weight: 500;
+            border-radius: 6px;
             cursor: pointer;
             transition: all 0.2s ease;
-            text-transform: uppercase;
-            letter-spacing: 0.04em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .toggle-btn.active {
-            background-color: var(--accent-brand);
+            background-color: #ffffff;
             color: var(--text-main);
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1), 0 0 0 0.5px rgba(0,0,0,0.05);
+            font-weight: 600;
         }
 
+        /* Input Elements Stack */
         .input-group {
             display: flex;
             flex-direction: column;
@@ -194,44 +218,45 @@
         }
 
         label {
-            font-size: 0.75rem;
+            font-size: 0.8rem;
             font-weight: 700;
             color: var(--text-muted);
             text-transform: uppercase;
-            letter-spacing: 0.04em;
+            letter-spacing: 0.03em;
         }
 
         .input-wrapper {
             display: flex;
             align-items: center;
             background-color: var(--bg-input);
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            padding: 0.65rem 0.85rem;
-            transition: all 0.15s ease;
+            border: 1px solid var(--border-dominant);
+            border-radius: 8px;
+            padding: 0.6rem 0.8rem;
+            box-shadow: var(--inner-shadow);
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
         }
 
         .input-wrapper:focus-within {
-            border-color: var(--accent-blue);
-            box-shadow: 0 0 0 1px var(--accent-blue);
+            border-color: var(--border-focus);
+            box-shadow: 0 0 0 3px rgba(143, 167, 190, 0.15);
         }
 
         .input-wrapper input {
             background: transparent;
             border: none;
             color: var(--text-main);
-            font-size: 1.2rem;
+            font-family: "Roboto Mono", monospace;
+            font-size: 1.1rem;
+            font-weight: 600;
             width: 100%;
             outline: none;
-            font-weight: 600;
             text-align: right;
             padding-right: 0.4rem;
-            letter-spacing: 0.02em;
         }
 
         .input-wrapper input::placeholder {
             color: var(--text-muted);
-            opacity: 0.3;
+            opacity: 0.35;
         }
 
         .input-wrapper input::-webkit-outer-spin-button,
@@ -245,31 +270,54 @@
 
         .input-wrapper .unit {
             color: var(--text-muted);
-            font-weight: 700;
+            font-family: "DM Sans", sans-serif;
+            font-weight: 600;
             font-size: 1rem;
             min-width: 15px;
             text-align: right;
         }
 
+        /* Banner Displays */
         .derived-factor-banner {
-            background: rgba(0, 210, 255, 0.05);
-            border: 1px solid rgba(0, 210, 255, 0.25);
-            border-radius: 6px;
+            background-color: #edf1fb;
+            border: 1px solid #d2dbe9;
+            border-radius: 8px;
             padding: 0.85rem;
-            font-family: monospace;
-            font-size: 0.82rem;
+            font-family: "Roboto Mono", monospace;
+            font-size: 0.8rem;
             font-weight: 600;
             color: var(--accent-blue);
             text-align: center;
-            margin-top: 1rem;
+            margin-top: 1.25rem;
             line-height: 1.6;
         }
 
+        .context-badge {
+            font-size: 0.85rem;
+            margin-top: 1.25rem;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            line-height: 1.5;
+        }
+
+        .context-withdrawal {
+            background-color: rgba(27, 74, 123, 0.05);
+            border: 1px solid rgba(27, 74, 123, 0.15);
+            color: var(--accent-blue);
+        }
+
+        .context-reinvestment {
+            background-color: rgba(ff, 127, 80, 0.05);
+            border: 1px dashed rgba(255, 127, 80, 0.35);
+            color: var(--accent-alert);
+        }
+
+        /* Interactive Action Buttons */
         .reset-btn {
-            background: transparent;
-            border: 1px solid var(--border);
+            background-color: transparent;
+            border: 1px solid var(--border-dominant);
             color: var(--text-muted);
-            padding: 0.55rem;
+            padding: 0.6rem;
             font-size: 0.78rem;
             font-weight: 700;
             border-radius: 6px;
@@ -277,43 +325,24 @@
             transition: all 0.2s ease;
             text-transform: uppercase;
             letter-spacing: 0.04em;
-            margin-top: 1rem;
+            margin-top: 1.25rem;
             width: 100%;
         }
 
         .reset-btn:hover {
             border-color: var(--accent-danger);
             color: var(--accent-danger);
-            background: rgba(239, 68, 68, 0.06);
+            background-color: rgba(181, 0, 7, 0.03);
         }
 
-        .context-badge {
-            font-size: 0.85rem;
-            margin-top: 1.25rem;
-            padding: 0.8rem 1rem;
-            border-radius: 6px;
-            line-height: 1.4;
-        }
-
-        .context-withdrawal {
-            background-color: rgba(0, 210, 255, 0.05);
-            border: 1px solid rgba(0, 210, 255, 0.2);
-            color: var(--accent-blue);
-        }
-
-        .context-reinvestment {
-            background-color: rgba(255, 107, 0, 0.05);
-            border: 1px dashed rgba(255, 107, 0, 0.35);
-            color: var(--accent-brand);
-        }
-
+        /* Premium Volatility Cushion Display Component */
         .health-display-container {
             text-align: center;
             margin: 1.5rem 0 0.5rem 0;
-            padding: 1.35rem;
-            background-color: rgba(6, 11, 19, 0.5);
-            border: 1px dashed var(--border);
-            border-radius: 8px;
+            padding: 1.5rem 1.25rem;
+            background-color: #f8f9fa;
+            border: 1px solid var(--border-dominant);
+            border-radius: 12px;
         }
 
         .health-headline {
@@ -322,12 +351,13 @@
             color: var(--text-muted);
             text-transform: uppercase;
             letter-spacing: 0.08em;
-            margin-bottom: 0.7rem;
+            margin-bottom: 0.5rem;
         }
 
         .health-percentage {
-            font-size: 2.6rem;
-            font-weight: 800;
+            font-family: "DM Sans", sans-serif;
+            font-size: 2.5rem;
+            font-weight: 700;
             line-height: 1;
             margin-bottom: 0.5rem;
             transition: color 0.2s ease;
@@ -335,40 +365,43 @@
         }
 
         .health-bar-bg {
-            height: 6px;
-            background: linear-gradient(to right, var(--accent-danger) 20%, var(--accent-warning) 50%, var(--accent-green) 80%);
-            border-radius: 3px;
-            margin: 0.85rem 0;
+            height: 8px;
+            background: linear-gradient(to right, var(--accent-danger) 0%, var(--accent-warning) 50%, var(--accent-green) 100%);
+            border-radius: 4px;
+            margin: 1rem 0;
             position: relative;
         }
 
         .health-bar-indicator {
-            width: 4px;
-            height: 14px;
+            width: 6px;
+            height: 16px;
             background-color: var(--text-main);
-            border: 1px solid var(--bg-main);
+            border: 1px solid #ffffff;
             position: absolute;
             top: -4px;
-            border-radius: 2px;
+            border-radius: 3px;
             transform: translateX(-50%);
             transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
         }
 
         .health-summary-text {
             font-size: 0.88rem;
             color: var(--text-muted);
-            line-height: 1.4;
-            margin-top: 0.8rem;
+            line-height: 1.5;
+            margin-top: 0.85rem;
         }
 
         .health-summary-text strong {
             color: var(--text-main);
+            font-weight: 600;
         }
 
+        /* Documentation Block Typography Rules */
         .instructions-text {
             font-size: 0.85rem;
             color: var(--text-muted);
-            line-height: 1.55;
+            line-height: 1.6;
         }
 
         .instructions-text p {
@@ -377,10 +410,11 @@
 
         .instructions-text strong {
             color: var(--text-main);
+            font-weight: 600;
         }
 
         .instructions-list {
-            margin-left: 1.15rem;
+            margin-left: 1.25rem;
             display: flex;
             flex-direction: column;
             gap: 0.6rem;
@@ -390,13 +424,11 @@
 <body>
 
 <div class="wrapper">
-    <!-- BRAND HEADER COMPONENT -->
     <div class="app-header">
         <h1>Leverage Guardrail Workstation</h1>
         <p>M1 Smart Transfer Risk Framework &amp; Simulator</p>
     </div>
 
-    <!-- COLLAPSIBLE ACCORDION QUICK START GUIDE -->
     <details class="card" open>
         <summary>💡 Quick Start Guide &amp; Glossary</summary>
         <div class="accordion-content">
@@ -412,7 +444,6 @@
         </div>
     </details>
 
-    <!-- CARD 1: CURRENT DASHBOARD METRICS -->
     <div class="card">
         <div class="card-title">1. Current M1 Dashboard Metrics</div>
         
@@ -461,14 +492,12 @@
         <button type="button" class="reset-btn" onclick="resetDefaults()">Reset to Defaults</button>
     </div>
 
-    <!-- CARD 2: SIMULATOR & HEALTH WORKSTATION -->
     <div class="card">
         <div class="card-title">
             <span>2. Leverage &amp; Utilization Simulator</span>
             <span id="sim-status-badge" class="status-badge status-live">Live Baseline</span>
         </div>
 
-        <!-- Debt-to-Asset Input -->
         <div class="input-group">
             <label for="dta-input">Debt-to-Asset (DTA) Ratio [Macro Leverage]</label>
             <div class="input-wrapper">
@@ -477,7 +506,6 @@
             </div>
         </div>
 
-        <!-- Margin Utilization Input -->
         <div class="input-group">
             <label for="util-input">Margin Utilization Rate [Dashboard Capacity]</label>
             <div class="input-wrapper">
@@ -486,12 +514,10 @@
             </div>
         </div>
 
-        <!-- Dynamic Context Guardrail Notice Element -->
         <div id="context-indicator" class="context-badge context-withdrawal">
             Active Framework: <strong>Withdrawal Utilization</strong>
         </div>
 
-        <!-- VISUAL MARGIN HEALTH EXPANSION WIDGET -->
         <div class="health-display-container">
             <div class="health-headline">Cushion to Margin Call</div>
             <div class="health-percentage" id="health-percentage-display">100%</div>
@@ -506,7 +532,6 @@
         </div>
     </div>
 
-    <!-- CARD 3: AUTOMATION GUARDRAILS -->
     <div class="card">
         <div class="card-title">3. Smart Transfer Guide &amp; Guardrails</div>
         <div class="instructions-text">
