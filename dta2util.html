@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Margin Capacity Converter</title>
+    <style>
+        :root {
+            --bg-main: #0b131f;
+            --bg-card: #152232;
+            --bg-input: #22344a;
+            --text-main: #ffffff;
+            --text-muted: #8da2bb;
+            --accent-green: #11b981;
+            --accent-blue: #38bdf8;
+            --border: #2d415a;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            padding: 2rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .wrapper {
+            width: 100%;
+            max-width: 500px;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.75rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+        }
+
+        .card-title {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--accent-blue);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 1.25rem;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 0.5rem;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 0.5rem;
+        }
+
+        header h1 {
+            font-size: 1.35rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        header p {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .input-group:last-of-type {
+            margin-bottom: 0;
+        }
+
+        label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .input-wrapper {
+            display: flex;
+            align-items: center;
+            background-color: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0.6rem 0.8rem;
+            transition: border-color 0.15s ease;
+        }
+
+        .input-wrapper:focus-within {
+            border-color: var(--accent-green);
+        }
+
+        .input-wrapper input {
+            background: transparent;
+            border: none;
+            color: var(--text-main);
+            font-size: 1.15rem;
+            width: 100%;
+            outline: none;
+            font-weight: 600;
+            text-align: right;
+            padding-right: 0.4rem;
+        }
+
+        .input-wrapper input::-webkit-outer-spin-button,
+        .input-wrapper input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        .input-wrapper input[type=number] {
+            -moz-appearance: textfield;
+        }
+
+        .input-wrapper .unit {
+            color: var(--text-muted);
+            font-weight: 600;
+            font-size: 1rem;
+            min-width: 15px;
+            text-align: right;
+        }
+
+        .derived-factor-banner {
+            background: rgba(56, 189, 248, 0.08);
+            border: 1px dashed rgba(56, 189, 248, 0.3);
+            border-radius: 8px;
+            padding: 0.75rem;
+            font-family: monospace;
+            font-size: 0.8rem;
+            color: var(--accent-blue);
+            text-align: center;
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+<body>
+
+<div class="wrapper">
+    <!-- CALIBRATION STEP -->
+    <div class="card">
+        <div class="card-title">1. M1 Live Dashboard Calibration</div>
+        
+        <div class="input-group">
+            <label for="cal-value">Account Value</label>
+            <div class="input-wrapper">
+                <span class="unit">$</span>
+                <input type="number" id="cal-value" step="0.01" value="179659.25">
+            </div>
+        </div>
+
+        <div class="grid-2">
+            <div class="input-group">
+                <label for="cal-borrowed">Total Borrowed</label>
+                <div class="input-wrapper">
+                    <span class="unit">$</span>
+                    <input type="number" id="cal-borrowed" step="0.01" value="49757.09">
+                </div>
+            </div>
+            <div class="input-group">
+                <label for="cal-util">Dashboard Util %</label>
+                <div class="input-wrapper">
+                    <input type="number" id="cal-util" step="0.01" value="55.76">
+                    <span class="unit">%</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="derived-factor-banner" id="factor-readout">
+            Derived Capacity Limit: --
+        </div>
+    </div>
+
+    <!-- INTERACTIVE CONVERTER (CLEANED VIEW) -->
+    <div class="card">
+        <header>
+            <h1>Calibrated Margin Converter</h1>
+            <p>Direct Bi-Directional Conversion Calculator</p>
+        </header>
+
+        <div style="height: 1rem;"></div>
+
+        <!-- Debt-to-Asset Input -->
+        <div class="input-group">
+            <label for="dta-input">Debt-to-Asset (DTA) Ratio</label>
+            <div class="input-wrapper">
+                <input type="number" id="dta-input" step="0.01" min="0" max="100" placeholder="0.00">
+                <span class="unit">%</span>
+            </div>
+        </div>
+
+        <!-- Margin Utilization Input -->
+        <div class="input-group">
+            <label for="util-input">Margin Utilization Rate</label>
+            <div class="input-wrapper">
+                <input type="number" id="util-input" step="0.01" min="0" max="100" placeholder="0.00">
+                <span class="unit">%</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Calibration Elements
+    const calValue = document.getElementById('cal-value');
+    const calBorrowed = document.getElementById('cal-borrowed');
+    const calUtil = document.getElementById('cal-util');
+    const factorReadout = document.getElementById('factor-readout');
+
+    // Converter Elements
+    const dtaInput = document.getElementById('dta-input');
+    const utilInput = document.getElementById('util-input');
+
+    // State variable for the dynamically derived factor
+    let calibrationFactor = 0.496772;
+
+    function recalibrateSystem() {
+        const value = parseFloat(calValue.value);
+        const borrowed = parseFloat(calBorrowed.value);
+        const util = parseFloat(calUtil.value);
+
+        if (value > 0 && borrowed >= 0 && util > 0) {
+            // 1. Calculate live DTA: Borrowed / Value
+            const currentDtaPercent = (borrowed / value) * 100;
+            
+            // 2. Derive Capacity Factor (DTA % / Util %)
+            calibrationFactor = currentDtaPercent / util;
+
+            // 3. Display maximum initial borrow capacity limit configuration
+            const maxBorrowCapacityLimit = (calibrationFactor * 100).toFixed(4);
+            factorReadout.textContent = `Derived Max Borrow Limit: ${maxBorrowCapacityLimit}%`;
+            
+            // 4. Refresh conversion fields using new baseline math
+            convertFromDTA();
+        } else {
+            factorReadout.textContent = "Invalid Calibration Inputs";
+        }
+    }
+
+    // Conversion: Util = DTA / Factor
+    function convertFromDTA() {
+        const dta = parseFloat(dtaInput.value);
+        if (!isNaN(dta) && calibrationFactor > 0) {
+            utilInput.value = (dta / calibrationFactor).toFixed(2);
+        } else {
+            utilInput.value = '';
+        }
+    }
+
+    // Conversion: DTA = Util * Factor
+    function convertFromUtil() {
+        const util = parseFloat(utilInput.value);
+        if (!isNaN(util)) {
+            dtaInput.value = (util * calibrationFactor).toFixed(2);
+        } else {
+            dtaInput.value = '';
+        }
+    }
+
+    // Listeners for Calibration Inputs
+    calValue.addEventListener('input', recalibrateSystem);
+    calBorrowed.addEventListener('input', recalibrateSystem);
+    calUtil.addEventListener('input', recalibrateSystem);
+
+    // Listeners for Converter Inputs
+    dtaInput.addEventListener('input', convertFromDTA);
+    utilInput.addEventListener('input', convertFromUtil);
+
+    // Initialize layout with the requested default 20.00% DTA
+    dtaInput.value = "20.00";
+    recalibrateSystem();
+</script>
+
+</body>
+</html>
