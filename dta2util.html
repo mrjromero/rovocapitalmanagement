@@ -335,6 +335,28 @@
             background-color: rgba(181, 0, 7, 0.03);
         }
 
+        .secondary-btn {
+            background-color: transparent;
+            border: 1px solid var(--border-dominant);
+            color: var(--text-muted);
+            padding: 0.6rem;
+            font-size: 0.78rem;
+            font-weight: 700;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin-top: 1.25rem;
+            width: 100%;
+        }
+
+        .secondary-btn:hover {
+            border-color: var(--accent-blue);
+            color: var(--accent-blue);
+            background-color: rgba(27, 74, 123, 0.03);
+        }
+
         /* Premium Volatility Cushion Display Component */
         .health-display-container {
             text-align: center;
@@ -429,8 +451,8 @@
         <p>M1 Smart Transfer Risk Framework &amp; Simulator</p>
     </div>
 
-    <details class="card" closed>
-        <summary>💡 Quick Start Guide (click to expand)</summary>
+    <details class="card" open>
+        <summary>💡 Quick Start Guide &amp; Glossary</summary>
         <div class="accordion-content">
             <div class="instructions-text">
                 <p><strong>What is this tool?</strong><br>
@@ -526,6 +548,8 @@
                 The value of your investments would have to drop <strong>--</strong> to face a margin call.
             </div>
         </div>
+
+        <button type="button" class="secondary-btn" onclick="syncSimToBaseline()">Reset Simulator to Live Baseline</button>
     </div>
 
     <div class="card">
@@ -534,7 +558,7 @@
             <p>M1 Smart Transfers are strictly triggered by <strong>cash balance thresholds</strong> (fixed dollar boundaries) rather than percentage parameters. However, when an automation rule executes a sweep from your credit line, it is governed by specific structural guardrails:</p>
             <ul class="instructions-list">
                 <li><strong>Withdrawal Limit Dependency (Cash Extraction):</strong> Automated rules treat sweeps as capital extractions. Because the cash leaves the portfolio shell, the maximum transfer size is strictly capped by your <strong>Available for Withdrawal</strong> credit limit.</li>
-                <li><strong>Reinvestment Rules Ignored:</strong> The expanded internal buying power ("Available to Invest") is completely bypassed by Smart Transfers since no balancing stock collateral is added to the account.</li>
+                <li><strong>Reinvestment Rules Ignored:</strong> The expanded internal buying power ("Available to Invest") is completely bypassed by Smart Transfers since no balancing stock collateral is added duly to the account.</li>
                 <li><strong>How to Calibrate:</strong> Keep the toggle set to <strong>Withdrawal Basis</strong>. Input different target cash sweep amounts as simulated debt into Card 2 to see exactly what your dashboard <strong>Margin Utilization Rate</strong> and macro <strong>DTA</strong> will look like post-transfer, ensuring your automated rules never cross critical risk limits.</li>
             </ul>
         </div>
@@ -577,7 +601,6 @@
     function formatInputField(input) {
         let cleanValue = input.value.replace(/[^0-9.]/g, '');
         
-        // Prevent typing multiple decimal dots
         let decimalCheck = cleanValue.split('.');
         if (decimalCheck.length > 2) {
             cleanValue = decimalCheck[0] + '.' + decimalCheck.slice(1).join('');
@@ -606,7 +629,6 @@
         input.value = formatted;
     }
 
-    // Programmatic String Value Formatter
     function formatCurrencyValue(val) {
         return '$' + parseFloat(val).toLocaleString('en-US', {
             minimumFractionDigits: val % 1 === 0 ? 0 : 2,
@@ -614,7 +636,6 @@
         });
     }
 
-    // String Parsing Float Utility Link
     function getFloatValue(input) {
         let clean = input.value.replace(/[^0-9.]/g, '');
         return parseFloat(clean) || 0;
@@ -770,6 +791,17 @@
         }
     }
 
+    // Programmatic Sandbox Reset Synchronization Execution Point
+    function syncSimToBaseline() {
+        const value = getFloatValue(calValue);
+        const borrowed = getFloatValue(calBorrowed);
+        if (value > 0) {
+            const liveDta = (borrowed / value) * 100;
+            dtaInput.value = liveDta.toFixed(2);
+            calculateDerivedMetrics('dta');
+        }
+    }
+
     function saveAppState() {
         try {
             const dataPayload = {
@@ -805,7 +837,6 @@
             calReqEquity.value = state.calReqEquity;
             calCreditLimit.value = state.calCreditLimit;
             
-            // Re-apply format formatting mask if stored values lack parameters
             if (!calValue.value.includes('$')) formatInputField(calValue);
             if (!calBorrowed.value.includes('$')) formatInputField(calBorrowed);
             if (!calReqEquity.value.includes('$')) formatInputField(calReqEquity);
@@ -862,7 +893,7 @@
         recalibrateSystem();
     }
 
-    // Wiring UI input hooks with formatting listeners
+    // Wiring UI input hooks
     calValue.addEventListener('input', handleCurrencyInputEvent);
     calBorrowed.addEventListener('input', handleCurrencyInputEvent);
     calReqEquity.addEventListener('input', handleCurrencyInputEvent);
