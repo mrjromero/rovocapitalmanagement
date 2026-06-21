@@ -239,7 +239,6 @@
             color: var(--accent-warning);
         }
 
-        /* Health Visual Widget Style Rules */
         .health-display-container {
             text-align: center;
             margin: 1.5rem 0 0.5rem 0;
@@ -516,7 +515,6 @@
                     calculateDerivedMetrics('dta');
                 }
             } else {
-                // If the user modified the simulator fields directly, refresh health outputs
                 calculateMarginHealth();
             }
         } else {
@@ -550,11 +548,9 @@
         const mmr = (parseFloat(calMmr.value) || 25) / 100;
         const dta = (parseFloat(dtaInput.value) || 0) / 100;
         
-        // Compute active simulated debt burden
         const simulatedDebt = value * dta;
 
         if (value <= 0 || simulatedDebt <= 0) {
-            // Unleveraged safe state handling
             healthPercentDisplay.textContent = "100%";
             healthPercentDisplay.style.color = "var(--accent-green)";
             healthIndicatorDot.style.left = "100%";
@@ -562,14 +558,10 @@
             return;
         }
 
-        // Margin call occurs when: Equity = Assets - Debt < Assets * MMR -> Assets_min = Debt / (1 - MMR)
         const liquidationFloor = simulatedDebt / (1 - mmr);
-        
-        // Calculate cushions
         const dollarCushion = value - liquidationFloor;
         const percentageCushion = (dollarCushion / value) * 100;
 
-        // Render dynamic text values
         if (percentageCushion <= 0) {
             healthPercentDisplay.textContent = "0.00%";
             healthPercentDisplay.style.color = "var(--accent-danger)";
@@ -578,11 +570,9 @@
         } else {
             healthPercentDisplay.textContent = percentageCushion.toFixed(2) + "%";
             
-            // Map the dot left property securely to match colors (0% cushion is left, 100% is right)
             let indicatorPosition = Math.min(Math.max(percentageCushion, 0), 100);
             healthIndicatorDot.style.left = indicatorPosition + "%";
 
-            // Set dynamic color spectrum mapping
             if (percentageCushion > 45) {
                 healthPercentDisplay.style.color = "var(--accent-green)";
             } else if (percentageCushion > 20) {
@@ -605,7 +595,6 @@
     dtaInput.addEventListener('input', () => calculateDerivedMetrics('dta'));
     utilInput.addEventListener('input', () => calculateDerivedMetrics('util'));
 
-    // Bootstrap run on page initialization
     recalibrateSystem();
 </script>
 
