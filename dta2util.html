@@ -134,12 +134,6 @@
             border: 1px solid rgba(56, 189, 248, 0.2);
         }
 
-        .grid-2 {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1rem;
-        }
-
         .input-group {
             display: flex;
             flex-direction: column;
@@ -239,7 +233,6 @@
             color: var(--accent-warning);
         }
 
-        /* Health Visual Widget Style Rules */
         .health-display-container {
             text-align: center;
             margin: 1.5rem 0 0.5rem 0;
@@ -322,7 +315,6 @@
 <body>
 
 <div class="wrapper">
-    <!-- COLLAPSIBLE ACCORDION QUICK START GUIDE -->
     <details class="card" open>
         <summary>💡 Quick Start Guide &amp; Glossary</summary>
         <div class="accordion-content">
@@ -338,7 +330,6 @@
         </div>
     </details>
 
-    <!-- CARD 1: CURRENT DASHBOARD METRICS -->
     <div class="card">
         <div class="card-title">1. Current M1 Dashboard Metrics</div>
         
@@ -355,20 +346,19 @@
             </div>
         </div>
 
-        <div class="grid-2">
-            <div class="input-group">
-                <label for="cal-borrowed">Total Borrowed</label>
-                <div class="input-wrapper">
-                    <span class="unit">$</span>
-                    <input type="number" id="cal-borrowed" step="0.01" value="20000.00">
-                </div>
+        <div class="input-group">
+            <label for="cal-borrowed">Total Borrowed</label>
+            <div class="input-wrapper">
+                <span class="unit">$</span>
+                <input type="number" id="cal-borrowed" step="0.01" value="20000.00">
             </div>
-            <div class="input-group">
-                <label for="cal-mmr">Position MMR</label>
-                <div class="input-wrapper">
-                    <input type="number" id="cal-mmr" step="1" min="20" max="100" value="25">
-                    <span class="unit">%</span>
-                </div>
+        </div>
+
+        <div class="input-group">
+            <label for="cal-mmr">Position MMR</label>
+            <div class="input-wrapper">
+                <input type="number" id="cal-mmr" step="1" min="20" max="100" value="25">
+                <span class="unit">%</span>
             </div>
         </div>
 
@@ -385,11 +375,9 @@
         </div>
     </div>
 
-    <!-- CARD 2: SIMULATOR & HEALTH WORKSTATION -->
     <div class="card">
         <div class="card-title">2. Leverage &amp; Utilization Simulator</div>
 
-        <!-- Debt-to-Asset Input -->
         <div class="input-group">
             <label for="dta-input">Debt-to-Asset (DTA) Ratio [Macro Leverage]</label>
             <div class="input-wrapper">
@@ -398,7 +386,6 @@
             </div>
         </div>
 
-        <!-- Margin Utilization Input -->
         <div class="input-group">
             <label for="util-input">Margin Utilization Rate [Dashboard Capacity]</label>
             <div class="input-wrapper">
@@ -407,12 +394,10 @@
             </div>
         </div>
 
-        <!-- Dynamic Context Guardrail Notice Element -->
         <div id="context-indicator" class="context-badge context-withdrawal">
             Active Framework: <strong>Withdrawal Utilization</strong>
         </div>
 
-        <!-- VISUAL MARGIN HEALTH EXPANSION WIDGET -->
         <div class="health-display-container">
             <div class="health-headline">Cushion to Margin Call</div>
             <div class="health-percentage" id="health-percentage-display">100%</div>
@@ -427,7 +412,6 @@
         </div>
     </div>
 
-    <!-- CARD 3: AUTOMATION GUARDRAILS -->
     <div class="card">
         <div class="card-title">3. Smart Transfer Guide &amp; Guardrails</div>
         <div class="instructions-text">
@@ -516,7 +500,6 @@
                     calculateDerivedMetrics('dta');
                 }
             } else {
-                // If the user modified the simulator fields directly, refresh health outputs
                 calculateMarginHealth();
             }
         } else {
