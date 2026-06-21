@@ -13,6 +13,7 @@
             --text-muted: #8da2bb;
             --accent-green: #11b981;
             --accent-blue: #38bdf8;
+            --accent-warning: #fbbf24;
             --border: #2d415a;
         }
 
@@ -181,7 +182,27 @@
             margin-top: 1rem;
         }
 
-        /* Instructions Styling */
+        /* Context Notification Display Classes */
+        .context-badge {
+            font-size: 0.85rem;
+            margin-top: 1.25rem;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            line-height: 1.4;
+        }
+
+        .context-withdrawal {
+            background-color: rgba(56, 189, 248, 0.06);
+            border: 1px solid rgba(56, 189, 248, 0.2);
+            color: var(--accent-blue);
+        }
+
+        .context-reinvestment {
+            background-color: rgba(245, 158, 11, 0.08);
+            border: 1px dashed rgba(245, 158, 11, 0.4);
+            color: var(--accent-warning);
+        }
+
         .instructions-text {
             font-size: 0.85rem;
             color: var(--text-muted);
@@ -245,7 +266,7 @@
         </div>
     </div>
 
-    <!-- INTERACTIVE CONVERTER -->
+    <!-- INTERACTIVE CONVERTER (UPDATED UX WITH LIVE STATUS WARNINGS) -->
     <div class="card">
         <header>
             <h1>Calibrated Margin Converter</h1>
@@ -254,6 +275,7 @@
 
         <div style="height: 1rem;"></div>
 
+        <!-- Debt-to-Asset Input -->
         <div class="input-group">
             <label for="dta-input">Debt-to-Asset (DTA) Ratio</label>
             <div class="input-wrapper">
@@ -262,12 +284,18 @@
             </div>
         </div>
 
+        <!-- Margin Utilization Input -->
         <div class="input-group">
             <label for="util-input">Margin Utilization Rate</label>
             <div class="input-wrapper">
                 <input type="number" id="util-input" step="0.01" min="0" max="100" placeholder="0.00">
                 <span class="unit">%</span>
             </div>
+        </div>
+
+        <!-- Real-time Context Banner Element -->
+        <div id="context-indicator" class="context-badge context-withdrawal">
+            Active Framework: <strong>Withdrawal Utilization</strong>
         </div>
     </div>
 
@@ -291,6 +319,7 @@
     const calCreditLimit = document.getElementById('cal-credit-limit');
     const creditLimitLabel = document.getElementById('credit-limit-label');
     const factorReadout = document.getElementById('factor-readout');
+    const contextIndicator = document.getElementById('context-indicator');
     
     const btnWithdraw = document.getElementById('mode-withdraw');
     const btnReinvest = document.getElementById('mode-reinvest');
@@ -314,11 +343,19 @@
             btnReinvest.classList.remove('active');
             creditLimitLabel.textContent = "Withdrawal Credit Limit";
             calCreditLimit.value = snapshotValues.withdrawal;
+            
+            // Render standard safe context readout
+            contextIndicator.className = "context-badge context-withdrawal";
+            contextIndicator.innerHTML = "Active Framework: <strong>Withdrawal Utilization</strong>";
         } else {
             btnReinvest.classList.add('active');
             btnWithdraw.classList.remove('active');
             creditLimitLabel.textContent = "Reinvestment Credit Limit";
             calCreditLimit.value = snapshotValues.reinvestment;
+            
+            // Inject distinct high-visibility guardrail warning label
+            contextIndicator.className = "context-badge context-reinvestment";
+            contextIndicator.innerHTML = "⚠️ <strong>Warning:</strong> Reinvestment Basis Active. Switch calibration back to <strong>Withdrawal Basis</strong> if organizing metrics for M1 Smart Transfer rules.";
         }
         recalibrateSystem();
     }
