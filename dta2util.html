@@ -60,6 +60,32 @@
             margin-bottom: 1.25rem;
             border-bottom: 1px solid var(--border);
             padding-bottom: 0.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* State Indicator Badge Rules */
+        .status-badge {
+            font-size: 0.68rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+        }
+
+        .status-live {
+            background-color: rgba(17, 185, 129, 0.1);
+            border: 1px solid var(--accent-green);
+            color: var(--accent-green);
+        }
+
+        .status-simulated {
+            background-color: rgba(251, 191, 36, 0.1);
+            border: 1px solid var(--accent-warning);
+            color: var(--accent-warning);
         }
 
         details.card {
@@ -338,8 +364,9 @@
 <body>
 
 <div class="wrapper">
-    <details class="card" open>
-        <summary>💡 Quick Start Guide &amp; Glossary</summary>
+    <!-- COLLAPSIBLE ACCORDION QUICK START GUIDE -->
+    <details class="card" closed>
+        <summary>💡 Quick Start Guide (click to expand)</summary>
         <div class="accordion-content">
             <div class="instructions-text">
                 <p><strong>What is this tool?</strong><br>
@@ -353,6 +380,7 @@
         </div>
     </details>
 
+    <!-- CARD 1: CURRENT DASHBOARD METRICS -->
     <div class="card">
         <div class="card-title">1. Current M1 Dashboard Metrics</div>
         
@@ -401,9 +429,15 @@
         <button type="button" class="reset-btn" onclick="resetDefaults()">Reset to Defaults</button>
     </div>
 
+    <!-- CARD 2: SIMULATOR & HEALTH WORKSTATION -->
     <div class="card">
-        <div class="card-title">2. Leverage &amp; Utilization Simulator</div>
+        <!-- REFACTORED TITLE CONTAINER WITH DYNAMIC BADGE SLOT -->
+        <div class="card-title">
+            <span>2. Leverage &amp; Utilization Simulator</span>
+            <span id="sim-status-badge" class="status-badge status-live">Live Baseline</span>
+        </div>
 
+        <!-- Debt-to-Asset Input -->
         <div class="input-group">
             <label for="dta-input">Debt-to-Asset (DTA) Ratio [Macro Leverage]</label>
             <div class="input-wrapper">
@@ -412,6 +446,7 @@
             </div>
         </div>
 
+        <!-- Margin Utilization Input -->
         <div class="input-group">
             <label for="util-input">Margin Utilization Rate [Dashboard Capacity]</label>
             <div class="input-wrapper">
@@ -420,10 +455,12 @@
             </div>
         </div>
 
+        <!-- Dynamic Context Guardrail Notice Element -->
         <div id="context-indicator" class="context-badge context-withdrawal">
             Active Framework: <strong>Withdrawal Utilization</strong>
         </div>
 
+        <!-- VISUAL MARGIN HEALTH EXPANSION WIDGET -->
         <div class="health-display-container">
             <div class="health-headline">Cushion to Margin Call</div>
             <div class="health-percentage" id="health-percentage-display">100%</div>
@@ -438,6 +475,7 @@
         </div>
     </div>
 
+    <!-- CARD 3: AUTOMATION GUARDRAILS -->
     <div class="card">
         <div class="card-title">3. Smart Transfer Guide &amp; Guardrails</div>
         <div class="instructions-text">
@@ -467,13 +505,14 @@
     // Simulator Variables
     const dtaInput = document.getElementById('dta-input');
     const utilInput = document.getElementById('util-input');
+    const simStatusBadge = document.getElementById('sim-status-badge');
 
     // Margin Health Elements
     const healthPercentDisplay = document.getElementById('health-percentage-display');
     const healthIndicatorDot = document.getElementById('health-indicator-dot');
     const healthSummaryExplanation = document.getElementById('health-summary-explanation');
 
-    // State Architecture Variables
+    // State Architecture
     let activeMode = 'withdrawal'; 
     let calibrationFactor = 0.50;
 
@@ -525,7 +564,6 @@
             factorReadout.innerHTML = "Derived Max Borrow Limit (" + activeMode + "): " + maxBorrowCapacityLimit + "%<br>" +
                                       "Derived Blended Portfolio MMR: " + blendedMmrPercent.toFixed(2) + "%";
             
-            // If the adjustment came from loading state from local storage, do not force-override simulator numbers
             if (e && e.target && e.target.id === 'state-load-engine') {
                 calculateMarginHealth();
                 return;
@@ -568,11 +606,25 @@
 
     function calculateMarginHealth() {
         const value = parseFloat(calValue.value) || 0;
+        const borrowed = parseFloat(calBorrowed.value) || 0;
         const reqEquity = parseFloat(calReqEquity.value) || 0;
         const dta = (parseFloat(dtaInput.value) || 0) / 100;
         
         const mmr = value > 0 ? (reqEquity / value) : 0.25;
         const simulatedDebt = value * dta;
+
+        // Dynamic State Variance Checker Execution Loop
+        const baselineDta = value > 0 ? (borrowed / value) * 100 : 0;
+        const currentSimDta = dta * 100;
+        const isSimulated = Math.abs(currentSimDta - baselineDta) > 0.01;
+
+        if (isSimulated) {
+            simStatusBadge.className = "status-badge status-simulated";
+            simStatusBadge.textContent = "Simulated Future";
+        } else {
+            simStatusBadge.className = "status-badge status-live";
+            simStatusBadge.textContent = "Live Baseline";
+        }
 
         if (value <= 0 || simulatedDebt <= 0) {
             healthPercentDisplay.textContent = "100%";
@@ -606,11 +658,16 @@
             }
 
             const formattedDollarCushion = dollarCushion.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
-            healthSummaryExplanation.innerHTML = "The value of your investments would have to drop <strong>" + percentageCushion.toFixed(2) + "% ($" + formattedDollarCushion + ")</strong> to face a margin call.";
+            
+            // Context-Specific Language Optimization Output
+            if (isSimulated) {
+                healthSummaryExplanation.innerHTML = "Under this <strong>simulated scenario</strong>, your investments would have to drop <strong>" + percentageCushion.toFixed(2) + "% ($" + formattedDollarCushion + ")</strong> to face a margin call.";
+            } else {
+                healthSummaryExplanation.innerHTML = "The value of your <strong>current investments</strong> would have to drop <strong>" + percentageCushion.toFixed(2) + "% ($" + formattedDollarCushion + ")</strong> to face a margin call.";
+            }
         }
     }
 
-    // STATE CONTROLLER FUNCTIONS
     function saveAppState() {
         try {
             const dataPayload = {
@@ -660,7 +717,6 @@
                 contextIndicator.innerHTML = "⚠️ <strong>Warning:</strong> Reinvestment Basis Active. Switch calibration back to <strong>Withdrawal Basis</strong> if organizing metrics for M1 Smart Transfer rules.";
             }
             
-            // Run calibration under a bypass target context to prevent auto-overriding layout data slots
             recalibrateSystem({ target: { id: 'state-load-engine' } });
             
             if (state.dtaValue) {
@@ -707,7 +763,6 @@
     dtaInput.addEventListener('input', () => calculateDerivedMetrics('dta'));
     utilInput.addEventListener('input', () => calculateDerivedMetrics('util'));
 
-    // Safe load runtime initiation
     loadAppState();
 </script>
 
