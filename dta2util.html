@@ -161,7 +161,7 @@
             <label for="cal-value">Account Value</label>
             <div class="input-wrapper">
                 <span class="unit">$</span>
-                <input type="number" id="cal-value" step="0.01" value="179659.19">
+                <input type="number" id="cal-value" step="0.01" value="19237.33">
             </div>
         </div>
 
@@ -169,15 +169,15 @@
             <label for="cal-borrowed">Total Borrowed</label>
             <div class="input-wrapper">
                 <span class="unit">$</span>
-                <input type="number" id="cal-borrowed" step="0.01" value="49757.09">
+                <input type="number" id="cal-borrowed" step="0.01" value="6833.33">
             </div>
         </div>
 
         <div class="input-group">
-            <label for="cal-avail-withdraw">Avail. to Borrow (Withdraw)</label>
+            <label for="cal-credit-limit">Credit Limit (Max Borrow Line)</label>
             <div class="input-wrapper">
                 <span class="unit">$</span>
-                <input type="number" id="cal-avail-withdraw" step="0.01" value="39471.10">
+                <input type="number" id="cal-credit-limit" step="0.01" value="9618.63">
             </div>
         </div>
 
@@ -216,7 +216,7 @@
     // Calibration Elements
     const calValue = document.getElementById('cal-value');
     const calBorrowed = document.getElementById('cal-borrowed');
-    const calAvailWithdraw = document.getElementById('cal-avail-withdraw');
+    const calCreditLimit = document.getElementById('cal-credit-limit');
     const factorReadout = document.getElementById('factor-readout');
 
     // Converter Elements
@@ -224,25 +224,21 @@
     const utilInput = document.getElementById('util-input');
 
     // State variable for the dynamically derived factor
-    let calibrationFactor = 0.496772;
+    let calibrationFactor = 0.50;
 
     function recalibrateSystem() {
         const value = parseFloat(calValue.value);
-        const borrowed = parseFloat(calBorrowed.value);
-        const availWithdraw = parseFloat(calAvailWithdraw.value);
+        const creditLimit = parseFloat(calCreditLimit.value);
 
-        if (value > 0 && !isNaN(borrowed) && !isNaN(availWithdraw)) {
-            // Total credit line capacity is the sum of what is used + what is left to withdraw
-            const totalCapacityLine = borrowed + availWithdraw;
-            
-            // Derive Capacity Factor directly relative to portfolio assets
-            calibrationFactor = totalCapacityLine / value;
+        if (value > 0 && !isNaN(creditLimit)) {
+            // Capacity factor is now directly derived straight from the credit limit line
+            calibrationFactor = creditLimit / value;
 
-            // Render dashboard status feedback
+            // Render precise platform max limit metric
             const maxBorrowCapacityLimit = (calibrationFactor * 100).toFixed(4);
             factorReadout.textContent = `Derived Max Borrow Limit: ${maxBorrowCapacityLimit}%`;
             
-            // Refresh active conversion workstation
+            // Refresh translation calculation fields
             convertFromDTA();
         } else {
             factorReadout.textContent = "Invalid Calibration Inputs";
@@ -272,14 +268,14 @@
     // Listeners for Calibration Fields
     calValue.addEventListener('input', recalibrateSystem);
     calBorrowed.addEventListener('input', recalibrateSystem);
-    calAvailWithdraw.addEventListener('input', recalibrateSystem);
+    calCreditLimit.addEventListener('input', recalibrateSystem);
 
     // Listeners for Conversion Workstation
     dtaInput.addEventListener('input', convertFromDTA);
     utilInput.addEventListener('input', convertFromUtil);
 
-    // Initialize engine layout with the default 20.00% DTA
-    dtaInput.value = "20.00";
+    // Initialize layout defaults
+    dtaInput.value = "36.00";
     recalibrateSystem();
 </script>
 
