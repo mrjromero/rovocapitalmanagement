@@ -5,36 +5,31 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>M1 Leverage Simulator & Smart Transfer Guardrails</title>
     <style>
-        /* Typography Imports From Target Stylesheet */
         @import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&display=swap");
         @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap");
         @import url("https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;600;700&display=swap");
 
-        /* Embedded Variable Engine Context */
         :root {
-            --bg-main: #f5f5f5;
-            --bg-card: #ffffff;
-            --bg-input: #ffffff;
-            --bg-toggle: #f0f0f1;
-            --text-main: #0d1728;
-            --text-muted: #595959;
-            --accent-green: #00b5ae;
-            --accent-blue: #1b4a7b;
-            --accent-warning: #e4bd52;
-            --accent-danger: #b50007;
+            --bg-main: #0b131f;
+            --bg-card: #152232;
+            --bg-input: #22344a;
+            --text-main: #ffffff;
+            --text-muted: #8da2bb;
+            --accent-green: #11b981;
+            --accent-blue: #38bdf8;
+            --accent-warning: #fbbf24;
+            --accent-danger: #ef4444;
             --accent-alert: #ff7f50;
-            --border-dominant: #dfdfe6;
-            --border-soft: #eeeef2;
-            --border-focus: #8fa7de;
-            --card-shadow: 0 4px 20px rgba(38, 91, 140, 0.06);
-            --inner-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
+            --border: #2d415a;
+            --border-focus: #38bdf8;
+            --card-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
         }
 
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
         }
 
         body {
@@ -45,8 +40,6 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
         }
 
         .wrapper {
@@ -57,7 +50,6 @@
             gap: 1.5rem;
         }
 
-        /* App Main Top Branding Header */
         .app-header {
             text-align: center;
             margin-bottom: 0.5rem;
@@ -76,15 +68,14 @@
         .app-header p {
             font-size: 0.88rem;
             color: var(--text-muted);
-            font-weight: 400;
-            line-height: 1.4;
+            font-weight: 500;
+            letter-spacing: 0.01em;
         }
 
-        /* Institutional Structural Cards */
         .card {
             background-color: var(--bg-card);
-            border: 1px solid var(--border-dominant);
-            border-radius: 16px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
             padding: 1.75rem;
             box-shadow: var(--card-shadow);
         }
@@ -92,42 +83,40 @@
         .card-title {
             font-family: "Poppins", sans-serif;
             font-size: 0.95rem;
-            font-weight: 600;
-            color: var(--text-main);
+            font-weight: 700;
+            color: var(--accent-blue);
             text-transform: uppercase;
             letter-spacing: 0.05em;
             margin-bottom: 1.25rem;
-            border-bottom: 1px solid var(--border-soft);
-            padding-bottom: 0.6rem;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 0.5rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
 
-        /* Status Badges */
         .status-badge {
             font-size: 0.68rem;
-            font-weight: 700;
+            font-weight: 800;
             text-transform: uppercase;
             letter-spacing: 0.06em;
-            padding: 0.25rem 0.6rem;
+            padding: 0.2rem 0.5rem;
             border-radius: 4px;
-            font-family: "Poppins", sans-serif;
+            transition: all 0.2s ease;
         }
 
         .status-live {
-            background-color: rgba(0, 181, 174, 0.1);
+            background-color: rgba(17, 185, 129, 0.1);
             border: 1px solid var(--accent-green);
             color: var(--accent-green);
         }
 
         .status-simulated {
-            background-color: rgba(255, 127, 80, 0.1);
-            border: 1px solid var(--accent-alert);
-            color: var(--accent-alert);
+            background-color: rgba(251, 191, 36, 0.1);
+            border: 1px solid var(--accent-warning);
+            color: var(--accent-warning);
         }
 
-        /* Collapsible Glossary Accordion */
         details.card {
             padding: 0;
             overflow: hidden;
@@ -135,11 +124,10 @@
 
         summary {
             list-style: none;
-            padding: 1.25rem 1.75rem;
-            font-family: "Poppins", sans-serif;
-            font-size: 0.9rem;
-            font-weight: 600;
-            color: var(--accent-blue);
+            padding: 1.5rem 1.75rem;
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--accent-warning);
             text-transform: uppercase;
             letter-spacing: 0.05em;
             cursor: pointer;
@@ -155,7 +143,7 @@
 
         summary::after {
             content: '▼';
-            font-size: 0.7rem;
+            font-size: 0.75rem;
             color: var(--text-muted);
             transition: transform 0.2s ease;
         }
@@ -165,20 +153,18 @@
         }
 
         .accordion-content {
-            padding: 0 1.75rem 1.5rem 1.75rem;
-            border-top: 1px solid var(--border-soft);
+            padding: 0 1.75rem 1.75rem 1.75rem;
+            border-top: 1px solid rgba(45, 65, 90, 0.4);
             padding-top: 1.25rem;
         }
 
-        /* Segmented Horizontal Toggle Interface */
         .toggle-container {
             display: flex;
-            background-color: var(--bg-toggle);
-            padding: 2px;
+            background-color: var(--bg-main);
+            padding: 0.25rem;
             border-radius: 8px;
             margin-bottom: 1.25rem;
-            height: 40px;
-            box-shadow: inset 0 0.5px 2px rgba(0,0,0,0.05);
+            border: 1px solid var(--border);
         }
 
         .toggle-btn {
@@ -187,25 +173,22 @@
             border: none;
             color: var(--text-muted);
             padding: 0.5rem;
-            font-family: "DM Sans", sans-serif;
             font-size: 0.85rem;
-            font-weight: 500;
+            font-weight: 600;
             border-radius: 6px;
             cursor: pointer;
             transition: all 0.2s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
         }
 
         .toggle-btn.active {
-            background-color: #ffffff;
+            background-color: var(--bg-input);
             color: var(--text-main);
-            box-shadow: 0 1px 2px rgba(0,0,0,0.1), 0 0 0 0.5px rgba(0,0,0,0.05);
-            font-weight: 600;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            border: 1px solid rgba(56, 189, 248, 0.2);
         }
 
-        /* Input Elements Stack */
         .input-group {
             display: flex;
             flex-direction: column;
@@ -219,7 +202,7 @@
 
         label {
             font-size: 0.8rem;
-            font-weight: 700;
+            font-weight: 600;
             color: var(--text-muted);
             text-transform: uppercase;
             letter-spacing: 0.03em;
@@ -229,16 +212,14 @@
             display: flex;
             align-items: center;
             background-color: var(--bg-input);
-            border: 1px solid var(--border-dominant);
+            border: 1px solid var(--border);
             border-radius: 8px;
             padding: 0.6rem 0.8rem;
-            box-shadow: var(--inner-shadow);
-            transition: border-color 0.15s ease, box-shadow 0.15s ease;
+            transition: border-color 0.15s ease;
         }
 
         .input-wrapper:focus-within {
             border-color: var(--border-focus);
-            box-shadow: 0 0 0 3px rgba(143, 167, 190, 0.15);
         }
 
         .input-wrapper input {
@@ -246,50 +227,59 @@
             border: none;
             color: var(--text-main);
             font-family: "Roboto Mono", monospace;
-            font-size: 1.1rem;
-            font-weight: 600;
+            font-size: 1.15rem;
             width: 100%;
             outline: none;
+            font-weight: 600;
             text-align: right;
-            padding-right: 0.4rem;
         }
 
         .input-wrapper input::placeholder {
             color: var(--text-muted);
-            opacity: 0.35;
-        }
-
-        .input-wrapper input::-webkit-outer-spin-button,
-        .input-wrapper input::-webkit-inner-spin-button {
-            -webkit-appearance: none;
-            margin: 0;
-        }
-        .input-wrapper input[type=number] {
-            -moz-appearance: textfield;
+            opacity: 0.4;
         }
 
         .input-wrapper .unit {
             color: var(--text-muted);
-            font-family: "DM Sans", sans-serif;
             font-weight: 600;
             font-size: 1rem;
             min-width: 15px;
             text-align: right;
         }
 
-        /* Banner Displays */
         .derived-factor-banner {
-            background-color: #edf1fb;
-            border: 1px solid #d2dbe9;
+            background: rgba(56, 189, 248, 0.08);
+            border: 1px dashed rgba(56, 189, 248, 0.3);
             border-radius: 8px;
-            padding: 0.85rem;
-            font-family: "Roboto Mono", monospace;
+            padding: 0.75rem;
+            font-family: monospace;
             font-size: 0.8rem;
-            font-weight: 600;
             color: var(--accent-blue);
             text-align: center;
-            margin-top: 1.25rem;
-            line-height: 1.6;
+            margin-top: 1rem;
+            line-height: 1.5;
+        }
+
+        .reset-btn {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            padding: 0.5rem;
+            font-size: 0.8rem;
+            font-weight: 700;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            margin-top: 1rem;
+            width: 100%;
+        }
+
+        .reset-btn:hover {
+            border-color: var(--accent-danger);
+            color: var(--accent-danger);
+            background: rgba(239, 68, 68, 0.05);
         }
 
         .context-badge {
@@ -297,52 +287,28 @@
             margin-top: 1.25rem;
             padding: 0.75rem 1rem;
             border-radius: 8px;
-            line-height: 1.5;
+            line-height: 1.4;
         }
 
         .context-withdrawal {
-            background-color: rgba(27, 74, 123, 0.05);
-            border: 1px solid rgba(27, 74, 123, 0.15);
+            background-color: rgba(56, 189, 248, 0.06);
+            border: 1px solid rgba(56, 189, 248, 0.2);
             color: var(--accent-blue);
         }
 
         .context-reinvestment {
-            background-color: rgba(ff, 127, 80, 0.05);
-            border: 1px dashed rgba(255, 127, 80, 0.35);
-            color: var(--accent-alert);
+            background-color: rgba(245, 158, 11, 0.08);
+            border: 1px dashed rgba(245, 158, 11, 0.4);
+            color: var(--accent-warning);
         }
 
-        /* Interactive Action Buttons */
-        .reset-btn {
-            background-color: transparent;
-            border: 1px solid var(--border-dominant);
-            color: var(--text-muted);
-            padding: 0.6rem;
-            font-size: 0.78rem;
-            font-weight: 700;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            text-transform: uppercase;
-            letter-spacing: 0.04em;
-            margin-top: 1.25rem;
-            width: 100%;
-        }
-
-        .reset-btn:hover {
-            border-color: var(--accent-danger);
-            color: var(--accent-danger);
-            background-color: rgba(181, 0, 7, 0.03);
-        }
-
-        /* Premium Volatility Cushion Display Component */
         .health-display-container {
             text-align: center;
             margin: 1.5rem 0 0.5rem 0;
-            padding: 1.5rem 1.25rem;
-            background-color: #f8f9fa;
-            border: 1px solid var(--border-dominant);
-            border-radius: 12px;
+            padding: 1.25rem;
+            background-color: rgba(11, 19, 31, 0.4);
+            border: 1px dashed var(--border);
+            border-radius: 10px;
         }
 
         .health-headline {
@@ -351,57 +317,52 @@
             color: var(--text-muted);
             text-transform: uppercase;
             letter-spacing: 0.08em;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.7rem;
         }
 
         .health-percentage {
-            font-family: "DM Sans", sans-serif;
             font-size: 2.5rem;
-            font-weight: 700;
+            font-weight: 800;
             line-height: 1;
             margin-bottom: 0.5rem;
             transition: color 0.2s ease;
-            letter-spacing: -0.02em;
         }
 
         .health-bar-bg {
             height: 8px;
-            background: linear-gradient(to right, var(--accent-danger) 0%, var(--accent-warning) 50%, var(--accent-green) 100%);
+            background: linear-gradient(to right, var(--accent-danger) 20%, var(--accent-warning) 50%, var(--accent-green) 80%);
             border-radius: 4px;
-            margin: 1rem 0;
+            margin: 0.75rem 0;
             position: relative;
         }
 
         .health-bar-indicator {
-            width: 6px;
+            width: 4px;
             height: 16px;
             background-color: var(--text-main);
-            border: 1px solid #ffffff;
+            border: 1px solid var(--bg-main);
             position: absolute;
             top: -4px;
-            border-radius: 3px;
+            border-radius: 2px;
             transform: translateX(-50%);
             transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
         }
 
         .health-summary-text {
             font-size: 0.88rem;
             color: var(--text-muted);
-            line-height: 1.5;
-            margin-top: 0.85rem;
+            line-height: 1.4;
+            margin-top: 0.75rem;
         }
 
         .health-summary-text strong {
             color: var(--text-main);
-            font-weight: 600;
         }
 
-        /* Documentation Block Typography Rules */
         .instructions-text {
             font-size: 0.85rem;
             color: var(--text-muted);
-            line-height: 1.6;
+            line-height: 1.5;
         }
 
         .instructions-text p {
@@ -410,11 +371,10 @@
 
         .instructions-text strong {
             color: var(--text-main);
-            font-weight: 600;
         }
 
         .instructions-list {
-            margin-left: 1.25rem;
+            margin-left: 1.15rem;
             display: flex;
             flex-direction: column;
             gap: 0.6rem;
@@ -429,7 +389,7 @@
         <p>M1 Smart Transfer Risk Framework &amp; Simulator</p>
     </div>
 
-    <details class="card" close>
+    <details class="card" open>
         <summary>💡 Quick Start Guide &amp; Glossary</summary>
         <div class="accordion-content">
             <div class="instructions-text">
@@ -455,32 +415,28 @@
         <div class="input-group">
             <label for="cal-value">Account Value (Total Assets)</label>
             <div class="input-wrapper">
-                <span class="unit">$</span>
-                <input type="number" id="cal-value" step="0.01" value="100000.00">
+                <input type="text" id="cal-value" value="$100,000">
             </div>
         </div>
 
         <div class="input-group">
             <label for="cal-borrowed">Total Borrowed</label>
             <div class="input-wrapper">
-                <span class="unit">$</span>
-                <input type="number" id="cal-borrowed" step="0.01" value="20000.00">
+                <input type="text" id="cal-borrowed" value="$20,000">
             </div>
         </div>
 
         <div class="input-group">
             <label for="cal-req-equity">Required Equity</label>
             <div class="input-wrapper">
-                <span class="unit">$</span>
-                <input type="number" id="cal-req-equity" step="0.01" value="25000.00">
+                <input type="text" id="cal-req-equity" value="$25,000">
             </div>
         </div>
 
         <div class="input-group">
             <label id="credit-limit-label" for="cal-credit-limit">Withdrawal Credit Limit</label>
             <div class="input-wrapper">
-                <span class="unit">$</span>
-                <input type="number" id="cal-credit-limit" step="0.01" value="50000.00">
+                <input type="text" id="cal-credit-limit" value="$50,000">
             </div>
         </div>
 
@@ -577,6 +533,44 @@
         reinvestment: 65000.00
     };
 
+    // Text field currency extraction & formatting tools
+    function parseNumber(str) {
+        if (!str) return 0;
+        const clean = str.replace(/[^0-9.-]/g, '');
+        return parseFloat(clean) || 0;
+    }
+
+    function formatCurrency(num) {
+        if (isNaN(num)) return '$0';
+        if (num % 1 === 0) {
+            return '$' + Math.round(num).toLocaleString();
+        } else {
+            return '$' + num.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+    }
+
+    function setupCurrencyInput(inputEl) {
+        inputEl.addEventListener('focus', function() {
+            const val = parseNumber(inputEl.value);
+            if (val === 0) {
+                inputEl.value = '';
+            } else {
+                inputEl.value = val % 1 === 0 ? val.toString() : val.toFixed(2);
+            }
+        });
+
+        inputEl.addEventListener('blur', function() {
+            const val = parseNumber(inputEl.value);
+            inputEl.value = formatCurrency(val);
+        });
+    }
+
+    // Apply currency formatting to fields
+    setupCurrencyInput(calValue);
+    setupCurrencyInput(calBorrowed);
+    setupCurrencyInput(calReqEquity);
+    setupCurrencyInput(calCreditLimit);
+
     function setMode(mode) {
         activeMode = mode;
         
@@ -584,7 +578,7 @@
             btnWithdraw.classList.add('active');
             btnReinvest.classList.remove('active');
             creditLimitLabel.textContent = "Withdrawal Credit Limit";
-            calCreditLimit.value = snapshotValues.withdrawal;
+            calCreditLimit.value = formatCurrency(snapshotValues.withdrawal);
             
             contextIndicator.className = "context-badge context-withdrawal";
             contextIndicator.innerHTML = "Active Framework: <strong>Withdrawal Utilization Framework</strong>";
@@ -592,7 +586,7 @@
             btnReinvest.classList.add('active');
             btnWithdraw.classList.remove('active');
             creditLimitLabel.textContent = "Reinvestment Credit Limit";
-            calCreditLimit.value = snapshotValues.reinvestment;
+            calCreditLimit.value = formatCurrency(snapshotValues.reinvestment);
             
             contextIndicator.className = "context-badge context-reinvestment";
             contextIndicator.innerHTML = "⚠️ <strong>Warning:</strong> Reinvestment Basis Active. Switch calibration back to <strong>Withdrawal Basis</strong> if organizing metrics for M1 Smart Transfer rules.";
@@ -602,12 +596,12 @@
     }
 
     function recalibrateSystem(e) {
-        const value = parseFloat(calValue.value);
-        const borrowed = parseFloat(calBorrowed.value);
-        const reqEquity = parseFloat(calReqEquity.value);
-        const creditLimit = parseFloat(calCreditLimit.value);
+        const value = parseNumber(calValue.value);
+        const borrowed = parseNumber(calBorrowed.value);
+        const reqEquity = parseNumber(calReqEquity.value);
+        const creditLimit = parseNumber(calCreditLimit.value);
 
-        if (!isNaN(creditLimit)) {
+        if (!isNaN(creditLimit) && creditLimit > 0) {
             snapshotValues[activeMode] = creditLimit;
         }
 
@@ -661,9 +655,9 @@
     }
 
     function calculateMarginHealth() {
-        const value = parseFloat(calValue.value) || 0;
-        const borrowed = parseFloat(calBorrowed.value) || 0;
-        const reqEquity = parseFloat(calReqEquity.value) || 0;
+        const value = parseNumber(calValue.value) || 0;
+        const borrowed = parseNumber(calBorrowed.value) || 0;
+        const reqEquity = parseNumber(calReqEquity.value) || 0;
         const dta = (parseFloat(dtaInput.value) || 0) / 100;
         
         const mmr = value > 0 ? (reqEquity / value) : 0.25;
@@ -735,9 +729,7 @@
                 utilValue: utilInput.value
             };
             localStorage.setItem('m1_leverage_workstation_cache', JSON.stringify(dataPayload));
-        } catch (err) {
-            console.warn("Local storage state write blocked by user privacy config settings.", err);
-        }
+        } catch (err) {}
     }
 
     function loadAppState() {
@@ -781,7 +773,6 @@
                 calculateDerivedMetrics('util');
             }
         } catch (err) {
-            console.error("Failed to parse cache.", err);
             recalibrateSystem();
         }
     }
@@ -794,10 +785,10 @@
         activeMode = 'withdrawal';
         snapshotValues = { withdrawal: 50000.00, reinvestment: 65000.00 };
         
-        calValue.value = "100000.00";
-        calBorrowed.value = "20000.00";
-        calReqEquity.value = "25000.00";
-        calCreditLimit.value = "50000.00";
+        calValue.value = "$100,000";
+        calBorrowed.value = "$20,000";
+        calReqEquity.value = "$25,000";
+        calCreditLimit.value = "$50,000";
         
         btnWithdraw.classList.add('active');
         btnReinvest.classList.remove('active');
