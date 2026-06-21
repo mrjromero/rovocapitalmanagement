@@ -160,39 +160,33 @@
 <body>
 
 <div class="wrapper">
+    <!-- CALIBRATION STEP -->
     <div class="card">
-        <div class="card-title">1. M1 Live Dashboard Calibration</div>
+        <div class="card-title">M1 Current Margin Metrics</div>
         
-        <div class="grid-2">
-            <div class="input-group">
-                <label for="cal-value">Account Value</label>
-                <div class="input-wrapper">
-                    <span class="unit">$</span>
-                    <input type="number" id="cal-value" step="0.01" value="179659.19">
-                </div>
+        <!-- Account Value Full Width -->
+        <div class="input-group">
+            <label for="cal-value">Account Value</label>
+            <div class="input-wrapper">
+                <span class="unit">$</span>
+                <input type="number" id="cal-value" step="0.01" value="0.00">
             </div>
+        </div>
+
+        <!-- Balanced Two Column Row -->
+        <div class="grid-2">
             <div class="input-group">
                 <label for="cal-borrowed">Total Borrowed</label>
                 <div class="input-wrapper">
                     <span class="unit">$</span>
-                    <input type="number" id="cal-borrowed" step="0.01" value="49757.09">
+                    <input type="number" id="cal-borrowed" step="0.01" value="0.00">
                 </div>
             </div>
-        </div>
-
-        <div class="grid-2">
             <div class="input-group">
                 <label for="cal-avail-withdraw">Avail. to Borrow (Withdraw)</label>
                 <div class="input-wrapper">
                     <span class="unit">$</span>
-                    <input type="number" id="cal-avail-withdraw" step="0.01" value="39471.10">
-                </div>
-            </div>
-            <div class="input-group">
-                <label for="cal-avail-reinvest">Avail. to Borrow (Reinvest)</label>
-                <div class="input-wrapper">
-                    <span class="unit">$</span>
-                    <input type="number" id="cal-avail-reinvest" step="0.01" value="78942.20">
+                    <input type="number" id="cal-avail-withdraw" step="0.01" value="0.00">
                 </div>
             </div>
         </div>
@@ -202,6 +196,7 @@
         </div>
     </div>
 
+    <!-- INTERACTIVE CONVERTER -->
     <div class="card">
         <header>
             <h1>Calibrated Margin Converter</h1>
@@ -210,6 +205,7 @@
 
         <div style="height: 1rem;"></div>
 
+        <!-- Debt-to-Asset Input -->
         <div class="input-group">
             <label for="dta-input">Debt-to-Asset (DTA) Ratio</label>
             <div class="input-wrapper">
@@ -218,6 +214,7 @@
             </div>
         </div>
 
+        <!-- Margin Utilization Input -->
         <div class="input-group">
             <label for="util-input">Margin Utilization Rate</label>
             <div class="input-wrapper">
@@ -233,7 +230,6 @@
     const calValue = document.getElementById('cal-value');
     const calBorrowed = document.getElementById('cal-borrowed');
     const calAvailWithdraw = document.getElementById('cal-avail-withdraw');
-    const calAvailReinvest = document.getElementById('cal-avail-reinvest');
     const factorReadout = document.getElementById('factor-readout');
 
     // Converter Elements
@@ -249,17 +245,17 @@
         const availWithdraw = parseFloat(calAvailWithdraw.value);
 
         if (value > 0 && !isNaN(borrowed) && !isNaN(availWithdraw)) {
-            // 1. Total credit line capacity is the sum of what is used + what is left to withdraw
+            // Total credit line capacity is the sum of what is used + what is left to withdraw
             const totalCapacityLine = borrowed + availWithdraw;
             
-            // 2. Derive Capacity Factor directly relative to portfolio assets
+            // Derive Capacity Factor directly relative to portfolio assets
             calibrationFactor = totalCapacityLine / value;
 
-            // 3. Render dashboard status feedback
+            // Render dashboard status feedback
             const maxBorrowCapacityLimit = (calibrationFactor * 100).toFixed(4);
             factorReadout.textContent = `Derived Max Borrow Limit: ${maxBorrowCapacityLimit}%`;
             
-            // 4. Refresh active conversion workstation
+            // Refresh active conversion workstation
             convertFromDTA();
         } else {
             factorReadout.textContent = "Invalid Calibration Inputs";
