@@ -61,6 +61,48 @@
             padding-bottom: 0.5rem;
         }
 
+        /* Collapsible Accordion Style Rules */
+        details.card {
+            padding: 0;
+            overflow: hidden;
+        }
+
+        summary {
+            list-style: none;
+            padding: 1.5rem 1.75rem;
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--accent-warning);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            cursor: pointer;
+            user-select: none;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        summary::-webkit-details-marker {
+            display: none;
+        }
+
+        summary::after {
+            content: '▼';
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            transition: transform 0.2s ease;
+        }
+
+        details[open] summary::after {
+            transform: rotate(180deg);
+        }
+
+        .accordion-content {
+            padding: 0 1.75rem 1.75rem 1.75rem;
+            border-top: 1px solid rgba(45, 65, 90, 0.4);
+            padding-top: 1.25rem;
+        }
+
         .toggle-container {
             display: flex;
             background-color: var(--bg-main);
@@ -216,13 +258,20 @@
 <body>
 
 <div class="wrapper">
-    <div class="card">
-        <div class="card-title">💡 Quick Start Guide &amp; Purpose</div>
-        <div class="instructions-text">
-            <p>This workstation bridges the gap between raw macroeconomic leverage (<strong>Debt-to-Asset Ratio</strong>) and your M1 dashboard layout (<strong>Margin Utilization Rate</strong>).</p>
-            <p>M1 Finance alters your credit limits dynamically depending on capital direction. Because <strong>Smart Transfer rules</strong> behave as outbound cash extractions, they rely strictly on your rigid <strong>Withdrawal Basis</strong> metrics. This utility allows you to simulate hypothetical debt scenarios to safely project dashboard changes before updating live automation rules.</p>
+    <details class="card" open>
+        <summary>💡 Quick Start Guide &amp; Purpose</summary>
+        <div class="accordion-content">
+            <div class="instructions-text">
+                <p><strong>What is this tool?</strong><br>
+                This calculator helps you connect what you borrow compared to your actual account value (your true debt level) with what M1 displays on your screen (your utilization rate).</p>
+                <p><strong>Why does M1 have two different modes?</strong><br>
+                M1 calculates your limits differently based on where borrowed money goes:
+                </p>
+                <p>• <strong>Withdrawal Basis:</strong> Use this when taking cash out or setting up automatic <strong>Smart Transfers</strong>. Because cash leaves your account, M1 sets a tighter spending limit.</p>
+                <p>• <strong>Reinvestment Basis:</strong> Use this only when buying more stocks inside M1. M1 gives you a higher spending limit here because the new stocks you buy serve as fresh backup for the loan.</p>
+            </div>
         </div>
-    </div>
+    </details>
 
     <div class="card">
         <div class="card-title">1. Current M1 Dashboard Metrics</div>
