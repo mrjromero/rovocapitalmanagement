@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>M1 Calibrated Capacity Converter & Smart Transfer Guide</title>
+    <title>M1 Leverage Simulator & Smart Transfer Guardrails</title>
     <style>
         :root {
             --bg-main: #0b131f;
@@ -51,7 +51,7 @@
         }
 
         .card-title {
-            font-size: 0.9rem;
+            font-size: 0.95rem;
             font-weight: 700;
             color: var(--accent-blue);
             text-transform: uppercase;
@@ -59,22 +59,6 @@
             margin-bottom: 1.25rem;
             border-bottom: 1px solid var(--border);
             padding-bottom: 0.5rem;
-        }
-
-        header {
-            text-align: center;
-            margin-bottom: 0.5rem;
-        }
-
-        header h1 {
-            font-size: 1.35rem;
-            font-weight: 700;
-            margin-bottom: 0.25rem;
-        }
-
-        header p {
-            color: var(--text-muted);
-            font-size: 0.85rem;
         }
 
         .toggle-container {
@@ -153,6 +137,11 @@
             padding-right: 0.4rem;
         }
 
+        .input-wrapper input::placeholder {
+            color: var(--text-muted);
+            opacity: 0.4;
+        }
+
         .input-wrapper input::-webkit-outer-spin-button,
         .input-wrapper input::-webkit-inner-spin-button {
             -webkit-appearance: none;
@@ -182,7 +171,6 @@
             margin-top: 1rem;
         }
 
-        /* Context Notification Display Classes */
         .context-badge {
             font-size: 0.85rem;
             margin-top: 1.25rem;
@@ -228,9 +216,9 @@
 <body>
 
 <div class="wrapper">
-    <!-- CALIBRATION STEP -->
+    <!-- CARD 1: CURRENT DASHBOARD METRICS -->
     <div class="card">
-        <div class="card-title">1. M1 Live Dashboard Calibration</div>
+        <div class="card-title">1. Current M1 Dashboard Metrics</div>
         
         <div class="toggle-container">
             <button class="toggle-btn active" id="mode-withdraw" onclick="setMode('withdrawal')">Withdrawal Basis</button>
@@ -241,7 +229,7 @@
             <label for="cal-value">Account Value</label>
             <div class="input-wrapper">
                 <span class="unit">$</span>
-                <input type="number" id="cal-value" step="0.01" value="19237.33">
+                <input type="number" id="cal-value" step="0.01" value="100000.00">
             </div>
         </div>
 
@@ -249,7 +237,7 @@
             <label for="cal-borrowed">Total Borrowed</label>
             <div class="input-wrapper">
                 <span class="unit">$</span>
-                <input type="number" id="cal-borrowed" step="0.01" value="6833.33">
+                <input type="number" id="cal-borrowed" step="0.01" value="20000.00">
             </div>
         </div>
 
@@ -257,7 +245,7 @@
             <label id="credit-limit-label" for="cal-credit-limit">Withdrawal Credit Limit</label>
             <div class="input-wrapper">
                 <span class="unit">$</span>
-                <input type="number" id="cal-credit-limit" step="0.01" value="9618.63">
+                <input type="number" id="cal-credit-limit" step="0.01" value="50000.00">
             </div>
         </div>
 
@@ -266,20 +254,15 @@
         </div>
     </div>
 
-    <!-- INTERACTIVE CONVERTER (UPDATED UX WITH LIVE STATUS WARNINGS) -->
+    <!-- CARD 2: SIMULATOR WORKSTATION -->
     <div class="card">
-        <header>
-            <h1>Calibrated Margin Converter</h1>
-            <p>Direct Bi-Directional Conversion Calculator</p>
-        </header>
-
-        <div style="height: 1rem;"></div>
+        <div class="card-title">2. Leverage &amp; Utilization Simulator</div>
 
         <!-- Debt-to-Asset Input -->
         <div class="input-group">
             <label for="dta-input">Debt-to-Asset (DTA) Ratio</label>
             <div class="input-wrapper">
-                <input type="number" id="dta-input" step="0.01" min="0" max="100" placeholder="0.00">
+                <input type="number" id="dta-input" step="0.01" min="0" max="100" placeholder="20.00">
                 <span class="unit">%</span>
             </div>
         </div>
@@ -288,20 +271,20 @@
         <div class="input-group">
             <label for="util-input">Margin Utilization Rate</label>
             <div class="input-wrapper">
-                <input type="number" id="util-input" step="0.01" min="0" max="100" placeholder="0.00">
+                <input type="number" id="util-input" step="0.01" min="0" max="100" placeholder="40.00">
                 <span class="unit">%</span>
             </div>
         </div>
 
-        <!-- Real-time Context Banner Element -->
+        <!-- Context Guardrail Notice Element -->
         <div id="context-indicator" class="context-badge context-withdrawal">
             Active Framework: <strong>Withdrawal Utilization</strong>
         </div>
     </div>
 
-    <!-- SMART TRANSFER RULES INSTRUCTIONS CARD -->
+    <!-- CARD 3: AUTOMATION GUARDRAILS -->
     <div class="card">
-        <div class="card-title">Smart Transfer Rules Integration</div>
+        <div class="card-title">3. Smart Transfer Guide &amp; Guardrails</div>
         <div class="instructions-text">
             <p>M1 Smart Transfers are strictly triggered by <strong>cash balance thresholds</strong> (dollar targets) rather than percentage parameters. However, when an automation rule executes a sweep from your line of credit, it is governed by specific structural guardrails:</p>
             <ul class="instructions-list">
@@ -330,9 +313,10 @@
     let activeMode = 'withdrawal'; 
     let calibrationFactor = 0.50;
 
+    // Calibrated clean initial snapshots
     const snapshotValues = {
-        withdrawal: 9618.63,
-        reinvestment: 12403.93
+        withdrawal: 50000.00,
+        reinvestment: 65000.00
     };
 
     function setMode(mode) {
@@ -344,7 +328,6 @@
             creditLimitLabel.textContent = "Withdrawal Credit Limit";
             calCreditLimit.value = snapshotValues.withdrawal;
             
-            // Render standard safe context readout
             contextIndicator.className = "context-badge context-withdrawal";
             contextIndicator.innerHTML = "Active Framework: <strong>Withdrawal Utilization</strong>";
         } else {
@@ -353,7 +336,6 @@
             creditLimitLabel.textContent = "Reinvestment Credit Limit";
             calCreditLimit.value = snapshotValues.reinvestment;
             
-            // Inject distinct high-visibility guardrail warning label
             contextIndicator.className = "context-badge context-reinvestment";
             contextIndicator.innerHTML = "⚠️ <strong>Warning:</strong> Reinvestment Basis Active. Switch calibration back to <strong>Withdrawal Basis</strong> if organizing metrics for M1 Smart Transfer rules.";
         }
