@@ -14,6 +14,7 @@
             --accent-green: #11b981;
             --accent-blue: #38bdf8;
             --accent-warning: #fbbf24;
+            --accent-danger: #ef4444;
             --border: #2d415a;
         }
 
@@ -61,7 +62,6 @@
             padding-bottom: 0.5rem;
         }
 
-        /* Collapsible Accordion Style Rules */
         details.card {
             padding: 0;
             overflow: hidden;
@@ -132,6 +132,12 @@
             color: var(--text-main);
             box-shadow: 0 2px 4px rgba(0,0,0,0.2);
             border: 1px solid rgba(56, 189, 248, 0.2);
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
         }
 
         .input-group {
@@ -233,6 +239,64 @@
             color: var(--accent-warning);
         }
 
+        /* Health Visual Widget Style Rules */
+        .health-display-container {
+            text-align: center;
+            margin: 1.5rem 0 0.5rem 0;
+            padding: 1.25rem;
+            background-color: rgba(11, 19, 31, 0.4);
+            border: 1px dashed var(--border);
+            border-radius: 10px;
+        }
+
+        .health-headline {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 0.7rem;
+        }
+
+        .health-percentage {
+            font-size: 2.5rem;
+            font-weight: 800;
+            line-height: 1;
+            margin-bottom: 0.5rem;
+            transition: color 0.2s ease;
+        }
+
+        .health-bar-bg {
+            height: 8px;
+            background: linear-gradient(to right, var(--accent-danger) 20%, var(--accent-warning) 50%, var(--accent-green) 80%);
+            border-radius: 4px;
+            margin: 0.75rem 0;
+            position: relative;
+        }
+
+        .health-bar-indicator {
+            width: 4px;
+            height: 16px;
+            background-color: var(--text-main);
+            border: 1px solid var(--bg-main);
+            position: absolute;
+            top: -4px;
+            border-radius: 2px;
+            transform: translateX(-50%);
+            transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .health-summary-text {
+            font-size: 0.88rem;
+            color: var(--text-muted);
+            line-height: 1.4;
+            margin-top: 0.75rem;
+        }
+
+        .health-summary-text strong {
+            color: var(--text-main);
+        }
+
         .instructions-text {
             font-size: 0.85rem;
             color: var(--text-muted);
@@ -291,11 +355,20 @@
             </div>
         </div>
 
-        <div class="input-group">
-            <label for="cal-borrowed">Total Borrowed (Margin Loan Balance)</label>
-            <div class="input-wrapper">
-                <span class="unit">$</span>
-                <input type="number" id="cal-borrowed" step="0.01" value="20000.00">
+        <div class="grid-2">
+            <div class="input-group">
+                <label for="cal-borrowed">Total Borrowed</label>
+                <div class="input-wrapper">
+                    <span class="unit">$</span>
+                    <input type="number" id="cal-borrowed" step="0.01" value="20000.00">
+                </div>
+            </div>
+            <div class="input-group">
+                <label for="cal-mmr">Position MMR</label>
+                <div class="input-wrapper">
+                    <input type="number" id="cal-mmr" step="1" min="20" max="100" value="25">
+                    <span class="unit">%</span>
+                </div>
             </div>
         </div>
 
@@ -312,7 +385,7 @@
         </div>
     </div>
 
-    <!-- CARD 2: SIMULATOR WORKSTATION -->
+    <!-- CARD 2: SIMULATOR & HEALTH WORKSTATION -->
     <div class="card">
         <div class="card-title">2. Leverage &amp; Utilization Simulator</div>
 
@@ -334,9 +407,23 @@
             </div>
         </div>
 
-        <!-- Context Guardrail Notice Element -->
+        <!-- Dynamic Context Guardrail Notice Element -->
         <div id="context-indicator" class="context-badge context-withdrawal">
             Active Framework: <strong>Withdrawal Utilization</strong>
+        </div>
+
+        <!-- VISUAL MARGIN HEALTH EXPANSION WIDGET -->
+        <div class="health-display-container">
+            <div class="health-headline">Cushion to Margin Call</div>
+            <div class="health-percentage" id="health-percentage-display">100%</div>
+            
+            <div class="health-bar-bg">
+                <div class="health-bar-indicator" id="health-indicator-dot"></div>
+            </div>
+            
+            <div class="health-summary-text" id="health-summary-explanation">
+                The value of your investments would have to drop <strong>--</strong> to face a margin call.
+            </div>
         </div>
     </div>
 
@@ -355,8 +442,10 @@
 </div>
 
 <script>
+    // Calibration Variables
     const calValue = document.getElementById('cal-value');
     const calBorrowed = document.getElementById('cal-borrowed');
+    const calMmr = document.getElementById('cal-mmr');
     const calCreditLimit = document.getElementById('cal-credit-limit');
     const creditLimitLabel = document.getElementById('credit-limit-label');
     const factorReadout = document.getElementById('factor-readout');
@@ -365,9 +454,16 @@
     const btnWithdraw = document.getElementById('mode-withdraw');
     const btnReinvest = document.getElementById('mode-reinvest');
 
+    // Simulator Variables
     const dtaInput = document.getElementById('dta-input');
     const utilInput = document.getElementById('util-input');
 
+    // Margin Health Elements
+    const healthPercentDisplay = document.getElementById('health-percentage-display');
+    const healthIndicatorDot = document.getElementById('health-indicator-dot');
+    const healthSummaryExplanation = document.getElementById('health-summary-explanation');
+
+    // State Architecture
     let activeMode = 'withdrawal'; 
     let calibrationFactor = 0.50;
 
@@ -394,7 +490,7 @@
             calCreditLimit.value = snapshotValues.reinvestment;
             
             contextIndicator.className = "context-badge context-reinvestment";
-            contextIndicator.innerHTML = "⚠️ <strong>Warning:</strong> Reinvestment Basis (Collateralized Framework) Active. Switch calibration back to <strong>Withdrawal Basis</strong> if organizing metrics for M1 Smart Transfer rules.";
+            contextIndicator.innerHTML = "⚠️ <strong>Warning:</strong> Reinvestment Basis Active. Switch calibration back to <strong>Withdrawal Basis</strong> if organizing metrics for M1 Smart Transfer rules.";
         }
         recalibrateSystem();
     }
@@ -417,39 +513,99 @@
                 if (!isNaN(borrowed)) {
                     const liveDta = (borrowed / value) * 100;
                     dtaInput.value = liveDta.toFixed(2);
-                    convertFromDTA();
+                    calculateDerivedMetrics('dta');
                 }
+            } else {
+                // If the user modified the simulator fields directly, refresh health outputs
+                calculateMarginHealth();
             }
         } else {
             factorReadout.textContent = "Invalid Calibration Inputs";
         }
     }
 
-    function convertFromDTA() {
-        const dta = parseFloat(dtaInput.value);
-        if (!isNaN(dta) && calibrationFactor > 0) {
-            utilInput.value = (dta / calibrationFactor).toFixed(2);
+    // Bi-directional engine core
+    function calculateDerivedMetrics(source) {
+        if (source === 'dta') {
+            const dta = parseFloat(dtaInput.value);
+            if (!isNaN(dta) && calibrationFactor > 0) {
+                utilInput.value = (dta / calibrationFactor).toFixed(2);
+            } else {
+                utilInput.value = '';
+            }
         } else {
-            utilInput.value = '';
+            const util = parseFloat(utilInput.value);
+            if (!isNaN(util)) {
+                dtaInput.value = (util * calibrationFactor).toFixed(2);
+            } else {
+                dtaInput.value = '';
+            }
+        }
+        calculateMarginHealth();
+    }
+
+    // Volatility Cushion & Risk Gauge Logic Loop
+    function calculateMarginHealth() {
+        const value = parseFloat(calValue.value) || 0;
+        const mmr = (parseFloat(calMmr.value) || 25) / 100;
+        const dta = (parseFloat(dtaInput.value) || 0) / 100;
+        
+        // Compute active simulated debt burden
+        const simulatedDebt = value * dta;
+
+        if (value <= 0 || simulatedDebt <= 0) {
+            // Unleveraged safe state handling
+            healthPercentDisplay.textContent = "100%";
+            healthPercentDisplay.style.color = "var(--accent-green)";
+            healthIndicatorDot.style.left = "100%";
+            healthSummaryExplanation.innerHTML = "Portfolio is <strong>fully unleveraged</strong>. There is no active liquidation vector.";
+            return;
+        }
+
+        // Margin call occurs when: Equity = Assets - Debt < Assets * MMR -> Assets_min = Debt / (1 - MMR)
+        const liquidationFloor = simulatedDebt / (1 - mmr);
+        
+        // Calculate cushions
+        const dollarCushion = value - liquidationFloor;
+        const percentageCushion = (dollarCushion / value) * 100;
+
+        // Render dynamic text values
+        if (percentageCushion <= 0) {
+            healthPercentDisplay.textContent = "0.00%";
+            healthPercentDisplay.style.color = "var(--accent-danger)";
+            healthIndicatorDot.style.left = "0%";
+            healthSummaryExplanation.innerHTML = "⚠️ <strong>MARGIN CALL ACTIVE:</strong> Simulated position has breached the maintenance threshold.";
+        } else {
+            healthPercentDisplay.textContent = percentageCushion.toFixed(2) + "%";
+            
+            // Map the dot left property securely to match colors (0% cushion is left, 100% is right)
+            let indicatorPosition = Math.min(Math.max(percentageCushion, 0), 100);
+            healthIndicatorDot.style.left = indicatorPosition + "%";
+
+            // Set dynamic color spectrum mapping
+            if (percentageCushion > 45) {
+                healthPercentDisplay.style.color = "var(--accent-green)";
+            } else if (percentageCushion > 20) {
+                healthPercentDisplay.style.color = "var(--accent-warning)";
+            } else {
+                healthPercentDisplay.style.color = "var(--accent-danger)";
+            }
+
+            const formattedDollarCushion = dollarCushion.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            healthSummaryExplanation.innerHTML = `The value of your investments would have to drop <strong>${percentageCushion.toFixed(2)}% ($${formattedDollarCushion})</strong> to face a margin call.`;
         }
     }
 
-    function convertFromUtil() {
-        const util = parseFloat(utilInput.value);
-        if (!isNaN(util)) {
-            dtaInput.value = (util * calibrationFactor).toFixed(2);
-        } else {
-            dtaInput.value = '';
-        }
-    }
-
+    // Wiring UI input hooks
     calValue.addEventListener('input', recalibrateSystem);
     calBorrowed.addEventListener('input', recalibrateSystem);
+    calMmr.addEventListener('input', recalibrateSystem);
     calCreditLimit.addEventListener('input', recalibrateSystem);
 
-    dtaInput.addEventListener('input', convertFromDTA);
-    utilInput.addEventListener('input', convertFromUtil);
+    dtaInput.addEventListener('input', () => calculateDerivedMetrics('dta'));
+    utilInput.addEventListener('input', () => calculateDerivedMetrics('util'));
 
+    // Bootstrap run on page initialization
     recalibrateSystem();
 </script>
 
