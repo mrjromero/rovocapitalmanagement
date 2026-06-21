@@ -76,12 +76,6 @@
             font-size: 0.85rem;
         }
 
-        .grid-2 {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1rem;
-        }
-
         .input-group {
             display: flex;
             flex-direction: column;
@@ -160,34 +154,30 @@
 <body>
 
 <div class="wrapper">
-    <!-- CALIBRATION STEP -->
     <div class="card">
-        <div class="card-title">M1 Current Margin Metrics</div>
+        <div class="card-title">1. M1 Live Dashboard Calibration</div>
         
-        <!-- Account Value Full Width -->
         <div class="input-group">
             <label for="cal-value">Account Value</label>
             <div class="input-wrapper">
                 <span class="unit">$</span>
-                <input type="number" id="cal-value" step="0.01" value="0.00">
+                <input type="number" id="cal-value" step="0.01" value="179659.19">
             </div>
         </div>
 
-        <!-- Balanced Two Column Row -->
-        <div class="grid-2">
-            <div class="input-group">
-                <label for="cal-borrowed">Total Borrowed</label>
-                <div class="input-wrapper">
-                    <span class="unit">$</span>
-                    <input type="number" id="cal-borrowed" step="0.01" value="0.00">
-                </div>
+        <div class="input-group">
+            <label for="cal-borrowed">Total Borrowed</label>
+            <div class="input-wrapper">
+                <span class="unit">$</span>
+                <input type="number" id="cal-borrowed" step="0.01" value="49757.09">
             </div>
-            <div class="input-group">
-                <label for="cal-avail-withdraw">Avail. to Borrow (Withdraw)</label>
-                <div class="input-wrapper">
-                    <span class="unit">$</span>
-                    <input type="number" id="cal-avail-withdraw" step="0.01" value="0.00">
-                </div>
+        </div>
+
+        <div class="input-group">
+            <label for="cal-avail-withdraw">Avail. to Borrow (Withdraw)</label>
+            <div class="input-wrapper">
+                <span class="unit">$</span>
+                <input type="number" id="cal-avail-withdraw" step="0.01" value="39471.10">
             </div>
         </div>
 
@@ -196,16 +186,14 @@
         </div>
     </div>
 
-    <!-- INTERACTIVE CONVERTER -->
     <div class="card">
         <header>
-            <h1>DTA/Utilization Converter</h1>
+            <h1>Calibrated Margin Converter</h1>
             <p>Direct Bi-Directional Conversion Calculator</p>
         </header>
 
         <div style="height: 1rem;"></div>
 
-        <!-- Debt-to-Asset Input -->
         <div class="input-group">
             <label for="dta-input">Debt-to-Asset (DTA) Ratio</label>
             <div class="input-wrapper">
@@ -214,7 +202,6 @@
             </div>
         </div>
 
-        <!-- Margin Utilization Input -->
         <div class="input-group">
             <label for="util-input">Margin Utilization Rate</label>
             <div class="input-wrapper">
@@ -237,7 +224,7 @@
     const utilInput = document.getElementById('util-input');
 
     // State variable for the dynamically derived factor
-    let calibrationFactor = 0.50;
+    let calibrationFactor = 0.496772;
 
     function recalibrateSystem() {
         const value = parseFloat(calValue.value);
