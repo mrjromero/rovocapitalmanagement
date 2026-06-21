@@ -288,7 +288,7 @@
             font-weight: 600;
             color: var(--accent-blue);
             text-align: center;
-            margin-top: 1.25rem;
+            margin-top: 1rem;
             line-height: 1.6;
         }
 
@@ -307,7 +307,7 @@
         }
 
         .context-reinvestment {
-            background-color: rgba(ff, 127, 80, 0.05);
+            background-color: rgba(255, 127, 80, 0.05);
             border: 1px dashed rgba(255, 127, 80, 0.35);
             color: var(--accent-alert);
         }
@@ -429,8 +429,8 @@
         <p>M1 Smart Transfer Risk Framework &amp; Simulator</p>
     </div>
 
-    <details class="card" close>
-        <summary>💡 Quick Start Guide (click to expand</summary>
+    <details class="card" closed>
+        <summary>💡 Quick Start Guide (click to expand)</summary>
         <div class="accordion-content">
             <div class="instructions-text">
                 <p><strong>What is this tool?</strong><br>
@@ -455,32 +455,28 @@
         <div class="input-group">
             <label for="cal-value">Account Value (Total Assets)</label>
             <div class="input-wrapper">
-                <span class="unit">$</span>
-                <input type="number" id="cal-value" step="0.01" value="100000.00">
+                <input type="text" id="cal-value" value="$100,000">
             </div>
         </div>
 
         <div class="input-group">
             <label for="cal-borrowed">Total Borrowed</label>
             <div class="input-wrapper">
-                <span class="unit">$</span>
-                <input type="number" id="cal-borrowed" step="0.01" value="20000.00">
+                <input type="text" id="cal-borrowed" value="$20,000">
             </div>
         </div>
 
         <div class="input-group">
             <label for="cal-req-equity">Required Equity</label>
             <div class="input-wrapper">
-                <span class="unit">$</span>
-                <input type="number" id="cal-req-equity" step="0.01" value="25000.00">
+                <input type="text" id="cal-req-equity" value="$25,000">
             </div>
         </div>
 
         <div class="input-group">
             <label id="credit-limit-label" for="cal-credit-limit">Withdrawal Credit Limit</label>
             <div class="input-wrapper">
-                <span class="unit">$</span>
-                <input type="number" id="cal-credit-limit" step="0.01" value="50000.00">
+                <input type="text" id="cal-credit-limit" value="$50,000">
             </div>
         </div>
 
@@ -577,6 +573,58 @@
         reinvestment: 65000.00
     };
 
+    // UI Input Auto-Mask Formatter Engine
+    function formatInputField(input) {
+        let cleanValue = input.value.replace(/[^0-9.]/g, '');
+        
+        // Prevent typing multiple decimal dots
+        let decimalCheck = cleanValue.split('.');
+        if (decimalCheck.length > 2) {
+            cleanValue = decimalCheck[0] + '.' + decimalCheck.slice(1).join('');
+        }
+        
+        if (cleanValue === '') {
+            input.value = '';
+            return;
+        }
+        
+        let parts = cleanValue.split('.');
+        let integerPart = parts[0];
+        let decimalPart = parts[1];
+        
+        if (integerPart) {
+            integerPart = parseFloat(integerPart).toLocaleString('en-US');
+        } else if (cleanValue.startsWith('.')) {
+            integerPart = '0';
+        }
+        
+        let formatted = '$' + integerPart;
+        if (parts.length > 1) {
+            formatted += '.' + (decimalPart !== undefined ? decimalPart.slice(0, 2) : '');
+        }
+        
+        input.value = formatted;
+    }
+
+    // Programmatic String Value Formatter
+    function formatCurrencyValue(val) {
+        return '$' + parseFloat(val).toLocaleString('en-US', {
+            minimumFractionDigits: val % 1 === 0 ? 0 : 2,
+            maximumFractionDigits: 2
+        });
+    }
+
+    // String Parsing Float Utility Link
+    function getFloatValue(input) {
+        let clean = input.value.replace(/[^0-9.]/g, '');
+        return parseFloat(clean) || 0;
+    }
+
+    function handleCurrencyInputEvent(e) {
+        formatInputField(e.target);
+        recalibrateSystem(e);
+    }
+
     function setMode(mode) {
         activeMode = mode;
         
@@ -584,7 +632,7 @@
             btnWithdraw.classList.add('active');
             btnReinvest.classList.remove('active');
             creditLimitLabel.textContent = "Withdrawal Credit Limit";
-            calCreditLimit.value = snapshotValues.withdrawal;
+            calCreditLimit.value = formatCurrencyValue(snapshotValues.withdrawal);
             
             contextIndicator.className = "context-badge context-withdrawal";
             contextIndicator.innerHTML = "Active Framework: <strong>Withdrawal Utilization Framework</strong>";
@@ -592,7 +640,7 @@
             btnReinvest.classList.add('active');
             btnWithdraw.classList.remove('active');
             creditLimitLabel.textContent = "Reinvestment Credit Limit";
-            calCreditLimit.value = snapshotValues.reinvestment;
+            calCreditLimit.value = formatCurrencyValue(snapshotValues.reinvestment);
             
             contextIndicator.className = "context-badge context-reinvestment";
             contextIndicator.innerHTML = "⚠️ <strong>Warning:</strong> Reinvestment Basis Active. Switch calibration back to <strong>Withdrawal Basis</strong> if organizing metrics for M1 Smart Transfer rules.";
@@ -602,12 +650,12 @@
     }
 
     function recalibrateSystem(e) {
-        const value = parseFloat(calValue.value);
-        const borrowed = parseFloat(calBorrowed.value);
-        const reqEquity = parseFloat(calReqEquity.value);
-        const creditLimit = parseFloat(calCreditLimit.value);
+        const value = getFloatValue(calValue);
+        const borrowed = getFloatValue(calBorrowed);
+        const reqEquity = getFloatValue(calReqEquity);
+        const creditLimit = getFloatValue(calCreditLimit);
 
-        if (!isNaN(creditLimit)) {
+        if (!isNaN(creditLimit) && calCreditLimit.value !== '') {
             snapshotValues[activeMode] = creditLimit;
         }
 
@@ -661,9 +709,9 @@
     }
 
     function calculateMarginHealth() {
-        const value = parseFloat(calValue.value) || 0;
-        const borrowed = parseFloat(calBorrowed.value) || 0;
-        const reqEquity = parseFloat(calReqEquity.value) || 0;
+        const value = getFloatValue(calValue);
+        const borrowed = getFloatValue(calBorrowed);
+        const reqEquity = getFloatValue(calReqEquity);
         const dta = (parseFloat(dtaInput.value) || 0) / 100;
         
         const mmr = value > 0 ? (reqEquity / value) : 0.25;
@@ -757,6 +805,12 @@
             calReqEquity.value = state.calReqEquity;
             calCreditLimit.value = state.calCreditLimit;
             
+            // Re-apply format formatting mask if stored values lack parameters
+            if (!calValue.value.includes('$')) formatInputField(calValue);
+            if (!calBorrowed.value.includes('$')) formatInputField(calBorrowed);
+            if (!calReqEquity.value.includes('$')) formatInputField(calReqEquity);
+            if (!calCreditLimit.value.includes('$')) formatInputField(calCreditLimit);
+            
             if (activeMode === 'withdrawal') {
                 btnWithdraw.classList.add('active');
                 btnReinvest.classList.remove('active');
@@ -794,10 +848,10 @@
         activeMode = 'withdrawal';
         snapshotValues = { withdrawal: 50000.00, reinvestment: 65000.00 };
         
-        calValue.value = "100000.00";
-        calBorrowed.value = "20000.00";
-        calReqEquity.value = "25000.00";
-        calCreditLimit.value = "50000.00";
+        calValue.value = "$100,000";
+        calBorrowed.value = "$20,000";
+        calReqEquity.value = "$25,000";
+        calCreditLimit.value = "$50,000";
         
         btnWithdraw.classList.add('active');
         btnReinvest.classList.remove('active');
@@ -808,11 +862,11 @@
         recalibrateSystem();
     }
 
-    // Wiring UI input hooks
-    calValue.addEventListener('input', recalibrateSystem);
-    calBorrowed.addEventListener('input', recalibrateSystem);
-    calReqEquity.addEventListener('input', recalibrateSystem);
-    calCreditLimit.addEventListener('input', recalibrateSystem);
+    // Wiring UI input hooks with formatting listeners
+    calValue.addEventListener('input', handleCurrencyInputEvent);
+    calBorrowed.addEventListener('input', handleCurrencyInputEvent);
+    calReqEquity.addEventListener('input', handleCurrencyInputEvent);
+    calCreditLimit.addEventListener('input', handleCurrencyInputEvent);
 
     dtaInput.addEventListener('input', () => calculateDerivedMetrics('dta'));
     utilInput.addEventListener('input', () => calculateDerivedMetrics('util'));
