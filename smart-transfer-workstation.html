@@ -845,13 +845,13 @@
             if (activeMode === 'withdrawal') {
                 btnWithdraw.classList.add('active');
                 btnReinvest.classList.remove('active');
-                creditLimitLabel.textContent = "Withdrawal Credit Limit";
+                creditLimitLabel.textContent = "Withdraw up to";
                 contextIndicator.className = "context-badge context-withdrawal";
                 contextIndicator.innerHTML = "Active Framework: <strong>Withdrawal Utilization Framework</strong>";
             } else {
                 btnReinvest.classList.add('active');
                 btnWithdraw.classList.remove('active');
-                creditLimitLabel.textContent = "Reinvestment Credit Limit";
+                creditLimitLabel.textContent = "Invest up to";
                 contextIndicator.className = "context-badge context-reinvestment";
                 contextIndicator.innerHTML = "⚠️ <strong>Warning:</strong> Reinvestment Basis Active. Switch calibration back to <strong>Withdrawal Basis</strong> if organizing metrics for M1 Smart Transfer rules.";
             }
