@@ -496,7 +496,7 @@
         </div>
 
         <div class="input-group">
-            <label id="credit-limit-label" for="cal-credit-limit">Withdrawal Credit Limit</label>
+            <label id="credit-limit-label" for="cal-credit-limit">Withdraw up to</label>
             <div class="input-wrapper">
                 <input type="text" id="cal-credit-limit" value="$50,000">
             </div>
@@ -652,7 +652,7 @@
         if (mode === 'withdrawal') {
             btnWithdraw.classList.add('active');
             btnReinvest.classList.remove('active');
-            creditLimitLabel.textContent = "Withdrawal Credit Limit";
+            creditLimitLabel.textContent = "Withdraw up to";
             calCreditLimit.value = formatCurrencyValue(snapshotValues.withdrawal);
             
             contextIndicator.className = "context-badge context-withdrawal";
@@ -660,7 +660,7 @@
         } else {
             btnReinvest.classList.add('active');
             btnWithdraw.classList.remove('active');
-            creditLimitLabel.textContent = "Reinvestment Credit Limit";
+            creditLimitLabel.textContent = "Invest up to";
             calCreditLimit.value = formatCurrencyValue(snapshotValues.reinvestment);
             
             contextIndicator.className = "context-badge context-reinvestment";
@@ -886,7 +886,7 @@
         
         btnWithdraw.classList.add('active');
         btnReinvest.classList.remove('active');
-        creditLimitLabel.textContent = "Withdrawal Credit Limit";
+        creditLimitLabel.textContent = "Withdraw up to";
         contextIndicator.className = "context-badge context-withdrawal";
         contextIndicator.innerHTML = "Active Framework: <strong>Withdrawal Utilization Framework</strong>";
         
