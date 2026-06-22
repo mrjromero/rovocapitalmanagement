@@ -451,7 +451,7 @@
         <p>M1 Smart Transfer Risk Framework &amp; Simulator</p>
     </div>
 
-    <details class="card" closed>
+    <details class="card">
         <summary>💡 Quick Start Guide (click to expand)</summary>
         <div class="accordion-content">
             <div class="instructions-text">
@@ -461,7 +461,7 @@
                 The platform calculates your borrow boundaries using two distinct risk frameworks:
                 </p>
                 <p>• <strong>Withdrawal Basis (Cash Extraction Framework):</strong> Use this when taking physical cash out of the account or modeling automated <strong>Smart Transfer Rules</strong>. Because cash leaves the Invest overall account pie entirely, M1 enforces a strict, rigid credit ceiling.</p>
-                <p>• <strong>Reinvestment Basis (Collateralized Buying Power):</strong> Use this only when using margin to buy more stocks/funds inside M1. The platform is showing a synthetic/calculated ceiling rather than a raw, absolute regulatory limit. because the newly bought shares stay inside the account as extra backup collateral.</p>
+                <p>• <strong>Reinvestment Basis (Collateralized Buying Power):</strong> Use this only when using margin to buy more stocks/funds inside M1. The platform is showing a synthetic/calculated ceiling rather than a raw, absolute regulatory limit because the newly bought shares stay inside the account as extra backup collateral.</p>
             </div>
         </div>
     </details>
@@ -516,6 +516,10 @@
             <span id="sim-status-badge" class="status-badge status-live">Live Baseline</span>
         </div>
 
+        <p class="instructions-text" style="margin-bottom: 1.25rem; font-size: 0.8rem; line-height: 1.5; background-color: #f8f9fa; padding: 0.6rem 0.8rem; border-radius: 6px; border-left: 3px solid var(--border-focus);">
+            <strong>Hint:</strong> Once baseline metrics are logged in Step 1, modify either percentage parameter below to compute future adjustments. The calculator converts values bi-directionally.
+        </p>
+
         <div class="input-group">
             <label for="dta-input">Debt-to-Asset (DTA) Ratio [Leverage]</label>
             <div class="input-wrapper">
@@ -534,6 +538,17 @@
 
         <div id="context-indicator" class="context-badge context-withdrawal">
             Active Framework: <strong>Withdrawal Utilization</strong>
+        </div>
+
+        <div class="derived-factor-banner" style="background-color: #f8f9fa; border: 1px solid var(--border-dominant); text-align: left; font-family: inherit; font-size: 0.85rem; color: var(--text-main); margin-top: 1.25rem; padding: 0.75rem 1rem;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 0.35rem;">
+                <span style="color: var(--text-muted); font-weight: 500;">Simulated Debt Balance:</span>
+                <strong id="sim-borrowed-display" style="font-family: 'Roboto Mono', monospace; color: var(--accent-blue);">--</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+                <span style="color: var(--text-muted); font-weight: 500;">Net Capital Change:</span>
+                <strong id="sim-change-display" style="font-family: 'Roboto Mono', monospace;">--</strong>
+            </div>
         </div>
 
         <div class="health-display-container">
@@ -750,6 +765,30 @@
             simStatusBadge.textContent = "Live Baseline";
         }
 
+        // DEBT DELTA REALTIME READOUT GENERATOR
+        const simBorrowedDisplay = document.getElementById('sim-borrowed-display');
+        const simChangeDisplay = document.getElementById('sim-change-display');
+        
+        if (value <= 0 || isNaN(dta)) {
+            simBorrowedDisplay.textContent = "--";
+            simChangeDisplay.textContent = "--";
+            simChangeDisplay.style.color = "var(--text-muted)";
+        } else {
+            simBorrowedDisplay.textContent = '$' + simulatedDebt.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            const loanDifference = simulatedDebt - borrowed;
+            
+            if (loanDifference > 0.01) {
+                simChangeDisplay.textContent = '+$' + loanDifference.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' (Draw)';
+                simChangeDisplay.style.color = "var(--accent-green)";
+            } else if (loanDifference < -0.01) {
+                simChangeDisplay.textContent = '-$' + Math.abs(loanDifference).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' (Paydown)';
+                simChangeDisplay.style.color = "var(--accent-danger)";
+            } else {
+                simChangeDisplay.textContent = "$0.00 (Unchanged)";
+                simChangeDisplay.style.color = "var(--text-muted)";
+            }
+        }
+
         if (value <= 0 || simulatedDebt <= 0) {
             healthPercentDisplay.textContent = "100%";
             healthPercentDisplay.style.color = "var(--accent-green)";
@@ -791,7 +830,6 @@
         }
     }
 
-    // Programmatic Sandbox Reset Synchronization Execution Point
     function syncSimToBaseline() {
         const value = getFloatValue(calValue);
         const borrowed = getFloatValue(calBorrowed);
