@@ -315,60 +315,7 @@
             color: var(--accent-alert);
         }
 
-        /* Reinforced Range Bar Visualizer Layout Component */
-        .range-track-wrapper {
-            position: relative;
-            margin: 2rem 0 1.25rem 0;
-            padding: 0;
-            display: block;
-            width: 100%;
-        }
-
-        .range-track-bg {
-            display: block;
-            width: 100%;
-            height: 12px;
-            background-color: #e9ecef;
-            border-radius: 6px;
-            position: relative;
-            border: 1px solid var(--border-dominant);
-        }
-
-        .range-track-highlight {
-            position: absolute;
-            height: 100%;
-            background-color: rgba(0, 181, 174, 0.12);
-            border-left: 2px solid var(--accent-green);
-            border-right: 2px solid var(--accent-green);
-            top: 0;
-        }
-
-        .range-track-pin {
-            width: 10px;
-            height: 22px;
-            background-color: var(--text-main);
-            border: 2px solid #ffffff;
-            position: absolute;
-            top: -5px;
-            border-radius: 3px;
-            transform: translateX(-50%);
-            box-shadow: 0 2px 4px rgba(0,0,0,0.25);
-            z-index: 10;
-            transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .range-labels-row {
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.72rem;
-            font-weight: 700;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.02em;
-            margin-top: 0.5rem;
-        }
-
-        /* Action Buttons */
+        /* Action Buttons Styles Restored */
         .reset-btn {
             background-color: transparent;
             border: 1px solid var(--border-dominant);
@@ -413,7 +360,7 @@
             background-color: rgba(27, 74, 123, 0.03);
         }
 
-        /* Premium Volatility Cushion Display Component */
+        /* Premium Volatility Cushion Display Component Styles Restored */
         .health-display-container {
             text-align: center;
             margin: 1.5rem 0 0.5rem 0;
@@ -475,7 +422,105 @@
             font-weight: 600;
         }
 
-        /* Documentation Block Typography Rules */
+        /* Reinforced Range Bar Visualizer Layout */
+        .range-track-wrapper {
+            position: relative;
+            margin: 2rem 0 1.25rem 0;
+            padding: 0;
+            display: block;
+            width: 100%;
+        }
+
+        .range-track-bg {
+            display: block;
+            width: 100%;
+            height: 14px;
+            background: linear-gradient(to right, rgba(0, 181, 174, 0.04) 0%, rgba(0, 181, 174, 0.08) 35%, rgba(228, 189, 82, 0.18) 65%, rgba(181, 0, 7, 0.18) 100%);
+            border-radius: 7px;
+            position: relative;
+            border: 1px solid var(--border-dominant);
+            cursor: ew-resize;
+            user-select: none;
+            touch-action: none;
+        }
+
+        .range-track-highlight {
+            position: absolute;
+            height: 100%;
+            background-color: rgba(27, 74, 123, 0.08);
+            border-left: 2px solid var(--accent-blue);
+            border-right: 2px solid var(--accent-blue);
+            top: 0;
+            pointer-events: none;
+        }
+
+        .range-track-pin {
+            width: 10px;
+            height: 24px;
+            background-color: var(--text-main);
+            border: 2px solid #ffffff;
+            position: absolute;
+            top: -6px;
+            border-radius: 3px;
+            transform: translateX(-50%);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            z-index: 10;
+            transition: left 0.1s cubic-bezier(0.4, 0, 0.2, 1);
+            pointer-events: none;
+        }
+
+        .range-labels-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+            margin-top: 0.5rem;
+            pointer-events: none;
+        }
+
+        /* High Visibility Boundary Risk Matrix CSS Elements */
+        .risk-matrix-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid var(--border-dominant);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .risk-matrix-table th {
+            background-color: var(--bg-toggle);
+            color: var(--text-main);
+            font-family: 'Poppins', sans-serif;
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            padding: 0.5rem 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-dominant);
+        }
+
+        .risk-matrix-table td {
+            padding: 0.6rem 0.75rem;
+            font-size: 0.8rem;
+            color: var(--text-main);
+            border-bottom: 1px solid var(--border-soft);
+        }
+
+        .risk-matrix-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .risk-matrix-table td strong {
+            font-family: 'Roboto Mono', monospace;
+        }
+
         .instructions-text {
             font-size: 0.85rem;
             color: var(--text-muted);
@@ -542,8 +587,8 @@
         <div class="card-title">1. Current M1 Dashboard Metrics</div>
         
         <div class="toggle-container">
-            <button class="toggle-btn active" id="mode-withdraw" onclick="setMode('withdrawal')">Withdrawal Basis</button>
-            <button class="toggle-btn" id="mode-reinvest" onclick="setMode('reinvestment')">Reinvestment Basis</button>
+            <button class="toggle-btn active" id="mode-withdraw">Withdrawal Basis</button>
+            <button class="toggle-btn" id="mode-reinvest">Reinvestment Basis</button>
         </div>
 
         <div class="input-group">
@@ -579,7 +624,7 @@
             Derived Blended Portfolio MMR: --
         </div>
 
-        <button type="button" class="reset-btn" onclick="resetDefaults()">Reset to Defaults</button>
+        <button type="button" class="reset-btn" id="reset-defaults-btn">Reset to Defaults</button>
     </div>
 
     <div class="card">
@@ -636,14 +681,14 @@
             </div>
         </div>
 
-        <button type="button" class="secondary-btn" onclick="syncSimToBaseline()">Reset Simulator to Live Baseline</button>
+        <button type="button" class="secondary-btn" id="sync-baseline-btn">Reset Simulator to Live Baseline</button>
     </div>
 
     <div class="card">
         <div class="card-title">3. Living Expense Range Target Gates</div>
         
         <p class="instructions-text" style="margin-bottom: 1.25rem; font-size: 0.8rem; line-height: 1.5;">
-            Define your targeted operating bandwidth for covering expenses. The workstation maps your parameters into exact <strong>M1 automated cash rules</strong>.
+            Define your targeted operating bandwidth for covering expenses. **Click anywhere on the bar track or physically drag the black pointer pin to manipulate your active simulation thresholds in real-time.**
         </p>
 
         <div class="grid-2">
@@ -664,14 +709,14 @@
         </div>
 
         <div class="range-track-wrapper">
-            <div class="range-track-bg">
+            <div id="visual-range-track-bar" class="range-track-bg">
                 <div id="visual-range-zone" class="range-track-highlight"></div>
                 <div id="visual-range-pin" class="range-track-pin"></div>
             </div>
             <div class="range-labels-row">
                 <span>0% Util</span>
-                <span id="visual-range-floor-label" style="color: var(--accent-blue);">Floor: 30%</span>
-                <span id="visual-range-ceiling-label" style="color: var(--accent-blue);">Ceiling: 50%</span>
+                <span id="visual-range-floor-label" style="color: var(--accent-blue); font-weight: 700;">Floor: 30%</span>
+                <span id="visual-range-ceiling-label" style="color: var(--accent-blue); font-weight: 700;">Ceiling: 50%</span>
                 <span>100% Util</span>
             </div>
         </div>
@@ -683,6 +728,25 @@
             </div>
         </div>
 
+        <table class="risk-matrix-table">
+            <thead>
+                <tr>
+                    <th>Boundary State</th>
+                    <th>Cushion to Margin Call</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="font-weight: 600; color: var(--accent-blue);">At Target Floor</td>
+                    <td><span id="matrix-floor-pct" style="font-weight: 700; color: var(--accent-green);">--</span> (<strong id="matrix-floor-cash">--</strong> drop)</td>
+                </tr>
+                <tr>
+                    <td style="font-weight: 600; color: var(--accent-danger);">At Target Ceiling</td>
+                    <td><span id="matrix-ceiling-pct" style="font-weight: 700;">--</span> (<strong id="matrix-ceiling-cash">--</strong> drop)</td>
+                </tr>
+            </tbody>
+        </table>
+
         <div class="derived-factor-banner" style="background-color: rgba(0, 181, 174, 0.05); border: 1px dashed var(--accent-green); text-align: left; font-family: inherit; font-size: 0.82rem; color: var(--text-main); padding: 0.85rem 1rem;">
             <div style="font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; color: var(--accent-blue); margin-bottom: 0.5rem; font-family: 'Poppins', sans-serif;">
                 Calculated M1 Smart Transfer Targets
@@ -692,6 +756,8 @@
                 <li><strong>Rule 2 (Overbalance):</strong> If Cash inside your incoming Yield/Holding vehicle exceeds your threshold, pay down Borrow <span style="color: var(--text-main); font-weight: 600;">until reaching a utilization limit of <strong id="m1-rule-ceiling-pct">--</strong>%</span> (Simulated Balance Target: <strong id="m1-rule-ceiling-cash" style="color: var(--text-main); font-family: 'Roboto Mono';">--</strong>).</li>
             </ul>
         </div>
+
+        <button type="button" class="reset-btn" id="reset-gates-btn">Reset Gates to Defaults</button>
     </div>
 
     <div class="card">
@@ -699,9 +765,9 @@
         <div class="instructions-text">
             <p>M1 Smart Transfers are strictly triggered by <strong>cash balance thresholds</strong> (fixed dollar boundaries) rather than percentage parameters. However, when an automation rule executes a sweep from your credit line, it is governed by specific structural guardrails:</p>
             <ul class="instructions-list">
-                <li><strong>Withdrawal Limit Dependency (Cash Extraction):</strong> Automated rules treat sweeps as capital extractions. Because the cash leaves the portfolio shell, the maximum transfer size is strictly capped by your <strong>Available for Withdrawal</strong> credit limit.</li>
-                <li><strong>Reinvestment Rules Ignored:</strong> The expanded internal buying power ("Available to Invest") is completely bypassed by Smart Transfers since no balancing stock collateral is added duly to the account.</li>
-                <li><strong>How to use for Smart Transfer calculations:</strong> Keep the toggle set to <strong>Withdrawal Basis</strong>. Input different target cash sweep amounts as simulated debt into Card 2 to see exactly what your dashboard <strong>Margin Utilization Rate</strong> and overall <strong>DTA</strong> will look like post-transfer, ensuring your automated rules never cross critical risk limits. You may also change the simulator to the desired <strong>DTA</strong> or <strong>Margin Utilization Rate</strong> to convert the values bi-directionally.</li>
+                <li>• <strong>Withdrawal Limit Dependency (Cash Extraction):</strong> Automated rules treat sweeps as capital extractions. Because the cash leaves the portfolio shell, the maximum transfer size is strictly capped by your <strong>Available for Withdrawal</strong> credit limit.</li>
+                <li>• <strong>Reinvestment Rules Ignored:</strong> The expanded internal buying power ("Available to Invest") is completely bypassed by Smart Transfers since no balancing stock collateral is added duly to the account.</li>
+                <li>• <strong>How to use for Smart Transfer calculations:</strong> Keep the toggle set to <strong>Withdrawal Basis</strong>. Input different target cash sweep amounts as simulated debt into Card 2 to see exactly what your dashboard <strong>Margin Utilization Rate</strong> and macro <strong>DTA</strong> will look like post-transfer, ensuring your automated rules never cross critical risk limits. You may also change the simulator to the desired <strong>DTA</strong> or <strong>Margin Utilization Rate</strong> to convert the values bi-directionally.</li>
             </ul>
         </div>
     </div>
@@ -724,6 +790,9 @@
     
     const btnWithdraw = document.getElementById('mode-withdraw');
     const btnReinvest = document.getElementById('mode-reinvest');
+    const btnResetDefaults = document.getElementById('reset-defaults-btn');
+    const btnSyncBaseline = document.getElementById('sync-baseline-btn');
+    const btnResetGates = document.getElementById('reset-gates-btn');
 
     // Simulator Variables
     const dtaInput = document.getElementById('dta-input');
@@ -733,6 +802,7 @@
     // Range Visualizer Variables
     const rangeFloorInput = document.getElementById('range-floor-input');
     const rangeCeilingInput = document.getElementById('range-ceiling-input');
+    const visualRangeTrackBar = document.getElementById('visual-range-track-bar');
     const visualRangeZone = document.getElementById('visual-range-zone');
     const visualRangePin = document.getElementById('visual-range-pin');
     const visualRangeFloorLabel = document.getElementById('visual-range-floor-label');
@@ -743,6 +813,12 @@
     const m1RuleFloorCash = document.getElementById('m1-rule-floor-cash');
     const m1RuleCeilingCash = document.getElementById('m1-rule-ceiling-cash');
 
+    // Matrix Variables
+    const matrixFloorPct = document.getElementById('matrix-floor-pct');
+    const matrixFloorCash = document.getElementById('matrix-floor-cash');
+    const matrixCeilingPct = document.getElementById('matrix-ceiling-pct');
+    const matrixCeilingCash = document.getElementById('matrix-ceiling-cash');
+
     // Margin Health Elements
     const healthPercentDisplay = document.getElementById('health-percentage-display');
     const healthIndicatorDot = document.getElementById('health-indicator-dot');
@@ -751,6 +827,7 @@
     // State Architecture
     let activeMode = 'withdrawal'; 
     let calibrationFactor = 0.50;
+    let isDraggingPin = false;
 
     let snapshotValues = {
         withdrawal: 50000.00,
@@ -869,32 +946,20 @@
         saveAppState();
     }
 
-    /* THE EXPLICIT FOCUSED SYNCHRONIZATION MATRIX THAT PROTECTS BI-DIRECTIONAL EDITING */
     function calculateDerivedMetrics(source) {
-        if (source === 'dta' && document.activeElement === dtaInput) {
+        if (source === 'dta') {
             const dta = parseFloat(dtaInput.value);
             if (!isNaN(dta) && calibrationFactor > 0) {
                 utilInput.value = (dta / calibrationFactor).toFixed(2);
-            } else {
+            } else if (dtaInput.value === '') {
                 utilInput.value = '';
             }
-        } else if (source === 'util' && document.activeElement === utilInput) {
+        } else if (source === 'util') {
             const util = parseFloat(utilInput.value);
             if (!isNaN(util)) {
                 dtaInput.value = (util * calibrationFactor).toFixed(2);
-            } else {
+            } else if (utilInput.value === '') {
                 dtaInput.value = '';
-            }
-        } else if (!source) {
-            // Direct system-driven fallback reset context path execution
-            const value = getFloatValue(calValue);
-            const borrowed = getFloatValue(calBorrowed);
-            if (value > 0 && !isNaN(borrowed)) {
-                const liveDta = (borrowed / value) * 100;
-                dtaInput.value = liveDta.toFixed(2);
-                if (calibrationFactor > 0) {
-                    utilInput.value = (liveDta / calibrationFactor).toFixed(2);
-                }
             }
         }
         calculateMarginHealth();
@@ -992,6 +1057,36 @@
             }
         }
 
+        // REVERSE ENGINEER ABSOLUTE RISK MATRIX CORRELATION BOUNDS
+        if (value > 0 && creditLimit > 0) {
+            const floorDebtLoad = creditLimit * (floorPercent / 100);
+            const floorLiquidationFloor = floorDebtLoad / (1 - mmr);
+            const floorDollarCushion = Math.max(value - floorLiquidationFloor, 0);
+            const floorPctCushion = (floorDollarCushion / value) * 100;
+
+            matrixFloorPct.textContent = floorPctCushion.toFixed(2) + "%";
+            matrixFloorCash.textContent = "$" + Math.round(floorDollarCushion).toLocaleString();
+            
+            if (floorPctCushion > 45) { matrixFloorPct.style.color = "var(--accent-green)"; }
+            else if (floorPctCushion > 20) { matrixFloorPct.style.color = "var(--accent-warning)"; }
+            else { matrixFloorPct.style.color = "var(--accent-danger)"; }
+
+            const ceilingDebtLoad = creditLimit * (ceilingPercent / 100);
+            const ceilingLiquidationFloor = ceilingDebtLoad / (1 - mmr);
+            const ceilingDollarCushion = Math.max(value - ceilingLiquidationFloor, 0);
+            const ceilingPctCushion = (ceilingDollarCushion / value) * 100;
+
+            matrixCeilingPct.textContent = ceilingPctCushion.toFixed(2) + "%";
+            matrixCeilingCash.textContent = "$" + Math.round(ceilingDollarCushion).toLocaleString();
+
+            if (ceilingPctCushion > 45) { matrixCeilingPct.style.color = "var(--accent-green)"; }
+            else if (ceilingPctCushion > 20) { matrixCeilingPct.style.color = "var(--accent-warning)"; }
+            else { matrixCeilingPct.style.color = "var(--accent-danger)"; }
+        } else {
+            matrixFloorPct.textContent = "--"; matrixFloorCash.textContent = "--";
+            matrixCeilingPct.textContent = "--"; matrixCeilingCash.textContent = "--";
+        }
+
         // Reverse engineer absolute cash thresholds for native M1 script sweeps
         if (creditLimit > 0) {
             const floorDebtTarget = creditLimit * (floorPercent / 100);
@@ -1045,19 +1140,69 @@
         }
     }
 
+    function updateSimFromTrack(clientX) {
+        if (!isDraggingPin) return; 
+        const rect = visualRangeTrackBar.getBoundingClientRect();
+        let offsetX = clientX - rect.left;
+        let calculatedUtilizationPercent = (offsetX / rect.width) * 100;
+        calculatedUtilizationPercent = Math.min(Math.max(calculatedUtilizationPercent, 0), 100);
+        
+        utilInput.value = calculatedUtilizationPercent.toFixed(2);
+        calculateDerivedMetrics('util');
+    }
+
+    // Connect standard desktop mouse drag sequences
+    visualRangeTrackBar.addEventListener('mousedown', (e) => {
+        isDraggingPin = true;
+        updateSimFromTrack(e.clientX);
+    });
+
+    window.addEventListener('mousemove', (e) => {
+        if (isDraggingPin) {
+            updateSimFromTrack(e.clientX);
+        }
+    });
+
+    window.addEventListener('mouseup', () => {
+        isDraggingPin = false;
+    });
+
+    // Connect standard mobile touch gestures
+    visualRangeTrackBar.addEventListener('touchstart', (e) => {
+        isDraggingPin = true;
+        updateSimFromTrack(e.touches[0].clientX);
+    });
+
+    window.addEventListener('touchmove', (e) => {
+        if (isDraggingPin) {
+            e.preventDefault(); 
+            updateSimFromTrack(e.touches[0].clientX);
+        }
+    }, { passive: false });
+
+    window.addEventListener('touchend', () => {
+        isDraggingPin = false;
+    });
+
     function syncSimToBaseline() {
         const value = getFloatValue(calValue);
         const borrowed = getFloatValue(calBorrowed);
         if (value > 0) {
             const liveDta = (borrowed / value) * 100;
             dtaInput.value = liveDta.toFixed(2);
-            // Explicit programmatic manual update context call
             if (calibrationFactor > 0) {
                 utilInput.value = (liveDta / calibrationFactor).toFixed(2);
             }
             calculateMarginHealth();
             saveAppState();
         }
+    }
+
+    function resetRangeDefaults() {
+        rangeFloorInput.value = "30";
+        rangeCeilingInput.value = "50";
+        calculateMarginHealth();
+        saveAppState();
     }
 
     function saveAppState() {
@@ -1078,6 +1223,10 @@
         } catch (err) {
             console.warn("Local storage state write blocked by user privacy config settings.", err);
         }
+    }
+
+    if (visualRangeTrackBar) {
+        // Safe placeholder framework activation
     }
 
     function loadAppState() {
@@ -1155,11 +1304,17 @@
         recalibrateSystem();
     }
 
-    // Wiring UI input hooks
+    // THE CLEAN, COMPLIANT EVENT LISTENER RUNTIME ENGINE
     calValue.addEventListener('input', handleCurrencyInputEvent);
     calBorrowed.addEventListener('input', handleCurrencyInputEvent);
     calReqEquity.addEventListener('input', handleCurrencyInputEvent);
     calCreditLimit.addEventListener('input', handleCurrencyInputEvent);
+
+    btnWithdraw.addEventListener('click', () => setMode('withdrawal'));
+    btnReinvest.addEventListener('click', () => setMode('reinvestment'));
+    btnResetDefaults.addEventListener('click', resetDefaults);
+    btnSyncBaseline.addEventListener('click', syncSimToBaseline);
+    btnResetGates.addEventListener('click', resetRangeDefaults);
 
     dtaInput.addEventListener('input', () => calculateDerivedMetrics('dta'));
     utilInput.addEventListener('input', () => calculateDerivedMetrics('util'));
