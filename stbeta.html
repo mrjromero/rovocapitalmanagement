@@ -315,7 +315,60 @@
             color: var(--accent-alert);
         }
 
-        /* Interactive Action Buttons */
+        /* Reinforced Range Bar Visualizer Layout Component */
+        .range-track-wrapper {
+            position: relative;
+            margin: 2rem 0 1.25rem 0;
+            padding: 0;
+            display: block;
+            width: 100%;
+        }
+
+        .range-track-bg {
+            display: block;
+            width: 100%;
+            height: 12px;
+            background-color: #e9ecef;
+            border-radius: 6px;
+            position: relative;
+            border: 1px solid var(--border-dominant);
+        }
+
+        .range-track-highlight {
+            position: absolute;
+            height: 100%;
+            background-color: rgba(0, 181, 174, 0.12);
+            border-left: 2px solid var(--accent-green);
+            border-right: 2px solid var(--accent-green);
+            top: 0;
+        }
+
+        .range-track-pin {
+            width: 10px;
+            height: 22px;
+            background-color: var(--text-main);
+            border: 2px solid #ffffff;
+            position: absolute;
+            top: -5px;
+            border-radius: 3px;
+            transform: translateX(-50%);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.25);
+            z-index: 10;
+            transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .range-labels-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+            margin-top: 0.5rem;
+        }
+
+        /* Action Buttons */
         .reset-btn {
             background-color: transparent;
             border: 1px solid var(--border-dominant);
@@ -789,8 +842,9 @@
 
         if (value > 0 && !isNaN(creditLimit)) {
             calibrationFactor = creditLimit / value;
-            const maxBorrowCapacityLimit = (calibrationFactor * 100).toFixed(4);
             
+            /* CHANGED TO 2 DECIMAL PLACES FOR A CLEANER READOUT */
+            const maxBorrowCapacityLimit = (calibrationFactor * 100).toFixed(2);
             const blendedMmrPercent = !isNaN(reqEquity) ? (reqEquity / value) * 100 : 25.00;
             
             factorReadout.innerHTML = "Derived Max Borrow Limit (" + activeMode + "): " + maxBorrowCapacityLimit + "%<br>" +
@@ -847,8 +901,6 @@
 
         const baselineDta = value > 0 ? (borrowed / value) * 100 : 0;
         const currentSimDta = dta * 100;
-        
-        // Tolerance framework check
         const isSimulated = Math.abs(currentSimDta - baselineDta) > 0.01;
 
         if (isSimulated) {
@@ -859,7 +911,6 @@
             simStatusBadge.textContent = "Live Baseline";
         }
 
-        // STRUCTURAL RE-ALIGNMENT FIX: Force simulatedDebt to point-perfect baseline if isSimulated evaluates to false
         const simulatedDebt = isSimulated ? (value * dta) : borrowed;
 
         // DEBT DELTA REALTIME READOUT GENERATOR
@@ -889,25 +940,25 @@
         // DYNAMIC RANGE TRACK GRAPH AND POINTER MAPPING
         let currentUtilizationRate = 0;
         if (calibrationFactor > 0) {
-            // Recalculate utilization rate directly using the real baseline debt lock if not simulated
             currentUtilizationRate = isSimulated ? ((dta * 100) / calibrationFactor) : ((borrowed / value) * 100) / calibrationFactor;
         }
         
         let pinLeftPosition = Math.min(Math.max(currentUtilizationRate, 0), 100);
-        visualRangePin.style.left = pinLeftPosition + '%';
+        if (visualRangePin) visualRangePin.style.left = pinLeftPosition + '%';
 
         const floorPercent = parseFloat(rangeFloorInput.value) || 0;
         const ceilingPercent = parseFloat(rangeCeilingInput.value) || 0;
 
-        // BIND PERCENTS INTO RULE LABELS DIRECTLY
         m1RuleFloorPct.textContent = floorPercent;
         m1RuleCeilingPct.textContent = ceilingPercent;
 
         visualRangeFloorLabel.textContent = "Floor: " + floorPercent + "%";
         visualRangeCeilingLabel.textContent = "Ceiling: " + ceilingPercent + "%";
 
-        visualRangeZone.style.left = floorPercent + '%';
-        visualRangeZone.style.width = Math.max((ceilingPercent - floorPercent), 0) + '%';
+        if (visualRangeZone) {
+            visualRangeZone.style.left = floorPercent + '%';
+            visualRangeZone.style.width = Math.max((ceilingPercent - floorPercent), 0) + '%';
+        }
 
         // COMPUTE POINTER TO CEILING DIFFERENTIAL
         if (isNaN(currentUtilizationRate) || creditLimit <= 0) {
@@ -993,19 +1044,6 @@
         }
     }
 
-    // Wiring UI input hooks
-    calValue.addEventListener('input', handleCurrencyInputEvent);
-    calBorrowed.addEventListener('input', handleCurrencyInputEvent);
-    calReqEquity.addEventListener('input', handleCurrencyInputEvent);
-    calCreditLimit.addEventListener('input', handleCurrencyInputEvent);
-
-    dtaInput.addEventListener('input', () => calculateDerivedMetrics('dta'));
-    utilInput.addEventListener('input', () => calculateDerivedMetrics('util'));
-    
-    rangeFloorInput.addEventListener('input', () => { calculateMarginHealth(); saveAppState(); });
-    rangeCeilingInput.addEventListener('input', () => { calculateMarginHealth(); saveAppState(); });
-
-    // Stater load configuration
     function saveAppState() {
         try {
             const dataPayload = {
