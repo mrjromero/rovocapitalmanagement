@@ -843,7 +843,6 @@
         if (value > 0 && !isNaN(creditLimit)) {
             calibrationFactor = creditLimit / value;
             
-            /* CHANGED TO 2 DECIMAL PLACES FOR A CLEANER READOUT */
             const maxBorrowCapacityLimit = (calibrationFactor * 100).toFixed(2);
             const blendedMmrPercent = !isNaN(reqEquity) ? (reqEquity / value) * 100 : 25.00;
             
@@ -870,20 +869,32 @@
         saveAppState();
     }
 
+    /* THE EXPLICIT FOCUSED SYNCHRONIZATION MATRIX THAT PROTECTS BI-DIRECTIONAL EDITING */
     function calculateDerivedMetrics(source) {
-        if (source === 'dta') {
+        if (source === 'dta' && document.activeElement === dtaInput) {
             const dta = parseFloat(dtaInput.value);
             if (!isNaN(dta) && calibrationFactor > 0) {
                 utilInput.value = (dta / calibrationFactor).toFixed(2);
             } else {
                 utilInput.value = '';
             }
-        } else {
+        } else if (source === 'util' && document.activeElement === utilInput) {
             const util = parseFloat(utilInput.value);
             if (!isNaN(util)) {
                 dtaInput.value = (util * calibrationFactor).toFixed(2);
             } else {
                 dtaInput.value = '';
+            }
+        } else if (!source) {
+            // Direct system-driven fallback reset context path execution
+            const value = getFloatValue(calValue);
+            const borrowed = getFloatValue(calBorrowed);
+            if (value > 0 && !isNaN(borrowed)) {
+                const liveDta = (borrowed / value) * 100;
+                dtaInput.value = liveDta.toFixed(2);
+                if (calibrationFactor > 0) {
+                    utilInput.value = (liveDta / calibrationFactor).toFixed(2);
+                }
             }
         }
         calculateMarginHealth();
@@ -1040,7 +1051,12 @@
         if (value > 0) {
             const liveDta = (borrowed / value) * 100;
             dtaInput.value = liveDta.toFixed(2);
-            calculateDerivedMetrics('dta');
+            // Explicit programmatic manual update context call
+            if (calibrationFactor > 0) {
+                utilInput.value = (liveDta / calibrationFactor).toFixed(2);
+            }
+            calculateMarginHealth();
+            saveAppState();
         }
     }
 
@@ -1105,13 +1121,9 @@
             
             recalibrateSystem({ target: { id: 'state-load-engine' } });
             
-            if (state.dtaValue) {
-                dtaInput.value = state.dtaValue;
-                calculateDerivedMetrics('dta');
-            } else if (state.utilValue) {
-                utilInput.value = state.utilValue;
-                calculateDerivedMetrics('util');
-            }
+            if (state.dtaValue) dtaInput.value = state.dtaValue;
+            if (state.utilValue) utilInput.value = state.utilValue;
+            calculateMarginHealth();
         } catch (err) {
             console.error("Failed to parse cache.", err);
             recalibrateSystem();
@@ -1142,6 +1154,18 @@
         
         recalibrateSystem();
     }
+
+    // Wiring UI input hooks
+    calValue.addEventListener('input', handleCurrencyInputEvent);
+    calBorrowed.addEventListener('input', handleCurrencyInputEvent);
+    calReqEquity.addEventListener('input', handleCurrencyInputEvent);
+    calCreditLimit.addEventListener('input', handleCurrencyInputEvent);
+
+    dtaInput.addEventListener('input', () => calculateDerivedMetrics('dta'));
+    utilInput.addEventListener('input', () => calculateDerivedMetrics('util'));
+    
+    rangeFloorInput.addEventListener('input', () => { calculateMarginHealth(); saveAppState(); });
+    rangeCeilingInput.addEventListener('input', () => { calculateMarginHealth(); saveAppState(); });
 
     loadAppState();
 </script>
