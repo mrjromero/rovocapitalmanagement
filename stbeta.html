@@ -262,6 +262,15 @@
             opacity: 0.35;
         }
 
+        .input-wrapper input::-webkit-outer-spin-button,
+        .input-wrapper input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        .input-wrapper input[type=number] {
+            -moz-appearance: textfield;
+        }
+
         .input-wrapper .unit {
             color: var(--text-muted);
             font-family: 'DM Sans', sans-serif;
@@ -306,7 +315,7 @@
             color: var(--accent-alert);
         }
 
-        /* Reinforced Range Bar Visualizer Layout Component */
+        /* Reinforced Range Bar Visualizer Layout */
         .range-track-wrapper {
             position: relative;
             margin: 2rem 0 1.25rem 0;
@@ -578,8 +587,8 @@
         <div class="card-title">1. Current M1 Dashboard Metrics</div>
         
         <div class="toggle-container">
-            <button class="toggle-btn active" id="mode-withdraw" onclick="setMode('withdrawal')">Withdrawal Basis</button>
-            <button class="toggle-btn" id="mode-reinvest" onclick="setMode('reinvestment')">Reinvestment Basis</button>
+            <button class="toggle-btn active" id="mode-withdraw">Withdrawal Basis</button>
+            <button class="toggle-btn" id="mode-reinvest">Reinvestment Basis</button>
         </div>
 
         <div class="input-group">
@@ -615,7 +624,7 @@
             Derived Blended Portfolio MMR: --
         </div>
 
-        <button type="button" class="reset-btn" onclick="resetDefaults()">Reset to Defaults</button>
+        <button type="button" class="reset-btn" id="reset-defaults-btn">Reset to Defaults</button>
     </div>
 
     <div class="card">
@@ -631,7 +640,7 @@
         <div class="input-group">
             <label for="dta-input">Debt-to-Asset (DTA) Ratio [Leverage]</label>
             <div class="input-wrapper">
-                <input type="number" id="dta-input" step="0.01" min="0" max="100" placeholder="20.00" oninput="calculateDerivedMetrics('dta')">
+                <input type="number" id="dta-input" step="0.01" min="0" max="100" placeholder="20.00">
                 <span class="unit">%</span>
             </div>
         </div>
@@ -639,7 +648,7 @@
         <div class="input-group">
             <label for="util-input">Margin Utilization Rate [Capacity]</label>
             <div class="input-wrapper">
-                <input type="number" id="util-input" step="0.01" min="0" max="100" placeholder="40.00" oninput="calculateDerivedMetrics('util')">
+                <input type="number" id="util-input" step="0.01" min="0" max="100" placeholder="40.00">
                 <span class="unit">%</span>
             </div>
         </div>
@@ -672,7 +681,7 @@
             </div>
         </div>
 
-        <button type="button" class="secondary-btn" onclick="syncSimToBaseline()">Reset Simulator to Live Baseline</button>
+        <button type="button" class="secondary-btn" id="sync-baseline-btn">Reset Simulator to Live Baseline</button>
     </div>
 
     <div class="card">
@@ -686,14 +695,14 @@
             <div class="input-group">
                 <label for="range-floor-input">Target Floor (Util %)</label>
                 <div class="input-wrapper">
-                    <input type="number" id="range-floor-input" step="1" min="0" max="100" value="30" oninput="calculateMarginHealth()">
+                    <input type="number" id="range-floor-input" step="1" min="0" max="100" value="30">
                     <span class="unit">%</span>
                 </div>
             </div>
             <div class="input-group">
                 <label for="range-ceiling-input">Target Ceiling (Util %)</label>
                 <div class="input-wrapper">
-                    <input type="number" id="range-ceiling-input" step="1" min="0" max="100" value="50" oninput="calculateMarginHealth()">
+                    <input type="number" id="range-ceiling-input" step="1" min="0" max="100" value="50">
                     <span class="unit">%</span>
                 </div>
             </div>
@@ -748,7 +757,7 @@
             </ul>
         </div>
 
-        <button type="button" class="reset-btn" onclick="resetRangeDefaults()">Reset Gates to Defaults</button>
+        <button type="button" class="reset-btn" id="reset-gates-btn">Reset Gates to Defaults</button>
     </div>
 
     <div class="card">
@@ -781,6 +790,9 @@
     
     const btnWithdraw = document.getElementById('mode-withdraw');
     const btnReinvest = document.getElementById('mode-reinvest');
+    const btnResetDefaults = document.getElementById('reset-defaults-btn');
+    const btnSyncBaseline = document.getElementById('sync-baseline-btn');
+    const btnResetGates = document.getElementById('reset-gates-btn');
 
     // Simulator Variables
     const dtaInput = document.getElementById('dta-input');
@@ -934,6 +946,7 @@
         saveAppState();
     }
 
+    /* DECOUPLED DIRECTIONAL SYNC ENGINE (ELIMINATES CONFLICT LOOPS) */
     function calculateDerivedMetrics(source) {
         if (source === 'dta') {
             const dta = parseFloat(dtaInput.value);
@@ -1287,6 +1300,24 @@
         
         recalibrateSystem();
     }
+
+    // CLEAN ARCHITECTURE: EVENT LISTENERS ARE EXCLUSIVELY MAPPED AT THE BOTTOM OF THE SCRIPT
+    calValue.addEventListener('input', handleCurrencyInputEvent);
+    calBorrowed.addEventListener('input', handleCurrencyInputEvent);
+    calReqEquity.addEventListener('input', handleCurrencyInputEvent);
+    calCreditLimit.addEventListener('input', handleCurrencyInputEvent);
+
+    btnWithdraw.addEventListener('click', () => setMode('withdrawal'));
+    btnReinvest.addEventListener('click', () => setMode('reinvestment'));
+    btnResetDefaults.addEventListener('click', resetDefaults);
+    btnSyncBaseline.addEventListener('click', syncSimToBaseline);
+    btnResetGates.addEventListener('click', resetRangeDefaults);
+
+    dtaInput.addEventListener('input', () => calculateDerivedMetrics('dta'));
+    utilInput.addEventListener('input', () => calculateDerivedMetrics('util'));
+    
+    rangeFloorInput.addEventListener('input', () => { calculateMarginHealth(); saveAppState(); });
+    rangeCeilingInput.addEventListener('input', () => { calculateMarginHealth(); saveAppState(); });
 
     loadAppState();
 </script>
