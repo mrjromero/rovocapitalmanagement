@@ -267,6 +267,9 @@
             -webkit-appearance: none;
             margin: 0;
         }
+        .input-wrapper input[type=number] {
+            -moz-appearance: textfield;
+        }
 
         .input-wrapper .unit {
             color: var(--text-muted);
@@ -312,7 +315,7 @@
             color: var(--accent-alert);
         }
 
-        /* Reinforced Risk Heat Gradient Track Component */
+        /* Reinforced Range Bar Visualizer Layout with Warning Risk Gradient Background */
         .range-track-wrapper {
             position: relative;
             margin: 2rem 0 1.25rem 0;
@@ -325,8 +328,8 @@
             display: block;
             width: 100%;
             height: 14px;
-            /* Added a safe directional risk gradient across background */
-            background: linear-gradient(to right, #e9ecef 60%, rgba(228, 189, 82, 0.15) 80%, rgba(181, 0, 7, 0.1) 100%);
+            /* UPGRADED: High fidelity multi-stop risk gradient matrix background */
+            background: linear-gradient(to right, rgba(0, 181, 174, 0.04) 0%, rgba(0, 181, 174, 0.08) 35%, rgba(228, 189, 82, 0.18) 65%, rgba(181, 0, 7, 0.18) 100%);
             border-radius: 7px;
             position: relative;
             border: 1px solid var(--border-dominant);
@@ -335,9 +338,9 @@
         .range-track-highlight {
             position: absolute;
             height: 100%;
-            background-color: rgba(0, 181, 174, 0.15);
-            border-left: 2px solid var(--accent-green);
-            border-right: 2px solid var(--accent-green);
+            background-color: rgba(27, 74, 123, 0.08);
+            border-left: 2px solid var(--accent-blue);
+            border-right: 2px solid var(--accent-blue);
             top: 0;
         }
 
@@ -350,7 +353,7 @@
             top: -6px;
             border-radius: 3px;
             transform: translateX(-50%);
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
             z-index: 10;
             transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
@@ -366,7 +369,47 @@
             margin-top: 0.5rem;
         }
 
-        /* Interactive Action Buttons */
+        /* High Visibility Boundary Risk Matrix CSS Elements */
+        .risk-matrix-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid var(--border-dominant);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .risk-matrix-table th {
+            background-color: var(--bg-toggle);
+            color: var(--text-main);
+            font-family: 'Poppins', sans-serif;
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            padding: 0.5rem 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-dominant);
+        }
+
+        .risk-matrix-table td {
+            padding: 0.6rem 0.75rem;
+            font-size: 0.8rem;
+            color: var(--text-main);
+            border-bottom: 1px solid var(--border-soft);
+        }
+
+        .risk-matrix-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .risk-matrix-table td strong {
+            font-family: 'Roboto Mono', monospace;
+        }
+
+        /* Action Buttons */
         .reset-btn {
             background-color: transparent;
             border: 1px solid var(--border-dominant);
@@ -668,29 +711,37 @@
             </div>
             <div class="range-labels-row">
                 <span>0% Util</span>
-                <span id="visual-range-floor-label" style="color: var(--accent-blue);">Floor: 30%</span>
-                <span id="visual-range-ceiling-label" style="color: var(--accent-blue);">Ceiling: 50%</span>
+                <span id="visual-range-floor-label" style="color: var(--accent-blue); font-weight: 700;">Floor: 30%</span>
+                <span id="visual-range-ceiling-label" style="color: var(--accent-blue); font-weight: 700;">Ceiling: 50%</span>
                 <span>100% Util</span>
             </div>
         </div>
 
-        <div class="derived-factor-banner" style="background-color: #f8f9fa; border: 1px solid var(--border-dominant); text-align: left; font-family: inherit; font-size: 0.85rem; color: var(--text-main); margin-top: 1rem; margin-bottom: 1.25rem; padding: 0.75rem 1rem;">
+        <div class="derived-factor-banner" style="background-color: #f8f9fa; border: 1px solid var(--border-dominant); text-align: left; font-family: inherit; font-size: 0.85rem; color: var(--text-main); margin-top: 1rem; margin-bottom: 1rem; padding: 0.75rem 1rem;">
             <div style="display: flex; justify-content: space-between;">
                 <span style="color: var(--text-muted); font-weight: 500;">Headroom to Target Ceiling:</span>
                 <strong id="ceiling-buffer-display" style="font-family: 'Roboto Mono', monospace;">--</strong>
             </div>
         </div>
 
-        <div class="grid-2" style="margin-bottom: 1.25rem;">
-            <div style="background-color: #f8f9fa; border: 1px solid var(--border-dominant); border-radius: 8px; padding: 0.6rem 0.8rem; text-align: center;">
-                <div style="font-size: 0.7rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.02em; margin-bottom: 0.25rem;">Cushion At Floor</div>
-                <strong id="floor-health-display" style="font-size: 1.05rem; font-weight: 700; color: var(--accent-green);">--</strong>
-            </div>
-            <div style="background-color: #f8f9fa; border: 1px solid var(--border-dominant); border-radius: 8px; padding: 0.6rem 0.8rem; text-align: center;">
-                <div style="font-size: 0.7rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.02em; margin-bottom: 0.25rem;">Cushion At Ceiling</div>
-                <strong id="ceiling-health-display" style="font-size: 1.05rem; font-weight: 700; color: var(--accent-warning);">--</strong>
-            </div>
-        </div>
+        <table class="risk-matrix-table">
+            <thead>
+                <tr>
+                    <th>Boundary State</th>
+                    <th>Cushion to Margin Call</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="font-weight: 600; color: var(--accent-blue);">At Target Floor</td>
+                    <td><span id="matrix-floor-pct" style="font-weight: 700; color: var(--accent-green);">--</span> (<strong id="matrix-floor-cash">--</strong> drop)</td>
+                </tr>
+                <tr>
+                    <td style="font-weight: 600; color: var(--accent-danger);">At Target Ceiling</td>
+                    <td><span id="matrix-ceiling-pct" style="font-weight: 700;">--</span> (<strong id="matrix-ceiling-cash">--</strong> drop)</td>
+                </tr>
+            </tbody>
+        </table>
 
         <div class="derived-factor-banner" style="background-color: rgba(0, 181, 174, 0.05); border: 1px dashed var(--accent-green); text-align: left; font-family: inherit; font-size: 0.82rem; color: var(--text-main); padding: 0.85rem 1rem;">
             <div style="font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; color: var(--accent-blue); margin-bottom: 0.5rem; font-family: 'Poppins', sans-serif;">
@@ -751,8 +802,12 @@
     const m1RuleCeilingPct = document.getElementById('m1-rule-ceiling-pct');
     const m1RuleFloorCash = document.getElementById('m1-rule-floor-cash');
     const m1RuleCeilingCash = document.getElementById('m1-rule-ceiling-cash');
-    const floorHealthDisplay = document.getElementById('floor-health-display');
-    const ceilingHealthDisplay = document.getElementById('ceiling-health-display');
+
+    // Matrix Variables
+    const matrixFloorPct = document.getElementById('matrix-floor-pct');
+    const matrixFloorCash = document.getElementById('matrix-floor-cash');
+    const matrixCeilingPct = document.getElementById('matrix-ceiling-pct');
+    const matrixCeilingCash = document.getElementById('matrix-ceiling-cash');
 
     // Margin Health Elements
     const healthPercentDisplay = document.getElementById('health-percentage-display');
@@ -1001,27 +1056,46 @@
             }
         }
 
-        // REVERSE ENGINEER ABSOLUTE BOUNDARY GATES MARGIN HEALTH STATEMENT RATIOS
+        // REVERSE ENGINEER ABSOLUTE RISK MATRIX CORRELATION BOUNDS
         if (value > 0 && creditLimit > 0) {
-            // Underbalance Floor Math Context
-            const absoluteFloorDebt = creditLimit * (floorPercent / 100);
-            const liquidationFloorValue = absoluteFloorDebt / (1 - mmr);
-            const floorPercentageCushion = Math.max(((value - liquidationFloorValue) / value) * 100, 0);
-            floorHealthDisplay.textContent = floorPercentageCushion.toFixed(2) + "%";
-            floorHealthDisplay.style.color = floorPercentageCushion > 45 ? "var(--accent-green)" : (floorPercentageCushion > 20 ? "var(--accent-warning)" : "var(--accent-danger)");
+            // Compute metrics at Floor Limit
+            const floorDebtLoad = creditLimit * (floorPercent / 100);
+            const floorLiquidationFloor = floorDebtLoad / (1 - mmr);
+            const floorDollarCushion = Math.max(value - floorLiquidationFloor, 0);
+            const floorPctCushion = (floorDollarCushion / value) * 100;
 
-            // Overbalance Ceiling Math Context
-            const absoluteCeilingDebt = creditLimit * (ceilingPercent / 100);
-            const liquidationCeilingValue = absoluteCeilingDebt / (1 - mmr);
-            const ceilingPercentageCushion = Math.max(((value - liquidationCeilingValue) / value) * 100, 0);
-            ceilingHealthDisplay.textContent = ceilingPercentageCushion.toFixed(2) + "%";
-            ceilingHealthDisplay.style.color = ceilingPercentageCushion > 45 ? "var(--accent-green)" : (ceilingPercentageCushion > 20 ? "var(--accent-warning)" : "var(--accent-danger)");
+            matrixFloorPct.textContent = floorPctCushion.toFixed(2) + "%";
+            matrixFloorCash.textContent = "$" + Math.round(floorDollarCushion).toLocaleString();
             
-            m1RuleFloorCash.textContent = '$' + Math.round(floorDebtTarget = absoluteFloorDebt).toLocaleString();
-            m1RuleCeilingCash.textContent = '$' + Math.round(ceilingDebtTarget = absoluteCeilingDebt).toLocaleString();
+            if (floorPctCushion > 45) { matrixFloorPct.style.color = "var(--accent-green)"; }
+            else if (floorPctCushion > 20) { matrixFloorPct.style.color = "var(--accent-warning)"; }
+            else { matrixFloorPct.style.color = "var(--accent-danger)"; }
+
+            // Compute metrics at Ceiling Limit
+            const ceilingDebtLoad = creditLimit * (ceilingPercent / 100);
+            const ceilingLiquidationFloor = ceilingDebtLoad / (1 - mmr);
+            const ceilingDollarCushion = Math.max(value - ceilingLiquidationFloor, 0);
+            const ceilingPctCushion = (ceilingDollarCushion / value) * 100;
+
+            matrixCeilingPct.textContent = ceilingPctCushion.toFixed(2) + "%";
+            matrixCeilingCash.textContent = "$" + Math.round(ceilingDollarCushion).toLocaleString();
+
+            if (ceilingPctCushion > 45) { matrixCeilingPct.style.color = "var(--accent-green)"; }
+            else if (ceilingPctCushion > 20) { matrixCeilingPct.style.color = "var(--accent-warning)"; }
+            else { matrixCeilingPct.style.color = "var(--accent-danger)"; }
         } else {
-            floorHealthDisplay.textContent = "--";
-            ceilingHealthDisplay.textContent = "--";
+            matrixFloorPct.textContent = "--"; matrixFloorCash.textContent = "--";
+            matrixCeilingPct.textContent = "--"; matrixCeilingCash.textContent = "--";
+        }
+
+        // Reverse engineer absolute cash thresholds for native M1 script sweeps
+        if (creditLimit > 0) {
+            const floorDebtTarget = creditLimit * (floorPercent / 100);
+            const ceilingDebtTarget = creditLimit * (ceilingPercent / 100);
+
+            m1RuleFloorCash.textContent = '$' + Math.round(floorDebtTarget).toLocaleString();
+            m1RuleCeilingCash.textContent = '$' + Math.round(ceilingDebtTarget).toLocaleString();
+        } else {
             m1RuleFloorCash.textContent = '--';
             m1RuleCeilingCash.textContent = '--';
         }
