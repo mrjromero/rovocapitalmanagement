@@ -6,9 +6,7 @@
     <title>M1 Leverage Simulator & Smart Transfer Guardrails</title>
     <style>
         /* Typography Imports From Target Stylesheet */
-        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&display=swap');
-        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
-        @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&family=Poppins:wght@400;500;600;700&family=Roboto+Mono:wght@400;500;600;700&display=swap');
 
         /* Embedded Variable Engine Context */
         :root {
@@ -262,6 +260,15 @@
         .input-wrapper input::placeholder {
             color: var(--text-muted);
             opacity: 0.35;
+        }
+
+        .input-wrapper input::-webkit-outer-spin-button,
+        .input-wrapper input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        .input-wrapper input[type=number] {
+            -moz-appearance: textfield;
         }
 
         .input-wrapper .unit {
@@ -528,7 +535,6 @@
         </div>
     </details>
 
-    <!-- CARD 1: BASELINE ACCOUNT PROFILE -->
     <div class="card">
         <div class="card-title">1. Current M1 Dashboard Metrics</div>
         
@@ -573,7 +579,6 @@
         <button type="button" class="reset-btn" onclick="resetDefaults()">Reset to Defaults</button>
     </div>
 
-    <!-- CARD 2: SIMULATOR WORKSTATION -->
     <div class="card">
         <div class="card-title">
             <span>2. Leverage &amp; Utilization Simulator</span>
@@ -631,7 +636,6 @@
         <button type="button" class="secondary-btn" onclick="syncSimToBaseline()">Reset Simulator to Live Baseline</button>
     </div>
 
-    <!-- CARD 3: POSITIVE CARRY SMART TRANSFER RANGE GATES -->
     <div class="card">
         <div class="card-title">3. Living Expense Range Target Gates</div>
         
@@ -656,7 +660,6 @@
             </div>
         </div>
 
-        <!-- VISUAL TRACK RANGE GRAPH COMPONENT -->
         <div class="range-track-wrapper">
             <div class="range-track-bg">
                 <div id="visual-range-zone" class="range-track-highlight"></div>
@@ -670,7 +673,6 @@
             </div>
         </div>
 
-        <!-- TRACKER POINTER TO CEILING DIFFERENTIAL ROW -->
         <div class="derived-factor-banner" style="background-color: #f8f9fa; border: 1px solid var(--border-dominant); text-align: left; font-family: inherit; font-size: 0.85rem; color: var(--text-main); margin-top: 1rem; margin-bottom: 1rem; padding: 0.75rem 1rem;">
             <div style="display: flex; justify-content: space-between;">
                 <span style="color: var(--text-muted); font-weight: 500;">Headroom to Target Ceiling:</span>
@@ -678,19 +680,17 @@
             </div>
         </div>
 
-        <!-- REVERSE ENGINEERED M1 SMART TRANSFER RULE CARD -->
         <div class="derived-factor-banner" style="background-color: rgba(0, 181, 174, 0.05); border: 1px dashed var(--accent-green); text-align: left; font-family: inherit; font-size: 0.82rem; color: var(--text-main); padding: 0.85rem 1rem;">
             <div style="font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; color: var(--accent-blue); margin-bottom: 0.5rem; font-family: 'Poppins', sans-serif;">
                 Required M1 Smart Transfer Configurations
             </div>
-            <ul style="margin-left: 1.1rem; display: flex; flex-direction: column; gap: 0.4rem; color: var(--text-muted); line-height: 1.4;">
-                <li><strong>Rule 1 (Underbalance):</strong> If Cash drops below <strong>$0.00</strong>, refill from Borrow up to an absolute Credit Limit debt anchor of <strong id="m1-rule-floor-cash" style="color: var(--text-main); font-family: 'Roboto Mono';">--</strong>.</li>
-                <li><strong>Rule 2 (Overbalance):</strong> If Cash inside your incoming Yield/Holding vehicle exceeds a benchmark comfort threshold, sweep surplus to execute a margin paydown down to <strong id="m1-rule-ceiling-cash" style="color: var(--text-main); font-family: 'Roboto Mono';">--</strong>.</li>
+            <ul style="margin-left: 1.1rem; display: flex; flex-direction: column; gap: 0.5rem; color: var(--text-muted); line-height: 1.5; list-style-type: square;">
+                <li><strong>Rule 1 (Underbalance):</strong> If Cash drops below <strong>$0.00</strong>, borrow from your credit line <span style="color: var(--text-main); font-weight: 600;">until reaching a utilization limit of <strong id="m1-rule-floor-pct">--</strong>%</span> (Simulated Balance Target: <strong id="m1-rule-floor-cash" style="color: var(--text-main); font-family: 'Roboto Mono';">--</strong>).</li>
+                <li><strong>Rule 2 (Overbalance):</strong> If Cash inside your incoming Yield/Holding vehicle exceeds your threshold, pay down Borrow <span style="color: var(--text-main); font-weight: 600;">until reaching a utilization limit of <strong id="m1-rule-ceiling-pct">--</strong>%</span> (Simulated Balance Target: <strong id="m1-rule-ceiling-cash" style="color: var(--text-main); font-family: 'Roboto Mono';">--</strong>).</li>
             </ul>
         </div>
     </div>
 
-    <!-- CARD 4: RULES DOCUMENTATION -->
     <div class="card">
         <div class="card-title">4. Smart Transfer Guide &amp; Guardrails</div>
         <div class="instructions-text">
@@ -703,7 +703,6 @@
         </div>
     </div>
 
-    <!-- NEW MUTED LEGAL DISCLOSURE COMPONENT SECTION -->
     <div class="legal-disclosure">
         <p><strong>Educational and Simulation Disclaimer:</strong> This application is provided solely as a hypothetical modeling sandbox and risk simulator for educational, personal planning, and structural validation purposes. It does not connect to the M1 Finance API, nor does it execute native transactional sweeps or portfolio trades. All outputs, metrics, cushion percentages, and dollar figures are math-driven approximations based entirely on the manual user data entered into Step 1.</p>
         <p><strong>No Investment Advice:</strong> The values derived by this system do not constitute professional financial, legal, tax, or investment advice. Margin borrowing involves a high degree of structural volatility and leverage risk, including the potential to face forced asset liquidations or lose more capital than originally deposited. Past portfolio performance, dividend yields, or positive carry spreads do not guarantee future safety boundaries. Users remain strictly and independently responsible for monitoring their live broker dashboards, verifying maintenance margin thresholds, and configuring automated account actions safely inside their official platform settings.</p>
@@ -736,6 +735,8 @@
     const visualRangeFloorLabel = document.getElementById('visual-range-floor-label');
     const visualRangeCeilingLabel = document.getElementById('visual-range-ceiling-label');
     const ceilingBufferDisplay = document.getElementById('ceiling-buffer-display');
+    const m1RuleFloorPct = document.getElementById('m1-rule-floor-pct');
+    const m1RuleCeilingPct = document.getElementById('m1-rule-ceiling-pct');
     const m1RuleFloorCash = document.getElementById('m1-rule-floor-cash');
     const m1RuleCeilingCash = document.getElementById('m1-rule-ceiling-cash');
 
@@ -943,13 +944,17 @@
         const floorPercent = parseFloat(rangeFloorInput.value) || 0;
         const ceilingPercent = parseFloat(rangeCeilingInput.value) || 0;
 
+        // BIND PERCENTS INTO RULE LABELS DIRECTLY
+        m1RuleFloorPct.textContent = floorPercent;
+        m1RuleCeilingPct.textContent = ceilingPercent;
+
         visualRangeFloorLabel.textContent = "Floor: " + floorPercent + "%";
         visualRangeCeilingLabel.textContent = "Ceiling: " + ceilingPercent + "%";
 
         visualRangeZone.style.left = floorPercent + '%';
         visualRangeZone.style.width = Math.max((ceilingPercent - floorPercent), 0) + '%';
 
-        // COMPUTE POINTER TO CEILING DIFFERENTIAL (ACCURACY UPDATE METHOD)
+        // COMPUTE POINTER TO CEILING DIFFERENTIAL
         if (isNaN(currentUtilizationRate) || creditLimit <= 0) {
             ceilingBufferDisplay.textContent = "--";
             ceilingBufferDisplay.style.color = "var(--text-muted)";
