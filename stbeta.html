@@ -306,7 +306,7 @@
             color: var(--accent-alert);
         }
 
-        /* Reinforced Range Bar Visualizer Layout */
+        /* Reinforced Range Bar Visualizer Layout Component */
         .range-track-wrapper {
             position: relative;
             margin: 2rem 0 1.25rem 0;
@@ -574,7 +574,6 @@
         </div>
     </details>
 
-    <!-- CARD 1: BASELINE ACCOUNT PROFILE -->
     <div class="card">
         <div class="card-title">1. Current M1 Dashboard Metrics</div>
         
@@ -619,7 +618,6 @@
         <button type="button" class="reset-btn" onclick="resetDefaults()">Reset to Defaults</button>
     </div>
 
-    <!-- CARD 2: SIMULATOR WORKSTATION -->
     <div class="card">
         <div class="card-title">
             <span>2. Leverage &amp; Utilization Simulator</span>
@@ -677,7 +675,6 @@
         <button type="button" class="secondary-btn" onclick="syncSimToBaseline()">Reset Simulator to Live Baseline</button>
     </div>
 
-    <!-- CARD 3: POSITIVE CARRY SMART TRANSFER RANGE GATES -->
     <div class="card">
         <div class="card-title">3. Living Expense Range Target Gates</div>
         
@@ -689,20 +686,19 @@
             <div class="input-group">
                 <label for="range-floor-input">Target Floor (Util %)</label>
                 <div class="input-wrapper">
-                    <input type="number" id="range-floor-input" step="1" min="0" max="100" value="30">
+                    <input type="number" id="range-floor-input" step="1" min="0" max="100" value="30" oninput="calculateMarginHealth()">
                     <span class="unit">%</span>
                 </div>
             </div>
             <div class="input-group">
                 <label for="range-ceiling-input">Target Ceiling (Util %)</label>
                 <div class="input-wrapper">
-                    <input type="number" id="range-ceiling-input" step="1" min="0" max="100" value="50">
+                    <input type="number" id="range-ceiling-input" step="1" min="0" max="100" value="50" oninput="calculateMarginHealth()">
                     <span class="unit">%</span>
                 </div>
             </div>
         </div>
 
-        <!-- VISUAL TRACK RANGE GRAPH COMPONENT WITH RISK BACKGROUND SPECTRUM -->
         <div class="range-track-wrapper">
             <div id="visual-range-track-bar" class="range-track-bg">
                 <div id="visual-range-zone" class="range-track-highlight"></div>
@@ -716,7 +712,6 @@
             </div>
         </div>
 
-        <!-- TRACKER POINTER TO CEILING DIFFERENTIAL ROW -->
         <div class="derived-factor-banner" style="background-color: #f8f9fa; border: 1px solid var(--border-dominant); text-align: left; font-family: inherit; font-size: 0.85rem; color: var(--text-main); margin-top: 1rem; margin-bottom: 1rem; padding: 0.75rem 1rem;">
             <div style="display: flex; justify-content: space-between;">
                 <span style="color: var(--text-muted); font-weight: 500;">Headroom to Target Ceiling:</span>
@@ -724,7 +719,6 @@
             </div>
         </div>
 
-        <!-- ADVANCED BOUNDARY RISK MATRIX DATA TABLE -->
         <table class="risk-matrix-table">
             <thead>
                 <tr>
@@ -744,7 +738,6 @@
             </tbody>
         </table>
 
-        <!-- CALCULATED TARGETS LOGIC SCRIPT COMPONENT -->
         <div class="derived-factor-banner" style="background-color: rgba(0, 181, 174, 0.05); border: 1px dashed var(--accent-green); text-align: left; font-family: inherit; font-size: 0.82rem; color: var(--text-main); padding: 0.85rem 1rem;">
             <div style="font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; color: var(--accent-blue); margin-bottom: 0.5rem; font-family: 'Poppins', sans-serif;">
                 Calculated M1 Smart Transfer Targets
@@ -758,7 +751,6 @@
         <button type="button" class="reset-btn" onclick="resetRangeDefaults()">Reset Gates to Defaults</button>
     </div>
 
-    <!-- CARD 4: RULES DOCUMENTATION -->
     <div class="card">
         <div class="card-title">4. Smart Transfer Guide &amp; Guardrails</div>
         <div class="instructions-text">
@@ -771,7 +763,6 @@
         </div>
     </div>
 
-    <!-- LEGAL DISCLOSURE COMPONENT SECTION -->
     <div class="legal-disclosure">
         <p><strong>Purely Educational Sandbox Disclaimer (Potential for Errors):</strong> This software application is provided completely free of charge strictly as an experimental, mathematical modeling sandbox for personal informational, planning, and educational exploration. **This tool has not been verified by certified financial compliance software and could contain logical, formatting, analytical, data-masking, or calculation errors.** It does not link dynamically to any live stock market feeds, financial institutions, or the M1 Finance backend API network. All metrics, cushions, price anchors, and cash rules displayed are nothing more than automated calculations derived entirely from the data values you manually provide in Step 1.</p>
         <p><strong>No Financial Advice or Guarantee:</strong> The mathematical algorithms executed by this framework do not constitute specialized financial, investment, legal, or tax advisory services. Operating a collateralized leverage line or automated transfer matrix introduces extreme risk components—including sudden margin interest hikes, asset valuation contractions, and unexpected, absolute account liquidation parameters enforced by clearing brokers. Past positive carry performance matrices or historical asset distribution streams do not guarantee structural safety levels under future market contractions. You remain entirely and uniquely liable for auditing your own calculations, confirming your live maintenance equity rules directly inside your official portal, and managing all automated transfer rules safely.</p>
@@ -870,7 +861,6 @@
         });
     }
 
-    // Floating parsing filter extraction
     function getFloatValue(input) {
         let clean = input.value.replace(/[^0-9.]/g, '');
         return parseFloat(clean) || 0;
@@ -944,7 +934,6 @@
         saveAppState();
     }
 
-    /* SEGREGATED DIRECTIONAL CALCULATION FORK SYSTEM */
     function calculateDerivedMetrics(source) {
         if (source === 'dta') {
             const dta = parseFloat(dtaInput.value);
@@ -1139,9 +1128,8 @@
         }
     }
 
-    /* UPGRADED: BALANCED EVENT STREAM METHOD CONTROLLER (ISOLATES USER INPUTS) */
     function updateSimFromTrack(clientX) {
-        if (!isDraggingPin) return; // Hard guard against loose programmatical coordinate snap calls
+        if (!isDraggingPin) return; 
         const rect = visualRangeTrackBar.getBoundingClientRect();
         let offsetX = clientX - rect.left;
         let calculatedUtilizationPercent = (offsetX / rect.width) * 100;
