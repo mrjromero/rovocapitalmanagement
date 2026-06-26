@@ -262,15 +262,6 @@
             opacity: 0.35;
         }
 
-        .input-wrapper input::-webkit-outer-spin-button,
-        .input-wrapper input::-webkit-inner-spin-button {
-            -webkit-appearance: none;
-            margin: 0;
-        }
-        .input-wrapper input[type=number] {
-            -moz-appearance: textfield;
-        }
-
         .input-wrapper .unit {
             color: var(--text-muted);
             font-family: 'DM Sans', sans-serif;
@@ -315,7 +306,7 @@
             color: var(--accent-alert);
         }
 
-        /* Reinforced Range Bar Visualizer Layout with Warning Risk Gradient Background */
+        /* Reinforced Range Bar Visualizer Layout with Risk Gradient Background */
         .range-track-wrapper {
             position: relative;
             margin: 2rem 0 1.25rem 0;
@@ -328,7 +319,6 @@
             display: block;
             width: 100%;
             height: 14px;
-            /* UPGRADED: High fidelity multi-stop risk gradient matrix background */
             background: linear-gradient(to right, rgba(0, 181, 174, 0.04) 0%, rgba(0, 181, 174, 0.08) 35%, rgba(228, 189, 82, 0.18) 65%, rgba(181, 0, 7, 0.18) 100%);
             border-radius: 7px;
             position: relative;
@@ -935,30 +925,21 @@
         saveAppState();
     }
 
+    /* BULLETPROOF, SEGREGATED BI-DIRECTIONAL CALCULATOR LISTENERS */
     function calculateDerivedMetrics(source) {
-        if (source === 'dta' && document.activeElement === dtaInput) {
+        if (source === 'dta') {
             const dta = parseFloat(dtaInput.value);
             if (!isNaN(dta) && calibrationFactor > 0) {
                 utilInput.value = (dta / calibrationFactor).toFixed(2);
-            } else {
+            } else if (dtaInput.value === '') {
                 utilInput.value = '';
             }
-        } else if (source === 'util' && document.activeElement === utilInput) {
+        } else if (source === 'util') {
             const util = parseFloat(utilInput.value);
             if (!isNaN(util)) {
                 dtaInput.value = (util * calibrationFactor).toFixed(2);
-            } else {
+            } else if (utilInput.value === '') {
                 dtaInput.value = '';
-            }
-        } else if (!source) {
-            const value = getFloatValue(calValue);
-            const borrowed = getFloatValue(calBorrowed);
-            if (value > 0 && !isNaN(borrowed)) {
-                const liveDta = (borrowed / value) * 100;
-                dtaInput.value = liveDta.toFixed(2);
-                if (calibrationFactor > 0) {
-                    utilInput.value = (liveDta / calibrationFactor).toFixed(2);
-                }
             }
         }
         calculateMarginHealth();
@@ -1058,7 +1039,6 @@
 
         // REVERSE ENGINEER ABSOLUTE RISK MATRIX CORRELATION BOUNDS
         if (value > 0 && creditLimit > 0) {
-            // Compute metrics at Floor Limit
             const floorDebtLoad = creditLimit * (floorPercent / 100);
             const floorLiquidationFloor = floorDebtLoad / (1 - mmr);
             const floorDollarCushion = Math.max(value - floorLiquidationFloor, 0);
@@ -1071,7 +1051,6 @@
             else if (floorPctCushion > 20) { matrixFloorPct.style.color = "var(--accent-warning)"; }
             else { matrixFloorPct.style.color = "var(--accent-danger)"; }
 
-            // Compute metrics at Ceiling Limit
             const ceilingDebtLoad = creditLimit * (ceilingPercent / 100);
             const ceilingLiquidationFloor = ceilingDebtLoad / (1 - mmr);
             const ceilingDollarCushion = Math.max(value - ceilingLiquidationFloor, 0);
@@ -1249,6 +1228,18 @@
         
         recalibrateSystem();
     }
+
+    // Wiring UI input hooks
+    calValue.addEventListener('input', handleCurrencyInputEvent);
+    calBorrowed.addEventListener('input', handleCurrencyInputEvent);
+    calReqEquity.addEventListener('input', handleCurrencyInputEvent);
+    calCreditLimit.addEventListener('input', handleCurrencyInputEvent);
+
+    dtaInput.addEventListener('input', () => calculateDerivedMetrics('dta'));
+    utilInput.addEventListener('input', () => calculateDerivedMetrics('util'));
+    
+    rangeFloorInput.addEventListener('input', () => { calculateMarginHealth(); saveAppState(); });
+    rangeCeilingInput.addEventListener('input', () => { calculateMarginHealth(); saveAppState(); });
 
     loadAppState();
 </script>
