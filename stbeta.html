@@ -267,9 +267,6 @@
             -webkit-appearance: none;
             margin: 0;
         }
-        .input-wrapper input[type=number] {
-            -moz-appearance: textfield;
-        }
 
         .input-wrapper .unit {
             color: var(--text-muted);
@@ -315,7 +312,7 @@
             color: var(--accent-alert);
         }
 
-        /* Reinforced Range Bar Visualizer Layout Component */
+        /* Reinforced Risk Heat Gradient Track Component */
         .range-track-wrapper {
             position: relative;
             margin: 2rem 0 1.25rem 0;
@@ -327,9 +324,10 @@
         .range-track-bg {
             display: block;
             width: 100%;
-            height: 12px;
-            background-color: #e9ecef;
-            border-radius: 6px;
+            height: 14px;
+            /* Added a safe directional risk gradient across background */
+            background: linear-gradient(to right, #e9ecef 60%, rgba(228, 189, 82, 0.15) 80%, rgba(181, 0, 7, 0.1) 100%);
+            border-radius: 7px;
             position: relative;
             border: 1px solid var(--border-dominant);
         }
@@ -337,7 +335,7 @@
         .range-track-highlight {
             position: absolute;
             height: 100%;
-            background-color: rgba(0, 181, 174, 0.12);
+            background-color: rgba(0, 181, 174, 0.15);
             border-left: 2px solid var(--accent-green);
             border-right: 2px solid var(--accent-green);
             top: 0;
@@ -345,14 +343,14 @@
 
         .range-track-pin {
             width: 10px;
-            height: 22px;
+            height: 24px;
             background-color: var(--text-main);
             border: 2px solid #ffffff;
             position: absolute;
-            top: -5px;
+            top: -6px;
             border-radius: 3px;
             transform: translateX(-50%);
-            box-shadow: 0 2px 4px rgba(0,0,0,0.25);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
             z-index: 10;
             transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
@@ -368,7 +366,7 @@
             margin-top: 0.5rem;
         }
 
-        /* Action Buttons */
+        /* Interactive Action Buttons */
         .reset-btn {
             background-color: transparent;
             border: 1px solid var(--border-dominant);
@@ -676,10 +674,21 @@
             </div>
         </div>
 
-        <div class="derived-factor-banner" style="background-color: #f8f9fa; border: 1px solid var(--border-dominant); text-align: left; font-family: inherit; font-size: 0.85rem; color: var(--text-main); margin-top: 1rem; margin-bottom: 1rem; padding: 0.75rem 1rem;">
+        <div class="derived-factor-banner" style="background-color: #f8f9fa; border: 1px solid var(--border-dominant); text-align: left; font-family: inherit; font-size: 0.85rem; color: var(--text-main); margin-top: 1rem; margin-bottom: 1.25rem; padding: 0.75rem 1rem;">
             <div style="display: flex; justify-content: space-between;">
                 <span style="color: var(--text-muted); font-weight: 500;">Headroom to Target Ceiling:</span>
                 <strong id="ceiling-buffer-display" style="font-family: 'Roboto Mono', monospace;">--</strong>
+            </div>
+        </div>
+
+        <div class="grid-2" style="margin-bottom: 1.25rem;">
+            <div style="background-color: #f8f9fa; border: 1px solid var(--border-dominant); border-radius: 8px; padding: 0.6rem 0.8rem; text-align: center;">
+                <div style="font-size: 0.7rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.02em; margin-bottom: 0.25rem;">Cushion At Floor</div>
+                <strong id="floor-health-display" style="font-size: 1.05rem; font-weight: 700; color: var(--accent-green);">--</strong>
+            </div>
+            <div style="background-color: #f8f9fa; border: 1px solid var(--border-dominant); border-radius: 8px; padding: 0.6rem 0.8rem; text-align: center;">
+                <div style="font-size: 0.7rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.02em; margin-bottom: 0.25rem;">Cushion At Ceiling</div>
+                <strong id="ceiling-health-display" style="font-size: 1.05rem; font-weight: 700; color: var(--accent-warning);">--</strong>
             </div>
         </div>
 
@@ -742,6 +751,8 @@
     const m1RuleCeilingPct = document.getElementById('m1-rule-ceiling-pct');
     const m1RuleFloorCash = document.getElementById('m1-rule-floor-cash');
     const m1RuleCeilingCash = document.getElementById('m1-rule-ceiling-cash');
+    const floorHealthDisplay = document.getElementById('floor-health-display');
+    const ceilingHealthDisplay = document.getElementById('ceiling-health-display');
 
     // Margin Health Elements
     const healthPercentDisplay = document.getElementById('health-percentage-display');
@@ -869,7 +880,6 @@
         saveAppState();
     }
 
-    /* THE EXPLICIT FOCUSED SYNCHRONIZATION MATRIX THAT PROTECTS BI-DIRECTIONAL EDITING */
     function calculateDerivedMetrics(source) {
         if (source === 'dta' && document.activeElement === dtaInput) {
             const dta = parseFloat(dtaInput.value);
@@ -886,7 +896,6 @@
                 dtaInput.value = '';
             }
         } else if (!source) {
-            // Direct system-driven fallback reset context path execution
             const value = getFloatValue(calValue);
             const borrowed = getFloatValue(calBorrowed);
             if (value > 0 && !isNaN(borrowed)) {
@@ -992,14 +1001,27 @@
             }
         }
 
-        // Reverse engineer absolute cash thresholds for native M1 script sweeps
-        if (creditLimit > 0) {
-            const floorDebtTarget = creditLimit * (floorPercent / 100);
-            const ceilingDebtTarget = creditLimit * (ceilingPercent / 100);
+        // REVERSE ENGINEER ABSOLUTE BOUNDARY GATES MARGIN HEALTH STATEMENT RATIOS
+        if (value > 0 && creditLimit > 0) {
+            // Underbalance Floor Math Context
+            const absoluteFloorDebt = creditLimit * (floorPercent / 100);
+            const liquidationFloorValue = absoluteFloorDebt / (1 - mmr);
+            const floorPercentageCushion = Math.max(((value - liquidationFloorValue) / value) * 100, 0);
+            floorHealthDisplay.textContent = floorPercentageCushion.toFixed(2) + "%";
+            floorHealthDisplay.style.color = floorPercentageCushion > 45 ? "var(--accent-green)" : (floorPercentageCushion > 20 ? "var(--accent-warning)" : "var(--accent-danger)");
 
-            m1RuleFloorCash.textContent = '$' + Math.round(floorDebtTarget).toLocaleString();
-            m1RuleCeilingCash.textContent = '$' + Math.round(ceilingDebtTarget).toLocaleString();
+            // Overbalance Ceiling Math Context
+            const absoluteCeilingDebt = creditLimit * (ceilingPercent / 100);
+            const liquidationCeilingValue = absoluteCeilingDebt / (1 - mmr);
+            const ceilingPercentageCushion = Math.max(((value - liquidationCeilingValue) / value) * 100, 0);
+            ceilingHealthDisplay.textContent = ceilingPercentageCushion.toFixed(2) + "%";
+            ceilingHealthDisplay.style.color = ceilingPercentageCushion > 45 ? "var(--accent-green)" : (ceilingPercentageCushion > 20 ? "var(--accent-warning)" : "var(--accent-danger)");
+            
+            m1RuleFloorCash.textContent = '$' + Math.round(floorDebtTarget = absoluteFloorDebt).toLocaleString();
+            m1RuleCeilingCash.textContent = '$' + Math.round(ceilingDebtTarget = absoluteCeilingDebt).toLocaleString();
         } else {
+            floorHealthDisplay.textContent = "--";
+            ceilingHealthDisplay.textContent = "--";
             m1RuleFloorCash.textContent = '--';
             m1RuleCeilingCash.textContent = '--';
         }
@@ -1051,7 +1073,6 @@
         if (value > 0) {
             const liveDta = (borrowed / value) * 100;
             dtaInput.value = liveDta.toFixed(2);
-            // Explicit programmatic manual update context call
             if (calibrationFactor > 0) {
                 utilInput.value = (liveDta / calibrationFactor).toFixed(2);
             }
@@ -1154,18 +1175,6 @@
         
         recalibrateSystem();
     }
-
-    // Wiring UI input hooks
-    calValue.addEventListener('input', handleCurrencyInputEvent);
-    calBorrowed.addEventListener('input', handleCurrencyInputEvent);
-    calReqEquity.addEventListener('input', handleCurrencyInputEvent);
-    calCreditLimit.addEventListener('input', handleCurrencyInputEvent);
-
-    dtaInput.addEventListener('input', () => calculateDerivedMetrics('dta'));
-    utilInput.addEventListener('input', () => calculateDerivedMetrics('util'));
-    
-    rangeFloorInput.addEventListener('input', () => { calculateMarginHealth(); saveAppState(); });
-    rangeCeilingInput.addEventListener('input', () => { calculateMarginHealth(); saveAppState(); });
 
     loadAppState();
 </script>
