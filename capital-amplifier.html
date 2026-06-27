@@ -70,8 +70,20 @@
         }
         button:hover { background-color: var(--accent-hover); }
         
-        /* Negative Carry Warning Box */
+        /* Alert Banners */
         .warning-box {
+            display: none;
+            background-color: rgba(245, 158, 11, 0.1);
+            border: 1px solid var(--warning);
+            color: var(--warning);
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            margin-top: 16px;
+            font-weight: 500;
+            line-height: 1.4;
+        }
+        .danger-box {
             display: none;
             background-color: rgba(239, 68, 68, 0.1);
             border: 1px solid var(--danger);
@@ -161,10 +173,24 @@
                 <input type="number" id="months" value="120" step="12">
             </div>
 
+            <div class="input-group" style="border-top: 1px solid var(--border); padding-top: 14px; margin-top: 14px;">
+                <label style="color: #f1f5f9; font-weight: 600;">💥 Black Swan Crash (%)</label>
+                <input type="number" id="crashSeverity" value="0" min="0" max="95" step="5">
+            </div>
+
+            <div class="input-group">
+                <label>Crash Occurrence (Month)</label>
+                <input type="number" id="crashMonth" value="36" min="1" step="1">
+            </div>
+
             <button onclick="runSimulation()">Calculate Curve</button>
 
             <div id="carryWarning" class="warning-box">
                 ⚠️ <strong>Negative Carry Warning:</strong> Your borrowing cost exceeds your asset growth rate (Yield + Appreciation). Leverage will actively decay your wealth.
+            </div>
+
+            <div id="marginCallAlert" class="danger-box">
+                🚨 <strong>Margin Call Triggered:</strong> At Month <span id="alertMonth">X</span>, the crash dropped assets below your maintenance threshold, forcing broker liquidation.
             </div>
         </div>
 
@@ -235,6 +261,10 @@
             const annAppreciation = parseFloat(document.getElementById('appreciation').value) / 100;
             const maintReq = parseFloat(document.getElementById('maintReq').value) / 100;
             const months = parseInt(document.getElementById('months').value);
+            
+            // Crash parameters
+            const crashSeverity = parseFloat(document.getElementById('crashSeverity').value) / 100;
+            const crashMonth = parseInt(document.getElementById('crashMonth').value);
 
             // Monthly rates
             const moYield = annYield / 12;
@@ -255,7 +285,7 @@
                 warningEl.style.display = 'none';
             }
 
-            // Calculate Max Drawdown
+            // Calculate Max Drawdown Theoretical Limit (Pre-crash baseline)
             let maxDrawdown = 0;
             if (targetDTA < (1 - maintReq)) {
                 maxDrawdown = (1 - (targetDTA / (1 - maintReq))) * 100;
@@ -277,6 +307,7 @@
             let equityData = [];
             let assetData = [];
             let benchmarkData = [];
+            let liquidationData = [];
 
             let currentEquity = P;
             let currentBenchmark = P;
@@ -286,19 +317,43 @@
             let finalMonthlyIncome = 0;
             let finalMonthlyInterest = 0;
             let finalMonthlyAppreciation = 0;
+            
+            let marginCallOccurred = false;
+            let marginCallMonthIndex = -1;
 
             for (let i = 0; i <= months; i++) {
                 labels.push(`Month ${i}`);
 
-                // Leveraged Balance Sheet
-                currentDebt = currentEquity * (targetDTA / (1 - targetDTA));
-                currentAssets = currentEquity + currentDebt;
+                // Process sudden market crash shock BEFORE checking safety boundaries
+                if (i === crashMonth && i > 0 && crashSeverity > 0) {
+                    currentAssets = currentAssets * (1 - crashSeverity);
+                    currentEquity = currentAssets - currentDebt;
+                    
+                    // A Margin Call occurs if actual assets drop below the required structural liquidation cushion
+                    if (currentAssets < (currentDebt / (1 - maintReq)) || currentEquity <= 0) {
+                        marginCallOccurred = true;
+                        marginCallMonthIndex = i;
+                    }
+                    if (currentEquity < 0) currentEquity = 0;
+                }
+
+                // Balance Sheet Rebalancing Step
+                if (currentEquity > 0) {
+                    currentDebt = currentEquity * (targetDTA / (1 - targetDTA));
+                    currentAssets = currentEquity + currentDebt;
+                } else {
+                    currentDebt = 0;
+                    currentAssets = 0;
+                }
 
                 equityData.push(currentEquity);
                 assetData.push(currentAssets);
                 benchmarkData.push(currentBenchmark);
+                
+                // Track Liquidation Cushion threshold line ($Debt / (1 - MaintReq))
+                liquidationData.push(currentDebt / (1 - maintReq));
 
-                // Leveraged Changes
+                // Accruing Interest and Returns
                 let income = currentAssets * moYield;
                 let interest = currentDebt * moMargin;
                 let appreciation = currentAssets * moAppreciation;
@@ -312,22 +367,22 @@
                 let netCashflow = income - interest;
                 currentEquity += (netCashflow + appreciation + monthlyCont);
 
-                // Unleveraged Benchmark Changes
+                // Benchmark Tracking
                 let benchIncome = currentBenchmark * moYield;
                 let benchAppreciation = currentBenchmark * moAppreciation;
                 currentBenchmark += (benchIncome + benchAppreciation + monthlyCont);
             }
 
-            // Post-simulation calculations
+            // Post-simulation data mapping
             const finalEquity = equityData[months];
-            const totalROI = ((finalEquity - totalInvested) / totalInvested) * 100;
+            const totalROI = totalInvested > 0 ? ((finalEquity - totalInvested) / totalInvested) * 100 : 0;
             const netMonthlyIncome = finalMonthlyIncome - finalMonthlyInterest;
 
             const finalAnnualNetReturn = (netMonthlyIncome + finalMonthlyAppreciation) * 12;
-            const finalROE = (finalAnnualNetReturn / finalEquity) * 100;
+            const finalROE = finalEquity > 0 ? (finalAnnualNetReturn / finalEquity) * 100 : 0;
             document.getElementById('outROE').innerText = `${finalROE.toFixed(2)}%`;
 
-            // Update remaining DOM Metrics
+            // Display UI updates
             document.getElementById('outEquity').innerText = formatCurrency(finalEquity);
             document.getElementById('outAssets').innerText = formatCurrency(assetData[months]);
             document.getElementById('outIncome').innerText = formatCurrency(finalMonthlyIncome);
@@ -342,9 +397,17 @@
             dscrEl.innerText = `${dscr}x`;
             dscrEl.className = `metric-value ${dscr < 1.5 ? 'warn-metric' : 'good-metric'}`;
 
+            // Margin Call Warning Box Toggle
+            const alertEl = document.getElementById('marginCallAlert');
+            if (marginCallOccurred) {
+                document.getElementById('alertMonth').innerText = marginCallMonthIndex;
+                alertEl.style.display = 'block';
+            } else {
+                alertEl.style.display = 'none';
+            }
+
             // Update Chart
             const ctx = document.getElementById('compoundingChart').getContext('2d');
-            
             if (chartInstance) {
                 chartInstance.destroy();
             }
@@ -379,6 +442,16 @@
                             backgroundColor: 'transparent',
                             borderWidth: 2,
                             borderDash: [5, 5],
+                            fill: false,
+                            pointRadius: 0
+                        },
+                        {
+                            label: 'Liquidation Threshold (Margin Call Line)',
+                            data: liquidationData,
+                            borderColor: '#ef4444',
+                            backgroundColor: 'transparent',
+                            borderWidth: 1.5,
+                            borderDash: [3, 3],
                             fill: false,
                             pointRadius: 0
                         }
