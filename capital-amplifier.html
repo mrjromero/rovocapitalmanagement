@@ -125,6 +125,54 @@
         }
         .tooltip-icon:hover .tooltip-text { visibility: visible; opacity: 1; }
 
+        /* Dynamic Tier Schedule Table Styles */
+        .tier-ledger-container {
+            margin: 16px 0;
+            background-color: var(--bg-color);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 10px;
+            font-size: 0.75rem;
+        }
+        .tier-ledger-title {
+            font-weight: bold;
+            color: var(--text-main);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-size: 0.7rem;
+        }
+        .tier-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: monospace;
+        }
+        .tier-table th {
+            text-align: left;
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 4px;
+        }
+        .tier-table td {
+            padding: 4px 0;
+            color: var(--text-muted);
+        }
+        .tier-active td {
+            color: var(--success) !important;
+            font-weight: bold;
+        }
+        .status-badge {
+            font-size: 0.65rem;
+            padding: 1px 4px;
+            border-radius: 3px;
+            background-color: rgba(148, 163, 184, 0.1);
+            color: var(--text-muted);
+        }
+        .status-active {
+            background-color: rgba(16, 185, 129, 0.15);
+            color: var(--success);
+        }
+
         .warning-box {
             display: none;
             background-color: rgba(245, 158, 11, 0.1);
@@ -201,43 +249,28 @@
             <h2>Capital Amplifier Simulator</h2>
             
             <div class="input-group">
-                <label>
-                    Starting Capital ($)
-                    <span class="tooltip-icon">ⓘ<span class="tooltip-text">Initial out-of-pocket cash principal used to launch the portfolio.</span></span>
-                </label>
+                <label>Starting Capital ($)</label>
                 <input type="number" id="startCapital" value="100000" step="1000">
             </div>
 
             <div class="input-group" id="standardContributionGroup">
-                <label>
-                    Monthly Contribution ($)
-                    <span class="tooltip-icon">ⓘ<span class="tooltip-text">Flat amount injected into the investments monthly.</span></span>
-                </label>
+                <label>Monthly Contribution ($)</label>
                 <input type="number" id="monthlyContribution" value="1000" step="100">
             </div>
 
             <div id="paycheckRoutingInputs" style="display: none;">
                 <div class="input-group">
-                    <label>
-                        Gross Monthly Paycheck ($)
-                        <span class="tooltip-icon">ⓘ<span class="tooltip-text">Your entire monthly paycheck flowed completely into the leveraged asset base on Day 1.</span></span>
-                    </label>
+                    <label>Gross Monthly Paycheck ($)</label>
                     <input type="number" id="grossPaycheck" value="5000" step="500">
                 </div>
                 <div class="input-group">
-                    <label>
-                        Monthly Living Expenses ($)
-                        <span class="tooltip-icon">ⓘ<span class="tooltip-text">Total capital drawn back out of the brokerage account via a margin loan to fund lifestyle bills.</span></span>
-                    </label>
+                    <label>Monthly Living Expenses ($)</label>
                     <input type="number" id="livingExpenses" value="4000" step="200">
                 </div>
             </div>
 
             <div class="input-group">
-                <label>
-                    Target DTA (%)
-                    <span class="tooltip-icon">ⓘ<span class="tooltip-text">Debt-to-Asset Ratio. Defines what percentage of your portfolio value consists of borrowed margin debt.</span></span>
-                </label>
+                <label>Target DTA (%)</label>
                 <input type="number" id="dta" value="30" step="1" max="99">
             </div>
             
@@ -248,7 +281,22 @@
 
             <div class="input-group">
                 <label>Base Margin Rate (%) (&lt;$100k Loan)</label>
-                <input type="number" id="marginRate" value="6.0" step="0.1">
+                <input type="number" id="marginRate" value="6.0" step="0.1" oninput="updateTierScheduleDisplay()">
+            </div>
+            
+            <div id="tierSchedulePanel" class="input-group" style="background-color: var(--bg-color); border: 1px solid var(--border); border-radius: 6px; padding: 10px; display:none;">
+                <div class="tier-ledger-title">Tier Borrow Schedule</div>
+                <table class="tier-table">
+                    <thead>
+                        <tr><th>Bracket</th><th>Rate</th><th>Status</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr id="rowTier1"><td>$0 - $100k</td><td id="rateTier1">6.00%</td><td><span id="badgeTier1" class="status-badge">Off</span></td></tr>
+                        <tr id="rowTier2"><td>$100k - $1M</td><td id="rateTier2">5.50%</td><td><span id="badgeTier2" class="status-badge">Off</span></td></tr>
+                        <tr id="rowTier3"><td>$1M - $3M</td><td id="rateTier3">5.00%</td><td><span id="badgeTier3" class="status-badge">Off</span></td></tr>
+                        <tr id="rowTier4"><td>$3M+</td><td id="rateTier4">4.50%</td><td><span id="badgeTier4" class="status-badge">Off</span></td></tr>
+                    </tbody>
+                </table>
             </div>
             
             <div class="input-group">
@@ -273,7 +321,7 @@
                 </div>
 
                 <div class="checkbox-group">
-                    <input type="checkbox" id="enableTiered">
+                    <input type="checkbox" id="enableTiered" onchange="updateTierScheduleDisplay(); runSimulation();">
                     <label for="enableTiered">Enable Tiered Margin Rates</label>
                 </div>
 
@@ -317,15 +365,24 @@
         <div style="display: flex; flex-direction: column; gap: 20px;">
             <div class="metrics-grid">
                 <div class="metric-card">
-                    <div class="metric-title" id="titleInvested">Total Invested</div>
+                    <div class="metric-title" id="titleInvested">
+                        Total Invested
+                        <span class="tooltip-icon">ⓘ<span class="tooltip-text">The cumulative sum of all out-of-pocket cash principal injections made over the timeline.</span></span>
+                    </div>
                     <div class="metric-value" id="outInvested">$0</div>
                 </div>
                 <div class="metric-card">
-                    <div class="metric-title" id="titleEquity">Final Equity</div>
+                    <div class="metric-title" id="titleEquity">
+                        Final Equity
+                        <span class="tooltip-icon">ⓘ<span class="tooltip-text">Your true net liquidating value (Total Assets minus Debt) at the end of the simulation timeline.</span></span>
+                    </div>
                     <div class="metric-value" id="outEquity">$0</div>
                 </div>
                 <div class="metric-card">
-                    <div class="metric-title" id="titleAssets">Final Total Assets</div>
+                    <div class="metric-title" id="titleAssets">
+                        Final Total Assets
+                        <span class="tooltip-icon">ⓘ<span class="tooltip-text">The gross value of the entire portfolio under management (Your Equity + Borrowed Margin).</span></span>
+                    </div>
                     <div class="metric-value" id="outAssets">$0</div>
                 </div>
                 <div class="metric-card">
@@ -407,6 +464,59 @@
             const isPaycheckMode = document.getElementById('enablePaycheck').checked;
             document.getElementById('standardContributionGroup').style.display = isPaycheckMode ? 'none' : 'block';
             document.getElementById('paycheckRoutingInputs').style.display = isPaycheckMode ? 'block' : 'none';
+        }
+
+        // Live visual text and state compiler for the margin schedule sidebar card
+        function updateTierScheduleDisplay(currentDebt = 0) {
+            const enableTiered = document.getElementById('enableTiered').checked;
+            const panel = document.getElementById('tierSchedulePanel');
+            const baseRate = parseFloat(document.getElementById('marginRate').value) / 100;
+            
+            if (!enableTiered) {
+                panel.style.display = 'none';
+                return;
+            }
+            panel.style.display = 'block';
+
+            const r1 = baseRate;
+            const r2 = Math.max(0.015, baseRate - 0.005);
+            const r3 = Math.max(0.015, baseRate - 0.010);
+            const r4 = Math.max(0.015, baseRate - 0.015);
+
+            document.getElementById('rateTier1').innerText = `${(r1 * 100).toFixed(2)}%`;
+            document.getElementById('rateTier2').innerText = `${(r2 * 100).toFixed(2)}%`;
+            document.getElementById('rateTier3').innerText = `${(r3 * 100).toFixed(2)}%`;
+            document.getElementById('rateTier4').innerText = `${(r4 * 100).toFixed(2)}%`;
+
+            // Reset highlight configurations
+            ['rowTier1', 'rowTier2', 'rowTier3', 'rowTier4'].forEach(id => document.getElementById(id).className = '');
+            ['badgeTier1', 'badgeTier2', 'badgeTier3', 'badgeTier4'].forEach(id => {
+                const b = document.getElementById(id);
+                b.innerText = 'Off';
+                b.className = 'status-badge';
+            });
+
+            if (currentDebt > 0) {
+                document.getElementById('rowTier1').className = 'tier-active';
+                document.getElementById('badgeTier1').innerText = 'Active';
+                document.getElementById('badgeTier1').className = 'status-badge status-active';
+                
+                if (currentDebt > 100000) {
+                    document.getElementById('rowTier2').className = 'tier-active';
+                    document.getElementById('badgeTier2').innerText = 'Active';
+                    document.getElementById('badgeTier2').className = 'status-badge status-active';
+                }
+                if (currentDebt > 1000000) {
+                    document.getElementById('rowTier3').className = 'tier-active';
+                    document.getElementById('badgeTier3').innerText = 'Active';
+                    document.getElementById('badgeTier3').className = 'status-badge status-active';
+                }
+                if (currentDebt > 3000000) {
+                    document.getElementById('rowTier4').className = 'tier-active';
+                    document.getElementById('badgeTier4').innerText = 'Active';
+                    document.getElementById('badgeTier4').className = 'status-badge status-active';
+                }
+            }
         }
 
         function calculateMonthlyMarginInterest(debt, baseRate) {
@@ -522,12 +632,9 @@
             for (let i = 0; i <= months; i++) {
                 labels.push(`Month ${i}`);
 
-                // CRASH INJECTION FIX: Apply crash to BOTH leveraged assets and buy-and-hold base capital
                 if (i === crashMonth && i > 0 && crashSeverity > 0) {
                     currentAssets = currentAssets * (1 - crashSeverity);
                     currentEquity = currentAssets - currentDebt;
-                    
-                    // Fixed: Buy and Hold investor is also hit by the macro market draw down event
                     currentBenchmark = currentBenchmark * (1 - crashSeverity);
                     
                     if (currentAssets < (currentDebt / (1 - maintReq)) || currentEquity <= 0) {
@@ -581,11 +688,13 @@
                 });
 
                 let netCashflow = income - interest;
-                
                 currentEquity += (netCashflow + appreciation + baselineMonthlyContribution);
                 currentBenchmark += (benchIncome + benchAppreciation + baselineMonthlyContribution);
                 cumulativeInflationFloor = (cumulativeInflationFloor * (1 + moInflationRate)) + baselineMonthlyContribution;
             }
+
+            // Sync structural interest tier display trackers using final snapshot
+            updateTieredTableUI(finalDebtSnapshot, annMargin, enableTiered);
 
             const discountFactor = (inflationMode === 'real') ? Math.pow(1 + moInflationRate, months) : 1;
             
@@ -607,7 +716,6 @@
             const finalSavingsDisplay = cumulativeSavingsNominal / discountFactor;
             const finalBenchmarkIncomeDisplay = finalBenchmarkMonthlyIncome / discountFactor;
 
-            const netMonthlyIncomeRaw = finalMonthlyIncome - finalMonthlyInterest;
             const effectiveAnnualMarginRate = finalDebtSnapshot > 0 ? ((finalMonthlyInterest * 12) / finalDebtSnapshot) * 100 : annMargin * 100;
 
             const totalROI = calculatedInvested > 0 ? ((finalEquityDisplay - calculatedInvested) / calculatedInvested) * 100 : 0;
@@ -644,7 +752,6 @@
             alertEl.style.display = marginCallOccurred ? 'block' : 'none';
             if (marginCallOccurred) document.getElementById('alertMonth').innerText = marginCallMonthIndex;
 
-            // Narrative Builder Engine
             const alphaPerformance = finalEquityDisplay - finalBenchmarkDisplay;
             const incomeDifferential = finalNetIncomeDisplay - finalBenchmarkIncomeDisplay;
             const inflationHurdleAlpha = finalEquityDisplay - (inflationFloorData[months] / discountFactor);
@@ -680,7 +787,7 @@
             }
 
             if (marginCallOccurred) {
-                safetyVerdict = `⚠️ <span class="badge badge-danger" style="color:#fff;">CRITICAL BREACH</span>: Your active parameters failed stress-testing. At Month ${marginCallMonthIndex}, the simulated crash dropped total asset values beneath your liquidation line, triggering forced broker intervention and locking in permanent equity impairment.`;
+                safetyVerdict = `⚠️ <span class="badge badge-danger" style="color:#fff;">CRITICAL BREACH</span>: Your active parameters failed stress-testing. At Month ${marginCallMonthIndex}, the simulated macro crash dropped total asset values beneath your liquidation line, triggering forced broker intervention and locking in permanent equity impairment.`;
             } else if (crashSeverity > 0) {
                 safetyVerdict = `🔒 <span class="badge badge-success">SURVIVED STRESS TEST</span>: Your account absorbed the injected ${document.getElementById('crashSeverity').value}% crash at Month ${crashMonth} safely. Even though both your portfolio and the cash Buy-and-Hold benchmark dropped simultaneously, your balance sheet maintained adequate cushion to avoid forced liquidation thresholds.`;
             } else {
@@ -689,7 +796,7 @@
 
             document.getElementById('narrativeOutput').innerHTML = `
                 ${paycheckRoutingPreamble}
-                <p>Over a span of <strong>${months} months</strong>, your strategy generated a final net equity valuation of <strong>${formatCurrency(finalEquityDisplay)}</strong> on an out-of-pocket cash commitment of <strong>${formatCurrency(calculatedInvested)}</strong>.</p>
+                <p>Over a span of <strong>${months} months</strong>, your strategy generated a final net equity valuation of <strong>${formatCurrency(finalEquityDisplay)}</strong> on an out-of-pocket cash commitment of <strong>${formatCurrency(totalInvestedNominal)}</strong>.</p>
                 <p>Compared to a standard unleveraged **Buy-and-Hold Strategy**, this design ${performanceVerdict} ${incomeVerdict}</p>
                 <p>${escapeVelocityVerdict}</p>
                 <p>${safetyVerdict}</p>
@@ -742,6 +849,11 @@
                     }
                 }
             });
+        }
+
+        // Dedicated helper syncing active tier table boundaries with loop state snapshots
+        function updateTieredTableUI(currentDebt, annMargin, enableTiered) {
+            updateTierScheduleDisplay(enableTiered ? currentDebt : 0);
         }
 
         function exportToCSV() {
