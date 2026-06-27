@@ -48,7 +48,7 @@
         h3 { margin-top: 0; font-size: 1.15rem; color: var(--text-main); padding-bottom: 6px; }
         h4 { margin: 16px 0 8px 0; font-size: 0.95rem; color: var(--text-main); text-transform: uppercase; letter-spacing: 0.05em; }
         .input-group { margin-bottom: 16px; }
-        .checkbox-group { margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+        .checkbox-group { margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
         .checkbox-group input { width: auto; cursor: pointer; }
         .checkbox-group label { margin-bottom: 0; cursor: pointer; color: var(--text-main); font-weight: 500; font-size: 0.9rem; }
         label { display: flex; align-items: center; justify-content: space-between; font-size: 0.875rem; color: var(--text-muted); margin-bottom: 6px; }
@@ -238,8 +238,8 @@
                 <div class="input-group">
                     <label>Inflation Mode</label>
                     <select id="inflationMode" onchange="toggleInflationInput()">
-                        <option value="nominal">Nominal Dollars (No Adjustment)</option>
-                        <option value="hurdle" selected>Nominal + Show Inflation Hurdle Line</option>
+                        <option value="nominal" selected>Nominal Dollars (No Adjustment)</option>
+                        <option value="hurdle">Nominal + Show Inflation Hurdle Line</option>
                         <option value="real">Real Dollars (Adjust All Metrics & Curves)</option>
                     </select>
                 </div>
@@ -519,7 +519,6 @@
                 cumulativeInflationFloor = (cumulativeInflationFloor * (1 + moInflationRate)) + monthlyCont;
             }
 
-            // Post Simulation Scaling Rules
             const discountFactor = (inflationMode === 'real') ? Math.pow(1 + moInflationRate, months) : 1;
             
             let calculatedInvested = P;
@@ -546,7 +545,6 @@
             const finalAnnualNetReturnNominal = ((finalMonthlyIncome - finalMonthlyInterest) + finalMonthlyAppreciation) * 12;
             const finalROE = equityData[months] > 0 ? (finalAnnualNetReturnNominal / equityData[months]) * 100 : 0;
 
-            // Update Dynamic Card Headers Text
             const isReal = (inflationMode === 'real');
             document.getElementById('titleInvested').innerText = isReal ? "Total Invested (Real)" : "Total Invested";
             document.getElementById('titleEquity').innerText = isReal ? "Final Equity (Real)" : "Final Equity";
@@ -577,7 +575,6 @@
             alertEl.style.display = marginCallOccurred ? 'block' : 'none';
             if (marginCallOccurred) document.getElementById('alertMonth').innerText = marginCallMonthIndex;
 
-            // NARRATIVE BUILDER ENGINE
             const alphaPerformance = finalEquityDisplay - finalBenchmarkDisplay;
             const inflationHurdleAlpha = finalEquityDisplay - (inflationFloorData[months] / discountFactor);
             let performanceVerdict = "";
@@ -610,7 +607,6 @@
                 <p>${safetyVerdict}</p>
             `;
 
-            // Sequential Chart Deflation Array Mapping Filters
             let chartAssets = [];
             let chartEquity = [];
             let chartBenchmark = [];
@@ -626,14 +622,12 @@
                 chartInflationFloor.push(inflationFloorData[i] / df);
             }
 
-            // Setup Chart Datasets Dynamically
             let datasets = [
                 { label: 'Total Assets', data: chartAssets, borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.05)', borderWidth: 2, fill: true, pointRadius: 0 },
                 { label: 'Base Equity (Leveraged)', data: chartEquity, borderColor: '#10b981', backgroundColor: 'transparent', borderWidth: 2, fill: false, pointRadius: 0 },
                 { label: 'Unleveraged Benchmark', data: chartBenchmark, borderColor: '#f59e0b', backgroundColor: 'transparent', borderWidth: 2, borderDash: [5, 5], fill: false, pointRadius: 0 }
             ];
 
-            // Only display the explicit purple floor hurdle if we are NOT in the fully flattened real mode
             if (inflationMode === 'hurdle') {
                 datasets.push({ label: 'Inflation Hurdle Floor', data: chartInflationFloor, borderColor: '#d946ef', backgroundColor: 'transparent', borderWidth: 2, fill: false, pointRadius: 0 });
             }
@@ -671,7 +665,7 @@
             const annInflationInput = parseFloat(document.getElementById('inflationRate').value) / 100;
             const moInflationRate = annInflationInput / 12;
 
-            let csvContent = "data:text/csv;charset=utf-8,";
+            let csvContent = "data:text/csv;charset=utf-8 Quit,";
             csvContent += `Month,Total Assets,Base Equity,Debt,Unleveraged Benchmark,Inflation Hurdle Floor,Liquidation Threshold\n`;
 
             lastSimulationRecords.forEach(rec => {
