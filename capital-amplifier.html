@@ -38,7 +38,7 @@
             width: 100%;
         }
         
-        /* Master Panel Isolation Rules */
+        /* Master Layer Separation Controls */
         .sidebar-panel {
             background-color: var(--panel-bg);
             padding: 24px;
@@ -100,7 +100,7 @@
         .btn-secondary { background-color: var(--secondary); margin-top: 8px; }
         .btn-secondary:hover { background-color: var(--secondary-hover); }
         
-        /* Fixed Tooltip Infrastructure (Right-Aligned Anchor Prevents Clipping) */
+        /* Advanced Layer-Safe Tooltip Framework */
         .tooltip-icon {
             display: inline-block;
             cursor: help;
@@ -112,7 +112,7 @@
         .tooltip-icon:hover { color: var(--accent); }
         .tooltip-text {
             visibility: hidden;
-            width: 260px;
+            width: 250px;
             background-color: #020617;
             color: #e2e8f0;
             text-align: left;
@@ -125,7 +125,7 @@
             position: absolute;
             z-index: 999;
             bottom: 140%;
-            right: 0; /* Pulls tooltip inward to stay perfectly inside screen viewports */
+            right: 0; /* Align right boundary edge inward to eliminate mobile clip layout bugs */
             box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.7);
             opacity: 0;
             transition: opacity 0.15s ease, visibility 0.15s ease;
@@ -136,7 +136,6 @@
             opacity: 1;
         }
 
-        /* Tier Ledger Elements */
         .tier-ledger-title {
             font-weight: bold;
             color: var(--text-main);
@@ -212,6 +211,8 @@
             z-index: 1;
             transition: border-color 0.2s;
         }
+        
+        /* Interactive Card Priority Layer Escalation Override */
         .metric-card:hover {
             z-index: 100;
             border-color: var(--accent);
@@ -235,9 +236,11 @@
         .badge-warning { background-color: rgba(245, 158, 11, 0.15); color: var(--warning); border: 1px solid var(--warning); }
         
         @media (max-width: 1400px) { .metrics-grid { grid-template-columns: repeat(3, 1fr); } }
+        
         @media (max-width: 900px) {
             .container { grid-template-columns: 1fr; }
             .metrics-grid { grid-template-columns: repeat(2, 1fr); }
+            .tooltip-text { width: 220px; bottom: auto; top: 140%; left: auto; right: 0; transform: none; }
         }
     </style>
 </head>
@@ -258,7 +261,7 @@
             <div class="input-group" id="standardContributionGroup">
                 <label>
                     Monthly Contribution ($)
-                    <span class="tooltip-icon">ⓘ<span class="tooltip-text">Flat cash amount added into the investments monthly.</span></span>
+                    <span class="tooltip-icon">ⓘ<span class="tooltip-text">Additional out-of-pocket cash savings injected into the equity base monthly.</span></span>
                 </label>
                 <input type="number" id="monthlyContribution" value="1000" step="100">
             </div>
@@ -267,14 +270,14 @@
                 <div class="input-group">
                     <label>
                         Gross Monthly Paycheck ($)
-                        <span class="tooltip-icon">ⓘ<span class="tooltip-text">Your entire monthly check flowed completely into the asset base on Day 1.</span></span>
+                        <span class="tooltip-icon">ⓘ<span class="tooltip-text">Your entire monthly paycheck flowed completely into the leveraged asset base on Day 1.</span></span>
                     </label>
                     <input type="number" id="grossPaycheck" value="5000" step="500">
                 </div>
                 <div class="input-group">
                     <label>
                         Monthly Living Expenses ($)
-                        <span class="tooltip-icon">ⓘ<span class="tooltip-text">Total capital drawn out of the account via a margin loan to clear living costs.</span></span>
+                        <span class="tooltip-icon">ⓘ<span class="tooltip-text">Total capital drawn back out of the brokerage account via a margin loan to fund lifestyle bills.</span></span>
                     </label>
                     <input type="number" id="livingExpenses" value="4000" step="200">
                 </div>
@@ -304,7 +307,6 @@
                 <input type="number" id="marginRate" value="6.0" step="0.1" oninput="runSimulation()">
             </div>
             
-            <!-- Dynamic Pricing Tier Dashboard Schedule Grid -->
             <div class="input-group" id="tierScheduleGroup" style="margin-bottom: 20px; background-color: var(--bg-color); border: 1px solid var(--border); border-radius: 6px; padding: 12px; display: none;">
                 <div class="tier-ledger-title">Dynamic Margin Tier Ledger</div>
                 <table class="tier-table">
@@ -369,18 +371,27 @@
                 </div>
                 
                 <div class="input-group" id="inflationInputGroup" style="display: none; margin-bottom: 16px; padding-left: 8px;">
-                    <label>Annual Inflation Rate (%)</label>
+                    <label>
+                        Annual Inflation Rate (%)
+                        <span class="tooltip-icon">ⓘ<span class="tooltip-text">The annual loss of purchasing power percentage benchmark.</span></span>
+                    </label>
                     <input type="number" id="inflationRate" value="2.5" step="0.1">
                 </div>
             </div>
 
             <div class="input-group">
-                <label style="color: #f1f5f9; font-weight: 600;">💥 Black Swan Crash (%)</label>
+                <label style="color: #f1f5f9; font-weight: 600;">
+                    💥 Black Swan Crash (%)
+                    <span class="tooltip-icon">ⓘ<span class="tooltip-text">Injects an instant, unexpected systemic percentage drop into the macro asset base.</span></span>
+                </label>
                 <input type="number" id="crashSeverity" value="0" min="0" max="95" step="5">
             </div>
 
             <div class="input-group">
-                <label>Crash Occurrence (Month)</label>
+                <label>
+                    Crash Occurrence (Month)
+                    <span class="tooltip-icon">ⓘ<span class="tooltip-text">The specific month index layout when the market shock event strikes.</span></span>
+                </label>
                 <input type="number" id="crashMonth" value="36" min="1" step="1">
             </div>
 
@@ -397,7 +408,6 @@
             </div>
         </div>
 
-        <!-- Class Assigned Perfectly to Lock Grid Physics -->
         <div class="main-content">
             <div class="metrics-grid">
                 <div class="metric-card">
@@ -422,39 +432,66 @@
                     <div class="metric-value" id="outAssets">$0</div>
                 </div>
                 <div class="metric-card">
-                    <div class="metric-title">Leverage Ratio</div>
+                    <div class="metric-title">
+                        Leverage Ratio
+                        <span class="tooltip-icon">ⓘ<span class="tooltip-text">Total Assets divided by Base Equity. Tracks the asset exposure multiplier applied to your capital base.</span></span>
+                    </div>
                     <div class="metric-value" id="outLeverage">0.00x</div>
                 </div>
                 <div class="metric-card">
-                    <div class="metric-title">Total ROI</div>
+                    <div class="metric-title">
+                        Total ROI
+                        <span class="tooltip-icon">ⓘ<span class="tooltip-text">Return on Investment. Cumulative net percentage growth achieved strictly on your out-of-pocket cash deposits.</span></span>
+                    </div>
                     <div class="metric-value good-metric" id="outROI">0.0%</div>
                 </div>
                 <div class="metric-card">
-                    <div class="metric-title">Return on Equity</div>
+                    <div class="metric-title">
+                        Return on Equity
+                        <span class="tooltip-icon">ⓘ<span class="tooltip-text">Annualized net carry return + price appreciation run-rate calculated relative to your final equity base.</span></span>
+                    </div>
                     <div class="metric-value good-metric" id="outROE">0.0%</div>
                 </div>
                 <div class="metric-card">
-                    <div class="metric-title" id="titleGrossIncome">Gross Monthly Income</div>
+                    <div class="metric-title" id="titleGrossIncome">
+                        Gross Monthly Income
+                        <span class="tooltip-icon">ⓘ<span class="tooltip-text">Total crude cash flow generated monthly by the expanded asset pool before loan fees are subtracted.</span></span>
+                    </div>
                     <div class="metric-value" id="outIncome">$0</div>
                 </div>
                 <div class="metric-card">
-                    <div class="metric-title" id="titleNetIncome">Net Monthly Income</div>
+                    <div class="metric-title" id="titleNetIncome">
+                        Net Monthly Income
+                        <span class="tooltip-icon">ⓘ<span class="tooltip-text">Net monthly investment dividend/interest cash flow remaining after paying your margin debt fees.</span></span>
+                    </div>
                     <div class="metric-value good-metric" id="outNetIncome">$0</div>
                 </div>
                 <div class="metric-card">
-                    <div class="metric-title">Final DSCR</div>
+                    <div class="metric-title">
+                        Final DSCR
+                        <span class="tooltip-icon">ⓘ<span class="tooltip-text">Debt Service Coverage Ratio. Gross income divided by margin interest. Safety targets should sit comfortably above 1.50x.</span></span>
+                    </div>
                     <div class="metric-value" id="outDSCR">0.0x</div>
                 </div>
                 <div class="metric-card">
-                    <div class="metric-title">Max Drawdown</div>
+                    <div class="metric-title">
+                        Max Drawdown
+                        <span class="tooltip-icon">ⓘ<span class="tooltip-text">The maximum localized price decline your portfolio can absorb before hitting the broker's margin call limit.</span></span>
+                    </div>
                     <div class="metric-value" id="outDrawdown">0%</div>
                 </div>
                 <div class="metric-card">
-                    <div class="metric-title">Effective Margin Rate</div>
+                    <div class="metric-title">
+                        Effective Margin Rate
+                        <span class="tooltip-icon">ⓘ<span class="tooltip-text">The actual blended annual interest rate paid across your scale under the tiered structure.</span></span>
+                    </div>
                     <div class="metric-value info-metric" id="outEffectiveMargin">0.00%</div>
                 </div>
                 <div class="metric-card">
-                    <div class="metric-title" id="titleSavings">Tiered Savings</div>
+                    <div class="metric-title" id="titleSavings">
+                        Tiered Savings
+                        <span class="tooltip-icon">ⓘ<span class="tooltip-text">Total compounded dollar amount saved by utilizing size-tiered discount borrow brackets vs a flat fee.</span></span>
+                    </div>
                     <div class="metric-value good-metric" id="outSavings">$0</div>
                 </div>
             </div>
@@ -727,7 +764,6 @@
                 cumulativeInflationFloor = (cumulativeInflationFloor * (1 + moInflationRate)) + baselineMonthlyContribution;
             }
 
-            // Fixed Stacking Bug: The structural tier visual card updates safely here
             updateTierScheduleDisplay(enableTiered ? finalDebtSnapshot : 0);
 
             const discountFactor = (inflationMode === 'real') ? Math.pow(1 + moInflationRate, months) : 1;
@@ -786,7 +822,6 @@
             alertEl.style.display = marginCallOccurred ? 'block' : 'none';
             if (marginCallOccurred) document.getElementById('alertMonth').innerText = marginCallMonthIndex;
 
-            // Narrative Summary Matrix Builder
             const alphaPerformance = finalEquityDisplay - finalBenchmarkDisplay;
             const incomeDifferential = finalNetIncomeDisplay - finalBenchmarkIncomeDisplay;
             const inflationHurdleAlpha = finalEquityDisplay - (inflationFloorData[months] / discountFactor);
