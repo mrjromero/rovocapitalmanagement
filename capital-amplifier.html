@@ -178,13 +178,18 @@
 
             <div style="border-top: 1px solid var(--border); padding-top: 14px; margin-top: 14px;">
                 <div class="checkbox-group">
-                    <input type="checkbox" id="enableTiered" checked>
+                    <input type="checkbox" id="enableTiered">
                     <label for="enableTiered">Enable Tiered Margin Rates</label>
                 </div>
 
-                <div class="checkbox-group" style="margin-bottom: 16px;">
-                    <input type="checkbox" id="adjustInflation">
-                    <label for="adjustInflation">Adjust for Inflation (2.5%)</label>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="adjustInflation" onchange="toggleInflationInput()">
+                    <label for="adjustInflation">Adjust for Inflation</label>
+                </div>
+                
+                <div class="input-group" id="inflationInputGroup" style="display: none; margin-bottom: 16px; padding-left: 8px;">
+                    <label>Annual Inflation Rate (%)</label>
+                    <input type="number" id="inflationRate" value="2.5" step="0.1">
                 </div>
             </div>
 
@@ -274,6 +279,16 @@
             return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(value);
         }
 
+        function toggleInflationInput() {
+            const checkBox = document.getElementById('adjustInflation');
+            const inputGroup = document.getElementById('inflationInputGroup');
+            if (checkBox.checked) {
+                inputGroup.style.display = 'block';
+            } else {
+                inputGroup.style.display = 'none';
+            }
+        }
+
         function calculateMonthlyMarginInterest(debt, baseRate) {
             if (debt <= 0) return 0;
             
@@ -317,6 +332,7 @@
             const months = parseInt(document.getElementById('months').value);
             
             const adjustInflation = document.getElementById('adjustInflation').checked;
+            const annInflationInput = parseFloat(document.getElementById('inflationRate').value) / 100;
             const enableTiered = document.getElementById('enableTiered').checked;
             
             const crashSeverity = parseFloat(document.getElementById('crashSeverity').value) / 100;
@@ -324,7 +340,7 @@
 
             const moYield = annYield / 12;
             const moAppreciation = annAppreciation / 12;
-            const moInflationRate = 0.025 / 12;
+            const moInflationRate = annInflationInput / 12;
 
             if (targetDTA >= 1.0) {
                 alert("DTA must be strictly less than 100%");
@@ -398,12 +414,10 @@
                 benchmarkData.push(currentBenchmark);
                 liquidationData.push(currentDebt / (1 - maintReq));
 
-                // Process conditional interest accrual mapping
                 let income = currentAssets * moYield;
                 let interest = enableTiered ? calculateMonthlyMarginInterest(currentDebt, annMargin) : currentDebt * (annMargin / 12);
                 let appreciation = currentAssets * moAppreciation;
                 
-                // Track relative performance variance metrics
                 let flatInterestBaseline = currentDebt * (annMargin / 12);
                 cumulativeSavingsNominal += enableTiered ? (flatInterestBaseline - interest) : 0;
                 
@@ -572,7 +586,10 @@
             });
         }
 
-        window.onload = runSimulation;
+        window.onload = function() {
+            toggleInflationInput();
+            runSimulation();
+        };
     </script>
 </body>
 </html>
