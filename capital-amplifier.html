@@ -48,7 +48,6 @@
         h3 { margin-top: 0; font-size: 1.15rem; color: var(--text-main); padding-bottom: 6px; }
         .input-group { margin-bottom: 16px; position: relative; }
         
-        /* Stacking Context Fixes */
         .input-group:hover { z-index: 20; }
         .metric-card:hover { z-index: 20; border-color: var(--accent) !important; }
 
@@ -84,7 +83,6 @@
         .btn-secondary { background-color: var(--secondary); margin-top: 8px; }
         .btn-secondary:hover { background-color: var(--secondary-hover); }
         
-        /* Tooltip Framework Core Styling */
         .tooltip-icon {
             display: inline-block;
             cursor: help;
@@ -270,7 +268,7 @@
                     </select>
                 </div>
                 
-                <div class="input-group" id="inflationInputGroup" style="margin-bottom: 16px; padding-left: 8px;">
+                <div class="input-group" id="inflationInputGroup" style="display: none; margin-bottom: 16px; padding-left: 8px;">
                     <label>Annual Inflation Rate (%)</label>
                     <input type="number" id="inflationRate" value="2.5" step="0.1">
                 </div>
@@ -513,6 +511,7 @@
             let finalMonthlyInterest = 0;
             let finalMonthlyAppreciation = 0;
             let finalDebtSnapshot = 0;
+            let finalBenchmarkMonthlyIncome = 0;
             
             let marginCallOccurred = false;
             let marginCallMonthIndex = -1;
@@ -551,6 +550,9 @@
                 let interest = enableTiered ? calculateMonthlyMarginInterest(currentDebt, annMargin) : currentDebt * (annMargin / 12);
                 let appreciation = currentAssets * moAppreciation;
                 
+                let benchIncome = currentBenchmark * moYield;
+                let benchAppreciation = currentBenchmark * moAppreciation;
+                
                 let flatInterestBaseline = currentDebt * (annMargin / 12);
                 cumulativeSavingsNominal += enableTiered ? (flatInterestBaseline - interest) : 0;
                 
@@ -559,6 +561,7 @@
                     finalMonthlyInterest = interest;
                     finalMonthlyAppreciation = appreciation;
                     finalDebtSnapshot = currentDebt;
+                    finalBenchmarkMonthlyIncome = benchIncome;
                 }
 
                 lastSimulationRecords.push({
@@ -574,10 +577,7 @@
                 let netCashflow = income - interest;
                 currentEquity += (netCashflow + appreciation + monthlyCont);
 
-                let benchIncome = currentBenchmark * moYield;
-                let benchAppreciation = currentBenchmark * moAppreciation;
                 currentBenchmark += (benchIncome + benchAppreciation + monthlyCont);
-
                 cumulativeInflationFloor = (cumulativeInflationFloor * (1 + moInflationRate)) + monthlyCont;
             }
 
@@ -599,8 +599,8 @@
             const finalIncomeDisplay = finalMonthlyIncome / discountFactor;
             const finalNetIncomeDisplay = (finalMonthlyIncome - finalMonthlyInterest) / discountFactor;
             const finalSavingsDisplay = cumulativeSavingsNominal / discountFactor;
+            const finalBenchmarkIncomeDisplay = finalBenchmarkMonthlyIncome / discountFactor;
 
-            const netMonthlyIncomeRaw = finalMonthlyIncome - finalMonthlyInterest;
             const effectiveAnnualMarginRate = finalDebtSnapshot > 0 ? ((finalMonthlyInterest * 12) / finalDebtSnapshot) * 100 : annMargin * 100;
 
             const totalROI = calculatedInvested > 0 ? ((finalEquityDisplay - calculatedInvested) / calculatedInvested) * 100 : 0;
@@ -637,10 +637,13 @@
             alertEl.style.display = marginCallOccurred ? 'block' : 'none';
             if (marginCallOccurred) document.getElementById('alertMonth').innerText = marginCallMonthIndex;
 
-            // Narrative Generator
+            // NARRATIVE BUILDER ENGINE
             const alphaPerformance = finalEquityDisplay - finalBenchmarkDisplay;
+            const incomeDifferential = finalNetIncomeDisplay - finalBenchmarkIncomeDisplay;
             const inflationHurdleAlpha = finalEquityDisplay - (inflationFloorData[months] / discountFactor);
+            
             let performanceVerdict = "";
+            let incomeVerdict = "";
             let safetyVerdict = "";
             let escapeVelocityVerdict = "";
 
@@ -648,6 +651,14 @@
                 performanceVerdict = `outperformed the unleveraged investment baseline by <span class="badge badge-success">${formatCurrency(alphaPerformance)}</span> due to positive structural carry.`;
             } else {
                 performanceVerdict = `underperformed the unleveraged investment baseline by <span class="badge badge-danger">${formatCurrency(Math.abs(alphaPerformance))}</span> because borrowing fees or market crash shocks dragged down production.`;
+            }
+
+            if (incomeDifferential > 0) {
+                incomeVerdict = `By expanding your total productive asset base, the leveraged strategy scaled your cash flow engine to a net monthly income of <strong>${formatCurrency(finalNetIncomeDisplay)}</strong>. This is <span class="badge badge-success">${formatCurrency(incomeDifferential)} more monthly income</span> than the unleveraged benchmark's net yield of <strong>${formatCurrency(finalBenchmarkIncomeDisplay)}</strong>.`;
+            } else if (incomeDifferential < 0) {
+                incomeVerdict = `Due to margin interest expenses outstripping leverage gains, the leveraged strategy's net monthly income dropped to <strong>${formatCurrency(finalNetIncomeDisplay)}</strong>. This is <span class="badge badge-danger">${formatCurrency(Math.abs(incomeDifferential))} less monthly income</span> than the unleveraged benchmark's cash flow of <strong>${formatCurrency(finalBenchmarkIncomeDisplay)}</strong>.`;
+            } else {
+                incomeVerdict = `Both strategies generated an identical net monthly income of <strong>${formatCurrency(finalNetIncomeDisplay)}</strong>.`;
             }
 
             if (inflationHurdleAlpha > 0) {
@@ -666,7 +677,8 @@
 
             document.getElementById('narrativeOutput').innerHTML = `
                 <p>Over a span of <strong>${months} months</strong>, your strategy generated a final net equity valuation of <strong>${formatCurrency(finalEquityDisplay)}</strong> on an out-of-pocket cash commitment of <strong>${formatCurrency(calculatedInvested)}</strong>.</p>
-                <p>Compared to your control benchmark option, this design ${performanceVerdict} ${escapeVelocityVerdict}</p>
+                <p>Compared to your control benchmark option, this design ${performanceVerdict} ${incomeVerdict}</p>
+                <p>${escapeVelocityVerdict}</p>
                 <p>${safetyVerdict}</p>
             `;
 
