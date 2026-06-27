@@ -38,7 +38,7 @@
             width: 100%;
         }
         
-        /* Sidebar Layer Elevation: Overrides Right Column Z-Index Traps */
+        /* Master Panel Isolation Rules */
         .sidebar-panel {
             background-color: var(--panel-bg);
             padding: 24px;
@@ -100,7 +100,7 @@
         .btn-secondary { background-color: var(--secondary); margin-top: 8px; }
         .btn-secondary:hover { background-color: var(--secondary-hover); }
         
-        /* Master Tooltip Overlay Framework */
+        /* Fixed Tooltip Infrastructure (Right-Aligned Anchor Prevents Clipping) */
         .tooltip-icon {
             display: inline-block;
             cursor: help;
@@ -112,7 +112,7 @@
         .tooltip-icon:hover { color: var(--accent); }
         .tooltip-text {
             visibility: hidden;
-            width: 250px;
+            width: 260px;
             background-color: #020617;
             color: #e2e8f0;
             text-align: left;
@@ -125,8 +125,7 @@
             position: absolute;
             z-index: 999;
             bottom: 140%;
-            left: 50%;
-            transform: translateX(-50%);
+            right: 0; /* Pulls tooltip inward to stay perfectly inside screen viewports */
             box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.7);
             opacity: 0;
             transition: opacity 0.15s ease, visibility 0.15s ease;
@@ -137,6 +136,7 @@
             opacity: 1;
         }
 
+        /* Tier Ledger Elements */
         .tier-ledger-title {
             font-weight: bold;
             color: var(--text-main);
@@ -156,11 +156,11 @@
             border-bottom: 1px solid var(--border);
             padding-bottom: 4px;
         }
-        .tier-table td { padding: 4px 0; color: var(--text-muted); }
+        .tier-table td { padding: 6px 0; color: var(--text-muted); }
         .tier-active td { color: var(--success) !important; font-weight: bold; }
         .status-badge {
             font-size: 0.65rem;
-            padding: 1px 4px;
+            padding: 2px 5px;
             border-radius: 3px;
             background-color: rgba(148, 163, 184, 0.1);
             color: var(--text-muted);
@@ -210,10 +210,8 @@
             justify-content: center;
             position: relative;
             z-index: 1;
-            transition: border-color 0.2s, z-index 0s;
+            transition: border-color 0.2s;
         }
-        
-        /* Metric Card Hover Elevation: Overrides Neighbor Layer Contexts */
         .metric-card:hover {
             z-index: 100;
             border-color: var(--accent);
@@ -237,12 +235,9 @@
         .badge-warning { background-color: rgba(245, 158, 11, 0.15); color: var(--warning); border: 1px solid var(--warning); }
         
         @media (max-width: 1400px) { .metrics-grid { grid-template-columns: repeat(3, 1fr); } }
-        
-        /* Responsive Tooltip Adaptation to Protect Viewport Edges */
         @media (max-width: 900px) {
             .container { grid-template-columns: 1fr; }
             .metrics-grid { grid-template-columns: repeat(2, 1fr); }
-            .tooltip-text { width: 220px; bottom: auto; top: 140%; left: auto; right: 0; transform: none; }
         }
     </style>
 </head>
@@ -263,7 +258,7 @@
             <div class="input-group" id="standardContributionGroup">
                 <label>
                     Monthly Contribution ($)
-                    <span class="tooltip-icon">ⓘ<span class="tooltip-text">Flat amount injected into the investments monthly.</span></span>
+                    <span class="tooltip-icon">ⓘ<span class="tooltip-text">Flat cash amount added into the investments monthly.</span></span>
                 </label>
                 <input type="number" id="monthlyContribution" value="1000" step="100">
             </div>
@@ -272,14 +267,14 @@
                 <div class="input-group">
                     <label>
                         Gross Monthly Paycheck ($)
-                        <span class="tooltip-icon">ⓘ<span class="tooltip-text">Your entire monthly paycheck flowed completely into the leveraged asset base on Day 1.</span></span>
+                        <span class="tooltip-icon">ⓘ<span class="tooltip-text">Your entire monthly check flowed completely into the asset base on Day 1.</span></span>
                     </label>
                     <input type="number" id="grossPaycheck" value="5000" step="500">
                 </div>
                 <div class="input-group">
                     <label>
                         Monthly Living Expenses ($)
-                        <span class="tooltip-icon">ⓘ<span class="tooltip-text">Total capital drawn back out of the brokerage account via a margin loan to fund lifestyle bills.</span></span>
+                        <span class="tooltip-icon">ⓘ<span class="tooltip-text">Total capital drawn out of the account via a margin loan to clear living costs.</span></span>
                     </label>
                     <input type="number" id="livingExpenses" value="4000" step="200">
                 </div>
@@ -296,7 +291,7 @@
             <div class="input-group">
                 <label>
                     Portfolio Yield (%) Annual
-                    <span class="tooltip-icon">ⓘ<span class="tooltip-text">The annual dividend yield or interest cash flow rate generated by your underlying assets.</span></span>
+                    <span class="tooltip-icon">ⓘ<span class="tooltip-text">The annual dividend yield or interest cash flow rate generated by your underlying holdings.</span></span>
                 </label>
                 <input type="number" id="yield" value="9.0" step="0.1">
             </div>
@@ -306,28 +301,33 @@
                     Base Margin Rate (%) (&lt;$100k Loan)
                     <span class="tooltip-icon">ⓘ<span class="tooltip-text">The base annual interest rate charged by the broker on borrowed margin debt balances.</span></span>
                 </label>
-                <input type="number" id="marginRate" value="6.0" step="0.1" oninput="updateTierScheduleDisplay()">
+                <input type="number" id="marginRate" value="6.0" step="0.1" oninput="runSimulation()">
             </div>
             
-            <div class="input-group" id="tierScheduleGroup" style="margin-bottom: 20px;">
+            <!-- Dynamic Pricing Tier Dashboard Schedule Grid -->
+            <div class="input-group" id="tierScheduleGroup" style="margin-bottom: 20px; background-color: var(--bg-color); border: 1px solid var(--border); border-radius: 6px; padding: 12px; display: none;">
                 <div class="tier-ledger-title">Dynamic Margin Tier Ledger</div>
                 <table class="tier-table">
                     <thead>
-                        <tr style="text-align: left; font-size: 0.75rem; color: var(--text-muted);">
+                        <tr style="text-align: left; font-size: 0.75rem; color: var(--text-muted); border-bottom: 1px solid var(--border);">
                             <th>Brackets</th>
                             <th>Rate</th>
                             <th>Status</th>
                         </tr>
                     </thead>
-                    <tbody style="font-size: 0.8rem;" id="tierTableBody">
-                        </tbody>
+                    <tbody style="font-size: 0.8rem;">
+                        <tr id="rowTier1"><td>$0 - $100k</td><td id="rateTier1">6.00%</td><td><span id="badgeTier1" class="status-badge">Off</span></td></tr>
+                        <tr id="rowTier2"><td>$100k - $1M</td><td id="rateTier2">5.50%</td><td><span id="badgeTier2" class="status-badge">Off</span></td></tr>
+                        <tr id="rowTier3"><td>$1M - $3M</td><td id="rateTier3">5.00%</td><td><span id="badgeTier3" class="status-badge">Off</span></td></tr>
+                        <tr id="rowTier4"><td>$3M+</td><td id="rateTier4">4.50%</td><td><span id="badgeTier4" class="status-badge">Off</span></td></tr>
+                    </tbody>
                 </table>
             </div>
             
             <div class="input-group">
                 <label>
                     Portfolio Appreciation (%) Annual
-                    <span class="tooltip-icon">ⓘ<span class="tooltip-text">The projected organic annual price appreciation or capital gains rate of your holdings.</span></span>
+                    <span class="tooltip-icon">ⓘ<span class="tooltip-text">The projected organic annual price appreciation rate of your holdings.</span></span>
                 </label>
                 <input type="number" id="appreciation" value="0.0" step="0.1">
             </div>
@@ -350,7 +350,7 @@
 
             <div style="border-top: 1px solid var(--border); padding-top: 14px; margin-top: 14px;">
                 <div class="checkbox-group">
-                    <input type="checkbox" id="enablePaycheck" onchange="togglePaycheckMode()">
+                    <input type="checkbox" id="enablePaycheck" onchange="togglePaycheckMode(); runSimulation();">
                     <label for="enablePaycheck">Model Paycheck Flow (Buy, Borrow, Die)</label>
                 </div>
 
@@ -361,7 +361,7 @@
 
                 <div class="input-group">
                     <label>Inflation Mode</label>
-                    <select id="inflationMode" onchange="toggleInflationInput()">
+                    <select id="inflationMode" onchange="toggleInflationInput(); runSimulation();">
                         <option value="nominal" selected>Nominal Dollars (No Adjustment)</option>
                         <option value="hurdle">Nominal + Show Inflation Hurdle Line</option>
                         <option value="real">Real Dollars (Adjust All Metrics & Curves)</option>
@@ -397,6 +397,7 @@
             </div>
         </div>
 
+        <!-- Class Assigned Perfectly to Lock Grid Physics -->
         <div class="main-content">
             <div class="metrics-grid">
                 <div class="metric-card">
@@ -409,7 +410,7 @@
                 <div class="metric-card">
                     <div class="metric-title" id="titleEquity">
                         Final Equity
-                        <span class="tooltip-icon">ⓘ<span class="tooltip-text">Your true net liquidating value (Total Assets minus Debt) at the end of the simulation timeline.</span></span>
+                        <span class="tooltip-icon">ⓘ<span class="tooltip-text">Your true net worth (Total Assets minus Debt) at the end of the simulation timeline.</span></span>
                     </div>
                     <div class="metric-value" id="outEquity">$0</div>
                 </div>
@@ -421,66 +422,39 @@
                     <div class="metric-value" id="outAssets">$0</div>
                 </div>
                 <div class="metric-card">
-                    <div class="metric-title">
-                        Leverage Ratio
-                        <span class="tooltip-icon">ⓘ<span class="tooltip-text">Total Assets divided by Base Equity. Tracks the asset exposure multiplier applied to your capital base.</span></span>
-                    </div>
+                    <div class="metric-title">Leverage Ratio</div>
                     <div class="metric-value" id="outLeverage">0.00x</div>
                 </div>
                 <div class="metric-card">
-                    <div class="metric-title">
-                        Total ROI
-                        <span class="tooltip-icon">ⓘ<span class="tooltip-text">Return on Investment. Cumulative net percentage growth achieved strictly on your out-of-pocket cash deposits.</span></span>
-                    </div>
+                    <div class="metric-title">Total ROI</div>
                     <div class="metric-value good-metric" id="outROI">0.0%</div>
                 </div>
                 <div class="metric-card">
-                    <div class="metric-title">
-                        Return on Equity
-                        <span class="tooltip-icon">ⓘ<span class="tooltip-text">Annualized net carry return + price appreciation run-rate calculated relative to your final equity base.</span></span>
-                    </div>
+                    <div class="metric-title">Return on Equity</div>
                     <div class="metric-value good-metric" id="outROE">0.0%</div>
                 </div>
                 <div class="metric-card">
-                    <div class="metric-title" id="titleGrossIncome">
-                        Gross Monthly Income
-                        <span class="tooltip-icon">ⓘ<span class="tooltip-text">Total crude cash flow generated monthly by the expanded asset pool before loan fees are subtracted.</span></span>
-                    </div>
+                    <div class="metric-title" id="titleGrossIncome">Gross Monthly Income</div>
                     <div class="metric-value" id="outIncome">$0</div>
                 </div>
                 <div class="metric-card">
-                    <div class="metric-title" id="titleNetIncome">
-                        Net Monthly Income
-                        <span class="tooltip-icon">ⓘ<span class="tooltip-text">Net monthly investment dividend/interest cash flow remaining after paying your margin debt fees.</span></span>
-                    </div>
+                    <div class="metric-title" id="titleNetIncome">Net Monthly Income</div>
                     <div class="metric-value good-metric" id="outNetIncome">$0</div>
                 </div>
                 <div class="metric-card">
-                    <div class="metric-title">
-                        Final DSCR
-                        <span class="tooltip-icon">ⓘ<span class="tooltip-text">Debt Service Coverage Ratio. Gross income divided by margin interest. Safety targets should sit comfortably above 1.50x.</span></span>
-                    </div>
+                    <div class="metric-title">Final DSCR</div>
                     <div class="metric-value" id="outDSCR">0.0x</div>
                 </div>
                 <div class="metric-card">
-                    <div class="metric-title">
-                        Max Drawdown
-                        <span class="tooltip-icon">ⓘ<span class="tooltip-text">The maximum localized price decline your portfolio can absorb before hitting the broker's margin call limit.</span></span>
-                    </div>
+                    <div class="metric-title">Max Drawdown</div>
                     <div class="metric-value" id="outDrawdown">0%</div>
                 </div>
                 <div class="metric-card">
-                    <div class="metric-title">
-                        Effective Margin Rate
-                        <span class="tooltip-icon">ⓘ<span class="tooltip-text">The actual blended annual interest rate paid across your scale under the tiered structure.</span></span>
-                    </div>
+                    <div class="metric-title">Effective Margin Rate</div>
                     <div class="metric-value info-metric" id="outEffectiveMargin">0.00%</div>
                 </div>
                 <div class="metric-card">
-                    <div class="metric-title" id="titleSavings">
-                        Tiered Savings
-                        <span class="tooltip-icon">ⓘ<span class="tooltip-text">Total compounded dollar amount saved by utilizing size-tiered discount borrow brackets vs a flat fee.</span></span>
-                    </div>
+                    <div class="metric-title" id="titleSavings">Tiered Savings</div>
                     <div class="metric-value good-metric" id="outSavings">$0</div>
                 </div>
             </div>
@@ -530,10 +504,9 @@
 
         function updateTierScheduleDisplay(currentDebt = 0) {
             const enableTiered = document.getElementById('enableTiered').checked;
-            const panel = document.getElementById('tierSchedulePanel');
+            const panel = document.getElementById('tierScheduleGroup');
             const baseRate = parseFloat(document.getElementById('marginRate').value) / 100;
             
-            // Adjust the rates inside the layout table dynamically based on current base inputs
             const r1 = baseRate;
             const r2 = Math.max(0.015, baseRate - 0.005);
             const r3 = Math.max(0.015, baseRate - 0.010);
@@ -544,7 +517,6 @@
             document.getElementById('rateTier3').innerText = `${(r3 * 100).toFixed(2)}%`;
             document.getElementById('rateTier4').innerText = `${(r4 * 100).toFixed(2)}%`;
 
-            // Reset highlight classes
             ['rowTier1', 'rowTier2', 'rowTier3', 'rowTier4'].forEach(id => document.getElementById(id).className = '');
             ['badgeTier1', 'badgeTier2', 'badgeTier3', 'badgeTier4'].forEach(id => {
                 const b = document.getElementById(id);
@@ -689,6 +661,8 @@
             let marginCallMonthIndex = -1;
             let cumulativeSavingsNominal = 0;
 
+            const totalInvestedNominal = P + (baselineMonthlyContribution * months);
+
             for (let i = 0; i <= months; i++) {
                 labels.push(`Month ${i}`);
 
@@ -753,7 +727,7 @@
                 cumulativeInflationFloor = (cumulativeInflationFloor * (1 + moInflationRate)) + baselineMonthlyContribution;
             }
 
-            // Sync visual components
+            // Fixed Stacking Bug: The structural tier visual card updates safely here
             updateTierScheduleDisplay(enableTiered ? finalDebtSnapshot : 0);
 
             const discountFactor = (inflationMode === 'real') ? Math.pow(1 + moInflationRate, months) : 1;
@@ -765,7 +739,7 @@
                     calculatedInvested += baselineMonthlyContribution / Math.pow(1 + moInflationRate, m);
                 }
             } else {
-                calculatedInvested = P + (baselineMonthlyContribution * months);
+                calculatedInvested = totalInvestedNominal;
             }
 
             const finalEquityDisplay = equityData[months] / discountFactor;
@@ -812,7 +786,7 @@
             alertEl.style.display = marginCallOccurred ? 'block' : 'none';
             if (marginCallOccurred) document.getElementById('alertMonth').innerText = marginCallMonthIndex;
 
-            // Narrative Generator Outputs
+            // Narrative Summary Matrix Builder
             const alphaPerformance = finalEquityDisplay - finalBenchmarkDisplay;
             const incomeDifferential = finalNetIncomeDisplay - finalBenchmarkIncomeDisplay;
             const inflationHurdleAlpha = finalEquityDisplay - (inflationFloorData[months] / discountFactor);
@@ -842,7 +816,7 @@
             }
 
             if (inflationHurdleAlpha > 0) {
-                escapeVelocityVerdict = `Crucially, your final equity cleared the baseline inflation hurdle line by <strong>${formatCurrency(inflationHurdleAlpha)}</strong>, proving that your amplified strategy created genuine purchasing power expansion over time.`;
+                escapeVelocityVerdict = `Crucially, your final wealth cleared the baseline inflation hurdle line by <strong>${formatCurrency(inflationHurdleAlpha)}</strong>, proving that your amplified strategy created genuine purchasing power expansion over time.`;
             } else {
                 escapeVelocityVerdict = `Regrettably, your final wealth failed to clear the inflation hurdle line, meaning your capital lost real purchasing power over the course of the simulation.`;
             }
