@@ -17,6 +17,8 @@
             --success: #10b981;
             --danger: #ef4444;
             --warning: #f59e0b;
+            --secondary: #475569;
+            --secondary-hover: #334155;
         }
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -47,7 +49,7 @@
         .checkbox-group { margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
         .checkbox-group input { width: auto; cursor: pointer; }
         .checkbox-group label { margin-bottom: 0; cursor: pointer; color: var(--text-main); font-weight: 500; font-size: 0.9rem; }
-        label { display: block; font-size: 0.875rem; color: var(--text-muted); margin-bottom: 6px; }
+        label { display: flex; align-items: center; justify-content: space-between; font-size: 0.875rem; color: var(--text-muted); margin-bottom: 6px; }
         input {
             width: 100%;
             padding: 10px;
@@ -59,10 +61,10 @@
             box-sizing: border-box;
         }
         input:focus { outline: none; border-color: var(--accent); }
+        
         button {
             width: 100%;
             padding: 12px;
-            background-color: var(--accent);
             color: white;
             border: none;
             border-radius: 6px;
@@ -71,8 +73,49 @@
             transition: background-color 0.2s;
             margin-top: 10px;
         }
-        button:hover { background-color: var(--accent-hover); }
+        .btn-primary { background-color: var(--accent); }
+        .btn-primary:hover { background-color: var(--accent-hover); }
+        .btn-secondary { background-color: var(--secondary); margin-top: 8px; }
+        .btn-secondary:hover { background-color: var(--secondary-hover); }
         
+        /* Premium CSS Tooltip Infrastructure */
+        .tooltip-icon {
+            display: inline-block;
+            cursor: help;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            margin-left: 4px;
+            position: relative;
+        }
+        .tooltip-icon:hover { color: var(--accent); }
+        .tooltip-text {
+            visibility: hidden;
+            width: 240px;
+            background-color: #020617;
+            color: #e2e8f0;
+            text-align: left;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 10px;
+            font-weight: 400;
+            font-size: 0.75rem;
+            line-height: 1.4;
+            position: absolute;
+            z-index: 50;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+            opacity: 0;
+            transition: opacity 0.2s, visibility 0.2s;
+        }
+        .tooltip-icon:hover .tooltip-text {
+            visibility: visible;
+            opacity: 1;
+        }
+        .metric-title .tooltip-icon { margin-left: 6px; }
+        .metric-title .tooltip-text { bottom: 140%; }
+
         .warning-box {
             display: none;
             background-color: rgba(245, 158, 11, 0.1);
@@ -113,8 +156,9 @@
             display: flex;
             flex-direction: column;
             justify-content: center;
+            position: relative;
         }
-        .metric-title { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+        .metric-title { display: flex; align-items: center; justify-content: center; font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
         .metric-value { font-size: 1.4rem; font-weight: bold; margin-top: 8px; font-family: monospace; }
         .good-metric { color: var(--success); }
         .warn-metric { color: var(--danger); }
@@ -147,7 +191,10 @@
             </div>
 
             <div class="input-group">
-                <label>Target DTA (%)</label>
+                <label>
+                    Target DTA (%)
+                    <span class="tooltip-icon">ⓘ<span class="tooltip-text">Debt-to-Asset Ratio. Defines what percentage of your portfolio value consists of borrowed margin debt.</span></span>
+                </label>
                 <input type="number" id="dta" value="30" step="1" max="99">
             </div>
             
@@ -167,7 +214,10 @@
             </div>
 
             <div class="input-group">
-                <label>Maintenance Requirement (%)</label>
+                <label>
+                    Maintenance Requirement (%)
+                    <span class="tooltip-icon">ⓘ<span class="tooltip-text">The minimum account equity percentage required by regulatory agencies or brokers before liquidations occur.</span></span>
+                </label>
                 <input type="number" id="maintReq" value="25" step="1">
             </div>
             
@@ -203,7 +253,8 @@
                 <input type="number" id="crashMonth" value="36" min="1" step="1">
             </div>
 
-            <button onclick="runSimulation()">Calculate Curve</button>
+            <button class="btn-primary" onclick="runSimulation()">Calculate Curve</button>
+            <button class="btn-secondary" onclick="exportToCSV()">💾 Export Run to CSV</button>
 
             <div id="carryWarning" class="warning-box">
                 ⚠️ <strong>Negative Carry Warning:</strong> Your borrowing cost exceeds your asset growth rate (Yield + Appreciation). Leverage will actively decay your wealth.
@@ -229,39 +280,60 @@
                     <div class="metric-value" id="outAssets">$0</div>
                 </div>
                 <div class="metric-card">
-                    <div class="metric-title">Leverage Ratio</div>
+                    <div class="metric-title">
+                        Leverage Ratio
+                        <span class="tooltip-icon">ⓘ<span class="tooltip-text">Total Assets divided by Base Equity. Tracks the power multiplier applied to your owned assets.</span></span>
+                    </div>
                     <div class="metric-value" id="outLeverage">0.00x</div>
                 </div>
                 <div class="metric-card">
-                    <div class="metric-title">Total ROI</div>
+                    <div class="metric-title">
+                        Total ROI
+                        <span class="tooltip-icon">ⓘ<span class="tooltip-text">Return on Investment. Cumulative growth percentage achieved on out-of-pocket cash deposits.</span></span>
+                    </div>
                     <div class="metric-value good-metric" id="outROI">0.0%</div>
                 </div>
                 <div class="metric-card">
-                    <div class="metric-title">Return on Equity</div>
+                    <div class="metric-title">
+                        Return on Equity
+                        <span class="tooltip-icon">ⓘ<span class="tooltip-text">Annualized net cashflows + appreciation run-rate calculated against final equity net worth.</span></span>
+                    </div>
                     <div class="metric-value good-metric" id="outROE">0.0%</div>
                 </div>
                 <div class="metric-card">
                     <div class="metric-title" id="titleGrossIncome">Gross Monthly Income</div>
-                    <div class="metric-value good-metric" id="outIncome">$0</div>
+                    <div class="metric-value" id="outIncome">$0</div>
                 </div>
                 <div class="metric-card">
                     <div class="metric-title" id="titleNetIncome">Net Monthly Income</div>
                     <div class="metric-value good-metric" id="outNetIncome">$0</div>
                 </div>
                 <div class="metric-card">
-                    <div class="metric-title">Final DSCR</div>
+                    <div class="metric-title">
+                        Final DSCR
+                        <span class="tooltip-icon">ⓘ<span class="tooltip-text">Debt Service Coverage Ratio. Gross cashflow divided by margin interest. Safety targets are >1.50x.</span></span>
+                    </div>
                     <div class="metric-value" id="outDSCR">0.0x</div>
                 </div>
                 <div class="metric-card">
-                    <div class="metric-title">Max Drawdown</div>
+                    <div class="metric-title">
+                        Max Drawdown
+                        <span class="tooltip-icon">ⓘ<span class="tooltip-text">The localized maximum crash buffer before portfolio asset values hit the structural broker liquidation wall.</span></span>
+                    </div>
                     <div class="metric-value" id="outDrawdown">0%</div>
                 </div>
                 <div class="metric-card">
-                    <div class="metric-title">Effective Margin Rate</div>
+                    <div class="metric-title">
+                        Effective Margin Rate
+                        <span class="tooltip-icon">ⓘ<span class="tooltip-text">The actual blended interest rate paid at month end across the collective balance sheet scale.</span></span>
+                    </div>
                     <div class="metric-value info-metric" id="outEffectiveMargin">0.00%</div>
                 </div>
                 <div class="metric-card">
-                    <div class="metric-title" id="titleSavings">Tiered Savings</div>
+                    <div class="metric-title" id="titleSavings">
+                        Tiered Savings
+                        <span class="tooltip-icon">ⓘ<span class="tooltip-text">The total cumulative dollars saved using volume tiered margin interest breaks versus flat basic pricing.</span></span>
+                    </div>
                     <div class="metric-value good-metric" id="outSavings">$0</div>
                 </div>
             </div>
@@ -274,6 +346,7 @@
 
     <script>
         let chartInstance = null;
+        let lastSimulationRecords = []; // Global anchor tracking state cache for CSV generation
 
         function formatCurrency(value) {
             return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(value);
@@ -282,16 +355,11 @@
         function toggleInflationInput() {
             const checkBox = document.getElementById('adjustInflation');
             const inputGroup = document.getElementById('inflationInputGroup');
-            if (checkBox.checked) {
-                inputGroup.style.display = 'block';
-            } else {
-                inputGroup.style.display = 'none';
-            }
+            inputGroup.style.display = checkBox.checked ? 'block' : 'none';
         }
 
         function calculateMonthlyMarginInterest(debt, baseRate) {
             if (debt <= 0) return 0;
-            
             let totalAnnualInterest = 0;
             let remainingDebt = debt;
 
@@ -348,11 +416,7 @@
             }
 
             const warningEl = document.getElementById('carryWarning');
-            if (annMargin > (annYield + annAppreciation) && targetDTA > 0) {
-                warningEl.style.display = 'block';
-            } else {
-                warningEl.style.display = 'none';
-            }
+            warningEl.style.display = (annMargin > (annYield + annAppreciation) && targetDTA > 0) ? 'block' : 'none';
 
             let maxDrawdown = 0;
             if (targetDTA < (1 - maintReq)) {
@@ -365,6 +429,8 @@
             const leverageRatio = 1 / (1 - targetDTA);
             document.getElementById('outLeverage').innerText = `${leverageRatio.toFixed(2)}x`;
 
+            // Clear state data buckets
+            lastSimulationRecords = [];
             let labels = [];
             let equityData = [];
             let assetData = [];
@@ -427,6 +493,16 @@
                     finalMonthlyAppreciation = appreciation;
                     finalDebtSnapshot = currentDebt;
                 }
+
+                // Cache metrics data to memory matrix before applying compound accrual shifts
+                lastSimulationRecords.push({
+                    month: i,
+                    nominalAssets: currentAssets,
+                    nominalEquity: currentEquity,
+                    nominalDebt: currentDebt,
+                    nominalBenchmark: currentBenchmark,
+                    nominalLiquidation: currentDebt / (1 - maintReq)
+                });
 
                 let netCashflow = income - interest;
                 currentEquity += (netCashflow + appreciation + monthlyCont);
@@ -515,44 +591,10 @@
                 data: {
                     labels: labels,
                     datasets: [
-                        {
-                            label: 'Total Assets',
-                            data: chartAssets,
-                            borderColor: '#3b82f6',
-                            backgroundColor: 'rgba(59, 130, 246, 0.05)',
-                            borderWidth: 2,
-                            fill: true,
-                            pointRadius: 0
-                        },
-                        {
-                            label: 'Base Equity (Leveraged)',
-                            data: chartEquity,
-                            borderColor: '#10b981',
-                            backgroundColor: 'transparent',
-                            borderWidth: 2,
-                            fill: false,
-                            pointRadius: 0
-                        },
-                        {
-                            label: 'Unleveraged Benchmark',
-                            data: chartBenchmark,
-                            borderColor: '#f59e0b',
-                            backgroundColor: 'transparent',
-                            borderWidth: 2,
-                            borderDash: [5, 5],
-                            fill: false,
-                            pointRadius: 0
-                        },
-                        {
-                            label: 'Liquidation Threshold (Margin Call Line)',
-                            data: chartLiquidation,
-                            borderColor: '#ef4444',
-                            backgroundColor: 'transparent',
-                            borderWidth: 1.5,
-                            borderDash: [3, 3],
-                            fill: false,
-                            pointRadius: 0
-                        }
+                        { label: 'Total Assets', data: chartAssets, borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.05)', borderWidth: 2, fill: true, pointRadius: 0 },
+                        { label: 'Base Equity (Leveraged)', data: chartEquity, borderColor: '#10b981', backgroundColor: 'transparent', borderWidth: 2, fill: false, pointRadius: 0 },
+                        { label: 'Unleveraged Benchmark', data: chartBenchmark, borderColor: '#f59e0b', backgroundColor: 'transparent', borderWidth: 2, borderDash: [5, 5], fill: false, pointRadius: 0 },
+                        { label: 'Liquidation Threshold (Margin Call Line)', data: chartLiquidation, borderColor: '#ef4444', backgroundColor: 'transparent', borderWidth: 1.5, borderDash: [3, 3], fill: false, pointRadius: 0 }
                     ]
                 },
                 options: {
@@ -560,30 +602,52 @@
                     maintainAspectRatio: false,
                     interaction: { mode: 'index', intersect: false },
                     plugins: {
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    return context.dataset.label + ': ' + formatCurrency(context.raw);
-                                }
-                            }
-                        },
+                        tooltip: { callbacks: { label: function(context) { return context.dataset.label + ': ' + formatCurrency(context.raw); } } },
                         legend: { labels: { color: '#f8fafc' } }
                     },
                     scales: {
-                        y: {
-                            ticks: {
-                                color: '#94a3b8',
-                                callback: function(value) { return '$' + (value / 1000) + 'k'; }
-                            },
-                            grid: { color: '#334155' }
-                        },
-                        x: {
-                            ticks: { color: '#94a3b8', maxTicksLimit: 12 },
-                            grid: { display: false }
-                        }
+                        y: { ticks: { color: '#94a3b8', callback: function(value) { return '$' + (value / 1000) + 'k'; } }, grid: { color: '#334155' } },
+                        x: { ticks: { color: '#94a3b8', maxTicksLimit: 12 }, grid: { display: false } }
                     }
                 }
             });
+        }
+
+        // CSV Export Functionality
+        function exportToCSV() {
+            if (!lastSimulationRecords || lastSimulationRecords.length === 0) {
+                alert("Please run a simulation calculation curve before exporting data.");
+                return;
+            }
+
+            const adjustInflation = document.getElementById('adjustInflation').checked;
+            const annInflationInput = parseFloat(document.getElementById('inflationRate').value) / 100;
+            const moInflationRate = annInflationInput / 12;
+
+            // Generate Headers
+            let csvContent = "data:text/csv;charset=utf-8,";
+            csvContent += `Month,Total Assets (${adjustInflation ? 'Real' : 'Nominal'}),Base Equity (${adjustInflation ? 'Real' : 'Nominal'}),Debt,Unleveraged Benchmark (${adjustInflation ? 'Real' : 'Nominal'}),Liquidation Threshold\n`;
+
+            // Render Rows
+            lastSimulationRecords.forEach(rec => {
+                let df = adjustInflation ? Math.pow(1 + moInflationRate, rec.month) : 1;
+                let assets = (rec.nominalAssets / df).toFixed(0);
+                let equity = (rec.nominalEquity / df).toFixed(0);
+                let debt = (rec.nominalDebt).toFixed(0); // Debt balances remain static in terms of legal contract liability
+                let bench = (rec.nominalBenchmark / df).toFixed(0);
+                let liq = (rec.nominalLiquidation / df).toFixed(0);
+
+                csvContent += `${rec.month},${assets},${equity},${debt},${bench},${liq}\n`;
+            });
+
+            // Trigger Browser file payload transmission
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `capital_amplifier_export_${adjustInflation ? 'real' : 'nominal'}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         }
 
         window.onload = function() {
