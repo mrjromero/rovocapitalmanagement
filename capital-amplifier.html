@@ -833,13 +833,13 @@
             let paycheckRoutingPreamble = "";
 
             if (isPaycheckMode) {
-                paycheckRoutingPreamble = `<p>🚀 <strong>Buy, Borrow, Die Paycheck Flow Enabled:</strong> Instead of holding your paycheck in dead cash accounts to pay bills, you are modeling routing your full monthly human capital income of <strong>${formatCurrency(grossPaycheck)}</strong> directly into assets, using margin credit tiers to float your monthly lifestyle bills of <strong>${formatCurrency(livingExpenses)}</strong>. This expands balance sheet velocity compared to traditional investors who only let their baseline surplus savings of <strong>${formatCurrency(baselineMonthlyContribution)}</strong> touch market compounding.</p>`;
+                paycheckRoutingPreamble = `<p>🚀 <strong>Buy, Borrow, Die Paycheck Flow Enabled:</strong> Instead of holding your paycheck in dead cash accounts to pay bills, you are modeling routing your full net monthly income of <strong>${formatCurrency(grossPaycheck)}</strong> directly into assets, using margin credit tiers to float your monthly lifestyle bills of <strong>${formatCurrency(livingExpenses)}</strong>. This expands balance sheet velocity compared to traditional investors who only let their baseline surplus savings of <strong>${formatCurrency(baselineMonthlyContribution)}</strong> touch market compounding.</p>`;
             }
 
             if (alphaPerformance > 0) {
-                performanceVerdict = `outperformed a standard cash-based **Buy-and-Hold Strategy** by <span class="badge badge-success">${formatCurrency(alphaPerformance)}</span> due to the compounding power of your positive margin carry.`;
+                performanceVerdict = `outperformed a standard cash-based <strong>Buy-and-Hold Strategy</strong> by <span class="badge badge-success">${formatCurrency(alphaPerformance)}</span> due to the compounding power of your positive margin carry.`;
             } else {
-                performanceVerdict = `underperformed a standard cash-based **Buy-and-Hold Strategy** by <span class="badge badge-danger">${formatCurrency(Math.abs(alphaPerformance))}</span> because the combination of borrowing costs or portfolio crash shocks dragged your returns below a simple 0% leverage plan.`;
+                performanceVerdict = `underperformed a standard cash-based <strong>Buy-and-Hold Strategy</strong> by <span class="badge badge-danger">${formatCurrency(Math.abs(alphaPerformance))}</span> because the combination of borrowing costs or portfolio crash shocks dragged your returns below a simple 0% leverage plan.`;
             }
 
             if (incomeDifferential > 0) {
