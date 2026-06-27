@@ -44,9 +44,9 @@
         }
         h2 { margin-top: 0; font-size: 1.25rem; color: var(--text-main); border-bottom: 1px solid var(--border); padding-bottom: 12px; }
         .input-group { margin-bottom: 16px; }
-        .checkbox-group { margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+        .checkbox-group { margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
         .checkbox-group input { width: auto; cursor: pointer; }
-        .checkbox-group label { margin-bottom: 0; cursor: pointer; color: var(--text-main); font-weight: 500; }
+        .checkbox-group label { margin-bottom: 0; cursor: pointer; color: var(--text-main); font-weight: 500; font-size: 0.9rem; }
         label { display: block; font-size: 0.875rem; color: var(--text-muted); margin-bottom: 6px; }
         input {
             width: 100%;
@@ -176,9 +176,16 @@
                 <input type="number" id="months" value="120" step="12">
             </div>
 
-            <div class="checkbox-group" style="border-top: 1px solid var(--border); padding-top: 14px; margin-top: 14px;">
-                <input type="checkbox" id="adjustInflation">
-                <label for="adjustInflation">Adjust for Inflation (2.5%)</label>
+            <div style="border-top: 1px solid var(--border); padding-top: 14px; margin-top: 14px;">
+                <div class="checkbox-group">
+                    <input type="checkbox" id="enableTiered" checked>
+                    <label for="enableTiered">Enable Tiered Margin Rates</label>
+                </div>
+
+                <div class="checkbox-group" style="margin-bottom: 16px;">
+                    <input type="checkbox" id="adjustInflation">
+                    <label for="adjustInflation">Adjust for Inflation (2.5%)</label>
+                </div>
             </div>
 
             <div class="input-group">
@@ -308,7 +315,9 @@
             const annAppreciation = parseFloat(document.getElementById('appreciation').value) / 100;
             const maintReq = parseFloat(document.getElementById('maintReq').value) / 100;
             const months = parseInt(document.getElementById('months').value);
+            
             const adjustInflation = document.getElementById('adjustInflation').checked;
+            const enableTiered = document.getElementById('enableTiered').checked;
             
             const crashSeverity = parseFloat(document.getElementById('crashSeverity').value) / 100;
             const crashMonth = parseInt(document.getElementById('crashMonth').value);
@@ -389,12 +398,14 @@
                 benchmarkData.push(currentBenchmark);
                 liquidationData.push(currentDebt / (1 - maintReq));
 
+                // Process conditional interest accrual mapping
                 let income = currentAssets * moYield;
-                let interest = calculateMonthlyMarginInterest(currentDebt, annMargin);
+                let interest = enableTiered ? calculateMonthlyMarginInterest(currentDebt, annMargin) : currentDebt * (annMargin / 12);
                 let appreciation = currentAssets * moAppreciation;
                 
+                // Track relative performance variance metrics
                 let flatInterestBaseline = currentDebt * (annMargin / 12);
-                cumulativeSavingsNominal += (flatInterestBaseline - interest);
+                cumulativeSavingsNominal += enableTiered ? (flatInterestBaseline - interest) : 0;
                 
                 if (i === months) {
                     finalMonthlyIncome = income;
