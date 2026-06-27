@@ -45,6 +45,8 @@
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }
         h2 { margin-top: 0; font-size: 1.25rem; color: var(--text-main); border-bottom: 1px solid var(--border); padding-bottom: 12px; }
+        h3 { margin-top: 0; font-size: 1.15rem; color: var(--text-main); padding-bottom: 6px; }
+        h4 { margin: 16px 0 8px 0; font-size: 0.95rem; color: var(--text-main); text-transform: uppercase; letter-spacing: 0.05em; }
         .input-group { margin-bottom: 16px; }
         .checkbox-group { margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
         .checkbox-group input { width: auto; cursor: pointer; }
@@ -78,7 +80,6 @@
         .btn-secondary { background-color: var(--secondary); margin-top: 8px; }
         .btn-secondary:hover { background-color: var(--secondary-hover); }
         
-        /* Premium CSS Tooltip Infrastructure */
         .tooltip-icon {
             display: inline-block;
             cursor: help;
@@ -109,10 +110,7 @@
             opacity: 0;
             transition: opacity 0.2s, visibility 0.2s;
         }
-        .tooltip-icon:hover .tooltip-text {
-            visibility: visible;
-            opacity: 1;
-        }
+        .tooltip-icon:hover .tooltip-text { visibility: visible; opacity: 1; }
         .metric-title .tooltip-icon { margin-left: 6px; }
         .metric-title .tooltip-text { bottom: 140%; }
 
@@ -165,9 +163,18 @@
         .info-metric { color: var(--accent); }
         canvas { width: 100% !important; height: 500px !important; }
         
-        @media (max-width: 1400px) {
-            .metrics-grid { grid-template-columns: repeat(3, 1fr); }
-        }
+        /* Summary Narrative Styling */
+        .summary-narrative { font-size: 0.95rem; line-height: 1.6; color: var(--text-main); }
+        .summary-narrative p { margin: 0 0 12px 0; }
+        .summary-narrative ul { margin: 0 0 16px 0; padding-left: 20px; }
+        .summary-narrative li { margin-bottom: 8px; color: var(--text-muted); }
+        .summary-narrative strong { color: var(--text-main); }
+        .badge { display: inline-block; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-family: monospace; font-size: 0.85rem; }
+        .badge-success { background-color: rgba(16, 185, 129, 0.15); color: var(--success); border: 1px solid var(--success); }
+        .badge-danger { background-color: rgba(239, 68, 110, 0.15); color: var(--danger); border: 1px solid var(--danger); }
+        .badge-warning { background-color: rgba(245, 158, 11, 0.15); color: var(--warning); border: 1px solid var(--warning); }
+        
+        @media (max-width: 1400px) { .metrics-grid { grid-template-columns: repeat(3, 1fr); } }
         @media (max-width: 900px) {
             .container { grid-template-columns: 1fr; }
             .metrics-grid { grid-template-columns: repeat(2, 1fr); }
@@ -341,12 +348,29 @@
             <div class="panel">
                 <canvas id="compoundingChart"></canvas>
             </div>
+
+            <div class="panel summary-narrative">
+                <h3>Simulation Summary & Chart Guide</h3>
+                <div id="narrativeOutput">
+                    </div>
+                
+                <hr style="border: none; border-top: 1px solid var(--border); margin: 20px 0;">
+                
+                <h3>Understanding the Data Curves</h3>
+                <p>The interactive charting component maps out your asset structure over time. Here is what each line measures:</p>
+                <ul>
+                    <li><strong style="color: #3b82f6;">Total Assets (Solid Blue Area):</strong> The gross market valuation of your total holding power. It visually expands away from your net worth line based on how much structural debt you have introduced onto the balance sheet.</li>
+                    <li><strong style="color: #10b981;">Base Equity / Leveraged (Solid Green Line):</strong> Your true personal net worth over time under this leveraged framework. It represents gross assets minus the outstanding margin debt balance. All positive carry, price appreciation, and savings injections compound directly into this curve.</li>
+                    <li><strong style="color: #f59e0b;">Unleveraged Benchmark (Dashed Amber Line):</strong> Your baseline financial control run. It outlines what your exact net worth trajectory would look like if you avoided borrowing entirely and simply compounded your starting capital and monthly savings at standard investment returns.</li>
+                    <li><strong style="color: #ef4444;">Liquidation Threshold / Margin Call Line (Dotted Red Line):</strong> The critical safety floor. Calculated dynamically as <span style="font-family: monospace; color: #f8fafc;">Outstanding Debt ÷ (1 - Maintenance Requirement)</span>. If the blue asset area ever breaches or touches this line, your capital faces an immediate forced broker liquidation.</li>
+                </ul>
+            </div>
         </div>
     </div>
 
     <script>
         let chartInstance = null;
-        let lastSimulationRecords = []; // Global anchor tracking state cache for CSV generation
+        let lastSimulationRecords = [];
 
         function formatCurrency(value) {
             return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(value);
@@ -429,7 +453,6 @@
             const leverageRatio = 1 / (1 - targetDTA);
             document.getElementById('outLeverage').innerText = `${leverageRatio.toFixed(2)}x`;
 
-            // Clear state data buckets
             lastSimulationRecords = [];
             let labels = [];
             let equityData = [];
@@ -494,7 +517,6 @@
                     finalDebtSnapshot = currentDebt;
                 }
 
-                // Cache metrics data to memory matrix before applying compound accrual shifts
                 lastSimulationRecords.push({
                     month: i,
                     nominalAssets: currentAssets,
@@ -525,6 +547,7 @@
             
             const finalEquityDisplay = equityData[months] / discountFactor;
             const finalAssetsDisplay = assetData[months] / discountFactor;
+            const finalBenchmarkDisplay = benchmarkData[months] / discountFactor;
             const finalIncomeDisplay = finalMonthlyIncome / discountFactor;
             const finalNetIncomeDisplay = (finalMonthlyIncome - finalMonthlyInterest) / discountFactor;
             const finalSavingsDisplay = cumulativeSavingsNominal / discountFactor;
@@ -567,6 +590,34 @@
             } else {
                 alertEl.style.display = 'none';
             }
+
+            // DYNAMIC NARRATIVE SUMMARY CONTENT CALCULATOR
+            const alphaPerformance = finalEquityDisplay - finalBenchmarkDisplay;
+            let performanceVerdict = "";
+            let safetyVerdict = "";
+
+            if (alphaPerformance > 0) {
+                performanceVerdict = `Outperformed the unleveraged investment baseline by <span class="badge badge-success">${formatCurrency(alphaPerformance)}</span>. This confirms that introducing a positive carry structural spread successfully accelerated compound wealth accumulation over your baseline.`;
+            } else if (alphaPerformance < 0) {
+                performanceVerdict = `Underperformed the unleveraged investment baseline by <span class="badge badge-danger">${formatCurrency(Math.abs(alphaPerformance))}</span>. This indicates that borrowing costs, negative cash flows, or the structural damage of a market crash actively destroyed wealth relative to a safe 0% leverage execution.`;
+            } else {
+                performanceVerdict = `Performed identically to the unleveraged baseline. Because leverage targets were set to 0%, no risk or excess return alpha was added to the base capital pool.`;
+            }
+
+            if (marginCallOccurred) {
+                safetyVerdict = `⚠️ <span class="badge badge-danger" style="color: #ffffff;">CRITICAL BREACH</span>: Your active parameters failed stress-testing. At Month ${marginCallMonthIndex}, the simulated crash dropped total asset values beneath your liquidation line, triggering forced broker intervention and locking in permanent equity impairment.`;
+            } else if (crashSeverity > 0) {
+                safetyVerdict = `🔒 <span class="badge badge-success">SURVIVED STRESS TEST</span>: Your account absorbed the injected ${document.getElementById('crashSeverity').value}% crash at Month ${crashMonth} without crossing the liquidation floor. Though equity declined significantly, your balance sheet maintained adequate cushion to avert forced liquidations.`;
+            } else {
+                safetyVerdict = `ℹ️ <span class="badge badge-warning">NO ACTIVE SHOCK</span>: The timeline ran without an active market crash event. Under normal market conditions, you maintained a dynamic safety cushion of <strong>${maxDrawdown.toFixed(1)}%</strong> before structural asset thresholds would trigger a margin call.`;
+            }
+
+            const narrativeHTML = `
+                <p>Over a span of <strong>${months} months</strong>, your strategy generated a final net equity valuation of <strong>${formatCurrency(finalEquityDisplay)}</strong> on an out-of-pocket cash commitment of <strong>${formatCurrency(calculatedInvested)}</strong>.</p>
+                <p>Compared to your benchmark option, this design: ${performanceVerdict}</p>
+                <p>${safetyVerdict}</p>
+            `;
+            document.getElementById('narrativeOutput').innerHTML = narrativeHTML;
 
             let chartAssets = [];
             let chartEquity = [];
@@ -613,7 +664,6 @@
             });
         }
 
-        // CSV Export Functionality
         function exportToCSV() {
             if (!lastSimulationRecords || lastSimulationRecords.length === 0) {
                 alert("Please run a simulation calculation curve before exporting data.");
@@ -624,23 +674,20 @@
             const annInflationInput = parseFloat(document.getElementById('inflationRate').value) / 100;
             const moInflationRate = annInflationInput / 12;
 
-            // Generate Headers
             let csvContent = "data:text/csv;charset=utf-8,";
             csvContent += `Month,Total Assets (${adjustInflation ? 'Real' : 'Nominal'}),Base Equity (${adjustInflation ? 'Real' : 'Nominal'}),Debt,Unleveraged Benchmark (${adjustInflation ? 'Real' : 'Nominal'}),Liquidation Threshold\n`;
 
-            // Render Rows
             lastSimulationRecords.forEach(rec => {
                 let df = adjustInflation ? Math.pow(1 + moInflationRate, rec.month) : 1;
                 let assets = (rec.nominalAssets / df).toFixed(0);
                 let equity = (rec.nominalEquity / df).toFixed(0);
-                let debt = (rec.nominalDebt).toFixed(0); // Debt balances remain static in terms of legal contract liability
+                let debt = (rec.nominalDebt).toFixed(0);
                 let bench = (rec.nominalBenchmark / df).toFixed(0);
                 let liq = (rec.nominalLiquidation / df).toFixed(0);
 
                 csvContent += `${rec.month},${assets},${equity},${debt},${bench},${liq}\n`;
             });
 
-            // Trigger Browser file payload transmission
             const encodedUri = encodeURI(csvContent);
             const link = document.createElement("a");
             link.setAttribute("href", encodedUri);
