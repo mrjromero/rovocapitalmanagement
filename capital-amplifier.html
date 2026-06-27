@@ -31,7 +31,7 @@
             display: grid;
             grid-template-columns: 350px 1fr;
             gap: 20px;
-            max-width: 1500px;
+            max-width: 1600px;
             width: 100%;
         }
         .panel {
@@ -85,12 +85,12 @@
             justify-content: center;
         }
         .metric-title { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
-        .metric-value { font-size: 1.5rem; font-weight: bold; margin-top: 8px; font-family: monospace; }
+        .metric-value { font-size: 1.4rem; font-weight: bold; margin-top: 8px; font-family: monospace; }
         .good-metric { color: var(--success); }
         .warn-metric { color: var(--danger); }
         canvas { width: 100% !important; height: 500px !important; }
         
-        @media (max-width: 1200px) {
+        @media (max-width: 1400px) {
             .metrics-grid { grid-template-columns: repeat(3, 1fr); }
         }
         @media (max-width: 900px) {
@@ -151,6 +151,10 @@
         <div style="display: flex; flex-direction: column; gap: 20px;">
             <div class="metrics-grid">
                 <div class="metric-card">
+                    <div class="metric-title">Total Invested</div>
+                    <div class="metric-value" id="outInvested">$0</div>
+                </div>
+                <div class="metric-card">
                     <div class="metric-title">Final Equity</div>
                     <div class="metric-value" id="outEquity">$0</div>
                 </div>
@@ -159,8 +163,24 @@
                     <div class="metric-value" id="outAssets">$0</div>
                 </div>
                 <div class="metric-card">
-                    <div class="metric-title">Final Monthly Income</div>
+                    <div class="metric-title">Leverage Ratio</div>
+                    <div class="metric-value" id="outLeverage">0.00x</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-title">Total ROI</div>
+                    <div class="metric-value good-metric" id="outROI">0.0%</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-title">Return on Equity</div>
+                    <div class="metric-value good-metric" id="outROE">0.0%</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-title">Gross Monthly Income</div>
                     <div class="metric-value good-metric" id="outIncome">$0</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-title">Net Monthly Income</div>
+                    <div class="metric-value good-metric" id="outNetIncome">$0</div>
                 </div>
                 <div class="metric-card">
                     <div class="metric-title">Final DSCR</div>
@@ -207,16 +227,22 @@
                 return;
             }
 
-            // Calculate Max Drawdown based on starting DTA and Maintenance Requirement
+            // Calculate Max Drawdown
             let maxDrawdown = 0;
             if (targetDTA < (1 - maintReq)) {
                 maxDrawdown = (1 - (targetDTA / (1 - maintReq))) * 100;
             }
-
-            // Update Drawdown DOM element
             const drawdownEl = document.getElementById('outDrawdown');
             drawdownEl.innerText = `${maxDrawdown.toFixed(1)}%`;
             drawdownEl.className = `metric-value ${maxDrawdown < 35 ? 'warn-metric' : 'good-metric'}`;
+
+            // Calculate Total Invested
+            const totalInvested = P + (monthlyCont * months);
+            document.getElementById('outInvested').innerText = formatCurrency(totalInvested);
+
+            // Calculate Leverage Ratio
+            const leverageRatio = 1 / (1 - targetDTA);
+            document.getElementById('outLeverage').innerText = `${leverageRatio.toFixed(2)}x`;
 
             // Tracking arrays for the chart
             let labels = [];
@@ -230,6 +256,7 @@
             
             let finalMonthlyIncome = 0;
             let finalMonthlyInterest = 0;
+            let finalMonthlyAppreciation = 0;
 
             for (let i = 0; i <= months; i++) {
                 labels.push(`Month ${i}`);
@@ -252,6 +279,7 @@
                 if (i === months) {
                     finalMonthlyIncome = income;
                     finalMonthlyInterest = interest;
+                    finalMonthlyAppreciation = appreciation;
                 }
 
                 // 3. Reinvest (Positive Carry + Appreciation + Contributions)
@@ -259,10 +287,26 @@
                 currentEquity += (netCashflow + appreciation + monthlyCont);
             }
 
+            // Calculate Return on Equity (ROE) based on the final month's annualized run rate
+            const finalAnnualNetReturn = ((finalMonthlyIncome - finalMonthlyInterest) + finalMonthlyAppreciation) * 12;
+            const finalROE = (finalAnnualNetReturn / equityData[months]) * 100;
+            document.getElementById('outROE').innerText = `${finalROE.toFixed(2)}%`;
+
+            // New Metric Calculations
+            const finalEquity = equityData[months];
+            const totalROI = ((finalEquity - totalInvested) / totalInvested) * 100;
+            const netMonthlyIncome = finalMonthlyIncome - finalMonthlyInterest;
+
             // Update remaining DOM Metrics
-            document.getElementById('outEquity').innerText = formatCurrency(equityData[months]);
+            document.getElementById('outEquity').innerText = formatCurrency(finalEquity);
             document.getElementById('outAssets').innerText = formatCurrency(assetData[months]);
             document.getElementById('outIncome').innerText = formatCurrency(finalMonthlyIncome);
+            document.getElementById('outNetIncome').innerText = formatCurrency(netMonthlyIncome);
+            
+            // Render Total ROI UI element
+            const roiEl = document.getElementById('outROI');
+            roiEl.innerText = `${totalROI.toFixed(2)}%`;
+            roiEl.className = `metric-value ${totalROI < 0 ? 'warn-metric' : 'good-metric'}`;
             
             const dscr = finalMonthlyInterest > 0 ? (finalMonthlyIncome / finalMonthlyInterest).toFixed(2) : '∞';
             const dscrEl = document.getElementById('outDSCR');
