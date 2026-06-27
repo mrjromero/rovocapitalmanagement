@@ -73,7 +73,6 @@
         }
         button:hover { background-color: var(--accent-hover); }
         
-        /* Alert Banners */
         .warning-box {
             display: none;
             background-color: rgba(245, 158, 11, 0.1);
@@ -99,7 +98,6 @@
             line-height: 1.4;
         }
 
-        /* Adjusted to a crisp 4-column balanced layout */
         .metrics-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -395,7 +393,6 @@
                 let interest = calculateMonthlyMarginInterest(currentDebt, annMargin);
                 let appreciation = currentAssets * moAppreciation;
                 
-                // Track cumulative visual differential vs flat base borrowing rate
                 let flatInterestBaseline = currentDebt * (annMargin / 12);
                 cumulativeSavingsNominal += (flatInterestBaseline - interest);
                 
@@ -431,7 +428,6 @@
             const finalNetIncomeDisplay = (finalMonthlyIncome - finalMonthlyInterest) / discountFactor;
             const finalSavingsDisplay = cumulativeSavingsNominal / discountFactor;
 
-            // Calculate dynamic final effective annual margin rate run-rate
             const effectiveAnnualMarginRate = finalDebtSnapshot > 0 ? ((finalMonthlyInterest * 12) / finalDebtSnapshot) * 100 : annMargin * 100;
 
             const totalROI = calculatedInvested > 0 ? ((finalEquityDisplay - calculatedInvested) / calculatedInvested) * 100 : 0;
