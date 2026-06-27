@@ -44,6 +44,9 @@
         }
         h2 { margin-top: 0; font-size: 1.25rem; color: var(--text-main); border-bottom: 1px solid var(--border); padding-bottom: 12px; }
         .input-group { margin-bottom: 16px; }
+        .checkbox-group { margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+        .checkbox-group input { width: auto; cursor: pointer; }
+        .checkbox-group label { margin-bottom: 0; cursor: pointer; color: var(--text-main); font-weight: 500; }
         label { display: block; font-size: 0.875rem; color: var(--text-muted); margin-bottom: 6px; }
         input {
             width: 100%;
@@ -154,7 +157,7 @@
             </div>
 
             <div class="input-group">
-                <label>Margin Rate (%) Annual</label>
+                <label>Base Margin Rate (%) (&lt;$100k Loan)</label>
                 <input type="number" id="marginRate" value="6.0" step="0.1">
             </div>
             
@@ -173,7 +176,12 @@
                 <input type="number" id="months" value="120" step="12">
             </div>
 
-            <div class="input-group" style="border-top: 1px solid var(--border); padding-top: 14px; margin-top: 14px;">
+            <div class="checkbox-group" style="border-top: 1px solid var(--border); padding-top: 14px; margin-top: 14px;">
+                <input type="checkbox" id="adjustInflation">
+                <label for="adjustInflation">Adjust for Inflation (2.5%)</label>
+            </div>
+
+            <div class="input-group">
                 <label style="color: #f1f5f9; font-weight: 600;">💥 Black Swan Crash (%)</label>
                 <input type="number" id="crashSeverity" value="0" min="0" max="95" step="5">
             </div>
@@ -197,15 +205,15 @@
         <div style="display: flex; flex-direction: column; gap: 20px;">
             <div class="metrics-grid">
                 <div class="metric-card">
-                    <div class="metric-title">Total Invested</div>
+                    <div class="metric-title" id="titleInvested">Total Invested</div>
                     <div class="metric-value" id="outInvested">$0</div>
                 </div>
                 <div class="metric-card">
-                    <div class="metric-title">Final Equity</div>
+                    <div class="metric-title" id="titleEquity">Final Equity</div>
                     <div class="metric-value" id="outEquity">$0</div>
                 </div>
                 <div class="metric-card">
-                    <div class="metric-title">Final Total Assets</div>
+                    <div class="metric-title" id="titleAssets">Final Total Assets</div>
                     <div class="metric-value" id="outAssets">$0</div>
                 </div>
                 <div class="metric-card">
@@ -221,11 +229,11 @@
                     <div class="metric-value good-metric" id="outROE">0.0%</div>
                 </div>
                 <div class="metric-card">
-                    <div class="metric-title">Gross Monthly Income</div>
+                    <div class="metric-title" id="titleGrossIncome">Gross Monthly Income</div>
                     <div class="metric-value good-metric" id="outIncome">$0</div>
                 </div>
                 <div class="metric-card">
-                    <div class="metric-title">Net Monthly Income</div>
+                    <div class="metric-title" id="titleNetIncome">Net Monthly Income</div>
                     <div class="metric-value good-metric" id="outNetIncome">$0</div>
                 </div>
                 <div class="metric-card">
@@ -251,6 +259,43 @@
             return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(value);
         }
 
+        // Blended Tiered Margin Function (Simulating Interactive Brokers style schedules)
+        function calculateMonthlyMarginInterest(debt, baseRate) {
+            if (debt <= 0) return 0;
+            
+            let totalAnnualInterest = 0;
+            let remainingDebt = debt;
+
+            // Tier 1: First $100,000 -> Base Rate
+            let t1 = Math.min(remainingDebt, 100000);
+            totalAnnualInterest += t1 * baseRate;
+            remainingDebt -= t1;
+
+            // Tier 2: $100,001 to $1,000,000 -> Base Rate - 0.5%
+            if (remainingDebt > 0) {
+                let t2 = Math.min(remainingDebt, 900000);
+                let r2 = Math.max(0.015, baseRate - 0.005);
+                totalAnnualInterest += t2 * r2;
+                remainingDebt -= t2;
+            }
+
+            // Tier 3: $1,000,001 to $3,000,000 -> Base Rate - 1.0%
+            if (remainingDebt > 0) {
+                let t3 = Math.min(remainingDebt, 2000000);
+                let r3 = Math.max(0.015, baseRate - 0.010);
+                totalAnnualInterest += t3 * r3;
+                remainingDebt -= t3;
+            }
+
+            // Tier 4: $3,000,000+ -> Base Rate - 1.5%
+            if (remainingDebt > 0) {
+                let r4 = Math.max(0.015, baseRate - 0.015);
+                totalAnnualInterest += remainingDebt * r4;
+            }
+
+            return totalAnnualInterest / 12;
+        }
+
         function runSimulation() {
             // Fetch inputs
             const P = parseFloat(document.getElementById('startCapital').value);
@@ -261,17 +306,15 @@
             const annAppreciation = parseFloat(document.getElementById('appreciation').value) / 100;
             const maintReq = parseFloat(document.getElementById('maintReq').value) / 100;
             const months = parseInt(document.getElementById('months').value);
+            const adjustInflation = document.getElementById('adjustInflation').checked;
             
-            // Crash parameters
             const crashSeverity = parseFloat(document.getElementById('crashSeverity').value) / 100;
             const crashMonth = parseInt(document.getElementById('crashMonth').value);
 
-            // Monthly rates
             const moYield = annYield / 12;
-            const moMargin = annMargin / 12;
             const moAppreciation = annAppreciation / 12;
+            const moInflationRate = 0.025 / 12; // 2.5% Annualized Inflation
 
-            // Leverage math limits
             if (targetDTA >= 1.0) {
                 alert("DTA must be strictly less than 100%");
                 return;
@@ -285,7 +328,7 @@
                 warningEl.style.display = 'none';
             }
 
-            // Calculate Max Drawdown Theoretical Limit (Pre-crash baseline)
+            // Theoretical Max Drawdown
             let maxDrawdown = 0;
             if (targetDTA < (1 - maintReq)) {
                 maxDrawdown = (1 - (targetDTA / (1 - maintReq))) * 100;
@@ -294,15 +337,11 @@
             drawdownEl.innerText = `${maxDrawdown.toFixed(1)}%`;
             drawdownEl.className = `metric-value ${maxDrawdown < 35 ? 'warn-metric' : 'good-metric'}`;
 
-            // Calculate Total Invested
-            const totalInvested = P + (monthlyCont * months);
-            document.getElementById('outInvested').innerText = formatCurrency(totalInvested);
-
             // Calculate Leverage Ratio
             const leverageRatio = 1 / (1 - targetDTA);
             document.getElementById('outLeverage').innerText = `${leverageRatio.toFixed(2)}x`;
 
-            // Tracking arrays for the chart
+            // Tracking arrays for raw nominal values
             let labels = [];
             let equityData = [];
             let assetData = [];
@@ -321,15 +360,14 @@
             let marginCallOccurred = false;
             let marginCallMonthIndex = -1;
 
+            // Core Nominal Simulation Loop
             for (let i = 0; i <= months; i++) {
                 labels.push(`Month ${i}`);
 
-                // Process sudden market crash shock BEFORE checking safety boundaries
                 if (i === crashMonth && i > 0 && crashSeverity > 0) {
                     currentAssets = currentAssets * (1 - crashSeverity);
                     currentEquity = currentAssets - currentDebt;
                     
-                    // A Margin Call occurs if actual assets drop below the required structural liquidation cushion
                     if (currentAssets < (currentDebt / (1 - maintReq)) || currentEquity <= 0) {
                         marginCallOccurred = true;
                         marginCallMonthIndex = i;
@@ -337,7 +375,6 @@
                     if (currentEquity < 0) currentEquity = 0;
                 }
 
-                // Balance Sheet Rebalancing Step
                 if (currentEquity > 0) {
                     currentDebt = currentEquity * (targetDTA / (1 - targetDTA));
                     currentAssets = currentEquity + currentDebt;
@@ -349,13 +386,11 @@
                 equityData.push(currentEquity);
                 assetData.push(currentAssets);
                 benchmarkData.push(currentBenchmark);
-                
-                // Track Liquidation Cushion threshold line ($Debt / (1 - MaintReq))
                 liquidationData.push(currentDebt / (1 - maintReq));
 
-                // Accruing Interest and Returns
+                // Blended Tiered Margin Calculation
                 let income = currentAssets * moYield;
-                let interest = currentDebt * moMargin;
+                let interest = calculateMonthlyMarginInterest(currentDebt, annMargin);
                 let appreciation = currentAssets * moAppreciation;
                 
                 if (i === months) {
@@ -367,26 +402,48 @@
                 let netCashflow = income - interest;
                 currentEquity += (netCashflow + appreciation + monthlyCont);
 
-                // Benchmark Tracking
                 let benchIncome = currentBenchmark * moYield;
                 let benchAppreciation = currentBenchmark * moAppreciation;
                 currentBenchmark += (benchIncome + benchAppreciation + monthlyCont);
             }
 
-            // Post-simulation data mapping
-            const finalEquity = equityData[months];
-            const totalROI = totalInvested > 0 ? ((finalEquity - totalInvested) / totalInvested) * 100 : 0;
-            const netMonthlyIncome = finalMonthlyIncome - finalMonthlyInterest;
+            // Calculate Invested Capital (Adjusting contributions along timeline if requested)
+            let calculatedInvested = P;
+            if (adjustInflation) {
+                for (let m = 1; m <= months; m++) {
+                    calculatedInvested += monthlyCont / Math.pow(1 + moInflationRate, m);
+                }
+            } else {
+                calculatedInvested = P + (monthlyCont * months);
+            }
 
-            const finalAnnualNetReturn = (netMonthlyIncome + finalMonthlyAppreciation) * 12;
-            const finalROE = finalEquity > 0 ? (finalAnnualNetReturn / finalEquity) * 100 : 0;
+            // Apply Post-Simulation Inflation Discount Filters to Display Metrics
+            const discountFactor = adjustInflation ? Math.pow(1 + moInflationRate, months) : 1;
+            
+            const finalEquityDisplay = equityData[months] / discountFactor;
+            const finalAssetsDisplay = assetData[months] / discountFactor;
+            const finalIncomeDisplay = finalMonthlyIncome / discountFactor;
+            const finalNetIncomeDisplay = (finalMonthlyIncome - finalMonthlyInterest) / discountFactor;
+
+            // ROI and ROE calculations
+            const totalROI = calculatedInvested > 0 ? ((finalEquityDisplay - calculatedInvested) / calculatedInvested) * 100 : 0;
+            const finalAnnualNetReturnNominal = ((finalMonthlyIncome - finalMonthlyInterest) + finalMonthlyAppreciation) * 12;
+            const finalROE = equityData[months] > 0 ? (finalAnnualNetReturnNominal / equityData[months]) * 100 : 0;
+
+            // Dynamic Metric UI Label Updates
+            document.getElementById('titleInvested').innerText = adjustInflation ? "Total Invested (Real)" : "Total Invested";
+            document.getElementById('titleEquity').innerText = adjustInflation ? "Final Equity (Real)" : "Final Equity";
+            document.getElementById('titleAssets').innerText = adjustInflation ? "Total Assets (Real)" : "Final Total Assets";
+            document.getElementById('titleGrossIncome').innerText = adjustInflation ? "Gross Income (Real)" : "Gross Monthly Income";
+            document.getElementById('titleNetIncome').innerText = adjustInflation ? "Net Income (Real)" : "Net Monthly Income";
+
+            // Populate updated UI Metrics
+            document.getElementById('outInvested').innerText = formatCurrency(calculatedInvested);
+            document.getElementById('outEquity').innerText = formatCurrency(finalEquityDisplay);
+            document.getElementById('outAssets').innerText = formatCurrency(finalAssetsDisplay);
+            document.getElementById('outIncome').innerText = formatCurrency(finalIncomeDisplay);
+            document.getElementById('outNetIncome').innerText = formatCurrency(finalNetIncomeDisplay);
             document.getElementById('outROE').innerText = `${finalROE.toFixed(2)}%`;
-
-            // Display UI updates
-            document.getElementById('outEquity').innerText = formatCurrency(finalEquity);
-            document.getElementById('outAssets').innerText = formatCurrency(assetData[months]);
-            document.getElementById('outIncome').innerText = formatCurrency(finalMonthlyIncome);
-            document.getElementById('outNetIncome').innerText = formatCurrency(netMonthlyIncome);
             
             const roiEl = document.getElementById('outROI');
             roiEl.innerText = `${totalROI.toFixed(2)}%`;
@@ -397,7 +454,7 @@
             dscrEl.innerText = `${dscr}x`;
             dscrEl.className = `metric-value ${dscr < 1.5 ? 'warn-metric' : 'good-metric'}`;
 
-            // Margin Call Warning Box Toggle
+            // Handle Margin Call Alert Banner
             const alertEl = document.getElementById('marginCallAlert');
             if (marginCallOccurred) {
                 document.getElementById('alertMonth').innerText = marginCallMonthIndex;
@@ -406,7 +463,21 @@
                 alertEl.style.display = 'none';
             }
 
-            // Update Chart
+            // Deflate local charting values sequentially if checked
+            let chartAssets = [];
+            let chartEquity = [];
+            let chartBenchmark = [];
+            let chartLiquidation = [];
+
+            for (let i = 0; i <= months; i++) {
+                let df = adjustInflation ? Math.pow(1 + moInflationRate, i) : 1;
+                chartAssets.push(assetData[i] / df);
+                chartEquity.push(equityData[i] / df);
+                chartBenchmark.push(benchmarkData[i] / df);
+                chartLiquidation.push(liquidationData[i] / df);
+            }
+
+            // Update Chart Elements
             const ctx = document.getElementById('compoundingChart').getContext('2d');
             if (chartInstance) {
                 chartInstance.destroy();
@@ -419,7 +490,7 @@
                     datasets: [
                         {
                             label: 'Total Assets',
-                            data: assetData,
+                            data: chartAssets,
                             borderColor: '#3b82f6',
                             backgroundColor: 'rgba(59, 130, 246, 0.05)',
                             borderWidth: 2,
@@ -428,7 +499,7 @@
                         },
                         {
                             label: 'Base Equity (Leveraged)',
-                            data: equityData,
+                            data: chartEquity,
                             borderColor: '#10b981',
                             backgroundColor: 'transparent',
                             borderWidth: 2,
@@ -437,7 +508,7 @@
                         },
                         {
                             label: 'Unleveraged Benchmark',
-                            data: benchmarkData,
+                            data: chartBenchmark,
                             borderColor: '#f59e0b',
                             backgroundColor: 'transparent',
                             borderWidth: 2,
@@ -447,7 +518,7 @@
                         },
                         {
                             label: 'Liquidation Threshold (Margin Call Line)',
-                            data: liquidationData,
+                            data: chartLiquidation,
                             borderColor: '#ef4444',
                             backgroundColor: 'transparent',
                             borderWidth: 1.5,
