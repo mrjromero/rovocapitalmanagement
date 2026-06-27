@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -37,6 +37,8 @@
             max-width: 1650px;
             width: 100%;
         }
+        
+        /* Master Layer Separation Rules (Fixes Stacking Context Traps) */
         .sidebar-panel {
             background-color: var(--panel-bg);
             padding: 24px;
@@ -44,8 +46,16 @@
             border: 1px solid var(--border);
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
             position: relative;
-            z-index: 30;
+            z-index: 10; /* Sidebar sits firmly on layer 10 */
         }
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            position: relative;
+            z-index: 5; /* Dashboard content sits safely on layer 5 */
+        }
+        
         .panel {
             background-color: var(--panel-bg);
             padding: 24px;
@@ -53,13 +63,11 @@
             border: 1px solid var(--border);
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }
+        
         h2 { margin-top: 0; font-size: 1.25rem; color: var(--text-main); border-bottom: 1px solid var(--border); padding-bottom: 12px; }
         h3 { margin-top: 0; font-size: 1.15rem; color: var(--text-main); padding-bottom: 6px; }
         .input-group { margin-bottom: 16px; position: relative; }
         
-        .input-group:hover { z-index: 20; }
-        .metric-card:hover { z-index: 20; border-color: var(--accent) !important; }
-
         .checkbox-group { margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
         .checkbox-group input { width: auto; cursor: pointer; }
         .checkbox-group label { margin-bottom: 0; cursor: pointer; color: var(--text-main); font-weight: 500; font-size: 0.9rem; }
@@ -92,6 +100,7 @@
         .btn-secondary { background-color: var(--secondary); margin-top: 8px; }
         .btn-secondary:hover { background-color: var(--secondary-hover); }
         
+        /* Master Floating Tooltip Infrastructure */
         .tooltip-icon {
             display: inline-block;
             cursor: help;
@@ -114,7 +123,7 @@
             font-size: 0.75rem;
             line-height: 1.4;
             position: absolute;
-            z-index: 100;
+            z-index: 999; /* Guarantees layout escape authority */
             bottom: 140%;
             left: 50%;
             transform: translateX(-50%);
@@ -123,17 +132,11 @@
             transition: opacity 0.15s ease, visibility 0.15s ease;
             pointer-events: none;
         }
-        .tooltip-icon:hover .tooltip-text { visibility: visible; opacity: 1; }
-
-        /* Dynamic Tier Schedule Table Styles */
-        .tier-ledger-container {
-            margin: 16px 0;
-            background-color: var(--bg-color);
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            padding: 10px;
-            font-size: 0.75rem;
+        .tooltip-icon:hover .tooltip-text {
+            visibility: visible;
+            opacity: 1;
         }
+
         .tier-ledger-title {
             font-weight: bold;
             color: var(--text-main);
@@ -204,6 +207,7 @@
             gap: 16px;
             margin-bottom: 20px;
         }
+        
         .metric-card {
             background-color: var(--panel-bg);
             padding: 16px;
@@ -217,7 +221,13 @@
             z-index: 1;
             transition: border-color 0.2s, z-index 0s;
         }
-        .metric-card:hover { z-index: 50; border-color: var(--accent); }
+        
+        /* Forces the active hovered card to scale its z-index over its grid neighbors */
+        .metric-card:hover {
+            z-index: 100;
+            border-color: var(--accent);
+        }
+        
         .metric-title { display: flex; align-items: center; justify-content: center; font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
         .metric-value { font-size: 1.4rem; font-weight: bold; margin-top: 8px; font-family: monospace; }
         .good-metric { color: var(--success); }
@@ -236,9 +246,19 @@
         .badge-warning { background-color: rgba(245, 158, 11, 0.15); color: var(--warning); border: 1px solid var(--warning); }
         
         @media (max-width: 1400px) { .metrics-grid { grid-template-columns: repeat(3, 1fr); } }
+        
+        /* Mobile Fluid Override Rules - Prevents Screen Edge Clipping */
         @media (max-width: 900px) {
             .container { grid-template-columns: 1fr; }
             .metrics-grid { grid-template-columns: repeat(2, 1fr); }
+            
+            .tooltip-text {
+                width: 210px;
+                left: auto;
+                right: 0;
+                transform: none; /* Shifts text leftward inward from right icon anchor */
+                bottom: 140%;
+            }
         }
     </style>
 </head>
@@ -249,38 +269,59 @@
             <h2>Capital Amplifier Simulator</h2>
             
             <div class="input-group">
-                <label>Starting Capital ($)</label>
+                <label>
+                    Starting Capital ($)
+                    <span class="tooltip-icon">ⓘ<span class="tooltip-text">Initial out-of-pocket cash principal used to launch the portfolio.</span></span>
+                </label>
                 <input type="number" id="startCapital" value="100000" step="1000">
             </div>
 
             <div class="input-group" id="standardContributionGroup">
-                <label>Monthly Contribution ($)</label>
+                <label>
+                    Monthly Contribution ($)
+                    <span class="tooltip-icon">ⓘ<span class="tooltip-text">Additional out-of-pocket cash savings injected into the equity base monthly.</span></span>
+                </label>
                 <input type="number" id="monthlyContribution" value="1000" step="100">
             </div>
 
             <div id="paycheckRoutingInputs" style="display: none;">
                 <div class="input-group">
-                    <label>Gross Monthly Paycheck ($)</label>
+                    <label>
+                        Gross Monthly Paycheck ($)
+                        <span class="tooltip-icon">ⓘ<span class="tooltip-text">Your entire monthly paycheck flowed completely into the leveraged asset base on Day 1.</span></span>
+                    </label>
                     <input type="number" id="grossPaycheck" value="5000" step="500">
                 </div>
                 <div class="input-group">
-                    <label>Monthly Living Expenses ($)</label>
+                    <label>
+                        Monthly Living Expenses ($)
+                        <span class="tooltip-icon">ⓘ<span class="tooltip-text">Total capital drawn back out of the brokerage account via a margin loan to fund lifestyle bills.</span></span>
+                    </label>
                     <input type="number" id="livingExpenses" value="4000" step="200">
                 </div>
             </div>
 
             <div class="input-group">
-                <label>Target DTA (%)</label>
+                <label>
+                    Target DTA (%)
+                    <span class="tooltip-icon">ⓘ<span class="tooltip-text">Debt-to-Asset Ratio. Defines what percentage of your portfolio value consists of borrowed margin debt.</span></span>
+                </label>
                 <input type="number" id="dta" value="30" step="1" max="99">
             </div>
             
             <div class="input-group">
-                <label>Portfolio Yield (%) Annual</label>
+                <label>
+                    Portfolio Yield (%) Annual
+                    <span class="tooltip-icon">ⓘ<span class="tooltip-text">The annual dividend yield or interest cash flow rate generated by your underlying assets.</span></span>
+                </label>
                 <input type="number" id="yield" value="9.0" step="0.1">
             </div>
 
             <div class="input-group">
-                <label>Base Margin Rate (%) (&lt;$100k Loan)</label>
+                <label>
+                    Base Margin Rate (%) (&lt;$100k Loan)
+                    <span class="tooltip-icon">ⓘ<span class="tooltip-text">The base annual interest rate charged by the broker on borrowed margin debt balances.</span></span>
+                </label>
                 <input type="number" id="marginRate" value="6.0" step="0.1" oninput="updateTierScheduleDisplay()">
             </div>
             
@@ -300,17 +341,26 @@
             </div>
             
             <div class="input-group">
-                <label>Portfolio Appreciation (%) Annual</label>
+                <label>
+                    Portfolio Appreciation (%) Annual
+                    <span class="tooltip-icon">ⓘ<span class="tooltip-text">The projected organic annual price appreciation or capital gains rate of your holdings.</span></span>
+                </label>
                 <input type="number" id="appreciation" value="0.0" step="0.1">
             </div>
 
             <div class="input-group">
-                <label>Maintenance Requirement (%)</label>
+                <label>
+                    Maintenance Requirement (%)
+                    <span class="tooltip-icon">ⓘ<span class="tooltip-text">The minimum account equity percentage required by the broker before forced liquidations occur.</span></span>
+                </label>
                 <input type="number" id="maintReq" value="25" step="1">
             </div>
             
             <div class="input-group">
-                <label>Simulation Time (Months)</label>
+                <label>
+                    Simulation Time (Months)
+                    <span class="tooltip-icon">ⓘ<span class="tooltip-text">The total timeline length of the compound simulation run in months.</span></span>
+                </label>
                 <input type="number" id="months" value="120" step="12">
             </div>
 
@@ -362,7 +412,7 @@
             </div>
         </div>
 
-        <div style="display: flex; flex-direction: column; gap: 20px;">
+        <div class="main-content">
             <div class="metrics-grid">
                 <div class="metric-card">
                     <div class="metric-title" id="titleInvested">
@@ -386,39 +436,66 @@
                     <div class="metric-value" id="outAssets">$0</div>
                 </div>
                 <div class="metric-card">
-                    <div class="metric-title">Leverage Ratio</div>
+                    <div class="metric-title">
+                        Leverage Ratio
+                        <span class="tooltip-icon">ⓘ<span class="tooltip-text">Total Assets divided by Base Equity. Tracks the asset exposure multiplier applied to your capital base.</span></span>
+                    </div>
                     <div class="metric-value" id="outLeverage">0.00x</div>
                 </div>
                 <div class="metric-card">
-                    <div class="metric-title">Total ROI</div>
+                    <div class="metric-title">
+                        Total ROI
+                        <span class="tooltip-icon">ⓘ<span class="tooltip-text">Return on Investment. Cumulative net percentage growth achieved strictly on your out-of-pocket cash deposits.</span></span>
+                    </div>
                     <div class="metric-value good-metric" id="outROI">0.0%</div>
                 </div>
                 <div class="metric-card">
-                    <div class="metric-title">Return on Equity</div>
+                    <div class="metric-title">
+                        Return on Equity
+                        <span class="tooltip-icon">ⓘ<span class="tooltip-text">Annualized net carry return + price appreciation run-rate calculated relative to your final equity base.</span></span>
+                    </div>
                     <div class="metric-value good-metric" id="outROE">0.0%</div>
                 </div>
                 <div class="metric-card">
-                    <div class="metric-title" id="titleGrossIncome">Gross Monthly Income</div>
+                    <div class="metric-title" id="titleGrossIncome">
+                        Gross Monthly Income
+                        <span class="tooltip-icon">ⓘ<span class="tooltip-text">Total crude cash flow generated monthly by the expanded asset pool before loan fees are subtracted.</span></span>
+                    </div>
                     <div class="metric-value" id="outIncome">$0</div>
                 </div>
                 <div class="metric-card">
-                    <div class="metric-title" id="titleNetIncome">Net Monthly Income</div>
+                    <div class="metric-title" id="titleNetIncome">
+                        Net Monthly Income
+                        <span class="tooltip-icon">ⓘ<span class="tooltip-text">Net monthly investment dividend/interest cash flow remaining after paying your margin debt fees.</span></span>
+                    </div>
                     <div class="metric-value good-metric" id="outNetIncome">$0</div>
                 </div>
                 <div class="metric-card">
-                    <div class="metric-title">Final DSCR</div>
+                    <div class="metric-title">
+                        Final DSCR
+                        <span class="tooltip-icon">ⓘ<span class="tooltip-text">Debt Service Coverage Ratio. Gross income divided by margin interest. Safety targets should sit comfortably above 1.50x.</span></span>
+                    </div>
                     <div class="metric-value" id="outDSCR">0.0x</div>
                 </div>
                 <div class="metric-card">
-                    <div class="metric-title">Max Drawdown</div>
+                    <div class="metric-title">
+                        Max Drawdown
+                        <span class="tooltip-icon">ⓘ<span class="tooltip-text">The maximum localized price decline your portfolio can absorb before hitting the broker's margin call limit.</span></span>
+                    </div>
                     <div class="metric-value" id="outDrawdown">0%</div>
                 </div>
                 <div class="metric-card">
-                    <div class="metric-title">Effective Margin Rate</div>
+                    <div class="metric-title">
+                        Effective Margin Rate
+                        <span class="tooltip-icon">ⓘ<span class="tooltip-text">The actual blended annual interest rate paid across your scale under the tiered structure.</span></span>
+                    </div>
                     <div class="metric-value info-metric" id="outEffectiveMargin">0.00%</div>
                 </div>
                 <div class="metric-card">
-                    <div class="metric-title" id="titleSavings">Tiered Savings</div>
+                    <div class="metric-title" id="titleSavings">
+                        Tiered Savings
+                        <span class="tooltip-icon">ⓘ<span class="tooltip-text">Total compounded dollar amount saved by utilizing size-tiered discount borrow brackets vs a flat fee.</span></span>
+                    </div>
                     <div class="metric-value good-metric" id="outSavings">$0</div>
                 </div>
             </div>
@@ -466,7 +543,6 @@
             document.getElementById('paycheckRoutingInputs').style.display = isPaycheckMode ? 'block' : 'none';
         }
 
-        // Live visual text and state compiler for the margin schedule sidebar card
         function updateTierScheduleDisplay(currentDebt = 0) {
             const enableTiered = document.getElementById('enableTiered').checked;
             const panel = document.getElementById('tierSchedulePanel');
@@ -488,7 +564,6 @@
             document.getElementById('rateTier3').innerText = `${(r3 * 100).toFixed(2)}%`;
             document.getElementById('rateTier4').innerText = `${(r4 * 100).toFixed(2)}%`;
 
-            // Reset highlight configurations
             ['rowTier1', 'rowTier2', 'rowTier3', 'rowTier4'].forEach(id => document.getElementById(id).className = '');
             ['badgeTier1', 'badgeTier2', 'badgeTier3', 'badgeTier4'].forEach(id => {
                 const b = document.getElementById(id);
@@ -693,8 +768,7 @@
                 cumulativeInflationFloor = (cumulativeInflationFloor * (1 + moInflationRate)) + baselineMonthlyContribution;
             }
 
-            // Sync structural interest tier display trackers using final snapshot
-            updateTieredTableUI(finalDebtSnapshot, annMargin, enableTiered);
+            updateTierScheduleDisplay(enableTiered ? finalDebtSnapshot : 0);
 
             const discountFactor = (inflationMode === 'real') ? Math.pow(1 + moInflationRate, months) : 1;
             
@@ -796,7 +870,7 @@
 
             document.getElementById('narrativeOutput').innerHTML = `
                 ${paycheckRoutingPreamble}
-                <p>Over a span of <strong>${months} months</strong>, your strategy generated a final net equity valuation of <strong>${formatCurrency(finalEquityDisplay)}</strong> on an out-of-pocket cash commitment of <strong>${formatCurrency(totalInvestedNominal)}</strong>.</p>
+                <p>Over a span of <strong>${months} months</strong>, your strategy generated a final net equity valuation of <strong>${formatCurrency(finalEquityDisplay)}</strong> on an out-of-pocket cash commitment of <strong>${formatCurrency(calculatedInvested)}</strong>.</p>
                 <p>Compared to a standard unleveraged **Buy-and-Hold Strategy**, this design ${performanceVerdict} ${incomeVerdict}</p>
                 <p>${escapeVelocityVerdict}</p>
                 <p>${safetyVerdict}</p>
@@ -849,11 +923,6 @@
                     }
                 }
             });
-        }
-
-        // Dedicated helper syncing active tier table boundaries with loop state snapshots
-        function updateTieredTableUI(currentDebt, annMargin, enableTiered) {
-            updateTierScheduleDisplay(enableTiered ? currentDebt : 0);
         }
 
         function exportToCSV() {
