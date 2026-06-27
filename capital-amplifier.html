@@ -16,6 +16,7 @@
             --border: #334155;
             --success: #10b981;
             --danger: #ef4444;
+            --warning: #f59e0b;
         }
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -68,6 +69,21 @@
             margin-top: 10px;
         }
         button:hover { background-color: var(--accent-hover); }
+        
+        /* Negative Carry Warning Box */
+        .warning-box {
+            display: none;
+            background-color: rgba(239, 68, 68, 0.1);
+            border: 1px solid var(--danger);
+            color: var(--danger);
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            margin-top: 16px;
+            font-weight: 500;
+            line-height: 1.4;
+        }
+
         .metrics-grid {
             display: grid;
             grid-template-columns: repeat(5, 1fr);
@@ -146,6 +162,10 @@
             </div>
 
             <button onclick="runSimulation()">Calculate Curve</button>
+
+            <div id="carryWarning" class="warning-box">
+                ⚠️ <strong>Negative Carry Warning:</strong> Your borrowing cost exceeds your asset growth rate (Yield + Appreciation). Leverage will actively decay your wealth.
+            </div>
         </div>
 
         <div style="display: flex; flex-direction: column; gap: 20px;">
@@ -227,6 +247,14 @@
                 return;
             }
 
+            // Negative Carry Check
+            const warningEl = document.getElementById('carryWarning');
+            if (annMargin > (annYield + annAppreciation) && targetDTA > 0) {
+                warningEl.style.display = 'block';
+            } else {
+                warningEl.style.display = 'none';
+            }
+
             // Calculate Max Drawdown
             let maxDrawdown = 0;
             if (targetDTA < (1 - maintReq)) {
@@ -248,9 +276,10 @@
             let labels = [];
             let equityData = [];
             let assetData = [];
-            let debtData = [];
+            let benchmarkData = [];
 
             let currentEquity = P;
+            let currentBenchmark = P;
             let currentAssets = 0;
             let currentDebt = 0;
             
@@ -261,41 +290,42 @@
             for (let i = 0; i <= months; i++) {
                 labels.push(`Month ${i}`);
 
-                // 1. Rebalance: Expand or contract balance sheet to meet target DTA
+                // Leveraged Balance Sheet
                 currentDebt = currentEquity * (targetDTA / (1 - targetDTA));
                 currentAssets = currentEquity + currentDebt;
 
-                // Store data state at start of month
                 equityData.push(currentEquity);
                 assetData.push(currentAssets);
-                debtData.push(currentDebt);
+                benchmarkData.push(currentBenchmark);
 
-                // 2. Generate yields and expenses for the month
+                // Leveraged Changes
                 let income = currentAssets * moYield;
                 let interest = currentDebt * moMargin;
                 let appreciation = currentAssets * moAppreciation;
                 
-                // Track for final metrics output
                 if (i === months) {
                     finalMonthlyIncome = income;
                     finalMonthlyInterest = interest;
                     finalMonthlyAppreciation = appreciation;
                 }
 
-                // 3. Reinvest (Positive Carry + Appreciation + Contributions)
                 let netCashflow = income - interest;
                 currentEquity += (netCashflow + appreciation + monthlyCont);
+
+                // Unleveraged Benchmark Changes
+                let benchIncome = currentBenchmark * moYield;
+                let benchAppreciation = currentBenchmark * moAppreciation;
+                currentBenchmark += (benchIncome + benchAppreciation + monthlyCont);
             }
 
-            // Calculate Return on Equity (ROE) based on the final month's annualized run rate
-            const finalAnnualNetReturn = ((finalMonthlyIncome - finalMonthlyInterest) + finalMonthlyAppreciation) * 12;
-            const finalROE = (finalAnnualNetReturn / equityData[months]) * 100;
-            document.getElementById('outROE').innerText = `${finalROE.toFixed(2)}%`;
-
-            // New Metric Calculations
+            // Post-simulation calculations
             const finalEquity = equityData[months];
             const totalROI = ((finalEquity - totalInvested) / totalInvested) * 100;
             const netMonthlyIncome = finalMonthlyIncome - finalMonthlyInterest;
+
+            const finalAnnualNetReturn = (netMonthlyIncome + finalMonthlyAppreciation) * 12;
+            const finalROE = (finalAnnualNetReturn / finalEquity) * 100;
+            document.getElementById('outROE').innerText = `${finalROE.toFixed(2)}%`;
 
             // Update remaining DOM Metrics
             document.getElementById('outEquity').innerText = formatCurrency(finalEquity);
@@ -303,7 +333,6 @@
             document.getElementById('outIncome').innerText = formatCurrency(finalMonthlyIncome);
             document.getElementById('outNetIncome').innerText = formatCurrency(netMonthlyIncome);
             
-            // Render Total ROI UI element
             const roiEl = document.getElementById('outROI');
             roiEl.innerText = `${totalROI.toFixed(2)}%`;
             roiEl.className = `metric-value ${totalROI < 0 ? 'warn-metric' : 'good-metric'}`;
@@ -329,15 +358,24 @@
                             label: 'Total Assets',
                             data: assetData,
                             borderColor: '#3b82f6',
-                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            backgroundColor: 'rgba(59, 130, 246, 0.05)',
                             borderWidth: 2,
                             fill: true,
                             pointRadius: 0
                         },
                         {
-                            label: 'Base Equity',
+                            label: 'Base Equity (Leveraged)',
                             data: equityData,
                             borderColor: '#10b981',
+                            backgroundColor: 'transparent',
+                            borderWidth: 2,
+                            fill: false,
+                            pointRadius: 0
+                        },
+                        {
+                            label: 'Unleveraged Benchmark',
+                            data: benchmarkData,
+                            borderColor: '#f59e0b',
                             backgroundColor: 'transparent',
                             borderWidth: 2,
                             borderDash: [5, 5],
@@ -377,7 +415,6 @@
             });
         }
 
-        // Run once on load
         window.onload = runSimulation;
     </script>
 </body>
