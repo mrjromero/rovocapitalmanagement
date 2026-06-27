@@ -833,7 +833,7 @@
             let paycheckRoutingPreamble = "";
 
             if (isPaycheckMode) {
-                paycheckRoutingPreamble = `<p>🚀 <strong>Buy, Borrow, Die Paycheck Flow Enabled:</strong> Instead of holding your paycheck in dead cash accounts to pay bills, you are modeling routing your full net monthly income of <strong>${formatCurrency(grossPaycheck)}</strong> directly into assets, using margin credit tiers to float your monthly lifestyle bills of <strong>${formatCurrency(livingExpenses)}</strong>. This expands balance sheet velocity compared to traditional investors who only let their baseline surplus savings of <strong>${formatCurrency(baselineMonthlyContribution)}</strong> touch market compounding.</p>`;
+                paycheckRoutingPreamble = `<p>🚀 <strong>Buy, Borrow, Die Paycheck Flow Enabled:</strong> Instead of holding your paycheck in dead cash accounts to pay bills, you are modeling routing your full net monthly income of <strong>${formatCurrency(grossPaycheck)}</strong> directly into assets, using margin to float your monthly lifestyle bills of <strong>${formatCurrency(livingExpenses)}</strong>. This expands balance sheet velocity compared to traditional investors who only let their baseline surplus savings of <strong>${formatCurrency(baselineMonthlyContribution)}</strong> touch market compounding.</p>`;
             }
 
             if (alphaPerformance > 0) {
@@ -843,9 +843,9 @@
             }
 
             if (incomeDifferential > 0) {
-                incomeVerdict = `By using debt to expand your productive asset base, your portfolio scaled up cash production to a net monthly income of <strong>${formatCurrency(finalNetIncomeDisplay)}</strong>. This generates <span class="badge badge-success">${formatCurrency(incomeDifferential)} more monthly cash flow</span> than a traditional cash **Buy-and-Hold Strategy**, which only generated a dividend flow of <strong>${formatCurrency(finalBenchmarkIncomeDisplay)}</strong>.`;
+                incomeVerdict = `By using debt to expand your productive asset base, your portfolio scaled up cash production to a net monthly income of <strong>${formatCurrency(finalNetIncomeDisplay)}</strong>. This generates <span class="badge badge-success">${formatCurrency(incomeDifferential)} more monthly cash flow</span> than a traditional cash <strong>Buy-and-Hold Strategy</strong>, which only generated a dividend flow of <strong>${formatCurrency(finalBenchmarkIncomeDisplay)}</strong>.`;
             } else if (incomeDifferential < 0) {
-                incomeVerdict = `Because monthly margin interest expenses outpaced your asset gains, your net monthly dividend flow dropped to <strong>${formatCurrency(finalNetIncomeDisplay)}</strong>. This is <span class="badge badge-danger">${formatCurrency(Math.abs(incomeDifferential))} less monthly cash flow</span> than a standard cash **Buy-and-Hold Strategy**, which yielded a clean <strong>${formatCurrency(finalBenchmarkIncomeDisplay)}</strong>.`;
+                incomeVerdict = `Because monthly margin interest expenses outpaced your asset gains, your net monthly dividend flow dropped to <strong>${formatCurrency(finalNetIncomeDisplay)}</strong>. This is <span class="badge badge-danger">${formatCurrency(Math.abs(incomeDifferential))} less monthly cash flow</span> than a standard cash <strong>Buy-and-Hold Strategy</strong>, which yielded a clean <strong>${formatCurrency(finalBenchmarkIncomeDisplay)}</strong>.`;
             } else {
                 incomeVerdict = `Both approaches produced an identical net monthly cash flow of <strong>${formatCurrency(finalNetIncomeDisplay)}</strong>.`;
             }
@@ -867,7 +867,7 @@
             document.getElementById('narrativeOutput').innerHTML = `
                 ${paycheckRoutingPreamble}
                 <p>Over a span of <strong>${months} months</strong>, your strategy generated a final net equity valuation of <strong>${formatCurrency(finalEquityDisplay)}</strong> on an out-of-pocket cash commitment of <strong>${formatCurrency(calculatedInvested)}</strong>.</p>
-                <p>Compared to a standard unleveraged **Buy-and-Hold Strategy**, this design ${performanceVerdict} ${incomeVerdict}</p>
+                <p>Compared to a standard unleveraged <strong>Buy-and-Hold Strategy</strong>, this design ${performanceVerdict} ${incomeVerdict}</p>
                 <p>${escapeVelocityVerdict}</p>
                 <p>${safetyVerdict}</p>
             `;
