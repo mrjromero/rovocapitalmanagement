@@ -17,6 +17,7 @@
             --success: #10b981;
             --danger: #ef4444;
             --warning: #f59e0b;
+            --inflation-line: #c084fc;
             --secondary: #475569;
             --secondary-hover: #334155;
         }
@@ -163,7 +164,6 @@
         .info-metric { color: var(--accent); }
         canvas { width: 100% !important; height: 500px !important; }
         
-        /* Summary Narrative Styling */
         .summary-narrative { font-size: 0.95rem; line-height: 1.6; color: var(--text-main); }
         .summary-narrative p { margin: 0 0 12px 0; }
         .summary-narrative ul { margin: 0 0 16px 0; padding-left: 20px; }
@@ -240,11 +240,11 @@
                 </div>
 
                 <div class="checkbox-group">
-                    <input type="checkbox" id="adjustInflation" onchange="toggleInflationInput()">
-                    <label for="adjustInflation">Adjust for Inflation</label>
+                    <input type="checkbox" id="adjustInflation" onchange="toggleInflationInput()" checked>
+                    <label for="adjustInflation">Show Inflation Hurdle Line</label>
                 </div>
                 
-                <div class="input-group" id="inflationInputGroup" style="display: none; margin-bottom: 16px; padding-left: 8px;">
+                <div class="input-group" id="inflationInputGroup" style="margin-bottom: 16px; padding-left: 8px;">
                     <label>Annual Inflation Rate (%)</label>
                     <input type="number" id="inflationRate" value="2.5" step="0.1">
                 </div>
@@ -351,8 +351,7 @@
 
             <div class="panel summary-narrative">
                 <h3>Simulation Summary & Chart Guide</h3>
-                <div id="narrativeOutput">
-                    </div>
+                <div id="narrativeOutput"></div>
                 
                 <hr style="border: none; border-top: 1px solid var(--border); margin: 20px 0;">
                 
@@ -362,6 +361,7 @@
                     <li><strong style="color: #3b82f6;">Total Assets (Solid Blue Area):</strong> The gross market valuation of your total holding power. It visually expands away from your net worth line based on how much structural debt you have introduced onto the balance sheet.</li>
                     <li><strong style="color: #10b981;">Base Equity / Leveraged (Solid Green Line):</strong> Your true personal net worth over time under this leveraged framework. It represents gross assets minus the outstanding margin debt balance. All positive carry, price appreciation, and savings injections compound directly into this curve.</li>
                     <li><strong style="color: #f59e0b;">Unleveraged Benchmark (Dashed Amber Line):</strong> Your baseline financial control run. It outlines what your exact net worth trajectory would look like if you avoided borrowing entirely and simply compounded your starting capital and monthly savings at standard investment returns.</li>
+                    <li><strong style="color: #c084fc;">Inflation Breakeven Hurdle (Solid Purple Line):</strong> The purchasing power baseline. This tracks how much your out-of-pocket savings injections must grow *just to protect your baseline purchasing power* against inflation. If your equity curve is above this line, you have real gains. If it flies drastically above it, leverage has achieved financial escape velocity.</li>
                     <li><strong style="color: #ef4444;">Liquidation Threshold / Margin Call Line (Dotted Red Line):</strong> The critical safety floor. Calculated dynamically as <span style="font-family: monospace; color: #f8fafc;">Outstanding Debt ÷ (1 - Maintenance Requirement)</span>. If the blue asset area ever breaches or touches this line, your capital faces an immediate forced broker liquidation.</li>
                 </ul>
             </div>
@@ -423,7 +423,7 @@
             const maintReq = parseFloat(document.getElementById('maintReq').value) / 100;
             const months = parseInt(document.getElementById('months').value);
             
-            const adjustInflation = document.getElementById('adjustInflation').checked;
+            const showInflationLine = document.getElementById('adjustInflation').checked;
             const annInflationInput = parseFloat(document.getElementById('inflationRate').value) / 100;
             const enableTiered = document.getElementById('enableTiered').checked;
             
@@ -460,9 +460,11 @@
             let debtData = [];
             let benchmarkData = [];
             let liquidationData = [];
+            let inflationFloorData = [];
 
             let currentEquity = P;
             let currentBenchmark = P;
+            let cumulativeInflationFloor = P;
             let currentAssets = 0;
             let currentDebt = 0;
             
@@ -474,6 +476,8 @@
             let marginCallOccurred = false;
             let marginCallMonthIndex = -1;
             let cumulativeSavingsNominal = 0;
+
+            const totalInvestedNominal = P + (monthlyCont * months);
 
             for (let i = 0; i <= months; i++) {
                 labels.push(`Month ${i}`);
@@ -502,6 +506,7 @@
                 debtData.push(currentDebt);
                 benchmarkData.push(currentBenchmark);
                 liquidationData.push(currentDebt / (1 - maintReq));
+                inflationFloorData.push(cumulativeInflationFloor);
 
                 let income = currentAssets * moYield;
                 let interest = enableTiered ? calculateMonthlyMarginInterest(currentDebt, annMargin) : currentDebt * (annMargin / 12);
@@ -523,7 +528,8 @@
                     nominalEquity: currentEquity,
                     nominalDebt: currentDebt,
                     nominalBenchmark: currentBenchmark,
-                    nominalLiquidation: currentDebt / (1 - maintReq)
+                    nominalLiquidation: currentDebt / (1 - maintReq),
+                    nominalInflationFloor: cumulativeInflationFloor
                 });
 
                 let netCashflow = income - interest;
@@ -532,45 +538,24 @@
                 let benchIncome = currentBenchmark * moYield;
                 let benchAppreciation = currentBenchmark * moAppreciation;
                 currentBenchmark += (benchIncome + benchAppreciation + monthlyCont);
+
+                // Inflate the floor hurdle rule sequentially
+                cumulativeInflationFloor = (cumulativeInflationFloor * (1 + moInflationRate)) + monthlyCont;
             }
 
-            let calculatedInvested = P;
-            if (adjustInflation) {
-                for (let m = 1; m <= months; m++) {
-                    calculatedInvested += monthlyCont / Math.pow(1 + moInflationRate, m);
-                }
-            } else {
-                calculatedInvested = P + (monthlyCont * months);
-            }
-
-            const discountFactor = adjustInflation ? Math.pow(1 + moInflationRate, months) : 1;
-            
-            const finalEquityDisplay = equityData[months] / discountFactor;
-            const finalAssetsDisplay = assetData[months] / discountFactor;
-            const finalBenchmarkDisplay = benchmarkData[months] / discountFactor;
-            const finalIncomeDisplay = finalMonthlyIncome / discountFactor;
-            const finalNetIncomeDisplay = (finalMonthlyIncome - finalMonthlyInterest) / discountFactor;
-            const finalSavingsDisplay = cumulativeSavingsNominal / discountFactor;
-
+            const netMonthlyIncome = finalMonthlyIncome - finalMonthlyInterest;
             const effectiveAnnualMarginRate = finalDebtSnapshot > 0 ? ((finalMonthlyInterest * 12) / finalDebtSnapshot) * 100 : annMargin * 100;
 
-            const totalROI = calculatedInvested > 0 ? ((finalEquityDisplay - calculatedInvested) / calculatedInvested) * 100 : 0;
-            const finalAnnualNetReturnNominal = ((finalMonthlyIncome - finalMonthlyInterest) + finalMonthlyAppreciation) * 12;
+            const totalROI = totalInvestedNominal > 0 ? ((equityData[months] - totalInvestedNominal) / totalInvestedNominal) * 100 : 0;
+            const finalAnnualNetReturnNominal = (netMonthlyIncome + finalMonthlyAppreciation) * 12;
             const finalROE = equityData[months] > 0 ? (finalAnnualNetReturnNominal / equityData[months]) * 100 : 0;
 
-            document.getElementById('titleInvested').innerText = adjustInflation ? "Total Invested (Real)" : "Total Invested";
-            document.getElementById('titleEquity').innerText = adjustInflation ? "Final Equity (Real)" : "Final Equity";
-            document.getElementById('titleAssets').innerText = adjustInflation ? "Total Assets (Real)" : "Final Total Assets";
-            document.getElementById('titleGrossIncome').innerText = adjustInflation ? "Gross Income (Real)" : "Gross Monthly Income";
-            document.getElementById('titleNetIncome').innerText = adjustInflation ? "Net Income (Real)" : "Net Monthly Income";
-            document.getElementById('titleSavings').innerText = adjustInflation ? "Tiered Savings (Real)" : "Tiered Savings";
-
-            document.getElementById('outInvested').innerText = formatCurrency(calculatedInvested);
-            document.getElementById('outEquity').innerText = formatCurrency(finalEquityDisplay);
-            document.getElementById('outAssets').innerText = formatCurrency(finalAssetsDisplay);
-            document.getElementById('outIncome').innerText = formatCurrency(finalIncomeDisplay);
-            document.getElementById('outNetIncome').innerText = formatCurrency(finalNetIncomeDisplay);
-            document.getElementById('outSavings').innerText = formatCurrency(finalSavingsDisplay);
+            document.getElementById('outInvested').innerText = formatCurrency(totalInvestedNominal);
+            document.getElementById('outEquity').innerText = formatCurrency(equityData[months]);
+            document.getElementById('outAssets').innerText = formatCurrency(assetData[months]);
+            document.getElementById('outIncome').innerText = formatCurrency(finalMonthlyIncome);
+            document.getElementById('outNetIncome').innerText = formatCurrency(netMonthlyIncome);
+            document.getElementById('outSavings').innerText = formatCurrency(cumulativeSavingsNominal);
             document.getElementById('outROE').innerText = `${finalROE.toFixed(2)}%`;
             document.getElementById('outEffectiveMargin').innerText = `${effectiveAnnualMarginRate.toFixed(2)}%`;
             
@@ -584,70 +569,61 @@
             dscrEl.className = `metric-value ${dscr < 1.5 ? 'warn-metric' : 'good-metric'}`;
 
             const alertEl = document.getElementById('marginCallAlert');
-            if (marginCallOccurred) {
-                document.getElementById('alertMonth').innerText = marginCallMonthIndex;
-                alertEl.style.display = 'block';
-            } else {
-                alertEl.style.display = 'none';
-            }
+            alertEl.style.display = marginCallOccurred ? 'block' : 'none';
+            if (marginCallOccurred) document.getElementById('alertMonth').innerText = marginCallMonthIndex;
 
-            // DYNAMIC NARRATIVE SUMMARY CONTENT CALCULATOR
-            const alphaPerformance = finalEquityDisplay - finalBenchmarkDisplay;
+            // DYNAMIC NARRATIVE SUMMARY GENERATION
+            const alphaPerformance = equityData[months] - benchmarkData[months];
+            const inflationHurdleAlpha = equityData[months] - inflationFloorData[months];
             let performanceVerdict = "";
             let safetyVerdict = "";
+            let escapeVelocityVerdict = "";
 
             if (alphaPerformance > 0) {
-                performanceVerdict = `Outperformed the unleveraged investment baseline by <span class="badge badge-success">${formatCurrency(alphaPerformance)}</span>. This confirms that introducing a positive carry structural spread successfully accelerated compound wealth accumulation over your baseline.`;
-            } else if (alphaPerformance < 0) {
-                performanceVerdict = `Underperformed the unleveraged investment baseline by <span class="badge badge-danger">${formatCurrency(Math.abs(alphaPerformance))}</span>. This indicates that borrowing costs, negative cash flows, or the structural damage of a market crash actively destroyed wealth relative to a safe 0% leverage execution.`;
+                performanceVerdict = `outperformed the unleveraged investment baseline by <span class="badge badge-success">${formatCurrency(alphaPerformance)}</span> due to positive structural carry.`;
             } else {
-                performanceVerdict = `Performed identically to the unleveraged baseline. Because leverage targets were set to 0%, no risk or excess return alpha was added to the base capital pool.`;
+                performanceVerdict = `underperformed the unleveraged investment baseline by <span class="badge badge-danger">${formatCurrency(Math.abs(alphaPerformance))}</span> because borrowing fees or market crash shocks dragged down production.`;
+            }
+
+            if (inflationHurdleAlpha > 0) {
+                escapeVelocityVerdict = `Crucially, your final equity cleared the nominal inflation hurdle line by <strong>${formatCurrency(inflationHurdleAlpha)}</strong>, proving the strategy generated genuine real wealth expansion.`;
+            } else {
+                escapeVelocityVerdict = `Regrettably, your final wealth failed to clear the nominal inflation line, meaning your capital lost purchasing power over time in real terms.`;
             }
 
             if (marginCallOccurred) {
-                safetyVerdict = `⚠️ <span class="badge badge-danger" style="color: #ffffff;">CRITICAL BREACH</span>: Your active parameters failed stress-testing. At Month ${marginCallMonthIndex}, the simulated crash dropped total asset values beneath your liquidation line, triggering forced broker intervention and locking in permanent equity impairment.`;
+                safetyVerdict = `⚠️ <span class="badge badge-danger" style="color:#fff;">CRITICAL BREACH</span>: Your active parameters failed stress-testing. At Month ${marginCallMonthIndex}, the simulated crash dropped total asset values beneath your liquidation line, triggering forced broker intervention and locking in permanent equity impairment.`;
             } else if (crashSeverity > 0) {
-                safetyVerdict = `🔒 <span class="badge badge-success">SURVIVED STRESS TEST</span>: Your account absorbed the injected ${document.getElementById('crashSeverity').value}% crash at Month ${crashMonth} without crossing the liquidation floor. Though equity declined significantly, your balance sheet maintained adequate cushion to avert forced liquidations.`;
+                safetyVerdict = `🔒 <span class="badge badge-success">SURVIVED STRESS TEST</span>: Your account absorbed the injected ${document.getElementById('crashSeverity').value}% crash at Month ${crashMonth} safely. Your balance sheet maintained adequate cushion to avoid forced liquidation thresholds.`;
             } else {
-                safetyVerdict = `ℹ️ <span class="badge badge-warning">NO ACTIVE SHOCK</span>: The timeline ran without an active market crash event. Under normal market conditions, you maintained a dynamic safety cushion of <strong>${maxDrawdown.toFixed(1)}%</strong> before structural asset thresholds would trigger a margin call.`;
+                safetyVerdict = `ℹ️ <span class="badge badge-warning">NO ACTIVE SHOCK</span>: The timeline ran without an active market crash event. Under normal conditions, you maintained a safety cushion of <strong>${maxDrawdown.toFixed(1)}%</strong> before structural asset thresholds would trigger a margin call.`;
             }
 
-            const narrativeHTML = `
-                <p>Over a span of <strong>${months} months</strong>, your strategy generated a final net equity valuation of <strong>${formatCurrency(finalEquityDisplay)}</strong> on an out-of-pocket cash commitment of <strong>${formatCurrency(calculatedInvested)}</strong>.</p>
-                <p>Compared to your benchmark option, this design: ${performanceVerdict}</p>
+            document.getElementById('narrativeOutput').innerHTML = `
+                <p>Over a span of <strong>${months} months</strong>, your strategy generated a final nominal net equity valuation of <strong>${formatCurrency(equityData[months])}</strong> on an out-of-pocket cash commitment of <strong>${formatCurrency(totalInvestedNominal)}</strong>.</p>
+                <p>Compared to your control benchmark option, this design ${performanceVerdict} ${escapeVelocityVerdict}</p>
                 <p>${safetyVerdict}</p>
             `;
-            document.getElementById('narrativeOutput').innerHTML = narrativeHTML;
 
-            let chartAssets = [];
-            let chartEquity = [];
-            let chartBenchmark = [];
-            let chartLiquidation = [];
+            // Setup Chart Datasets Dynamically
+            let datasets = [
+                { label: 'Total Assets', data: assetData, borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.05)', borderWidth: 2, fill: true, pointRadius: 0 },
+                { label: 'Base Equity (Leveraged)', data: equityData, borderColor: '#10b981', backgroundColor: 'transparent', borderWidth: 2, fill: false, pointRadius: 0 },
+                { label: 'Unleveraged Benchmark', data: benchmarkData, borderColor: '#f59e0b', backgroundColor: 'transparent', borderWidth: 2, borderDash: [5, 5], fill: false, pointRadius: 0 }
+            ];
 
-            for (let i = 0; i <= months; i++) {
-                let df = adjustInflation ? Math.pow(1 + moInflationRate, i) : 1;
-                chartAssets.push(assetData[i] / df);
-                chartEquity.push(equityData[i] / df);
-                chartBenchmark.push(benchmarkData[i] / df);
-                chartLiquidation.push(liquidationData[i] / df);
+            if (showInflationLine) {
+                datasets.push({ label: 'Inflation Hurdle Floor', data: inflationFloorData, borderColor: 'var(--inflation-line)', backgroundColor: 'transparent', borderWidth: 2, fill: false, pointRadius: 0 });
             }
+
+            datasets.push({ label: 'Liquidation Threshold (Margin Call Line)', data: liquidationData, borderColor: '#ef4444', backgroundColor: 'transparent', borderWidth: 1.5, borderDash: [3, 3], fill: false, pointRadius: 0 });
 
             const ctx = document.getElementById('compoundingChart').getContext('2d');
-            if (chartInstance) {
-                chartInstance.destroy();
-            }
+            if (chartInstance) chartInstance.destroy();
 
             chartInstance = new Chart(ctx, {
                 type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [
-                        { label: 'Total Assets', data: chartAssets, borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.05)', borderWidth: 2, fill: true, pointRadius: 0 },
-                        { label: 'Base Equity (Leveraged)', data: chartEquity, borderColor: '#10b981', backgroundColor: 'transparent', borderWidth: 2, fill: false, pointRadius: 0 },
-                        { label: 'Unleveraged Benchmark', data: chartBenchmark, borderColor: '#f59e0b', backgroundColor: 'transparent', borderWidth: 2, borderDash: [5, 5], fill: false, pointRadius: 0 },
-                        { label: 'Liquidation Threshold (Margin Call Line)', data: chartLiquidation, borderColor: '#ef4444', backgroundColor: 'transparent', borderWidth: 1.5, borderDash: [3, 3], fill: false, pointRadius: 0 }
-                    ]
-                },
+                data: { labels: labels, datasets: datasets },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
@@ -669,29 +645,17 @@
                 alert("Please run a simulation calculation curve before exporting data.");
                 return;
             }
-
-            const adjustInflation = document.getElementById('adjustInflation').checked;
-            const annInflationInput = parseFloat(document.getElementById('inflationRate').value) / 100;
-            const moInflationRate = annInflationInput / 12;
-
             let csvContent = "data:text/csv;charset=utf-8,";
-            csvContent += `Month,Total Assets (${adjustInflation ? 'Real' : 'Nominal'}),Base Equity (${adjustInflation ? 'Real' : 'Nominal'}),Debt,Unleveraged Benchmark (${adjustInflation ? 'Real' : 'Nominal'}),Liquidation Threshold\n`;
+            csvContent += "Month,Total Assets,Base Equity,Debt,Unleveraged Benchmark,Inflation Hurdle Floor,Liquidation Threshold\n";
 
             lastSimulationRecords.forEach(rec => {
-                let df = adjustInflation ? Math.pow(1 + moInflationRate, rec.month) : 1;
-                let assets = (rec.nominalAssets / df).toFixed(0);
-                let equity = (rec.nominalEquity / df).toFixed(0);
-                let debt = (rec.nominalDebt).toFixed(0);
-                let bench = (rec.nominalBenchmark / df).toFixed(0);
-                let liq = (rec.nominalLiquidation / df).toFixed(0);
-
-                csvContent += `${rec.month},${assets},${equity},${debt},${bench},${liq}\n`;
+                csvContent += `${rec.month},${rec.nominalAssets.toFixed(0)},${rec.nominalEquity.toFixed(0)},${rec.nominalDebt.toFixed(0)},${rec.nominalBenchmark.toFixed(0)},${rec.nominalInflationFloor.toFixed(0)},${rec.nominalLiquidation.toFixed(0)}\n`;
             });
 
             const encodedUri = encodeURI(csvContent);
             const link = document.createElement("a");
             link.setAttribute("href", encodedUri);
-            link.setAttribute("download", `capital_amplifier_export_${adjustInflation ? 'real' : 'nominal'}.csv`);
+            link.setAttribute("download", "capital_amplifier_escape_velocity_export.csv");
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
