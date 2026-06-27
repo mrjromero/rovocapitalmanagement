@@ -38,7 +38,6 @@
             width: 100%;
         }
         
-        /* Master Layer Separation Controls */
         .sidebar-panel {
             background-color: var(--panel-bg);
             padding: 24px;
@@ -100,7 +99,6 @@
         .btn-secondary { background-color: var(--secondary); margin-top: 8px; }
         .btn-secondary:hover { background-color: var(--secondary-hover); }
         
-        /* Advanced Layer-Safe Tooltip Framework */
         .tooltip-icon {
             display: inline-block;
             cursor: help;
@@ -125,7 +123,7 @@
             position: absolute;
             z-index: 999;
             bottom: 140%;
-            right: 0; /* Align right boundary edge inward to eliminate mobile clip layout bugs */
+            right: 0;
             box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.7);
             opacity: 0;
             transition: opacity 0.15s ease, visibility 0.15s ease;
@@ -212,7 +210,6 @@
             transition: border-color 0.2s;
         }
         
-        /* Interactive Card Priority Layer Escalation Override */
         .metric-card:hover {
             z-index: 100;
             border-color: var(--accent);
@@ -703,9 +700,19 @@
             for (let i = 0; i <= months; i++) {
                 labels.push(`Month ${i}`);
 
+                // PHYSICS FIXED: Establish the structural target-debt ratio boundaries at the top of the month
+                if (currentEquity > 0) {
+                    currentDebt = currentEquity * (targetDTA / (1 - targetDTA));
+                    currentAssets = currentEquity + currentDebt;
+                } else {
+                    currentDebt = 0;
+                    currentAssets = 0;
+                }
+
+                // SHOCK FIX: Apply flash crash instantly. Debt stays completely sticky/rigid here.
                 if (i === crashMonth && i > 0 && crashSeverity > 0) {
                     currentAssets = currentAssets * (1 - crashSeverity);
-                    currentEquity = currentAssets - currentDebt;
+                    currentEquity = currentAssets - currentDebt; 
                     currentBenchmark = currentBenchmark * (1 - crashSeverity);
                     
                     if (currentAssets < (currentDebt / (1 - maintReq)) || currentEquity <= 0) {
@@ -715,14 +722,7 @@
                     if (currentEquity < 0) currentEquity = 0;
                 }
 
-                if (currentEquity > 0) {
-                    currentDebt = currentEquity * (targetDTA / (1 - targetDTA));
-                    currentAssets = currentEquity + currentDebt;
-                } else {
-                    currentDebt = 0;
-                    currentAssets = 0;
-                }
-
+                // Save states accurately reflecting the sticky crash month exposure metrics
                 equityData.push(currentEquity);
                 assetData.push(currentAssets);
                 debtData.push(currentDebt);
