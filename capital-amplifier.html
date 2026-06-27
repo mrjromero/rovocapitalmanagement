@@ -32,7 +32,7 @@
             display: grid;
             grid-template-columns: 350px 1fr;
             gap: 20px;
-            max-width: 1600px;
+            max-width: 1650px;
             width: 100%;
         }
         .panel {
@@ -99,9 +99,10 @@
             line-height: 1.4;
         }
 
+        /* Adjusted to a crisp 4-column balanced layout */
         .metrics-grid {
             display: grid;
-            grid-template-columns: repeat(5, 1fr);
+            grid-template-columns: repeat(4, 1fr);
             gap: 16px;
             margin-bottom: 20px;
         }
@@ -119,6 +120,7 @@
         .metric-value { font-size: 1.4rem; font-weight: bold; margin-top: 8px; font-family: monospace; }
         .good-metric { color: var(--success); }
         .warn-metric { color: var(--danger); }
+        .info-metric { color: var(--accent); }
         canvas { width: 100% !important; height: 500px !important; }
         
         @media (max-width: 1400px) {
@@ -244,6 +246,14 @@
                     <div class="metric-title">Max Drawdown</div>
                     <div class="metric-value" id="outDrawdown">0%</div>
                 </div>
+                <div class="metric-card">
+                    <div class="metric-title">Effective Margin Rate</div>
+                    <div class="metric-value info-metric" id="outEffectiveMargin">0.00%</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-title" id="titleSavings">Tiered Savings</div>
+                    <div class="metric-value good-metric" id="outSavings">$0</div>
+                </div>
             </div>
             
             <div class="panel">
@@ -259,19 +269,16 @@
             return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(value);
         }
 
-        // Blended Tiered Margin Function (Simulating Interactive Brokers style schedules)
         function calculateMonthlyMarginInterest(debt, baseRate) {
             if (debt <= 0) return 0;
             
             let totalAnnualInterest = 0;
             let remainingDebt = debt;
 
-            // Tier 1: First $100,000 -> Base Rate
             let t1 = Math.min(remainingDebt, 100000);
             totalAnnualInterest += t1 * baseRate;
             remainingDebt -= t1;
 
-            // Tier 2: $100,001 to $1,000,000 -> Base Rate - 0.5%
             if (remainingDebt > 0) {
                 let t2 = Math.min(remainingDebt, 900000);
                 let r2 = Math.max(0.015, baseRate - 0.005);
@@ -279,7 +286,6 @@
                 remainingDebt -= t2;
             }
 
-            // Tier 3: $1,000,001 to $3,000,000 -> Base Rate - 1.0%
             if (remainingDebt > 0) {
                 let t3 = Math.min(remainingDebt, 2000000);
                 let r3 = Math.max(0.015, baseRate - 0.010);
@@ -287,7 +293,6 @@
                 remainingDebt -= t3;
             }
 
-            // Tier 4: $3,000,000+ -> Base Rate - 1.5%
             if (remainingDebt > 0) {
                 let r4 = Math.max(0.015, baseRate - 0.015);
                 totalAnnualInterest += remainingDebt * r4;
@@ -297,7 +302,6 @@
         }
 
         function runSimulation() {
-            // Fetch inputs
             const P = parseFloat(document.getElementById('startCapital').value);
             const monthlyCont = parseFloat(document.getElementById('monthlyContribution').value);
             const targetDTA = parseFloat(document.getElementById('dta').value) / 100;
@@ -313,14 +317,13 @@
 
             const moYield = annYield / 12;
             const moAppreciation = annAppreciation / 12;
-            const moInflationRate = 0.025 / 12; // 2.5% Annualized Inflation
+            const moInflationRate = 0.025 / 12;
 
             if (targetDTA >= 1.0) {
                 alert("DTA must be strictly less than 100%");
                 return;
             }
 
-            // Negative Carry Check
             const warningEl = document.getElementById('carryWarning');
             if (annMargin > (annYield + annAppreciation) && targetDTA > 0) {
                 warningEl.style.display = 'block';
@@ -328,7 +331,6 @@
                 warningEl.style.display = 'none';
             }
 
-            // Theoretical Max Drawdown
             let maxDrawdown = 0;
             if (targetDTA < (1 - maintReq)) {
                 maxDrawdown = (1 - (targetDTA / (1 - maintReq))) * 100;
@@ -337,14 +339,13 @@
             drawdownEl.innerText = `${maxDrawdown.toFixed(1)}%`;
             drawdownEl.className = `metric-value ${maxDrawdown < 35 ? 'warn-metric' : 'good-metric'}`;
 
-            // Calculate Leverage Ratio
             const leverageRatio = 1 / (1 - targetDTA);
             document.getElementById('outLeverage').innerText = `${leverageRatio.toFixed(2)}x`;
 
-            // Tracking arrays for raw nominal values
             let labels = [];
             let equityData = [];
             let assetData = [];
+            let debtData = [];
             let benchmarkData = [];
             let liquidationData = [];
 
@@ -356,11 +357,12 @@
             let finalMonthlyIncome = 0;
             let finalMonthlyInterest = 0;
             let finalMonthlyAppreciation = 0;
+            let finalDebtSnapshot = 0;
             
             let marginCallOccurred = false;
             let marginCallMonthIndex = -1;
+            let cumulativeSavingsNominal = 0;
 
-            // Core Nominal Simulation Loop
             for (let i = 0; i <= months; i++) {
                 labels.push(`Month ${i}`);
 
@@ -385,18 +387,23 @@
 
                 equityData.push(currentEquity);
                 assetData.push(currentAssets);
+                debtData.push(currentDebt);
                 benchmarkData.push(currentBenchmark);
                 liquidationData.push(currentDebt / (1 - maintReq));
 
-                // Blended Tiered Margin Calculation
                 let income = currentAssets * moYield;
                 let interest = calculateMonthlyMarginInterest(currentDebt, annMargin);
                 let appreciation = currentAssets * moAppreciation;
+                
+                // Track cumulative visual differential vs flat base borrowing rate
+                let flatInterestBaseline = currentDebt * (annMargin / 12);
+                cumulativeSavingsNominal += (flatInterestBaseline - interest);
                 
                 if (i === months) {
                     finalMonthlyIncome = income;
                     finalMonthlyInterest = interest;
                     finalMonthlyAppreciation = appreciation;
+                    finalDebtSnapshot = currentDebt;
                 }
 
                 let netCashflow = income - interest;
@@ -407,7 +414,6 @@
                 currentBenchmark += (benchIncome + benchAppreciation + monthlyCont);
             }
 
-            // Calculate Invested Capital (Adjusting contributions along timeline if requested)
             let calculatedInvested = P;
             if (adjustInflation) {
                 for (let m = 1; m <= months; m++) {
@@ -417,33 +423,36 @@
                 calculatedInvested = P + (monthlyCont * months);
             }
 
-            // Apply Post-Simulation Inflation Discount Filters to Display Metrics
             const discountFactor = adjustInflation ? Math.pow(1 + moInflationRate, months) : 1;
             
             const finalEquityDisplay = equityData[months] / discountFactor;
             const finalAssetsDisplay = assetData[months] / discountFactor;
             const finalIncomeDisplay = finalMonthlyIncome / discountFactor;
             const finalNetIncomeDisplay = (finalMonthlyIncome - finalMonthlyInterest) / discountFactor;
+            const finalSavingsDisplay = cumulativeSavingsNominal / discountFactor;
 
-            // ROI and ROE calculations
+            // Calculate dynamic final effective annual margin rate run-rate
+            const effectiveAnnualMarginRate = finalDebtSnapshot > 0 ? ((finalMonthlyInterest * 12) / finalDebtSnapshot) * 100 : annMargin * 100;
+
             const totalROI = calculatedInvested > 0 ? ((finalEquityDisplay - calculatedInvested) / calculatedInvested) * 100 : 0;
             const finalAnnualNetReturnNominal = ((finalMonthlyIncome - finalMonthlyInterest) + finalMonthlyAppreciation) * 12;
             const finalROE = equityData[months] > 0 ? (finalAnnualNetReturnNominal / equityData[months]) * 100 : 0;
 
-            // Dynamic Metric UI Label Updates
             document.getElementById('titleInvested').innerText = adjustInflation ? "Total Invested (Real)" : "Total Invested";
             document.getElementById('titleEquity').innerText = adjustInflation ? "Final Equity (Real)" : "Final Equity";
             document.getElementById('titleAssets').innerText = adjustInflation ? "Total Assets (Real)" : "Final Total Assets";
             document.getElementById('titleGrossIncome').innerText = adjustInflation ? "Gross Income (Real)" : "Gross Monthly Income";
             document.getElementById('titleNetIncome').innerText = adjustInflation ? "Net Income (Real)" : "Net Monthly Income";
+            document.getElementById('titleSavings').innerText = adjustInflation ? "Tiered Savings (Real)" : "Tiered Savings";
 
-            // Populate updated UI Metrics
             document.getElementById('outInvested').innerText = formatCurrency(calculatedInvested);
             document.getElementById('outEquity').innerText = formatCurrency(finalEquityDisplay);
             document.getElementById('outAssets').innerText = formatCurrency(finalAssetsDisplay);
             document.getElementById('outIncome').innerText = formatCurrency(finalIncomeDisplay);
             document.getElementById('outNetIncome').innerText = formatCurrency(finalNetIncomeDisplay);
+            document.getElementById('outSavings').innerText = formatCurrency(finalSavingsDisplay);
             document.getElementById('outROE').innerText = `${finalROE.toFixed(2)}%`;
+            document.getElementById('outEffectiveMargin').innerText = `${effectiveAnnualMarginRate.toFixed(2)}%`;
             
             const roiEl = document.getElementById('outROI');
             roiEl.innerText = `${totalROI.toFixed(2)}%`;
@@ -454,7 +463,6 @@
             dscrEl.innerText = `${dscr}x`;
             dscrEl.className = `metric-value ${dscr < 1.5 ? 'warn-metric' : 'good-metric'}`;
 
-            // Handle Margin Call Alert Banner
             const alertEl = document.getElementById('marginCallAlert');
             if (marginCallOccurred) {
                 document.getElementById('alertMonth').innerText = marginCallMonthIndex;
@@ -463,7 +471,6 @@
                 alertEl.style.display = 'none';
             }
 
-            // Deflate local charting values sequentially if checked
             let chartAssets = [];
             let chartEquity = [];
             let chartBenchmark = [];
@@ -477,7 +484,6 @@
                 chartLiquidation.push(liquidationData[i] / df);
             }
 
-            // Update Chart Elements
             const ctx = document.getElementById('compoundingChart').getContext('2d');
             if (chartInstance) {
                 chartInstance.destroy();
