@@ -38,7 +38,7 @@
             width: 100%;
         }
         
-        /* Reinforced Structural Stacking Layer Contexts */
+        /* Master Layer Separation Controls */
         .sidebar-panel {
             background-color: var(--panel-bg);
             padding: 24px;
@@ -100,7 +100,7 @@
         .btn-secondary { background-color: var(--secondary); margin-top: 8px; }
         .btn-secondary:hover { background-color: var(--secondary-hover); }
         
-        /* Multi-Layer Defensive Tooltip Layout Engine */
+        /* Advanced Layer-Safe Tooltip Framework */
         .tooltip-icon {
             display: inline-block;
             cursor: help;
@@ -125,7 +125,7 @@
             position: absolute;
             z-index: 999;
             bottom: 140%;
-            right: 0; /* Aligns box edges inward to completely isolate viewport layout breaks */
+            right: 0;
             box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.7);
             opacity: 0;
             transition: opacity 0.15s ease, visibility 0.15s ease;
@@ -212,7 +212,6 @@
             transition: border-color 0.2s;
         }
         
-        /* Metric Scorecard Overlay Elevation */
         .metric-card:hover {
             z-index: 100;
             border-color: var(--accent);
@@ -230,7 +229,7 @@
         .summary-narrative ul { margin: 0 0 16px 0; padding-left: 20px; }
         .summary-narrative li { margin-bottom: 8px; color: var(--text-muted); }
         .summary-narrative strong { color: var(--text-main); }
-        .badge { display: inline-block; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-family: monospace; font-size: 0.85rem; }
+        .badge { inline-block; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-family: monospace; font-size: 0.85rem; }
         .badge-success { background-color: rgba(16, 185, 129, 0.15); color: var(--success); border: 1px solid var(--success); }
         .badge-danger { background-color: rgba(239, 68, 110, 0.15); color: var(--danger); border: 1px solid var(--danger); }
         .badge-warning { background-color: rgba(245, 158, 11, 0.15); color: var(--warning); border: 1px solid var(--warning); }
@@ -682,7 +681,7 @@
             let liquidationData = [];
             let inflationFloorData = [];
 
-            // INICIALIZAÇÃO DO ESTADO COMPACTO (MÊS 0)
+            // RESET INITIAL TIMELINE STATES (Month 0 Anchor)
             let currentEquity = P;
             let currentBenchmark = P;
             let cumulativeInflationFloor = P;
@@ -702,7 +701,6 @@
 
             const totalInvestedNominal = P + (baselineMonthlyContribution * months);
 
-            // Registro inicial do ponto de partida (Mês 0)
             labels.push("Month 0");
             equityData.push(currentEquity);
             assetData.push(currentAssets);
@@ -720,11 +718,11 @@
                 nominalInflationFloor: cumulativeInflationFloor
             });
 
-            // LOOP CRONOLÓGICO DA MÁQUINA DE ESTADOS (MÊSES 1 A N)
+            // CHRONOLOGICAL DISCRETE STATE ENGINE TIMELINE LOOP
             for (let i = 1; i <= months; i++) {
                 labels.push(`Month ${i}`);
 
-                // FASE 1: ACUMULAÇÃO E CRESCIMENTO DO ATIVO ANTERIOR
+                // FASE 1: COMPOUNDING EXPANSION RUNS
                 let grossIncome = currentAssets * moYield;
                 let interestExpense = enableTiered ? calculateMonthlyMarginInterest(currentDebt, annMargin) : currentDebt * (annMargin / 12);
                 let appreciationValue = currentAssets * moAppreciation;
@@ -735,11 +733,10 @@
                 let flatInterestBaseline = currentDebt * (annMargin / 12);
                 cumulativeSavingsNominal += enableTiered ? (flatInterestBaseline - interestExpense) : 0;
 
-                // Transição do saldo de crescimento orgânico antes dos aportes
                 currentEquity += (grossIncome - interestExpense + appreciationValue);
                 currentAssets += (grossIncome + appreciationValue);
 
-                // FASE 2: FLUXO DE CAIXA E APORTES (PAYCHECK VS STANDARD)
+                // FASE 2: CAPITAL PAYLOAD DEPOSITS & FLOWS
                 if (isPaycheckMode) {
                     currentAssets += grossPaycheck;
                     currentDebt += livingExpenses;
@@ -749,13 +746,12 @@
                     currentEquity += baselineMonthlyContribution;
                 }
 
-                // Crescimento do Benchmark Independente
                 currentBenchmark += (benchIncome + benchAppreciation + baselineMonthlyContribution);
 
-                // FASE 3: SHOCK DE MERCADO INSTANTÂNEO (STICKY DEBT OVERRIDE)
+                // FASE 3: INSTANT MACRO SHOCK EVENT (RIGID DEBT PHYSICS OVERRIDE)
                 if (i === crashMonth && crashSeverity > 0) {
                     currentAssets = currentAssets * (1 - crashSeverity);
-                    currentEquity = currentAssets - currentDebt; // Dívida congelada; Patrimônio absorve o impacto
+                    currentEquity = currentAssets - currentDebt; // Debt is frozen; Equity absorbs 100% loss payload
                     currentBenchmark = currentBenchmark * (1 - crashSeverity);
                     
                     if (currentAssets < (currentDebt / (1 - maintReq)) || currentEquity <= 0) {
@@ -766,16 +762,15 @@
 
                 if (currentEquity < 0) currentEquity = 0;
 
-                // FASE 4: GOVERNADOR DE ALAVANCAGEM / DTA REBALANCING
+                // FASE 4: REGULATED LEVERAGE DE-LEVERAGING INJECTION GOVERNOR
                 let idealDebt = currentEquity * (targetDTA / (1 - targetDTA));
                 
                 if (currentDebt < idealDebt) {
-                    // Sob alavancagem normal: Expandir dívida para manter DTA alvo
                     let additionalBorrow = idealDebt - currentDebt;
                     currentDebt = idealDebt;
                     currentAssets += additionalBorrow;
                 } 
-                // Se estiver sobre-alavancado (pós-choque), os empréstimos são congelados. Dívida permanece fixa.
+                // Over-leveraged post-shock limits restrict new margin creation automatically
 
                 if (i === months) {
                     finalMonthlyIncome = grossIncome;
@@ -785,7 +780,6 @@
                     finalBenchmarkMonthlyIncome = benchIncome;
                 }
 
-                // Gravação final de dados limpos do ciclo corrente
                 equityData.push(currentEquity);
                 assetData.push(currentAssets);
                 debtData.push(currentDebt);
@@ -806,7 +800,21 @@
                 cumulativeInflationFloor = (cumulativeInflationFloor * (1 + moInflationRate)) + baselineMonthlyContribution;
             }
 
+            updateTierScheduleDisplay(enableTiered ? finalDebtSnapshot : 0);
+
             const discountFactor = (inflationMode === 'real') ? Math.pow(1 + moInflationRate, months) : 1;
+            
+            // CRITICAL SYSTEM PATCH: FIXED MISSING DECLARATION FOR calculatedInvested
+            let calculatedInvested = P;
+            if (inflationMode === 'real') {
+                calculatedInvested = P;
+                for (let m = 1; m <= months; m++) {
+                    calculatedInvested += baselineMonthlyContribution / Math.pow(1 + moInflationRate, m);
+                }
+            } else {
+                calculatedInvested = totalInvestedNominal;
+            }
+
             const finalEquityDisplay = equityData[months] / discountFactor;
             const finalAssetsDisplay = assetData[months] / discountFactor;
             const finalBenchmarkDisplay = benchmarkData[months] / discountFactor;
@@ -820,6 +828,14 @@
             const totalROI = calculatedInvested > 0 ? ((finalEquityDisplay - calculatedInvested) / calculatedInvested) * 100 : 0;
             const finalAnnualNetReturnNominal = ((finalMonthlyIncome - finalMonthlyInterest) + finalMonthlyAppreciation) * 12;
             const finalROE = equityData[months] > 0 ? (finalAnnualNetReturnNominal / equityData[months]) * 100 : 0;
+
+            const isReal = (inflationMode === 'real');
+            document.getElementById('titleInvested').innerText = isReal ? "Total Invested (Real)" : "Total Invested";
+            document.getElementById('titleEquity').innerText = isReal ? "Final Equity (Real)" : "Final Equity";
+            document.getElementById('titleAssets').innerText = isReal ? "Total Assets (Real)" : "Final Total Assets";
+            document.getElementById('titleGrossIncome').innerText = isReal ? "Gross Income (Real)" : "Gross Monthly Income";
+            document.getElementById('titleNetIncome').innerText = isReal ? "Net Income (Real)" : "Net Monthly Income";
+            document.getElementById('titleSavings').innerText = isReal ? "Tiered Savings (Real)" : "Tiered Savings";
 
             document.getElementById('outInvested').innerText = formatCurrency(calculatedInvested);
             document.getElementById('outEquity').innerText = formatCurrency(finalEquityDisplay);
@@ -843,7 +859,6 @@
             alertEl.style.display = marginCallOccurred ? 'block' : 'none';
             if (marginCallOccurred) document.getElementById('alertMonth').innerText = marginCallMonthIndex;
 
-            // Renderizador da Análise Narrativa Dinâmica
             const alphaPerformance = finalEquityDisplay - finalBenchmarkDisplay;
             const incomeDifferential = finalNetIncomeDisplay - finalBenchmarkIncomeDisplay;
             const inflationHurdleAlpha = finalEquityDisplay - (inflationFloorData[months] / discountFactor);
