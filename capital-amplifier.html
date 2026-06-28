@@ -125,7 +125,7 @@
             position: absolute;
             z-index: 999;
             bottom: 140%;
-            right: 0;
+            right: 0; /* Align right boundary edge inward to eliminate mobile clip layout bugs */
             box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.7);
             opacity: 0;
             transition: opacity 0.15s ease, visibility 0.15s ease;
@@ -212,6 +212,7 @@
             transition: border-color 0.2s;
         }
         
+        /* Interactive Card Priority Layer Escalation Override */
         .metric-card:hover {
             z-index: 100;
             border-color: var(--accent);
@@ -229,7 +230,7 @@
         .summary-narrative ul { margin: 0 0 16px 0; padding-left: 20px; }
         .summary-narrative li { margin-bottom: 8px; color: var(--text-muted); }
         .summary-narrative strong { color: var(--text-main); }
-        .badge { inline-block; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-family: monospace; font-size: 0.85rem; }
+        .badge { display: inline-block; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-family: monospace; font-size: 0.85rem; }
         .badge-success { background-color: rgba(16, 185, 129, 0.15); color: var(--success); border: 1px solid var(--success); }
         .badge-danger { background-color: rgba(239, 68, 110, 0.15); color: var(--danger); border: 1px solid var(--danger); }
         .badge-warning { background-color: rgba(245, 158, 11, 0.15); color: var(--warning); border: 1px solid var(--warning); }
@@ -306,6 +307,7 @@
                 <input type="number" id="marginRate" value="6.0" step="0.1" oninput="runSimulation()">
             </div>
             
+            <!-- Dynamic Pricing Tier Dashboard Schedule Grid -->
             <div class="input-group" id="tierScheduleGroup" style="margin-bottom: 20px; background-color: var(--bg-color); border: 1px solid var(--border); border-radius: 6px; padding: 12px; display: none;">
                 <div class="tier-ledger-title">Dynamic Margin Tier Ledger</div>
                 <table class="tier-table">
@@ -804,7 +806,7 @@
 
             const discountFactor = (inflationMode === 'real') ? Math.pow(1 + moInflationRate, months) : 1;
             
-            // CRITICAL SYSTEM PATCH: FIXED MISSING DECLARATION FOR calculatedInvested
+            // SYSTEM ANCHOR: RE-ESTABLISHING THE INVESTMENT VALUE CONSTANT
             let calculatedInvested = P;
             if (inflationMode === 'real') {
                 calculatedInvested = P;
@@ -893,10 +895,26 @@
                 escapeVelocityVerdict = `Regrettably, your final wealth failed to clear the inflation hurdle line, meaning your capital lost real purchasing power over the course of the simulation.`;
             }
 
+            // RE-ENGINEERED RISK NARRATIVE DISPATCH LOGIC (CRASH SUMMARY CARD EXPLANATIONS)
             if (marginCallOccurred) {
-                safetyVerdict = `⚠️ <span class="badge badge-danger" style="color:#fff;">CRITICAL BREACH</span>: Your active parameters failed stress-testing. At Month ${marginCallMonthIndex}, the simulated macro crash dropped total asset values beneath your liquidation line, triggering forced broker intervention and locking in permanent equity impairment.`;
+                safetyVerdict = `
+                    <div style="margin-top: 12px; border-left: 4px solid var(--danger); padding-left: 12px;">
+                        ⚠️ <span class="badge badge-danger" style="color:#fff;">CRITICAL BREACH</span>: Injected stress-testing parameters triggered forced broker liquidations at <strong>Month ${marginCallMonthIndex}</strong>.
+                        <p style="margin: 6px 0 0 0; font-size: 0.875rem; color: var(--text-muted);">
+                            <strong>Balance Sheet Breakdown:</strong> When the ${document.getElementById('crashSeverity').value}% systemic shock event hit your holdings, outstanding debt liabilities remained completely sticky. Because your broker does not forgive debt during market contractions, your Leveraged Equity (Green Line) was forced to absorb 100% of the asset destruction on an amplified basis. This caused your structural leverage multiplier to skyrocket instantly, plunging your gross asset curve below the <strong>Liquidation Threshold Line</strong>—which remained completely flat across the crash due to your frozen absolute liabilities—locking in a total account wipeout.
+                        </p>
+                    </div>`;
             } else if (crashSeverity > 0) {
-                safetyVerdict = `🔒 <span class="badge badge-success">SURVIVED STRESS TEST</span>: Your account absorbed the injected ${document.getElementById('crashSeverity').value}% crash at Month ${crashMonth} safely. Even though both your portfolio and the cash Buy-and-Hold benchmark dropped simultaneously, your balance sheet maintained adequate cushion to avoid forced liquidation thresholds.`;
+                safetyVerdict = `
+                    <div style="margin-top: 12px; border-left: 4px solid var(--success); padding-left: 12px;">
+                        🔒 <span class="badge badge-success">SURVIVED STRESS TEST</span>: Your account absorbed the injected ${document.getElementById('crashSeverity').value}% market shock at <strong>Month ${crashMonth}</strong> without crossing maintenance boundaries.
+                        <p style="margin: 6px 0 0 0; font-size: 0.875rem; color: var(--text-muted);">
+                            <strong>Why the Chart Looks This Way:</strong><br>
+                            1. <strong>The Deep Green Plunge:</strong> Notice that your Base Equity (Green Line) drops with a much steeper vertical cliff than the unleveraged Standard Buy-and-Hold baseline. This maps institutional downside volatility accurately: your absolute debt balance remained completely fixed, forcing your net worth to shoulder the entire macro dollar correction.<br>
+                            2. <strong>The Flat Red Dotted Line:</strong> The Liquidation Threshold stays perfectly straight and level across Month ${crashMonth} because absolute liabilities are a rigid contractual constraint. Your safety margin contracted drastically as your assets plunged down toward this threshold.<br>
+                            3. <strong>The Over-Leverage Governor:</strong> In the months following the shock, asset expansion flatlines because the engine flags the over-leveraged state, caps new borrowing completely, and funnels 100% of your incoming capital deposits and net income directly into paying down outstanding debt principal until balance sheet safety ratios return to your target parameters.
+                        </p>
+                    </div>`;
             } else {
                 safetyVerdict = `ℹ️ <span class="badge badge-warning">NO ACTIVE SHOCK</span>: The timeline ran without an active market crash event. Under normal conditions, you maintained a safety cushion of <strong>${maxDrawdown.toFixed(1)}%</strong> before structural asset thresholds would trigger a margin call.`;
             }
