@@ -41,20 +41,18 @@
             padding: 2rem 1rem;
             display: flex;
             justify-content: center;
-            align-items: flex-start;
+            align-items: center;
             min-height: 100vh;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
         }
 
-        /* RESPONSIVE WRAPPER ENGINE */
         .wrapper {
             width: 100%;
-            max-width: 500px; /* Mobile first default baseline width */
+            max-width: 500px;
             display: flex;
             flex-direction: column;
             gap: 1.5rem;
-            transition: max-width 0.3s ease;
         }
 
         /* App Main Top Branding Header */
@@ -80,13 +78,6 @@
             line-height: 1.4;
         }
 
-        /* RESPONSIVE THREE-COLUMN GRID SYSTEM */
-        .dashboard-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 1.5rem;
-        }
-
         /* Institutional Structural Cards */
         .card {
             background-color: var(--bg-card);
@@ -94,17 +85,6 @@
             border-radius: 16px;
             padding: 1.75rem;
             box-shadow: var(--card-shadow);
-            height: 100%; /* Force cards to stretch equally to row height */
-        }
-
-        /* Flex layout engine to push action buttons natively to bottom edge */
-        .card-flex {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .card-flex .push-to-bottom {
-            margin-top: auto;
         }
 
         .card-title {
@@ -149,7 +129,6 @@
         details.card {
             padding: 0;
             overflow: hidden;
-            height: fit-content; /* Ensure expandable card remains fluid */
         }
 
         summary {
@@ -579,25 +558,6 @@
             line-height: 1.5;
             margin-bottom: 0.6rem;
         }
-
-        /* INTENSE WIDESCREEN THREE-COLUMN GRID MEDIA INTERCEPT */
-        @media (min-width: 1150px) {
-            .wrapper {
-                max-width: 100%; /* Let the layout canvas run fluid out to borders */
-                padding-left: 1.5rem;
-                padding-right: 1.5rem;
-            }
-
-            .dashboard-grid {
-                grid-template-columns: 1fr 1fr 1fr; /* Lock row into 3 perfect equal columns */
-                align-items: stretch; /* Stretch children equally to the maximum row height */
-            }
-
-            /* Make contextual full-width elements dynamically banner across all columns */
-            .sticky-header-card, .full-width-doc {
-                grid-column: span 3;
-            }
-        }
     </style>
 </head>
 <body>
@@ -608,230 +568,218 @@
         <p>M1 Smart Transfer Risk Framework &amp; Simulator</p>
     </div>
 
-    <!-- RESPONSIVE LAYOUT THREE-COLUMN GRID CANVAS -->
-    <div class="dashboard-grid">
-
-        <details class="card sticky-header-card">
-            <summary>💡 Quick Start Guide &amp; Glossary</summary>
-            <div class="accordion-content">
-                <div class="instructions-text">
-                    <p><strong>What is this tool?</strong><br>
-                    This tool bridges the gap between your portfolio's <strong>Leverage (Debt-to-Asset / DTA Ratio)</strong> and your M1 "Current balance and limits" screen: <strong>Borrow Capacity (Margin Utilization Rate)</strong>.</p>
-                    <p><strong>Why does M1 have two different modes?</strong><br>
-                    The platform calculates your borrow boundaries using two distinct risk frameworks:
-                    </p>
-                    <p>• <strong>Withdrawal Basis (Cash Extraction Framework):</strong> Use this when taking physical cash out of the account or modeling automated <strong>Smart Transfer Rules</strong>. Because cash leaves the Invest overall account pie entirely, M1 enforces a strict, rigid credit ceiling.</p>
-                    <p>• <strong>Reinvestment Basis (Collateralized Buying Power):</strong> Use this only when using margin to buy more stocks/funds inside M1. The platform is showing a synthetic/calculated ceiling rather than a raw, absolute regulatory limit because the newly bought shares stay inside the account as extra backup collateral.</p>
-                </div>
-            </div>
-        </details>
-
-        <!-- CARD 1: BASELINE ACCOUNT PROFILE -->
-        <div class="card card-flex">
-            <div>
-                <div class="card-title">1. Current M1 Dashboard Metrics</div>
-                
-                <div class="toggle-container">
-                    <button class="toggle-btn active" id="mode-withdraw">Withdrawal Basis</button>
-                    <button class="toggle-btn" id="mode-reinvest">Reinvestment Basis</button>
-                </div>
-
-                <div class="input-group">
-                    <label for="cal-value">Account Value (Total Assets)</label>
-                    <div class="input-wrapper">
-                        <input type="text" id="cal-value" value="$100,000">
-                    </div>
-                </div>
-
-                <div class="input-group">
-                    <label for="cal-borrowed">Total Borrowed</label>
-                    <div class="input-wrapper">
-                        <input type="text" id="cal-borrowed" value="$20,000">
-                    </div>
-                </div>
-
-                <div class="input-group">
-                    <label for="cal-req-equity">Required Equity</label>
-                    <div class="input-wrapper">
-                        <input type="text" id="cal-req-equity" value="$25,000">
-                    </div>
-                </div>
-
-                <div class="input-group">
-                    <label id="credit-limit-label" for="cal-credit-limit">Withdraw up to</label>
-                    <div class="input-wrapper">
-                        <input type="text" id="cal-credit-limit" value="$50,000">
-                    </div>
-                </div>
-            </div>
-
-            <div class="push-to-bottom">
-                <div class="derived-factor-banner" id="factor-readout">
-                    Derived Capacity Limit: --<br>
-                    Derived Blended Portfolio MMR: --
-                </div>
-
-                <button type="button" class="reset-btn" id="reset-defaults-btn">Reset to Defaults</button>
-            </div>
-        </div>
-
-        <!-- CARD 2: SIMULATOR WORKSTATION -->
-        <div class="card card-flex">
-            <div>
-                <div class="card-title">
-                    <span>2. Leverage &amp; Utilization Simulator</span>
-                    <span id="sim-status-badge" class="status-badge status-live">Live Baseline</span>
-                </div>
-
-                <p class="instructions-text" style="margin-bottom: 1.25rem; font-size: 0.8rem; line-height: 1.5; background-color: #f8f9fa; padding: 0.6rem 0.8rem; border-radius: 6px; border-left: 3px solid var(--border-focus);">
-                    <strong>Hint:</strong> Once baseline metrics are logged in Step 1, modify either percentage parameter below to compute future adjustments. The calculator converts values bi-directionally.
-                </p>
-
-                <div class="input-group">
-                    <label for="dta-input">Debt-to-Asset (DTA) Ratio [Leverage]</label>
-                    <div class="input-wrapper">
-                        <input type="number" id="dta-input" step="0.01" min="0" max="100" placeholder="20.00">
-                        <span class="unit">%</span>
-                    </div>
-                </div>
-
-                <div class="input-group">
-                    <label for="util-input">Margin Utilization Rate [Capacity]</label>
-                    <div class="input-wrapper">
-                        <input type="number" id="util-input" step="0.01" min="0" max="100" placeholder="40.00">
-                        <span class="unit">%</span>
-                    </div>
-                </div>
-
-                <div id="context-indicator" class="context-badge context-withdrawal">
-                    Active Framework: <strong>Withdrawal Utilization</strong>
-                </div>
-
-                <div class="derived-factor-banner" style="background-color: #f8f9fa; border: 1px solid var(--border-dominant); text-align: left; font-family: inherit; font-size: 0.85rem; color: var(--text-main); margin-top: 1.25rem; padding: 0.75rem 1rem;">
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.35rem;">
-                        <span style="color: var(--text-muted); font-weight: 500;">Simulated Debt Balance:</span>
-                        <strong id="sim-borrowed-display" style="font-family: 'Roboto Mono', monospace; color: var(--accent-blue);">--</strong>
-                    </div>
-                    <div style="display: flex; justify-content: space-between;">
-                        <span style="color: var(--text-muted); font-weight: 500;">Net Capital Change:</span>
-                        <strong id="sim-change-display" style="font-family: 'Roboto Mono', monospace;">--</strong>
-                    </div>
-                </div>
-
-                <div class="health-display-container">
-                    <div class="health-headline">Cushion to Margin Call</div>
-                    <div class="health-percentage" id="health-percentage-display">100%</div>
-                    
-                    <div class="health-bar-bg">
-                        <div class="health-bar-indicator" id="health-indicator-dot"></div>
-                    </div>
-                    
-                    <div class="health-summary-text" id="health-summary-explanation">
-                        The value of your investments would have to drop <strong>--</strong> to face a margin call.
-                    </div>
-                </div>
-            </div>
-
-            <div class="push-to-bottom">
-                <button type="button" class="secondary-btn" id="sync-baseline-btn">Reset Simulator to Live Baseline</button>
-            </div>
-        </div>
-
-        <!-- CARD 3: POSITIVE CARRY SMART TRANSFER RANGE GATES -->
-        <div class="card card-flex">
-            <div>
-                <div class="card-title">3. Living Expense Operating Boundaries</div>
-                
-                <p class="instructions-text" style="margin-bottom: 1.25rem; font-size: 0.8rem; line-height: 1.5;">
-                    Define your operational bandwidth for covering expenses. <strong>Click anywhere on the bar track or physically drag the black pointer pin to manipulate your active simulation thresholds in real-time.</strong>
-                </p>
-
-                <div class="grid-2">
-                    <div class="input-group">
-                        <label for="range-floor-input">Floor Limit (Util %)</label>
-                        <div class="input-wrapper">
-                            <input type="number" id="range-floor-input" step="1" min="0" max="100" value="30">
-                            <span class="unit">%</span>
-                        </div>
-                    </div>
-                    <div class="input-group">
-                        <label for="range-ceiling-input">Ceiling Limit (Util %)</label>
-                        <div class="input-wrapper">
-                            <input type="number" id="range-ceiling-input" step="1" min="0" max="100" value="50">
-                            <span class="unit">%</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="range-track-wrapper">
-                    <div id="visual-range-track-bar" class="range-track-bg">
-                        <div id="visual-range-zone" class="range-track-highlight"></div>
-                        <div id="visual-range-pin" class="range-track-pin"></div>
-                    </div>
-                    <div class="range-labels-row">
-                        <span>0% Util</span>
-                        <span id="visual-range-floor-label" style="color: var(--accent-blue); font-weight: 700;">Floor: 30%</span>
-                        <span id="visual-range-ceiling-label" style="color: var(--accent-blue); font-weight: 700;">Ceiling: 50%</span>
-                        <span>100% Util</span>
-                    </div>
-                </div>
-
-                <div class="derived-factor-banner" style="background-color: #f8f9fa; border: 1px solid var(--border-dominant); text-align: left; font-family: inherit; font-size: 0.85rem; color: var(--text-main); margin-top: 1rem; margin-bottom: 1rem; padding: 0.75rem 1rem;">
-                    <div style="display: flex; justify-content: space-between;">
-                        <span style="color: var(--text-muted); font-weight: 500;">Headroom to Ceiling Limit:</span>
-                        <strong id="ceiling-buffer-display" style="font-family: 'Roboto Mono', monospace;">--</strong>
-                    </div>
-                </div>
-
-                <table class="risk-matrix-table">
-                    <thead>
-                        <tr>
-                            <th>Boundary State</th>
-                            <th>Cushion to Margin Call</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td style="font-weight: 600; color: var(--accent-blue);">At Floor Limit</td>
-                            <td><span id="matrix-floor-pct" style="font-weight: 700; color: var(--accent-green);">--</span> (<strong id="matrix-floor-cash">--</strong> drop)</td>
-                        </tr>
-                        <tr>
-                            <td style="font-weight: 600; color: var(--accent-danger);">At Ceiling Limit</td>
-                            <td><span id="matrix-ceiling-pct" style="font-weight: 700;">--</span> (<strong id="matrix-ceiling-cash">--</strong> drop)</td>
-                        </tr>
-                    </tbody>
-                </table>
-
-                <div class="derived-factor-banner" style="background-color: rgba(0, 181, 174, 0.05); border: 1px dashed var(--accent-green); text-align: left; font-family: inherit; font-size: 0.82rem; color: var(--text-main); padding: 0.85rem 1rem;">
-                    <div style="font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; color: var(--accent-blue); margin-bottom: 0.5rem; font-family: 'Poppins', sans-serif;">
-                        Calculated M1 Smart Transfer Targets
-                    </div>
-                    <ul style="margin-left: 1.1rem; display: flex; flex-direction: column; gap: 0.5rem; color: var(--text-muted); line-height: 1.5; list-style-type: square;">
-                        <li><strong>Rule 1 (Underbalance):</strong> If Cash drops below <strong>$0.00</strong>, borrow from your credit line <span style="color: var(--text-main); font-weight: 600;">until reaching a utilization limit of <strong id="m1-rule-floor-pct">--</strong>%</span> (Simulated Balance Target: <strong id="m1-rule-floor-cash" style="color: var(--text-main); font-family: 'Roboto Mono';">--</strong>).</li>
-                        <li><strong>Rule 2 (Overbalance):</strong> If Cash inside your incoming Yield/Holding vehicle exceeds your threshold, pay down Borrow <span style="color: var(--text-main); font-weight: 600;">until reaching a utilization limit of <strong id="m1-rule-ceiling-pct">--</strong>%</span> (Simulated Balance Target: <strong id="m1-rule-ceiling-cash" style="color: var(--text-main); font-family: 'Roboto Mono';">--</strong>).</li>
-                    </ul>
-                </div>
-            </div>
-
-            <div class="push-to-bottom">
-                <button type="button" class="reset-btn" id="reset-gates-btn">Reset Gates to Defaults</button>
-            </div>
-        </div>
-
-        <!-- CARD 4: RULES DOCUMENTATION -->
-        <div class="card full-width-doc">
-            <div class="card-title">4. Smart Transfer Guide &amp; Guardrails</div>
+    <details class="card">
+        <summary>💡 Quick Start Guide &amp; Glossary</summary>
+        <div class="accordion-content">
             <div class="instructions-text">
-                <p>M1 Smart Transfers are strictly triggered by <strong>cash balance thresholds</strong> (fixed dollar boundaries) rather than percentage parameters. However, when an automation rule executes a sweep from your credit line, it is governed by specific structural guardrails:</p>
-                <ul class="instructions-list">
-                    <li><strong>Withdrawal Limit Dependency (Cash Extraction):</strong> Automated rules treat sweeps as capital extractions. Because the cash leaves the portfolio shell, the maximum transfer size is strictly capped by your <strong>Available for Withdrawal</strong> credit limit.</li>
-                    <li><strong>Reinvestment Rules Ignored:</strong> The expanded internal buying power ("Available to Invest") is completely bypassed by Smart Transfers since no balancing stock collateral is added duly to the account.</li>
-                    <li><strong>How to use for Smart Transfer calculations:</strong> Keep the toggle set to <strong>Withdrawal Basis</strong>. Input different target cash sweep amounts as simulated debt into Card 2 to see exactly what your dashboard <strong>Margin Utilization Rate</strong> and macro <strong>DTA</strong> will look like post-transfer, ensuring your automated rules never cross critical risk limits. You may also change the simulator to the desired <strong>DTA</strong> or <strong>Margin Utilization Rate</strong> to convert the values bi-directionally.</li>
-                </ul>
+                <p><strong>What is this tool?</strong><br>
+                This tool bridges the gap between your portfolio's <strong>Leverage (Debt-to-Asset / DTA Ratio)</strong> and your M1 "Current balance and limits" screen: <strong>Borrow Capacity (Margin Utilization Rate)</strong>.</p>
+                <p><strong>Why does M1 have two different modes?</strong><br>
+                The platform calculates your borrow boundaries using two distinct risk frameworks:
+                </p>
+                <p>• <strong>Withdrawal Basis (Cash Extraction Framework):</strong> Use this when taking physical cash out of the account or modeling automated <strong>Smart Transfer Rules</strong>. Because cash leaves the Invest overall account pie entirely, M1 enforces a strict, rigid credit ceiling.</p>
+                <p>• <strong>Reinvestment Basis (Collateralized Buying Power):</strong> Use this only when using margin to buy more stocks/funds inside M1. The platform is showing a synthetic/calculated ceiling rather than a raw, absolute regulatory limit because the newly bought shares stay inside the account as extra backup collateral.</p>
+            </div>
+        </div>
+    </details>
+
+    <!-- CARD 1: BASELINE ACCOUNT PROFILE -->
+    <div class="card">
+        <div class="card-title">1. Current M1 Dashboard Metrics</div>
+        
+        <div class="toggle-container">
+            <button class="toggle-btn active" id="mode-withdraw">Withdrawal Basis</button>
+            <button class="toggle-btn" id="mode-reinvest">Reinvestment Basis</button>
+        </div>
+
+        <div class="input-group">
+            <label for="cal-value">Account Value (Total Assets)</label>
+            <div class="input-wrapper">
+                <input type="text" id="cal-value" value="$100,000">
             </div>
         </div>
 
-    </div> <!-- /dashboard-grid -->
+        <div class="input-group">
+            <label for="cal-borrowed">Total Borrowed</label>
+            <div class="input-wrapper">
+                <input type="text" id="cal-borrowed" value="$20,000">
+            </div>
+        </div>
+
+        <div class="input-group">
+            <label for="cal-req-equity">Required Equity</label>
+            <div class="input-wrapper">
+                <input type="text" id="cal-req-equity" value="$25,000">
+            </div>
+        </div>
+
+        <div class="input-group">
+            <label id="credit-limit-label" for="cal-credit-limit">Withdraw up to</label>
+            <div class="input-wrapper">
+                <input type="text" id="cal-credit-limit" value="$50,000">
+            </div>
+        </div>
+
+        <div class="derived-factor-banner" id="factor-readout">
+            Derived Capacity Limit: --<br>
+            Derived Blended Portfolio MMR: --
+        </div>
+
+        <button type="button" class="reset-btn" id="reset-defaults-btn">Reset to Defaults</button>
+    </div>
+
+    <!-- CARD 2: SIMULATOR WORKSTATION -->
+    <div class="card">
+        <div class="card-title">
+            <span>2. Leverage &amp; Utilization Simulator</span>
+            <span id="sim-status-badge" class="status-badge status-live">Live Baseline</span>
+        </div>
+
+        <p class="instructions-text" style="margin-bottom: 1.25rem; font-size: 0.8rem; line-height: 1.5; background-color: #f8f9fa; padding: 0.6rem 0.8rem; border-radius: 6px; border-left: 3px solid var(--border-focus);">
+            <strong>Hint:</strong> Once baseline metrics are logged in Step 1, modify either percentage parameter below to compute future adjustments. The calculator converts values bi-directionally.
+        </p>
+
+        <div class="input-group">
+            <label for="dta-input">Debt-to-Asset (DTA) Ratio [Leverage]</label>
+            <div class="input-wrapper">
+                <input type="number" id="dta-input" step="0.01" min="0" max="100" placeholder="20.00">
+                <span class="unit">%</span>
+            </div>
+        </div>
+
+        <div class="input-group">
+            <label for="util-input">Margin Utilization Rate [Capacity]</label>
+            <div class="input-wrapper">
+                <input type="number" id="util-input" step="0.01" min="0" max="100" placeholder="40.00">
+                <span class="unit">%</span>
+            </div>
+        </div>
+
+        <div id="context-indicator" class="context-badge context-withdrawal">
+            Active Framework: <strong>Withdrawal Utilization</strong>
+        </div>
+
+        <div class="derived-factor-banner" style="background-color: #f8f9fa; border: 1px solid var(--border-dominant); text-align: left; font-family: inherit; font-size: 0.85rem; color: var(--text-main); margin-top: 1.25rem; padding: 0.75rem 1rem;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 0.35rem;">
+                <span style="color: var(--text-muted); font-weight: 500;">Simulated Debt Balance:</span>
+                <strong id="sim-borrowed-display" style="font-family: 'Roboto Mono', monospace; color: var(--accent-blue);">--</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+                <span style="color: var(--text-muted); font-weight: 500;">Net Capital Change:</span>
+                <strong id="sim-change-display" style="font-family: 'Roboto Mono', monospace;">--</strong>
+            </div>
+        </div>
+
+        <div class="health-display-container">
+            <div class="health-headline">Cushion to Margin Call</div>
+            <div class="health-percentage" id="health-percentage-display">100%</div>
+            
+            <div class="health-bar-bg">
+                <div class="health-bar-indicator" id="health-indicator-dot"></div>
+            </div>
+            
+            <div class="health-summary-text" id="health-summary-explanation">
+                The value of your investments would have to drop <strong>--</strong> to face a margin call.
+            </div>
+        </div>
+
+        <button type="button" class="secondary-btn" id="sync-baseline-btn">Reset Simulator to Live Baseline</button>
+    </div>
+
+    <!-- CARD 3: POSITIVE CARRY SMART TRANSFER RANGE GATES -->
+    <div class="card">
+        <!-- RENAME TO REINFORCE BOUNDARIES INSTEAD OF TARGETS -->
+        <div class="card-title">3. Living Expense Operating Boundaries</div>
+        
+        <p class="instructions-text" style="margin-bottom: 1.25rem; font-size: 0.8rem; line-height: 1.5;">
+            Define your operational bandwidth for covering expenses. <strong>Click anywhere on the bar track or physically drag the black pointer pin to manipulate your active simulation thresholds in real-time.</strong>
+        </p>
+
+        <div class="grid-2">
+            <div class="input-group">
+                <label for="range-floor-input">Floor Limit (Util %)</label>
+                <div class="input-wrapper">
+                    <input type="number" id="range-floor-input" step="1" min="0" max="100" value="30">
+                    <span class="unit">%</span>
+                </div>
+            </div>
+            <div class="input-group">
+                <label for="range-ceiling-input">Ceiling Limit (Util %)</label>
+                <div class="input-wrapper">
+                    <input type="number" id="range-ceiling-input" step="1" min="0" max="100" value="50">
+                    <span class="unit">%</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- VISUAL TRACK RANGE GRAPH COMPONENT WITH RISK BACKGROUND SPECTRUM -->
+        <div class="range-track-wrapper">
+            <div id="visual-range-track-bar" class="range-track-bg">
+                <div id="visual-range-zone" class="range-track-highlight"></div>
+                <div id="visual-range-pin" class="range-track-pin"></div>
+            </div>
+            <div class="range-labels-row">
+                <span>0% Util</span>
+                <span id="visual-range-floor-label" style="color: var(--accent-blue); font-weight: 700;">Floor: 30%</span>
+                <span id="visual-range-ceiling-label" style="color: var(--accent-blue); font-weight: 700;">Ceiling: 50%</span>
+                <span>100% Util</span>
+            </div>
+        </div>
+
+        <!-- TRACKER POINTER TO CEILING DIFFERENTIAL ROW -->
+        <div class="derived-factor-banner" style="background-color: #f8f9fa; border: 1px solid var(--border-dominant); text-align: left; font-family: inherit; font-size: 0.85rem; color: var(--text-main); margin-top: 1rem; margin-bottom: 1rem; padding: 0.75rem 1rem;">
+            <div style="display: flex; justify-content: space-between;">
+                <span style="color: var(--text-muted); font-weight: 500;">Headroom to Ceiling Limit:</span>
+                <strong id="ceiling-buffer-display" style="font-family: 'Roboto Mono', monospace;">--</strong>
+            </div>
+        </div>
+
+        <!-- ADVANCED BOUNDARY RISK MATRIX DATA TABLE -->
+        <table class="risk-matrix-table">
+            <thead>
+                <tr>
+                    <th>Boundary State</th>
+                    <th>Cushion to Margin Call</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="font-weight: 600; color: var(--accent-blue);">At Floor Limit</td>
+                    <td><span id="matrix-floor-pct" style="font-weight: 700; color: var(--accent-green);">--</span> (<strong id="matrix-floor-cash">--</strong> drop)</td>
+                </tr>
+                <tr>
+                    <td style="font-weight: 600; color: var(--accent-danger);">At Ceiling Limit</td>
+                    <td><span id="matrix-ceiling-pct" style="font-weight: 700;">--</span> (<strong id="matrix-ceiling-cash">--</strong> drop)</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- CALCULATED TARGETS LOGIC SCRIPT COMPONENT -->
+        <div class="derived-factor-banner" style="background-color: rgba(0, 181, 174, 0.05); border: 1px dashed var(--accent-green); text-align: left; font-family: inherit; font-size: 0.82rem; color: var(--text-main); padding: 0.85rem 1rem;">
+            <div style="font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; color: var(--accent-blue); margin-bottom: 0.5rem; font-family: 'Poppins', sans-serif;">
+                Calculated M1 Smart Transfer Targets
+            </div>
+            <ul style="margin-left: 1.1rem; display: flex; flex-direction: column; gap: 0.5rem; color: var(--text-muted); line-height: 1.5; list-style-type: square;">
+                <li><strong>Rule 1 (Underbalance):</strong> If Cash drops below <strong>$0.00</strong>, borrow from your credit line <span style="color: var(--text-main); font-weight: 600;">until reaching a utilization limit of <strong id="m1-rule-floor-pct">--</strong>%</span> (Simulated Balance Target: <strong id="m1-rule-floor-cash" style="color: var(--text-main); font-family: 'Roboto Mono';">--</strong>).</li>
+                <li><strong>Rule 2 (Overbalance):</strong> If Cash inside your incoming Yield/Holding vehicle exceeds your threshold, pay down Borrow <span style="color: var(--text-main); font-weight: 600;">until reaching a utilization limit of <strong id="m1-rule-ceiling-pct">--</strong>%</span> (Simulated Balance Target: <strong id="m1-rule-ceiling-cash" style="color: var(--text-main); font-family: 'Roboto Mono';">--</strong>).</li>
+            </ul>
+        </div>
+
+        <button type="button" class="reset-btn" id="reset-gates-btn">Reset Gates to Defaults</button>
+    </div>
+
+    <!-- CARD 4: RULES DOCUMENTATION -->
+    <div class="card">
+        <div class="card-title">4. Smart Transfer Guide &amp; Guardrails</div>
+        <div class="instructions-text">
+            <p>M1 Smart Transfers are strictly triggered by <strong>cash balance thresholds</strong> (fixed dollar boundaries) rather than percentage parameters. However, when an automation rule executes a sweep from your credit line, it is governed by specific structural guardrails:</p>
+            <ul class="instructions-list">
+                <li><strong>Withdrawal Limit Dependency (Cash Extraction):</strong> Automated rules treat sweeps as capital extractions. Because the cash leaves the portfolio shell, the maximum transfer size is strictly capped by your <strong>Available for Withdrawal</strong> credit limit.</li>
+                <li><strong>Reinvestment Rules Ignored:</strong> The expanded internal buying power ("Available to Invest") is completely bypassed by Smart Transfers since no balancing stock collateral is added duly to the account.</li>
+                <li><strong>How to use for Smart Transfer calculations:</strong> Keep the toggle set to <strong>Withdrawal Basis</strong>. Input different target cash sweep amounts as simulated debt into Card 2 to see exactly what your dashboard <strong>Margin Utilization Rate</strong> and macro <strong>DTA</strong> will look like post-transfer, ensuring your automated rules never cross critical risk limits. You may also change the simulator to the desired <strong>DTA</strong> or <strong>Margin Utilization Rate</strong> to convert the values bi-directionally.</li>
+            </ul>
+        </div>
+    </div>
 
     <!-- LEGAL DISCLOSURE COMPONENT SECTION -->
     <div class="legal-disclosure">
