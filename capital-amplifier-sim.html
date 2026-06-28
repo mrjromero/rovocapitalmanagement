@@ -38,7 +38,7 @@
             width: 100%;
         }
         
-        /* Master Layer Separation Controls */
+        /* Master Panel Layers - Prevents Tooltip Overlap Traps */
         .sidebar-panel {
             background-color: var(--panel-bg);
             padding: 24px;
@@ -100,7 +100,7 @@
         .btn-secondary { background-color: var(--secondary); margin-top: 8px; }
         .btn-secondary:hover { background-color: var(--secondary-hover); }
         
-        /* Advanced Layer-Safe Tooltip Framework */
+        /* Layer-Safe Tooltip Infrastructure */
         .tooltip-icon {
             display: inline-block;
             cursor: help;
@@ -125,7 +125,7 @@
             position: absolute;
             z-index: 999;
             bottom: 140%;
-            right: 0;
+            right: 0; /* Pulls tooltips inward to protect viewport edges */
             box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.7);
             opacity: 0;
             transition: opacity 0.15s ease, visibility 0.15s ease;
@@ -211,7 +211,6 @@
             z-index: 1;
             transition: border-color 0.2s;
         }
-        
         .metric-card:hover {
             z-index: 100;
             border-color: var(--accent);
@@ -235,7 +234,6 @@
         .badge-warning { background-color: rgba(245, 158, 11, 0.15); color: var(--warning); border: 1px solid var(--warning); }
         
         @media (max-width: 1400px) { .metrics-grid { grid-template-columns: repeat(3, 1fr); } }
-        
         @media (max-width: 900px) {
             .container { grid-template-columns: 1fr; }
             .metrics-grid { grid-template-columns: repeat(2, 1fr); }
@@ -252,7 +250,7 @@
             <div class="input-group">
                 <label>
                     Starting Cash ($)
-                    <span class="tooltip-icon">ⓘ<span class="tooltip-text">The initial chunk of your own money used to start the investments.</span></span>
+                    <span class="tooltip-icon">ⓘ<span class="tooltip-text">Your initial out-of-pocket savings used to start the investment portfolio.</span></span>
                 </label>
                 <input type="number" id="startCapital" value="100000" step="1000">
             </div>
@@ -260,7 +258,7 @@
             <div class="input-group" id="standardContributionGroup">
                 <label>
                     Monthly Savings Added ($)
-                    <span class="tooltip-icon">ⓘ<span class="tooltip-text">How much extra cash you plan to add to the account out of pocket each month.</span></span>
+                    <span class="tooltip-icon">ⓘ<span class="tooltip-text">Extra cash savings from your income added to your investments every month.</span></span>
                 </label>
                 <input type="number" id="monthlyContribution" value="1000" step="100">
             </div>
@@ -268,15 +266,15 @@
             <div id="paycheckRoutingInputs" style="display: none;">
                 <div class="input-group">
                     <label>
-                        Net Monthly Take-Home Pay ($)
-                        <span class="tooltip-icon">ⓘ<span class="tooltip-text">Your entire monthly salary deposited directly into the investment account on day one.</span></span>
+                        Net Monthly Paycheck ($)
+                        <span class="tooltip-icon">ⓘ<span class="tooltip-text">Your entire monthly take-home income deposited directly into investments on day one.</span></span>
                     </label>
                     <input type="number" id="grossPaycheck" value="5000" step="500">
                 </div>
                 <div class="input-group">
                     <label>
-                        Monthly Spending Bills ($)
-                        <span class="tooltip-icon">ⓘ<span class="tooltip-text">How much money you pull out as a low-cost loan to pay for normal living costs.</span></span>
+                        Monthly Living Expenses ($)
+                        <span class="tooltip-icon">ⓘ<span class="tooltip-text">The money you borrow back out via the loan to pay for your day-to-day living costs.</span></span>
                     </label>
                     <input type="number" id="livingExpenses" value="4000" step="200">
                 </div>
@@ -284,16 +282,16 @@
 
             <div class="input-group">
                 <label>
-                    Target Debt Ratio (%)
-                    <span class="tooltip-icon">ⓘ<span class="tooltip-text">What percentage of your total portfolio is bought using borrowed money vs your own cash.</span></span>
+                    Target Borrowing Level (%)
+                    <span class="tooltip-icon">ⓘ<span class="tooltip-text">What percentage of your total investments is funded using the broker's loan.</span></span>
                 </label>
                 <input type="number" id="dta" value="30" step="1" max="99">
             </div>
             
             <div class="input-group">
                 <label>
-                    Annual Investment Yield (%)
-                    <span class="tooltip-icon">ⓘ<span class="tooltip-text">The yearly interest or dividend cash flow payout rate generated by your investments.</span></span>
+                    Annual Dividend Yield (%)
+                    <span class="tooltip-icon">ⓘ<span class="tooltip-text">The regular cash flow or dividend payments generated by your investments each year.</span></span>
                 </label>
                 <input type="number" id="yield" value="9.0" step="0.1">
             </div>
@@ -301,43 +299,42 @@
             <div class="input-group">
                 <label>
                     Base Loan Interest Rate (%)
-                    <span class="tooltip-icon">ⓘ<span class="tooltip-text">The annual interest rate the broker charges you for borrowing money to buy extra assets.</span></span>
+                    <span class="tooltip-icon">ⓘ<span class="tooltip-text">The annual interest rate the broker charges you on the borrowed money.</span></span>
                 </label>
                 <input type="number" id="marginRate" value="6.0" step="0.1" oninput="runSimulation()">
             </div>
             
-            <!-- Dynamic Pricing Tier Dashboard Schedule Grid -->
             <div class="input-group" id="tierScheduleGroup" style="margin-bottom: 20px; background-color: var(--bg-color); border: 1px solid var(--border); border-radius: 6px; padding: 12px; display: none;">
-                <div class="tier-ledger-title">Dynamic Interest Rate Brackets</div>
+                <div class="tier-ledger-title">Available Loan Interest Discounts</div>
                 <table class="tier-table">
                     <thead>
                         <tr style="text-align: left; font-size: 0.75rem; color: var(--text-muted); border-bottom: 1px solid var(--border);">
                             <th>Loan Size</th>
-                            <th>Your Rate</th>
+                            <th>Rate</th>
                             <th>Status</th>
                         </tr>
                     </thead>
                     <tbody style="font-size: 0.8rem;">
-                        <tr id="rowTier1"><td>$0 - $100k</td><td id="rateTier1">6.00%</td><td><span id="badgeTier1" class="status-badge">Off</span></td></tr>
-                        <tr id="rowTier2"><td>$100k - $1M</td><td id="rateTier2">5.50%</td><td><span id="badgeTier2" class="status-badge">Off</span></td></tr>
-                        <tr id="rowTier3"><td>$1M - $3M</td><td id="rateTier3">5.00%</td><td><span id="badgeTier3" class="status-badge">Off</span></td></tr>
-                        <tr id="rowTier4"><td>$3M+</td><td id="rateTier4">4.50%</td><td><span id="badgeTier4" class="status-badge">Off</span></td></tr>
+                        <tr id="rowTier1"><td>$0 - $100k</td><td id="rateTier1">6.00%</td><td><span id="badgeTier1" class="status-badge">Unused</span></td></tr>
+                        <tr id="rowTier2"><td>$100k - $1M</td><td id="rateTier2">5.50%</td><td><span id="badgeTier2" class="status-badge">Unused</span></td></tr>
+                        <tr id="rowTier3"><td>$1M - $3M</td><td id="rateTier3">5.00%</td><td><span id="badgeTier3" class="status-badge">Unused</span></td></tr>
+                        <tr id="rowTier4"><td>$3M+</td><td id="rateTier4">4.50%</td><td><span id="badgeTier4" class="status-badge">Unused</span></td></tr>
                     </tbody>
                 </table>
             </div>
             
             <div class="input-group">
                 <label>
-                    Annual Price Appreciation (%)
-                    <span class="tooltip-icon">ⓘ<span class="tooltip-text">The expected annual market growth or price increase of your investment assets.</span></span>
+                    Annual Growth Rate (%)
+                    <span class="tooltip-icon">ⓘ<span class="tooltip-text">The expected annual organic increase in the share price or market value of your holdings.</span></span>
                 </label>
                 <input type="number" id="appreciation" value="0.0" step="0.1">
             </div>
 
             <div class="input-group">
                 <label>
-                    Broker Safety Limit (%)
-                    <span class="tooltip-icon">ⓘ<span class="tooltip-text">The minimum cash value you must keep in the account before the broker forces a sale.</span></span>
+                    Account Safety Margin (%)
+                    <span class="tooltip-icon">ⓘ<span class="tooltip-text">The minimum level of personal cash equity you must maintain before the broker forces a liquidation.</span></span>
                 </label>
                 <input type="number" id="maintReq" value="25" step="1">
             </div>
@@ -345,7 +342,7 @@
             <div class="input-group">
                 <label>
                     Simulation Time (Months)
-                    <span class="tooltip-icon">ⓘ<span class="tooltip-text">The total timeline length of the compound simulation run in months.</span></span>
+                    <span class="tooltip-icon">ⓘ<span class="tooltip-text">The total timeline length of the test calculation run in months.</span></span>
                 </label>
                 <input type="number" id="months" value="120" step="12">
             </div>
@@ -353,27 +350,27 @@
             <div style="border-top: 1px solid var(--border); padding-top: 14px; margin-top: 14px;">
                 <div class="checkbox-group">
                     <input type="checkbox" id="enablePaycheck" onchange="togglePaycheckMode(); runSimulation();">
-                    <label for="enablePaycheck">Model Salary Deposit Strategy</label>
+                    <label for="enablePaycheck">Maximize Paycheck Flow (Buy, Borrow, Die)</label>
                 </div>
 
                 <div class="checkbox-group">
                     <input type="checkbox" id="enableTiered" onchange="runSimulation()">
-                    <label for="enableTiered">Enable Volume Rate Discounts</label>
+                    <label for="enableTiered">Enable Lower Rates on Bigger Loans</label>
                 </div>
 
                 <div class="input-group">
-                    <label>Inflation Setting</label>
+                    <label>Inflation View Mode</label>
                     <select id="inflationMode" onchange="toggleInflationInput(); runSimulation();">
-                        <option value="nominal" selected>Normal Mode (Don't Adjust for Inflation)</option>
-                        <option value="hurdle">Normal Mode + Show Inflation Break-Even Line</option>
-                        <option value="real">Real Purchasing Power (Shrink Chart to True Value)</option>
+                        <option value="nominal" selected>Normal Mode (No Adjustments)</option>
+                        <option value="hurdle">Normal Mode + Show Inflation Hurdle</option>
+                        <option value="real">Real Purchasing Power (Adjust Values)</option>
                     </select>
                 </div>
                 
                 <div class="input-group" id="inflationInputGroup" style="display: none; margin-bottom: 16px; padding-left: 8px;">
                     <label>
                         Annual Inflation Rate (%)
-                        <span class="tooltip-icon">ⓘ<span class="tooltip-text">The estimated yearly rate at which consumer cash loses its purchasing power.</span></span>
+                        <span class="tooltip-icon">ⓘ<span class="tooltip-text">The annual loss of purchasing power benchmark.</span></span>
                     </label>
                     <input type="number" id="inflationRate" value="2.5" step="0.1">
                 </div>
@@ -382,29 +379,29 @@
             <div class="input-group">
                 <label style="color: #f1f5f9; font-weight: 600;">
                     💥 Market Crash Shock (%)
-                    <span class="tooltip-icon">ⓘ<span class="tooltip-text">Simulates an instant, sudden percentage drop across the entire stock market.</span></span>
+                    <span class="tooltip-icon">ⓘ<span class="tooltip-text">Injects an instant, unexpected drops into your total managed investments at a chosen month.</span></span>
                 </label>
                 <input type="number" id="crashSeverity" value="0" min="0" max="95" step="5">
             </div>
 
             <div class="input-group">
                 <label>
-                    Crash Happens at Month
-                    <span class="tooltip-icon">ⓘ<span class="tooltip-text">The exact month in the timeline where the sudden market crash hits.</span></span>
+                    Crash Month
+                    <span class="tooltip-icon">ⓘ<span class="tooltip-text">The specific month index when the market drop strikes.</span></span>
                 </label>
                 <input type="number" id="crashMonth" value="36" min="1" step="1">
             </div>
 
-            <button class="btn-primary" onclick="runSimulation()">Calculate Growth Plan</button>
-            <button class="btn-secondary" onclick="exportToCSV()">💾 Export Spreadsheet Data (CSV)</button>
-            <button class="btn-secondary" onclick="resetDefaults()" style="background-color: #64748b; margin-top: 8px;">🔄 Reset to Standard Baseline</button>
+            <button class="btn-primary" onclick="runSimulation()">Calculate Strategy</button>
+            <button class="btn-secondary" onclick="exportToCSV()">💾 Export Spreadsheet to CSV</button>
+            <button class="btn-secondary" onclick="resetDefaults()" style="background-color: #64748b; margin-top: 8px;">🔄 Reset to Defaults</button>
 
             <div id="carryWarning" class="warning-box">
-                ⚠️ <strong>Losing Money on Loans:</strong> Your borrowing interest costs are higher than what your investments make. This loan will actively shrink your wealth.
+                ⚠️ <strong>Losing Money on Borrowing:</strong> Your loan's interest rate is higher than your investment growth rate. Borrowing will actively shrink your wealth.
             </div>
 
             <div id="marginCallAlert" class="danger-box">
-                🚨 <strong>Account Forced Sale Triggered:</strong> At Month <span id="alertMonth">X</span>, the market crash wiped out too much value, forcing the broker to sell assets to pay off your loan.
+                🚨 <strong>Forced Sale Triggered:</strong> At Month <span id="alertMonth">X</span>, the crash dropped your personal cash cushion below the broker's floor, causing forced liquidations.
             </div>
         </div>
 
@@ -412,85 +409,85 @@
             <div class="metrics-grid">
                 <div class="metric-card">
                     <div class="metric-title" id="titleInvested">
-                        Total Cash Put In
-                        <span class="tooltip-icon">ⓘ<span class="tooltip-text">The total amount of your own out-of-pocket cash savings deposited over time.</span></span>
+                        Your Cash Out-of-Pocket
+                        <span class="tooltip-icon">ⓘ<span class="tooltip-text">The total amount of your own cash savings you deposited into this strategy over time.</span></span>
                     </div>
                     <div class="metric-value" id="outInvested">$0</div>
                 </div>
                 <div class="metric-card">
                     <div class="metric-title" id="titleEquity">
-                        Final Net Worth (Your Share)
-                        <span class="tooltip-icon">ⓘ<span class="tooltip-text">Your true net cash wealth (Total Portfolio Value minus what you still owe on the loan).</span></span>
+                        Your True Net Worth
+                        <span class="tooltip-icon">ⓘ<span class="tooltip-text">Your actual wealth (Total Managed Investments minus your outstanding Loan Balance).</span></span>
                     </div>
                     <div class="metric-value" id="outEquity">$0</div>
                 </div>
                 <div class="metric-card">
                     <div class="metric-title" id="titleAssets">
-                        Final Portfolio Value
-                        <span class="tooltip-icon">ⓘ<span class="tooltip-text">The total gross value of all the investments working for you (Your Cash + Borrowed Cash).</span></span>
+                        Total Investments Managed
+                        <span class="tooltip-icon">ⓘ<span class="tooltip-text">The full market value of the investments working for you (Your Cash Net Worth + the Borrowed Money).</span></span>
                     </div>
                     <div class="metric-value" id="outAssets">$0</div>
                 </div>
                 <div class="metric-card">
                     <div class="metric-title">
-                        Portfolio Size Multiplier
-                        <span class="tooltip-icon">ⓘ<span class="tooltip-text">Tracks how many times larger your portfolio is compared to your own cash base.</span></span>
+                        Investment Power Multiplier
+                        <span class="tooltip-icon">ⓘ<span class="tooltip-text">How many times your cash is multiplied by using borrowed money. 1.0x means zero debt.</span></span>
                     </div>
                     <div class="metric-value" id="outLeverage">0.00x</div>
                 </div>
                 <div class="metric-card">
                     <div class="metric-title">
-                        Total Return % (ROI)
-                        <span class="tooltip-icon">ⓘ<span class="tooltip-text">The total percentage profit generated strictly on your out-of-pocket cash savings.</span></span>
+                        Total Return on Cash
+                        <span class="tooltip-icon">ⓘ<span class="tooltip-text">The net total growth percentage achieved strictly on your actual cash out-of-pocket deposits.</span></span>
                     </div>
                     <div class="metric-value good-metric" id="outROI">0.0%</div>
                 </div>
                 <div class="metric-card">
                     <div class="metric-title">
-                        Return on Your Share % (ROE)
-                        <span class="tooltip-icon">ⓘ<span class="tooltip-text">Your net annual investment return rate calculated relative to your current clean net worth.</span></span>
+                        Annual Return on Equity
+                        <span class="tooltip-icon">ⓘ<span class="tooltip-text">Your annualized clear growth rate calculated relative to your personal cash equity base.</span></span>
                     </div>
                     <div class="metric-value good-metric" id="outROE">0.0%</div>
                 </div>
                 <div class="metric-card">
                     <div class="metric-title" id="titleGrossIncome">
-                        Gross Monthly Income
-                        <span class="tooltip-icon">ⓘ<span class="tooltip-text">The total monthly dividend or interest cash flow generated before loan fees are subtracted.</span></span>
+                        Total Monthly Dividends
+                        <span class="tooltip-icon">ⓘ<span class="tooltip-text">The gross cash payments your entire expanded investment pool brings in monthly before paying loan fees.</span></span>
                     </div>
                     <div class="metric-value" id="outIncome">$0</div>
                 </div>
                 <div class="metric-card">
                     <div class="metric-title" id="titleNetIncome">
-                        Net Monthly Take-Home
-                        <span class="tooltip-icon">ⓘ<span class="tooltip-text">The monthly investment cash flow left in your pocket after completely paying off loan interest fees.</span></span>
+                        Net Take-Home Dividends
+                        <span class="tooltip-icon">ⓘ<span class="tooltip-text">The monthly dividend cash flow remaining for you after paying off the broker's loan interest bills.</span></span>
                     </div>
                     <div class="metric-value good-metric" id="outNetIncome">$0</div>
                 </div>
                 <div class="metric-card">
                     <div class="metric-title">
-                        Cash Flow Safety Rating
-                        <span class="tooltip-icon">ⓘ<span class="tooltip-text">Measures your safety buffer: Investment Income divided by Interest Bills. Safe plans aim for 1.5x or higher.</span></span>
+                        Income-to-Debt Safety Score
+                        <span class="tooltip-icon">ⓘ<span class="tooltip-text">Debt Service Coverage Ratio. Measures how easily your dividend income covers your monthly interest payments. Comfort targets sit above 1.50x.</span></span>
                     </div>
                     <div class="metric-value" id="outDSCR">0.0x</div>
                 </div>
                 <div class="metric-card">
                     <div class="metric-title">
-                        Safety Cushion Drop Allowed
-                        <span class="tooltip-icon">ⓘ<span class="tooltip-text">The maximum percentage size drop your portfolio can handle before the broker forces a liquidation sale.</span></span>
+                        Max Drop Allowed
+                        <span class="tooltip-icon">ⓘ<span class="tooltip-text">The maximum market percentage drop your account can survive before hitting the broker's safety floor.</span></span>
                     </div>
                     <div class="metric-value" id="outDrawdown">0%</div>
                 </div>
                 <div class="metric-card">
                     <div class="metric-title">
-                        Blended Borrowing Cost
-                        <span class="tooltip-icon">ⓘ<span class="tooltip-text">The true annual interest rate you are paying after accounting for automatic size discounts.</span></span>
+                        Blended Interest Rate
+                        <span class="tooltip-icon">ⓘ<span class="tooltip-text">The actual average interest rate you pay across your entire balance under the tiered loan model.</span></span>
                     </div>
                     <div class="metric-value info-metric" id="outEffectiveMargin">0.00%</div>
                 </div>
                 <div class="metric-card">
                     <div class="metric-title" id="titleSavings">
-                        Discount Tier Savings
-                        <span class="tooltip-icon">ⓘ<span class="tooltip-text">The total amount of money you saved by utilizing large-scale volume rate interest brackets.</span></span>
+                        Interest Savings
+                        <span class="tooltip-icon">ⓘ<span class="tooltip-text">The total compound dollar savings pocketed by using discounted size brackets instead of a flat rate.</span></span>
                     </div>
                     <div class="metric-value good-metric" id="outSavings">$0</div>
                 </div>
@@ -509,11 +506,11 @@
                 <h3>Understanding the Data Curves</h3>
                 <p>The interactive charting component maps out your asset structure over time. Here is what each line measures:</p>
                 <ul>
-                    <li><strong style="color: #3b82f6;">Total Investments (Solid Blue Area):</strong> The total market value of all assets working for you. It grows larger than your net worth based on how much borrowed loan money you introduce to the balance sheet.</li>
-                    <li><strong style="color: #10b981;">Your Net Worth (Solid Green Line):</strong> Your real personal share of the wealth. It equals total investments minus what you still owe on the loan. All surplus savings and investment payouts add directly to this curve.</li>
-                    <li><strong style="color: #f59e0b;">Traditional Strategy - No Borrowing (Dashed Amber Line):</strong> Your safety comparison run. This shows exactly how much money you would have if you avoided borrowing entirely and just invested your own cash normally over time.</li>
-                    <li><strong style="color: #d946ef;">Inflation Break-Even Line (Solid Magenta Line):</strong> The purchasing power baseline. This tracks how much money your cash savings must grow *just to buy the same amount of goods* over time. If your green line is above this, you are building real wealth.</li>
-                    <li><strong style="color: #ef4444;">Broker Forced-Sale Danger Line (Dotted Red Line):</strong> Your critical safety floor. If the top of the blue investment area ever drops down to touch this line, your account has run out of safety cushion. The broker will immediately step in and force a liquidation sale to pay back the loan.</li>
+                    <li><strong style="color: #3b82f6;">Total Investments Managed (Solid Blue Area):</strong> The gross market valuation of your total holding power. It visually expands away from your net worth line based on how much structural debt you have introduced onto the balance sheet.</li>
+                    <li><strong style="color: #10b981;">Your Cash Net Worth / With Loan Strategy (Solid Green Line):</strong> Your true personal net worth over time under this leveraged framework. It represents gross assets minus the outstanding margin debt balance. All positive carry, price appreciation, and savings injections compound directly into this curve.</li>
+                    <li><strong style="color: #f59e0b;">Traditional Cash Buying / No Loan Strategy (Dashed Amber Line):</strong> Your baseline financial control run. It outlines what your exact net worth trajectory would look like if you avoided borrowing entirely and simply bought and held the underlying assets with 100% cash, reinvesting dividends over time.</li>
+                    <li><strong style="color: #d946ef;">Inflation Breakeven Hurdle (Solid Magenta Line):</strong> The purchasing power baseline. This tracks how much your out-of-pocket savings injections must grow *just to protect your baseline purchasing power* against inflation. If your equity curve is above this line, you have real gains. If it flies drastically above it, leverage has achieved financial escape velocity.</li>
+                    <li><strong style="color: #ef4444;">Forced Sale Safety Floor / Margin Call Line (Dotted Red Line):</strong> The critical safety floor. Calculated dynamically as <span style="font-family: monospace; color: #f8fafc;">Outstanding Debt ÷ (1 - Maintenance Requirement)</span>. If the blue asset area ever breaches or touches this line, your capital faces an immediate forced broker liquidation.</li>
                 </ul>
             </div>
         </div>
@@ -557,7 +554,7 @@
             ['rowTier1', 'rowTier2', 'rowTier3', 'rowTier4'].forEach(id => document.getElementById(id).className = '');
             ['badgeTier1', 'badgeTier2', 'badgeTier3', 'badgeTier4'].forEach(id => {
                 const b = document.getElementById(id);
-                b.innerText = 'Off';
+                b.innerText = 'Unused';
                 b.className = 'status-badge';
             });
 
@@ -655,7 +652,7 @@
             }
 
             if (targetDTA >= 1.0) {
-                alert("Debt Ratio must be strictly less than 100%");
+                alert("The target borrowing level must be strictly less than 100%");
                 return;
             }
 
@@ -682,7 +679,7 @@
             let liquidationData = [];
             let inflationFloorData = [];
 
-            // RESET INITIAL TIMELINE STATES (Month 0 Anchor)
+            // TIME STATE MACHINE CHRONOLOGY (Month 0 Anchor Initialization)
             let currentEquity = P;
             let currentBenchmark = P;
             let cumulativeInflationFloor = P;
@@ -719,11 +716,11 @@
                 nominalInflationFloor: cumulativeInflationFloor
             });
 
-            // CHRONOLOGICAL DISCRETE STATE ENGINE TIMELINE LOOP
+            // SIMULATION RUN CALCULATOR TIMELINE LOOP
             for (let i = 1; i <= months; i++) {
                 labels.push(`Month ${i}`);
 
-                // PHASE 1: COMPOUNDING EXPANSION RUNS
+                // PHASE 1: REVENUE COMPOUND ACCRUALS
                 let grossIncome = currentAssets * moYield;
                 let interestExpense = enableTiered ? calculateMonthlyMarginInterest(currentDebt, annMargin) : currentDebt * (annMargin / 12);
                 let appreciationValue = currentAssets * moAppreciation;
@@ -737,7 +734,7 @@
                 currentEquity += (grossIncome - interestExpense + appreciationValue);
                 currentAssets += (grossIncome + appreciationValue);
 
-                // PHASE 2: CAPITAL PAYLOAD DEPOSITS & FLOWS
+                // PHASE 2: SAVINGS & PAYCHECK DISPATCH INJECTIONS
                 if (isPaycheckMode) {
                     currentAssets += grossPaycheck;
                     currentDebt += livingExpenses;
@@ -749,7 +746,7 @@
 
                 currentBenchmark += (benchIncome + benchAppreciation + baselineMonthlyContribution);
 
-                // PHASE 3: INSTANT MACRO SHOCK EVENT (RIGID DEBT PHYSICS OVERRIDE)
+                // PHASE 3: RIGID DEBT PHYSICS SHOCK OVERRIDE (CRASH MONTH PROCESSING)
                 if (i === crashMonth && crashSeverity > 0) {
                     currentAssets = currentAssets * (1 - crashSeverity);
                     currentEquity = currentAssets - currentDebt; // Debt is frozen; Equity absorbs 100% loss payload
@@ -763,15 +760,16 @@
 
                 if (currentEquity < 0) currentEquity = 0;
 
-                // PHASE 4: REGULATED LEVERAGE DE-LEVERAGING INJECTION GOVERNOR
+                // PHASE 4: REBALANCING OVER-LEVERAGE PROTECTION GOVERNOR
                 let idealDebt = currentEquity * (targetDTA / (1 - targetDTA));
                 let isOverLeveraged = (currentDebt > idealDebt);
 
                 if (!isOverLeveraged) {
-                    let additionalBorrow = idealDebt - currentDebt;
+                    // Balances are safe: Borrow more margin to match target levels
                     currentDebt = idealDebt;
-                    currentAssets += additionalBorrow;
-                } 
+                    currentAssets = currentEquity + currentDebt;
+                }
+                // If over-leveraged after a crash, borrowing freezes. Debt tracks on rigid structural values.
 
                 if (i === months) {
                     finalMonthlyIncome = grossIncome;
@@ -779,22 +777,6 @@
                     finalMonthlyAppreciation = appreciationValue;
                     finalDebtSnapshot = currentDebt;
                     finalBenchmarkMonthlyIncome = benchIncome;
-                }
-
-                // RECOVERY REPAYMENT FLOW SYSTEM INTERCEPTIONS
-                let totalCashInflow = (currentAssets * moYield) - interestExpense + baselineMonthlyContribution;
-                if (isOverLeveraged) {
-                    currentAssets += (currentAssets * moAppreciation);
-                    currentEquity += (currentAssets * moAppreciation);
-                    
-                    if (totalCashInflow > 0) {
-                        let debtPaydown = Math.min(totalCashInflow, currentDebt);
-                        currentDebt -= debtPaydown;
-                        currentEquity += totalCashInflow;
-                    } else {
-                        currentEquity += totalCashInflow;
-                    }
-                    currentAssets = currentEquity + currentDebt;
                 }
 
                 equityData.push(currentEquity);
@@ -813,6 +795,25 @@
                     nominalLiquidation: currentDebt / (1 - maintReq),
                     nominalInflationFloor: cumulativeInflationFloor
                 });
+
+                // PHASE 5: POST-SHOCK DE-LEVERAGING RECOVERY PATHWAYS
+                let netCashflow = grossIncome - interestExpense;
+                let totalCashInflow = netCashflow + baselineMonthlyContribution;
+
+                if (isOverLeveraged) {
+                    // Balance sheet recovery mode: Route incoming cash directly to pay down loan balance
+                    currentAssets += appreciationValue;
+                    currentEquity += appreciationValue;
+                    
+                    if (totalCashInflow > 0) {
+                        let debtPaydown = Math.min(totalCashInflow, currentDebt);
+                        currentDebt -= debtPaydown;
+                        currentEquity += totalCashInflow; 
+                    } else {
+                        currentEquity += totalCashInflow; 
+                    }
+                    currentAssets = currentEquity + currentDebt;
+                }
 
                 cumulativeInflationFloor = (cumulativeInflationFloor * (1 + moInflationRate)) + baselineMonthlyContribution;
             }
@@ -846,12 +847,12 @@
             const finalROE = equityData[months] > 0 ? (finalAnnualNetReturnNominal / equityData[months]) * 100 : 0;
 
             const isReal = (inflationMode === 'real');
-            document.getElementById('titleInvested').innerText = isReal ? "Total Cash Deposited (Adjusted)" : "Total Cash Deposited";
-            document.getElementById('titleEquity').innerText = isReal ? "Final Net Worth (Adjusted)" : "Final Net Worth (Your Share)";
-            document.getElementById('titleAssets').innerText = isReal ? "Total Portfolio Value (Adjusted)" : "Final Portfolio Value";
-            document.getElementById('titleGrossIncome').innerText = isReal ? "Gross Income (Adjusted)" : "Gross Monthly Income";
-            document.getElementById('titleNetIncome').innerText = isReal ? "Net Take-Home (Adjusted)" : "Net Monthly Take-Home";
-            document.getElementById('titleSavings').innerText = isReal ? "Discount Savings (Adjusted)" : "Discount Tier Savings";
+            document.getElementById('titleInvested').innerText = isReal ? "Your Cash Out-of-Pocket (Real)" : "Your Cash Out-of-Pocket";
+            document.getElementById('titleEquity').innerText = isReal ? "Your True Net Worth (Real)" : "Your True Net Worth";
+            document.getElementById('titleAssets').innerText = isReal ? "Investments Managed (Real)" : "Total Investments Managed";
+            document.getElementById('titleGrossIncome').innerText = isReal ? "Total Monthly Dividends (Real)" : "Total Monthly Dividends";
+            document.getElementById('titleNetIncome').innerText = isReal ? "Net Take-Home Dividends (Real)" : "Net Take-Home Dividends";
+            document.getElementById('titleSavings').innerText = isReal ? "Interest Savings (Real)" : "Interest Savings";
 
             document.getElementById('outInvested').innerText = formatCurrency(calculatedInvested);
             document.getElementById('outEquity').innerText = formatCurrency(finalEquityDisplay);
@@ -875,6 +876,7 @@
             alertEl.style.display = marginCallOccurred ? 'block' : 'none';
             if (marginCallOccurred) document.getElementById('alertMonth').innerText = marginCallMonthIndex;
 
+            // Narrative Output Blocks Optimized in Layman Terms
             const alphaPerformance = finalEquityDisplay - finalBenchmarkDisplay;
             const incomeDifferential = finalNetIncomeDisplay - finalBenchmarkIncomeDisplay;
             const inflationHurdleAlpha = finalEquityDisplay - (inflationFloorData[months] / discountFactor);
@@ -886,57 +888,57 @@
             let paycheckRoutingPreamble = "";
 
             if (isPaycheckMode) {
-                paycheckRoutingPreamble = `<p>🚀 <strong>Salary Deposit Routing Active:</strong> Instead of leaving your salary sitting idle in a standard bank account, you are depositing your entire monthly take-home pay of <strong>${formatCurrency(grossPaycheck)}</strong> directly into investments on day one. You then use low-cost borrowed credit to clear your standard monthly bills of <strong>${formatCurrency(livingExpenses)}</strong>. This puts every single dollar of human labor immediately to work, expanding your compounding growth velocity compared to standard methods.</p>`;
+                paycheckRoutingPreamble = `<p>🚀 <strong>Paycheck Flow Strategy Active:</strong> Instead of leaving your salary sitting in a dead checking account to pay monthly bills, you are routing your full take-home income of <strong>${formatCurrency(grossPaycheck)}</strong> straight into investments on day one. You then use a rolling loan to pay your monthly bills of <strong>${formatCurrency(livingExpenses)}</strong>. This ensures every single dollar is immediately working and compounding for you.</p>`;
             }
 
             if (alphaPerformance > 0) {
-                performanceVerdict = `ended up beating a traditional cash <strong>No-Borrowing Strategy</strong> by <span class="badge badge-success">${formatCurrency(alphaPerformance)}</span> because your investment profits outpaced your loan interest costs.`;
+                performanceVerdict = `ended up beating a traditional cash-based <strong>Buy-and-Hold approach</strong> by <span class="badge badge-success">${formatCurrency(alphaPerformance)}</span> because your investments made more money than the loan cost you.`;
             } else {
-                performanceVerdict = `fell short of a traditional cash <strong>No-Borrowing Strategy</strong> by <span class="badge badge-danger">${formatCurrency(Math.abs(alphaPerformance))}</span> because borrowing fees or market crash events ate into your returns.`;
+                performanceVerdict = `made less money than a traditional cash-based <strong>Buy-and-Hold approach</strong> by <span class="badge badge-danger">${formatCurrency(Math.abs(alphaPerformance))}</span> because loan interest fees or market crash drops dragged your performance below a simple cash plan.`;
             }
 
             if (incomeDifferential > 0) {
-                incomeVerdict = `By using a loan to expand your overall pool of investments, your portfolio boosted monthly payouts to a net income of <strong>${formatCurrency(finalNetIncomeDisplay)}</strong>. This puts <span class="badge badge-success">${formatCurrency(incomeDifferential)} more monthly cash</span> in your pocket than a traditional cash <strong>No-Borrowing Strategy</strong>, which only made <strong>${formatCurrency(finalBenchmarkIncomeDisplay)}</strong>.`;
+                incomeVerdict = `By using a loan to buy more dividend-paying shares, your strategy grew your payout to a net monthly take-home income of <strong>${formatCurrency(finalNetIncomeDisplay)}</strong>. This gives you <span class="badge badge-success">${formatCurrency(incomeDifferential)} more in monthly cash flow</span> than a cash investor, who only collected <strong>${formatCurrency(finalBenchmarkIncomeDisplay)}</strong>.`;
             } else if (incomeDifferential < 0) {
-                incomeVerdict = `Because monthly loan interest fees were larger than your extra payouts, your monthly net profit dropped to <strong>${formatCurrency(finalNetIncomeDisplay)}</strong>. This is <span class="badge badge-danger">${formatCurrency(Math.abs(incomeDifferential)} less monthly cash</span> than a normal cash <strong>No-Borrowing Strategy</strong>, which netted a clean <strong>${formatCurrency(finalBenchmarkIncomeDisplay)}</strong>.`;
+                incomeVerdict = `Because monthly interest bills ate up too much of your gains, your net monthly take-home payout dropped to <strong>${formatCurrency(finalNetIncomeDisplay)}</strong>. This left you with <span class="badge badge-danger">${formatCurrency(Math.abs(incomeDifferential))} less monthly cash flow</span> than a standard cash strategy, which pocketed a clean <strong>${formatCurrency(finalBenchmarkIncomeDisplay)}</strong>.`;
             } else {
-                incomeVerdict = `Both methods produced an identical net monthly cash layout of <strong>${formatCurrency(finalNetIncomeDisplay)}</strong>.`;
+                incomeVerdict = `Both approaches produced identical monthly cash flows of <strong>${formatCurrency(finalNetIncomeDisplay)}</strong>.`;
             }
 
             if (inflationHurdleAlpha > 0) {
-                escapeVelocityVerdict = `Crucially, your final net worth beat the baseline inflation hurdle line by <strong>${formatCurrency(inflationHurdleAlpha)}</strong>, proving that your strategy built real, tangible purchasing power over time.`;
+                escapeVelocityVerdict = `Crucially, your final wealth beat the inflation hurdle by <strong>${formatCurrency(inflationHurdleAlpha)}</strong>, proving that this strategy generated real, meaningful purchasing power over time.`;
             } else {
-                escapeVelocityVerdict = `Regrettably, your final wealth failed to clear the inflation line, meaning your money lost true purchasing power over the course of the simulation.`;
+                escapeVelocityVerdict = `Regrettably, your final wealth failed to keep up with inflation, meaning your money lost real purchasing power over the course of the simulation.`;
             }
 
-            // RE-ENGINEERED LAYMAN RISK ANALYSIS EXPLANATIONS
+            // CRASH RISK MATRIX PLAIN ENGLISH NARRATIVE TRANSLATION LAYER
             if (marginCallOccurred) {
                 safetyVerdict = `
                     <div style="margin-top: 12px; border-left: 4px solid var(--danger); padding-left: 12px;">
-                        ⚠️ <span class="badge badge-danger" style="color:#fff;">CRITICAL BREACH</span>: The market crash forced a liquidation sale at <strong>Month ${marginCallMonthIndex}</strong>.
+                        ⚠️ <span class="badge badge-danger" style="color:#fff;">FORCED LIQUIDATION</span>: Your strategy hit a breaking point during the crash at <strong>Month ${marginCallMonthIndex}</strong>.
                         <p style="margin: 6px 0 0 0; font-size: 0.875rem; color: var(--text-muted);">
-                            <strong>What Went Wrong:</strong> When the ${document.getElementById('crashSeverity').value}% sudden stock crash hit, your loan balance stayed completely fixed. Because the broker doesn't reduce your debt when stocks drop, your personal Net Worth (Green Line) had to absorb 100% of the market damage on an amplified basis. This caused your leverage risk to spike, driving your portfolio value down below the <strong>Forced-Sale Danger Line</strong>—which stayed perfectly straight across the crash because your debt didn't change—forcing the broker to immediately sell your shares at rock-bottom prices.
+                            <strong>What Went Wrong:</strong> When the market took a sudden ${document.getElementById('crashSeverity').value}% drop, your loan balance stayed completely fixed. Because the bank does not lower your debt just because prices go down, your personal net worth had to take the full force of the blow. Your investments dropped below the <strong>Forced Sale Safety Floor Line</strong>—which remained perfectly flat because your debt didn't change—triggering an immediate forced broker margin call that wiped out your account.
                         </p>
                     </div>`;
             } else if (crashSeverity > 0) {
                 safetyVerdict = `
                     <div style="margin-top: 12px; border-left: 4px solid var(--success); padding-left: 12px;">
-                        🔒 <span class="badge badge-success">SURVIVED STRESS TEST</span>: Your account successfully survived the injected ${document.getElementById('crashSeverity').value}% market crash at <strong>Month ${crashMonth}</strong>.
+                        🔒 <span class="badge badge-success">SURVIVED THE SHOCK</span>: Your balance sheet successfully survived the injected ${document.getElementById('crashSeverity').value}% market drop at <strong>Month ${crashMonth}</strong>.
                         <p style="margin: 6px 0 0 0; font-size: 0.875rem; color: var(--text-muted);">
                             <strong>Why the Chart Looks This Way:</strong><br>
-                            1. <strong>The Steep Green Cliff:</strong> Notice that your Net Worth (Green Line) takes a much sharper and deeper vertical dive than the normal No-Borrowing benchmark. This shows the real risk of leverage: because your loan balance stayed rigid, your own cash share had to take the full dollar hit for the market drop.<br>
-                            2. <strong>The Flat Red Dotted Line:</strong> The Broker Safety floor remains completely straight and level across the crash because your debt balance didn't change. Your safety buffer narrowed dramatically as stock values plunged down toward this line.<br>
-                            3. <strong>The Automatic Debt Pay-Down:</strong> In the months directly following the crash, your asset growth flatlines on purpose. The system's <em>Borrowing Governor</em> automatically freezes all new loans and channels 100% of your incoming monthly savings and dividend income straight into paying off old debt until the portfolio's safety ratios return to your safe target bounds.
+                            1. <strong>The Deep Green Drop:</strong> Notice that your Cash Net Worth (Green Line) plunges with a much steeper cliff than the cash-only Buy-and-Hold baseline. This shows the real downside of leverage: your loan balance stayed rigid, forcing your personal cash to shoulder the entire drop.<br>
+                            2. <strong>The Flat Red Dotted Line:</strong> The Forced Sale Safety Floor stays perfectly flat across Month ${crashMonth} because your debt liabilities didn't change. Your buffer became razor-thin as your assets fell toward this line.<br>
+                            3. <strong>The Recovery Governor:</strong> In the months right after the drop, your total investments stall. This is because the software automatically locks down new borrowing and routes 100% of your incoming savings and dividends into aggressively paying off the loan until your safety margins are fully restored.
                         </p>
                     </div>`;
             } else {
-                safetyVerdict = `ℹ️ <span class="badge badge-warning">NO ACTIVE SHOCK</span>: The timeline ran without an active market crash event. Under normal conditions, you maintained a localized safety cushion of <strong>${maxDrawdown.toFixed(1)}%</strong> before market movements would cause a broker forced sale.`;
+                safetyVerdict = `ℹ Papel Net Worth tracking ran smoothly without an active market crash event. Under normal conditions, you had a safety cushion of <strong>${maxDrawdown.toFixed(1)}%</strong> before market drops would trigger a forced margin call sale.`;
             }
 
             document.getElementById('narrativeOutput').innerHTML = `
                 ${paycheckRoutingPreamble}
-                <p>Over a span of <strong>${months} months</strong>, your strategy generated a final net worth of <strong>${formatCurrency(finalEquityDisplay)}</strong> on a total cash commitment of <strong>${formatCurrency(calculatedInvested)}</strong>.</p>
-                <p>Compared to a traditional cash <strong>No-Borrowing Strategy</strong>, this layout ${performanceVerdict} ${incomeVerdict}</p>
+                <p>Over <strong>${months} months</strong>, your strategy built a final net worth of <strong>${formatCurrency(finalEquityDisplay)}</strong> on a total cash out-of-pocket savings footprint of <strong>${formatCurrency(calculatedInvested)}</strong>.</p>
+                <p>Compared to traditional cash investing, this design ${performanceVerdict} ${incomeVerdict}</p>
                 <p>${escapeVelocityVerdict}</p>
                 <p>${safetyVerdict}</p>
             `;
@@ -964,9 +966,9 @@
                 data: {
                     labels: labels,
                     datasets: [
-                        { label: 'Total Portfolio Size (Gross Investments)', data: chartAssets, borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.05)', borderWidth: 2, fill: true, pointRadius: 0 },
-                        { label: 'Your True Net Worth Share', data: chartEquity, borderColor: '#10b981', backgroundColor: 'transparent', borderWidth: 2, fill: false, pointRadius: 0 },
-                        { label: 'Traditional Cash Strategy (No Borrowing)', data: chartBenchmark, borderColor: '#f59e0b', backgroundColor: 'transparent', borderWidth: 2, borderDash: [5, 5], fill: false, pointRadius: 0 }
+                        { label: 'Total Investments Managed', data: chartAssets, borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.05)', borderWidth: 2, fill: true, pointRadius: 0 },
+                        { label: 'Your Cash Net Worth (With Loan Strategy)', data: chartEquity, borderColor: '#10b981', backgroundColor: 'transparent', borderWidth: 2, fill: false, pointRadius: 0 },
+                        { label: 'Traditional Cash Buying (No Loan Strategy)', data: chartBenchmark, borderColor: '#f59e0b', backgroundColor: 'transparent', borderWidth: 2, borderDash: [5, 5], fill: false, pointRadius: 0 }
                     ]
                 },
                 options: {
@@ -985,60 +987,10 @@
             });
             
             if (inflationMode === 'hurdle') {
-                chartInstance.data.datasets.push({ label: 'Inflation Break-Even Line', data: chartInflationFloor, borderColor: '#d946ef', backgroundColor: 'transparent', borderWidth: 2, fill: false, pointRadius: 0 });
+                chartInstance.data.datasets.push({ label: 'Inflation Hurdle Floor', data: chartInflationFloor, borderColor: '#d946ef', backgroundColor: 'transparent', borderWidth: 2, fill: false, pointRadius: 0 });
             }
-            chartInstance.data.datasets.push({ label: 'Broker Forced-Sale Danger Line', data: chartLiquidation, borderColor: '#ef4444', backgroundColor: 'transparent', borderWidth: 1.5, borderDash: [3, 3], fill: false, pointRadius: 0 });
+            chartInstance.data.datasets.push({ label: 'Forced Sale Safety Floor (Margin Call Line)', data: chartLiquidation, borderColor: '#ef4444', backgroundColor: 'transparent', borderWidth: 1.5, borderDash: [3, 3], fill: false, pointRadius: 0 });
             chartInstance.update();
-        }
-
-        function resetDefaults() {
-            document.getElementById('startCapital').value = 100000;
-            document.getElementById('monthlyContribution').value = 1000;
-            document.getElementById('grossPaycheck').value = 5000;
-            document.getElementById('livingExpenses').value = 4000;
-            document.getElementById('dta').value = 30;
-            document.getElementById('yield').value = 9.0;
-            document.getElementById('marginRate').value = 6.0;
-            document.getElementById('appreciation').value = 0.0;
-            document.getElementById('maintReq').value = 25;
-            document.getElementById('months').value = 120;
-            document.getElementById('inflationRate').value = 2.5;
-            document.getElementById('crashSeverity').value = 0;
-            document.getElementById('crashMonth').value = 36;
-            
-            document.getElementById('inflationMode').value = 'nominal';
-            document.getElementById('enablePaycheck').checked = false;
-            document.getElementById('enableTiered').checked = false;
-            
-            togglePaycheckMode();
-            toggleInflationInput();
-            runSimulation();
-        }
-
-        function exportToCSV() {
-            if (!lastSimulationRecords || lastSimulationRecords.length === 0) {
-                alert("Please run a simulation growth plan before exporting data.");
-                return;
-            }
-            const mode = document.getElementById('inflationMode').value;
-            const annInflationInput = parseFloat(document.getElementById('inflationRate').value) / 100;
-            const moInflationRate = annInflationInput / 12;
-
-            let csvContent = "data:text/csv;charset=utf-8,";
-            csvContent += `Month,Total Assets,Base Equity,Debt,Standard Buy-and-Hold,Inflation Hurdle Floor,Liquidation Threshold\n`;
-
-            lastSimulationRecords.forEach(rec => {
-                let df = (mode === 'real') ? Math.pow(1 + moInflationRate, rec.month) : 1;
-                csvContent += `${rec.month},${(rec.nominalAssets / df).toFixed(0)},${(rec.nominalEquity / df).toFixed(0)},${(rec.nominalDebt).toFixed(0)},${(rec.nominalBenchmark / df).toFixed(0)},${(rec.nominalInflationFloor / df).toFixed(0)},${(rec.nominalLiquidation / df).toFixed(0)}\n`;
-            });
-
-            const encodedUri = encodeURI(csvContent);
-            const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", `capital_amplifier_export_${mode}.csv`);
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
         }
 
         window.onload = function() {
