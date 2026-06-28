@@ -38,6 +38,7 @@
             width: 100%;
         }
         
+        /* Reinforced Structural Stacking Layer Contexts */
         .sidebar-panel {
             background-color: var(--panel-bg);
             padding: 24px;
@@ -99,7 +100,7 @@
         .btn-secondary { background-color: var(--secondary); margin-top: 8px; }
         .btn-secondary:hover { background-color: var(--secondary-hover); }
         
-        /* Advanced Layer-Safe Tooltip Framework */
+        /* Multi-Layer Defensive Tooltip Layout Engine */
         .tooltip-icon {
             display: inline-block;
             cursor: help;
@@ -124,7 +125,7 @@
             position: absolute;
             z-index: 999;
             bottom: 140%;
-            right: 0;
+            right: 0; /* Aligns box edges inward to completely isolate viewport layout breaks */
             box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.7);
             opacity: 0;
             transition: opacity 0.15s ease, visibility 0.15s ease;
@@ -211,6 +212,7 @@
             transition: border-color 0.2s;
         }
         
+        /* Metric Scorecard Overlay Elevation */
         .metric-card:hover {
             z-index: 100;
             border-color: var(--accent);
@@ -680,11 +682,11 @@
             let liquidationData = [];
             let inflationFloorData = [];
 
+            // INICIALIZAÇÃO DO ESTADO COMPACTO (MÊS 0)
             let currentEquity = P;
             let currentBenchmark = P;
             let cumulativeInflationFloor = P;
             
-            // Core balance sheet continuous state anchors
             let currentDebt = currentEquity * (targetDTA / (1 - targetDTA));
             let currentAssets = currentEquity + currentDebt;
             
@@ -700,58 +702,96 @@
 
             const totalInvestedNominal = P + (baselineMonthlyContribution * months);
 
-            for (let i = 0; i <= months; i++) {
+            // Registro inicial do ponto de partida (Mês 0)
+            labels.push("Month 0");
+            equityData.push(currentEquity);
+            assetData.push(currentAssets);
+            debtData.push(currentDebt);
+            benchmarkData.push(currentBenchmark);
+            liquidationData.push(currentDebt / (1 - maintReq));
+            inflationFloorData.push(cumulativeInflationFloor);
+            lastSimulationRecords.push({
+                month: 0,
+                nominalAssets: currentAssets,
+                nominalEquity: currentEquity,
+                nominalDebt: currentDebt,
+                nominalBenchmark: currentBenchmark,
+                nominalLiquidation: currentDebt / (1 - maintReq),
+                nominalInflationFloor: cumulativeInflationFloor
+            });
+
+            // LOOP CRONOLÓGICO DA MÁQUINA DE ESTADOS (MÊSES 1 A N)
+            for (let i = 1; i <= months; i++) {
                 labels.push(`Month ${i}`);
 
-                // 1. INSTANT SHOCK PHASE: Fires right at month boundary before any rebalancing lookup loops
-                if (i === crashMonth && i > 0 && crashSeverity > 0) {
+                // FASE 1: ACUMULAÇÃO E CRESCIMENTO DO ATIVO ANTERIOR
+                let grossIncome = currentAssets * moYield;
+                let interestExpense = enableTiered ? calculateMonthlyMarginInterest(currentDebt, annMargin) : currentDebt * (annMargin / 12);
+                let appreciationValue = currentAssets * moAppreciation;
+                
+                let benchIncome = currentBenchmark * moYield;
+                let benchAppreciation = currentBenchmark * moAppreciation;
+                
+                let flatInterestBaseline = currentDebt * (annMargin / 12);
+                cumulativeSavingsNominal += enableTiered ? (flatInterestBaseline - interestExpense) : 0;
+
+                // Transição do saldo de crescimento orgânico antes dos aportes
+                currentEquity += (grossIncome - interestExpense + appreciationValue);
+                currentAssets += (grossIncome + appreciationValue);
+
+                // FASE 2: FLUXO DE CAIXA E APORTES (PAYCHECK VS STANDARD)
+                if (isPaycheckMode) {
+                    currentAssets += grossPaycheck;
+                    currentDebt += livingExpenses;
+                    currentEquity += (grossPaycheck - livingExpenses);
+                } else {
+                    currentAssets += baselineMonthlyContribution;
+                    currentEquity += baselineMonthlyContribution;
+                }
+
+                // Crescimento do Benchmark Independente
+                currentBenchmark += (benchIncome + benchAppreciation + baselineMonthlyContribution);
+
+                // FASE 3: SHOCK DE MERCADO INSTANTÂNEO (STICKY DEBT OVERRIDE)
+                if (i === crashMonth && crashSeverity > 0) {
                     currentAssets = currentAssets * (1 - crashSeverity);
-                    currentEquity = currentAssets - currentDebt; // Debt remains sticky, equity absorbs full shock
+                    currentEquity = currentAssets - currentDebt; // Dívida congelada; Patrimônio absorve o impacto
                     currentBenchmark = currentBenchmark * (1 - crashSeverity);
                     
                     if (currentAssets < (currentDebt / (1 - maintReq)) || currentEquity <= 0) {
                         marginCallOccurred = true;
                         marginCallMonthIndex = i;
                     }
-                    if (currentEquity < 0) currentEquity = 0;
                 }
 
-                // 2. LEVERAGE GOVERNOR & DTA REGULATOR ENGINE
-                let targetDebt = currentEquity * (targetDTA / (1 - targetDTA));
-                let isOverLeveraged = (currentDebt > targetDebt);
+                if (currentEquity < 0) currentEquity = 0;
 
-                if (!isOverLeveraged) {
-                    // Under target parameters: Draw margin out to maintain systemic balance targets
-                    currentDebt = targetDebt;
-                    currentAssets = currentEquity + currentDebt;
+                // FASE 4: GOVERNADOR DE ALAVANCAGEM / DTA REBALANCING
+                let idealDebt = currentEquity * (targetDTA / (1 - targetDTA));
+                
+                if (currentDebt < idealDebt) {
+                    // Sob alavancagem normal: Expandir dívida para manter DTA alvo
+                    let additionalBorrow = idealDebt - currentDebt;
+                    currentDebt = idealDebt;
+                    currentAssets += additionalBorrow;
+                } 
+                // Se estiver sobre-alavancado (pós-choque), os empréstimos são congelados. Dívida permanece fixa.
+
+                if (i === months) {
+                    finalMonthlyIncome = grossIncome;
+                    finalMonthlyInterest = interestExpense;
+                    finalMonthlyAppreciation = appreciationValue;
+                    finalDebtSnapshot = currentDebt;
+                    finalBenchmarkMonthlyIncome = benchIncome;
                 }
-                // If over-leveraged (post-crash), cap new margin draws entirely. Debt scales smoothly on raw liabilities.
 
-                // Push uncompromised state measurements to logging records
+                // Gravação final de dados limpos do ciclo corrente
                 equityData.push(currentEquity);
                 assetData.push(currentAssets);
                 debtData.push(currentDebt);
                 benchmarkData.push(currentBenchmark);
                 liquidationData.push(currentDebt / (1 - maintReq));
                 inflationFloorData.push(cumulativeInflationFloor);
-
-                let income = currentAssets * moYield;
-                let interest = enableTiered ? calculateMonthlyMarginInterest(currentDebt, annMargin) : currentDebt * (annMargin / 12);
-                let appreciation = currentAssets * moAppreciation;
-                
-                let benchIncome = currentBenchmark * moYield;
-                let benchAppreciation = currentBenchmark * moAppreciation;
-                
-                let flatInterestBaseline = currentDebt * (annMargin / 12);
-                cumulativeSavingsNominal += enableTiered ? (flatInterestBaseline - interest) : 0;
-                
-                if (i === months) {
-                    finalMonthlyIncome = income;
-                    finalMonthlyInterest = interest;
-                    finalMonthlyAppreciation = appreciation;
-                    finalDebtSnapshot = currentDebt;
-                    finalBenchmarkMonthlyIncome = benchIncome;
-                }
 
                 lastSimulationRecords.push({
                     month: i,
@@ -763,46 +803,10 @@
                     nominalInflationFloor: cumulativeInflationFloor
                 });
 
-                // 3. RECOVERY DE-LEVERAGING INJECTION ROUTING
-                let netCashflow = income - interest;
-                let totalCashInflow = netCashflow + baselineMonthlyContribution;
-
-                if (isOverLeveraged) {
-                    // Enforce organic repayment path: direct all available net surplus to reduce outstanding loan liabilities
-                    currentAssets += appreciation;
-                    currentEquity += appreciation;
-                    
-                    if (totalCashInflow > 0) {
-                        let debtPaydown = Math.min(totalCashInflow, currentDebt);
-                        currentDebt -= debtPaydown;
-                        currentEquity += totalCashInflow; // Net worth expands by the full cash payload injected
-                    } else {
-                        currentEquity += totalCashInflow; // Structural negative carry eats directly into net worth
-                    }
-                    currentAssets = currentEquity + currentDebt;
-                } else {
-                    // Standard expansion compounding track
-                    currentEquity += (netCashflow + appreciation + baselineMonthlyContribution);
-                }
-
-                currentBenchmark += (benchIncome + benchAppreciation + baselineMonthlyContribution);
                 cumulativeInflationFloor = (cumulativeInflationFloor * (1 + moInflationRate)) + baselineMonthlyContribution;
             }
 
-            updateTierScheduleDisplay(enableTiered ? finalDebtSnapshot : 0);
-
             const discountFactor = (inflationMode === 'real') ? Math.pow(1 + moInflationRate, months) : 1;
-            
-            let calculatedInvested = P;
-            if (inflationMode === 'real') {
-                calculatedInvested = P;
-                for (let m = 1; m <= months; m++) {
-                    calculatedInvested += baselineMonthlyContribution / Math.pow(1 + moInflationRate, m);
-                }
-            } else {
-                calculatedInvested = totalInvestedNominal;
-            }
-
             const finalEquityDisplay = equityData[months] / discountFactor;
             const finalAssetsDisplay = assetData[months] / discountFactor;
             const finalBenchmarkDisplay = benchmarkData[months] / discountFactor;
@@ -839,6 +843,7 @@
             alertEl.style.display = marginCallOccurred ? 'block' : 'none';
             if (marginCallOccurred) document.getElementById('alertMonth').innerText = marginCallMonthIndex;
 
+            // Renderizador da Análise Narrativa Dinâmica
             const alphaPerformance = finalEquityDisplay - finalBenchmarkDisplay;
             const incomeDifferential = finalNetIncomeDisplay - finalBenchmarkIncomeDisplay;
             const inflationHurdleAlpha = finalEquityDisplay - (inflationFloorData[months] / discountFactor);
@@ -904,24 +909,19 @@
                 chartInflationFloor.push(inflationFloorData[i] / df);
             }
 
-            let datasets = [
-                { label: 'Total Assets', data: chartAssets, borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.05)', borderWidth: 2, fill: true, pointRadius: 0 },
-                { label: 'Base Equity (Leveraged)', data: chartEquity, borderColor: '#10b981', backgroundColor: 'transparent', borderWidth: 2, fill: false, pointRadius: 0 },
-                { label: 'Standard Buy-and-Hold (0% Leverage)', data: chartBenchmark, borderColor: '#f59e0b', backgroundColor: 'transparent', borderWidth: 2, borderDash: [5, 5], fill: false, pointRadius: 0 }
-            ];
-
-            if (inflationMode === 'hurdle') {
-                datasets.push({ label: 'Inflation Hurdle Floor', data: chartInflationFloor, borderColor: '#d946ef', backgroundColor: 'transparent', borderWidth: 2, fill: false, pointRadius: 0 });
-            }
-
-            datasets.push({ label: 'Liquidation Threshold (Margin Call Line)', data: chartLiquidation, borderColor: '#ef4444', backgroundColor: 'transparent', borderWidth: 1.5, borderDash: [3, 3], fill: false, pointRadius: 0 });
-
             const ctx = document.getElementById('compoundingChart').getContext('2d');
             if (chartInstance) chartInstance.destroy();
 
             chartInstance = new Chart(ctx, {
                 type: 'line',
-                data: { labels: labels, datasets: datasets },
+                data: {
+                    labels: labels,
+                    datasets: [
+                        { label: 'Total Assets', data: chartAssets, borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.05)', borderWidth: 2, fill: true, pointRadius: 0 },
+                        { label: 'Base Equity (Leveraged)', data: chartEquity, borderColor: '#10b981', backgroundColor: 'transparent', borderWidth: 2, fill: false, pointRadius: 0 },
+                        { label: 'Standard Buy-and-Hold (0% Leverage)', data: chartBenchmark, borderColor: '#f59e0b', backgroundColor: 'transparent', borderWidth: 2, borderDash: [5, 5], fill: false, pointRadius: 0 }
+                    ]
+                },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
@@ -936,6 +936,12 @@
                     }
                 }
             });
+            
+            if (inflationMode === 'hurdle') {
+                chartInstance.data.datasets.push({ label: 'Inflation Hurdle Floor', data: chartInflationFloor, borderColor: '#d946ef', backgroundColor: 'transparent', borderWidth: 2, fill: false, pointRadius: 0 });
+            }
+            chartInstance.data.datasets.push({ label: 'Liquidation Threshold (Margin Call Line)', data: chartLiquidation, borderColor: '#ef4444', backgroundColor: 'transparent', borderWidth: 1.5, borderDash: [3, 3], fill: false, pointRadius: 0 });
+            chartInstance.update();
         }
 
         function resetDefaults() {
