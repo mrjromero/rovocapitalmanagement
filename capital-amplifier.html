@@ -38,7 +38,6 @@
             width: 100%;
         }
         
-        /* Master Layer Separation Controls */
         .sidebar-panel {
             background-color: var(--panel-bg);
             padding: 24px;
@@ -704,26 +703,12 @@
             for (let i = 0; i <= months; i++) {
                 labels.push(`Month ${i}`);
 
-                // 1. DTA REGULATOR ENGINE (Fires before market processing)
-                let targetDebtForState = currentEquity * (targetDTA / (1 - targetDTA));
-                
-                if (targetDebtForState < currentDebt) {
-                    // Over-leveraged post-crash phase: Caps expansion, blocks artificial debt forgiveness
-                    currentDebt = currentDebt; 
-                    currentAssets = currentEquity + currentDebt;
-                } else {
-                    // Normal expansion path matching systemic target bounds
-                    currentDebt = targetDebtForState;
-                    currentAssets = currentEquity + currentDebt;
-                }
-
-                // 2. CRASH IMPULSIVE OVERRIDE BLOCK
+                // 1. INSTANT SHOCK PHASE: Fires right at month boundary before any rebalancing lookup loops
                 if (i === crashMonth && i > 0 && crashSeverity > 0) {
                     currentAssets = currentAssets * (1 - crashSeverity);
-                    currentEquity = currentAssets - currentDebt; // Debt stays frozen; Equity absorbs 100% of damage
+                    currentEquity = currentAssets - currentDebt; // Debt remains sticky, equity absorbs full shock
                     currentBenchmark = currentBenchmark * (1 - crashSeverity);
                     
-                    // Liquidating protection ceiling trigger audit
                     if (currentAssets < (currentDebt / (1 - maintReq)) || currentEquity <= 0) {
                         marginCallOccurred = true;
                         marginCallMonthIndex = i;
@@ -731,7 +716,18 @@
                     if (currentEquity < 0) currentEquity = 0;
                 }
 
-                // Append uncompromised metrics to tracing matrix arrays
+                // 2. LEVERAGE GOVERNOR & DTA REGULATOR ENGINE
+                let targetDebt = currentEquity * (targetDTA / (1 - targetDTA));
+                let isOverLeveraged = (currentDebt > targetDebt);
+
+                if (!isOverLeveraged) {
+                    // Under target parameters: Draw margin out to maintain systemic balance targets
+                    currentDebt = targetDebt;
+                    currentAssets = currentEquity + currentDebt;
+                }
+                // If over-leveraged (post-crash), cap new margin draws entirely. Debt scales smoothly on raw liabilities.
+
+                // Push uncompromised state measurements to logging records
                 equityData.push(currentEquity);
                 assetData.push(currentAssets);
                 debtData.push(currentDebt);
@@ -767,9 +763,28 @@
                     nominalInflationFloor: cumulativeInflationFloor
                 });
 
-                // Compounding phase transitions
+                // 3. RECOVERY DE-LEVERAGING INJECTION ROUTING
                 let netCashflow = income - interest;
-                currentEquity += (netCashflow + appreciation + baselineMonthlyContribution);
+                let totalCashInflow = netCashflow + baselineMonthlyContribution;
+
+                if (isOverLeveraged) {
+                    // Enforce organic repayment path: direct all available net surplus to reduce outstanding loan liabilities
+                    currentAssets += appreciation;
+                    currentEquity += appreciation;
+                    
+                    if (totalCashInflow > 0) {
+                        let debtPaydown = Math.min(totalCashInflow, currentDebt);
+                        currentDebt -= debtPaydown;
+                        currentEquity += totalCashInflow; // Net worth expands by the full cash payload injected
+                    } else {
+                        currentEquity += totalCashInflow; // Structural negative carry eats directly into net worth
+                    }
+                    currentAssets = currentEquity + currentDebt;
+                } else {
+                    // Standard expansion compounding track
+                    currentEquity += (netCashflow + appreciation + baselineMonthlyContribution);
+                }
+
                 currentBenchmark += (benchIncome + benchAppreciation + baselineMonthlyContribution);
                 cumulativeInflationFloor = (cumulativeInflationFloor * (1 + moInflationRate)) + baselineMonthlyContribution;
             }
@@ -801,14 +816,6 @@
             const totalROI = calculatedInvested > 0 ? ((finalEquityDisplay - calculatedInvested) / calculatedInvested) * 100 : 0;
             const finalAnnualNetReturnNominal = ((finalMonthlyIncome - finalMonthlyInterest) + finalMonthlyAppreciation) * 12;
             const finalROE = equityData[months] > 0 ? (finalAnnualNetReturnNominal / equityData[months]) * 100 : 0;
-
-            const isReal = (inflationMode === 'real');
-            document.getElementById('titleInvested').innerText = isReal ? "Total Invested (Real)" : "Total Invested";
-            document.getElementById('titleEquity').innerText = isReal ? "Final Equity (Real)" : "Final Equity";
-            document.getElementById('titleAssets').innerText = isReal ? "Total Assets (Real)" : "Final Total Assets";
-            document.getElementById('titleGrossIncome').innerText = isReal ? "Gross Income (Real)" : "Gross Monthly Income";
-            document.getElementById('titleNetIncome').innerText = isReal ? "Net Income (Real)" : "Net Monthly Income";
-            document.getElementById('titleSavings').innerText = isReal ? "Tiered Savings (Real)" : "Tiered Savings";
 
             document.getElementById('outInvested').innerText = formatCurrency(calculatedInvested);
             document.getElementById('outEquity').innerText = formatCurrency(finalEquityDisplay);
@@ -843,19 +850,19 @@
             let paycheckRoutingPreamble = "";
 
             if (isPaycheckMode) {
-                paycheckRoutingPreamble = `<p>🚀 <strong>Buy, Borrow, Die Paycheck Flow Enabled:</strong> Instead of holding your paycheck in dead cash accounts to pay bills, you are modeling routing your full net monthly income of <strong>${formatCurrency(grossPaycheck)}</strong> directly into assets, using margin credit tiers to float your monthly lifestyle bills of <strong>${formatCurrency(livingExpenses)}</strong>. This expands balance sheet velocity compared to traditional investors who only let their baseline surplus savings of <strong>${formatCurrency(baselineMonthlyContribution)}</strong> touch market compounding.</p>`;
+                paycheckRoutingPreamble = `<p>🚀 <strong>Buy, Borrow, Die Paycheck Flow Enabled:</strong> Instead of holding your paycheck in dead cash accounts to pay bills, you are modeling routing your full net monthly income of <strong>${formatCurrency(grossPaycheck)}</strong> directly into assets, using margin to float your monthly lifestyle bills of <strong>${formatCurrency(livingExpenses)}</strong>. This expands balance sheet velocity compared to traditional investors who only let their baseline surplus savings of <strong>${formatCurrency(baselineMonthlyContribution)}</strong> touch market compounding.</p>`;
             }
 
             if (alphaPerformance > 0) {
-                performanceVerdict = `outperformed a standard cash-based **Buy-and-Hold Strategy** by <span class="badge badge-success">${formatCurrency(alphaPerformance)}</span> due to the compounding power of your positive margin carry.`;
+                performanceVerdict = `outperformed a standard cash-based <strong>Buy-and-Hold Strategy</strong> by <span class="badge badge-success">${formatCurrency(alphaPerformance)}</span> due to the compounding power of your positive margin carry.`;
             } else {
-                performanceVerdict = `underperformed a standard cash-based **Buy-and-Hold Strategy** by <span class="badge badge-danger">${formatCurrency(Math.abs(alphaPerformance))}</span> because the combination of borrowing costs or portfolio crash shocks dragged your returns below a simple 0% leverage plan.`;
+                performanceVerdict = `underperformed a standard cash-based <strong>Buy-and-Hold Strategy</strong> by <span class="badge badge-danger">${formatCurrency(Math.abs(alphaPerformance))}</span> because the combination of borrowing costs or portfolio crash shocks dragged your returns below a simple 0% leverage plan.`;
             }
 
             if (incomeDifferential > 0) {
-                incomeVerdict = `By using debt to expand your productive asset base, your portfolio scaled up cash production to a net monthly income of <strong>${formatCurrency(finalNetIncomeDisplay)}</strong>. This generates <span class="badge badge-success">${formatCurrency(incomeDifferential)} more monthly cash flow</span> than a traditional cash **Buy-and-Hold Strategy**, which only generated a dividend flow of <strong>${formatCurrency(finalBenchmarkIncomeDisplay)}</strong>.`;
+                incomeVerdict = `By using debt to expand your productive asset base, your portfolio scaled up cash production to a net monthly income of <strong>${formatCurrency(finalNetIncomeDisplay)}</strong>. This generates <span class="badge badge-success">${formatCurrency(incomeDifferential)} more monthly cash flow</span> than a traditional cash <strong>Buy-and-Hold Strategy</strong>, which only generated a dividend flow of <strong>${formatCurrency(finalBenchmarkIncomeDisplay)}</strong>.`;
             } else if (incomeDifferential < 0) {
-                incomeVerdict = `Because monthly margin interest expenses outpaced your asset gains, your net monthly dividend flow dropped to <strong>${formatCurrency(finalNetIncomeDisplay)}</strong>. This is <span class="badge badge-danger">${formatCurrency(Math.abs(incomeDifferential))} less monthly cash flow</span> than a standard cash **Buy-and-Hold Strategy**, which yielded a clean <strong>${formatCurrency(finalBenchmarkIncomeDisplay)}</strong>.`;
+                incomeVerdict = `Because monthly margin interest expenses outpaced your asset gains, your net monthly dividend flow dropped to <strong>${formatCurrency(finalNetIncomeDisplay)}</strong>. This is <span class="badge badge-danger">${formatCurrency(Math.abs(incomeDifferential))} less monthly cash flow</span> than a standard cash <strong>Buy-and-Hold Strategy</strong>, which yielded a clean <strong>${formatCurrency(finalBenchmarkIncomeDisplay)}</strong>.`;
             } else {
                 incomeVerdict = `Both approaches produced an identical net monthly cash flow of <strong>${formatCurrency(finalNetIncomeDisplay)}</strong>.`;
             }
