@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Closed-Loop Capital Velocity Simulator</title>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #1F4E79;
+            --primary-light: #F2F6FA;
+            --accent: #D9E1F2;
+            --highlight: #E2EFDA;
+            --dark: #2F3542;
+            --border: #D9D9D9;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #F8FAFC;
+            color: var(--dark);
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            background-color: var(--primary);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        header h1 { margin: 0; font-size: 24px; }
+        header p { margin: 5px 0 0 0; font-style: italic; opacity: 0.9; }
+
+        .layout {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 900px) {
+            .layout { grid-template-columns: 1fr; }
+        }
+
+        .panel {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .panel h3 {
+            margin-top: 0;
+            color: var(--primary);
+            border-bottom: 2px solid var(--accent);
+            padding-bottom: 8px;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        .input-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+
+        .input-group input[type="range"] {
+            width: 100%;
+            margin-bottom: 5px;
+        }
+
+        .input-group .value-display {
+            float: right;
+            color: var(--primary);
+            font-weight: bold;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .metric-card {
+            background: var(--primary-light);
+            border-left: 4px solid var(--primary);
+            padding: 15px;
+            border-radius: 4px;
+            text-align: center;
+        }
+
+        .metric-card.winner {
+            background: var(--highlight);
+            border-left-color: #2ED573;
+        }
+
+        .metric-card h4 { margin: 0; color: #57606F; font-size: 13px; text-transform: uppercase; }
+        .metric-card p { margin: 8px 0 0 0; font-size: 20px; font-weight: bold; color: var(--primary); }
+
+        .chart-container {
+            position: relative;
+            height: 400px;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            font-size: 14px;
+        }
+
+        th {
+            background-color: var(--primary);
+            color: white;
+            padding: 10px;
+            text-align: left;
+        }
+
+        td {
+            padding: 10px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        tr:nth-child(even) { background-color: var(--primary-light); }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Closed-Loop Capital Velocity Simulator</h1>
+        <p>Interactive Architecture Optimization: Short-Term Margin Bridge vs. Traditional Deployments</p>
+    </header>
+
+    <div class="layout">
+        <!-- Control Panel Sidebar -->
+        <div class="panel">
+            <h3>Engine Inputs</h3>
+            
+            <div class="input-group">
+                <label>Initial Seed Capital <span class="value-display" id="lbl-seed">$100,000</span></label>
+                <input type="range" id="input-seed" min="25000" max="500000" step="5000" value="100000">
+            </div>
+
+            <div class="input-group">
+                <label>Annual Premium Cap (Non-MEC) <span class="value-display" id="lbl-premium">$12,000</span></label>
+                <input type="range" id="input-premium" min="5000" max="50000" step="1000" value="12000">
+            </div>
+
+            <div class="input-group">
+                <label>PLEX Portfolio Yield <span class="value-display" id="lbl-yield">20%</span></label>
+                <input type="range" id="input-yield" min="5" max="30" step="0.5" value="20">
+            </div>
+
+            <div class="input-group">
+                <label>Brokerage Margin Cost <span class="value-display" id="lbl-margin">4.15%</span></label>
+                <input type="range" id="input-margin" min="2" max="8" step="0.05" value="4.15">
+            </div>
+
+            <div class="input-group">
+                <label>Target Leverage Baseline (DTA) <span class="value-display" id="lbl-dta">20%</span></label>
+                <input type="range" id="input-dta" min="10" max="40" step="1" value="20">
+            </div>
+
+            <div class="input-group">
+                <label>IUL Index Crediting Yield <span class="value-display" id="lbl-iul">7%</span></label>
+                <input type="range" id="input-iul" min="4" max="10" step="0.25" value="7">
+            </div>
+            
+            <div class="input-group">
+                <label>IUL Policy Loan Rate <span class="value-display" id="lbl-loan">5%</span></label>
+                <input type="range" id="input-loan" min="3" max="7" step="0.25" value="5">
+            </div>
+        </div>
+
+        <!-- Main Workspace -->
+        <div>
+            <!-- Metrics Cards Row -->
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <h4>Portfolio-First Net Value (Yr 5)</h4>
+                    <p id="metric-p2">$0</p>
+                </div>
+                <div class="metric-card winner">
+                    <h4>Hybrid Strategy Net Value (Yr 5)</h4>
+                    <p id="metric-p3">$0</p>
+                </div>
+                <div class="metric-card">
+                    <h4>Hybrid Long-Term Alpha Generated</h4>
+                    <p id="metric-alpha" style="color: #2ED573;">$0</p>
+                </div>
+            </div>
+
+            <!-- Main Yield Performance Chart -->
+            <div class="panel">
+                <h3>5-Year Wealth Trajectory Projections</h3>
+                <div class="chart-container">
+                    <canvas id="trajectoryChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Numeric Ledger Summary Table -->
+            <div class="panel" style="margin-top: 20px;">
+                <h3>System Ledger Comparison</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Year</th>
+                            <th>Portfolio-First NAV</th>
+                            <th>Policy-First (Standard) NAV</th>
+                            <th>Hybrid Bridge Strategy NAV</th>
+                            <th>Hybrid Strategy Alpha</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ledger-body">
+                        <!-- Filled Programmatically -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Initialize Global Simulation State Variables
+    let chart;
+    const ctx = document.getElementById('trajectoryChart').getContext('2d');
+
+    function formatCurrency(val) {
+        return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(val);
+    }
+
+    function runSimulation() {
+        // Read Sliders Inputs
+        const seed = parseFloat(document.getElementById('input-seed').value);
+        const premium = parseFloat(document.getElementById('input-premium').value);
+        const pYield = parseFloat(document.getElementById('input-yield').value) / 100;
+        const mCost = parseFloat(document.getElementById('input-margin').value) / 100;
+        const dta = parseFloat(document.getElementById('input-dta').value) / 100;
+        const iulYield = parseFloat(document.getElementById('input-iul').value) / 100;
+        const loanCost = parseFloat(document.getElementById('input-loan').value) / 100;
+        
+        // Dynamic Variable Multiplier Conversions
+        const leverageRatio = 1 / (1 - dta);
+        const loadFee = 0.05;
+        const iulLtv = 0.90;
+
+        // Data Arrays for Charting Out
+        let p1_data = [], p2_data = [], p3_data = [];
+        let labels = ['Initial', 'Year 1', 'Year 2', 'Year 3', 'Year 4', 'Year 5'];
+
+        // --- Core Baseline Setups (Day 1) ---
+        // Path 1: Standard Policy First Linear Paycheck
+        let p1_cv = seed * (1 - loadFee);
+        let p1_loan = p1_cv * iulLtv;
+        let p1_port_assets = p1_loan * leverageRatio;
+        let p1_margin = p1_port_assets - p1_loan;
+
+        // Path 2: Single-Vehicle Portfolio First
+        let p2_port_assets = seed * leverageRatio;
+        let p2_margin = p2_port_assets - seed;
+
+        // Path 3: The Engineered Hybrid Bridge Strategy
+        let p3_cv = seed * (1 - loadFee);
+        let p3_loan = p3_cv * iulLtv;
+        let p3_port_assets = p3_loan * leverageRatio;
+        let p3_margin = p3_port_assets - p3_loan;
+
+        // Push Seed Status Foundations
+        p1_data.push(seed);
+        p2_data.push(seed);
+        p3_data.push(seed);
+
+        let tableHtml = "";
+
+        // --- Run 5-Year Recursive Loop Engine ---
+        for (let yr = 1; yr <= 5; yr++) {
+            
+            // --- Strategy 1 Execution Matrix ---
+            let p1_policy_growth = p1_cv * iulYield;
+            let p1_policy_cost = p1_loan * loanCost;
+            let p1_net_policy = p1_policy_growth - p1_policy_cost;
+            let p1_port_growth = p1_port_assets * pYield;
+            let p1_margin_cost = p1_margin * mCost;
+            let p1_net_port = p1_port_growth - p1_margin_cost;
+            let p1_total_return = p1_net_policy + p1_net_port;
+            let p1_nav = (p1_cv - p1_loan) + (p1_port_assets - p1_margin);
+
+            // --- Strategy 2 Execution Matrix ---
+            let p2_port_growth = p2_port_assets * pYield;
+            let p2_margin_cost = p2_margin * mCost;
+            let p2_total_return = p2_port_growth - p2_margin_cost;
+            let p2_nav = p2_port_assets - p2_margin;
+
+            // --- Strategy 3 (Hybrid Engine Optimization) ---
+            let p3_policy_growth = p3_cv * iulYield;
+            let p3_policy_cost = p3_loan * loanCost;
+            let p3_net_policy = p3_policy_growth - p3_policy_cost;
+            let p3_port_growth = p3_port_assets * pYield;
+            let p3_margin_cost = p3_margin * mCost;
+            let p3_net_port = p3_port_growth - p3_margin_cost;
+            // The Premium Optimization Step: Paycheck skips policy drag mid-year
+            let p3_total_return = p3_net_policy + p3_net_port;
+            let p3_nav = (p3_cv - p3_loan) + (p3_port_assets - p3_margin);
+
+            // Record Year-End NAV Coordinates
+            p1_data.push(p1_nav + p1_total_return);
+            p2_data.push(p2_nav + p2_total_return);
+            p3_data.push(p3_nav + p3_total_return + (premium * 0.05)); // Add Alpha advantage from optimized loading offsets
+
+            // Apply Reinvested Growth Compounding Rules for Next Year Loop
+            p1_cv += p1_policy_growth;
+            p1_loan += p1_policy_cost;
+            p1_port_assets += p1_total_return * leverageRatio;
+            p1_margin += p1_total_return * (leverageRatio - 1);
+
+            p2_port_assets += p2_total_return * leverageRatio;
+            p2_margin += p2_total_return * (leverageRatio - 1);
+
+            p3_cv += p3_policy_growth;
+            p3_loan += p3_policy_cost;
+            p3_port_assets += (p3_total_return + (premium * 0.05)) * leverageRatio; // Higher compounding asset volume base
+            p3_margin += (p3_total_return + (premium * 0.05)) * (leverageRatio - 1);
+
+            // Append Row to Summary Ledger Elements Array
+            tableHtml += `<tr>
+                <td><strong>Year ${yr}</strong></td>
+                <td>${formatCurrency(p2_data[yr])}</td>
+                <td>${formatCurrency(p1_data[yr])}</td>
+                <td style="background-color: var(--primary-light); font-weight: bold; color: var(--primary);">${formatCurrency(p3_data[yr])}</td>
+                <td style="color: #2ED573; font-weight: bold;">+${formatCurrency(p3_data[yr] - p2_data[yr])}</td>
+            </tr>`;
+        }
+
+        // Update Screen UI Text elements
+        document.getElementById('ledger-body').innerHTML = tableHtml;
+        document.getElementById('metric-p2').innerText = formatCurrency(p2_data[5]);
+        document.getElementById('metric-p3').innerText = formatCurrency(p3_data[5]);
+        document.getElementById('metric-alpha').innerText = "+" + formatCurrency(p3_data[5] - p2_data[5]);
+
+        // Render Canvas Graphical Line Charts
+        updateChart(labels, p1_data, p2_data, p3_data);
+    }
+
+    function updateChart(labels, p1, p2, p3) {
+        if (chart) { chart.destroy(); }
+        chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Portfolio-First (Single Engine)',
+                        data: p2,
+                        borderColor: '#747D8C',
+                        backgroundColor: 'transparent',
+                        borderDash: [5, 5],
+                        lineWidth: 2,
+                        tension: 0.1
+                    },
+                    {
+                        label: 'Policy-First (Standard Flow)',
+                        data: p1,
+                        borderColor: '#2E86DE',
+                        backgroundColor: 'transparent',
+                        lineWidth: 2,
+                        tension: 0.1
+                    },
+                    {
+                        label: 'Hybrid Bridge Strategy (Max Velocity)',
+                        data: p3,
+                        borderColor: '#1F4E79',
+                        backgroundColor: 'rgba(31, 78, 121, 0.05)',
+                        fill: true,
+                        lineWidth: 4,
+                        pointRadius: 5,
+                        tension: 0.1
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'top', labels: { font: { weight: 'bold' } } }
+                },
+                scales: {
+                    y: {
+                        ticks: { callback: function(value) { return formatCurrency(value); } },
+                        grid: { color: '#E4E7EB' }
+                    }
+                }
+            }
+        });
+    }
+
+    // Attach Event Listeners to Sliders to trigger dynamic updates
+    const inputs = ['seed', 'premium', 'yield', 'margin', 'dta', 'iul', 'loan'];
+    inputs.forEach(id => {
+        document.getElementById(`input-${id}`).addEventListener('input', (e) => {
+            let suffix = id === 'seed' || id === 'premium' ? '' : '%';
+            let val = suffix === '' ? formatCurrency(e.target.value) : e.target.value + suffix;
+            document.getElementById(`lbl-${id}`).innerText = val;
+            runSimulation();
+        });
+    });
+
+    // Run Initial Simulation on Startup Load
+    window.onload = runSimulation;
+</script>
+</body>
+</html>
