@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Closed-Loop Capital Velocity Simulator (30-Year Model)</title>
+    <title>Capital Flow: Policy or PLEX Pie first?</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
@@ -196,8 +196,8 @@
 
 <div class="container">
     <header>
-        <h1>Closed-Loop Capital Velocity Simulator</h1>
-        <p>Interactive Architecture Optimization: Short-Term Margin Bridge Model with 30-Year Stress Testing</p>
+        <h1>Capital Flow: Policy or PLEX Pie first?</h1>
+        <p>Up to 30 Year Comparison</p>
     </header>
 
     <div class="layout">
@@ -231,12 +231,12 @@
                 </div>
 
                 <div class="input-group">
-                    <label>IUL Index Crediting Yield <span class="value-display" id="lbl-iul">7%</span></label>
+                    <label>IUL/WL Crediting or Dividend Yield <span class="value-display" id="lbl-iul">7%</span></label>
                     <input type="range" id="input-iul" min="4" max="10" step="0.25" value="7">
                 </div>
                 
                 <div class="input-group">
-                    <label>IUL Policy Loan Rate <span class="value-display" id="lbl-loan">5%</span></label>
+                    <label>IUL/WL Policy Loan Rate <span class="value-display" id="lbl-loan">5%</span></label>
                     <input type="range" id="input-loan" min="3" max="7" step="0.25" value="5">
                 </div>
 
@@ -317,155 +317,189 @@
 </div>
 
 <script>
-    let chart;
-    const ctx = document.getElementById('trajectoryChart').getContext('2d');
+    // Explicitly initialize global variable to null to protect early conditional check boundaries
+    let chart = null;
 
     function formatCurrency(val) {
+        if (isNaN(val) || !isFinite(val)) return "$0";
         return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(val);
     }
 
     function runSimulation() {
-        const seed = parseFloat(document.getElementById('input-seed').value);
-        const premium = parseFloat(document.getElementById('input-premium').value);
-        const pYield = parseFloat(document.getElementById('input-yield').value) / 100;
-        const mCost = parseFloat(document.getElementById('input-margin').value) / 100;
-        const dta = parseFloat(document.getElementById('input-dta').value) / 100;
-        const iulYield = parseFloat(document.getElementById('input-iul').value) / 100;
-        const loanCost = parseFloat(document.getElementById('input-loan').value) / 100;
-        const simulationYears = parseInt(document.getElementById('input-years').value);
-        
-        const leverageRatio = 1 / (1 - dta);
-        const loadFee = 0.05;
-        const iulLtv = 0.90;
-
-        let p1_data = [seed], p2_data = [seed], p3_data = [seed];
-        let labels = ['Initial'];
-
-        // Core Balance Setups (Day 1)
-        let p1_cv = seed * (1 - loadFee); let p1_loan = p1_cv * iulLtv;
-        let p1_port_assets = p1_loan * leverageRatio; let p1_margin = p1_port_assets - p1_loan;
-
-        let p2_port_assets = seed * leverageRatio; let p2_margin = p2_port_assets - seed;
-
-        let p3_cv = seed * (1 - loadFee); let p3_loan = p3_cv * iulLtv;
-        let p3_port_assets = p3_loan * leverageRatio; let p3_margin = p3_port_assets - p3_loan;
-
-        let tableHtml = "";
-
-        for (let yr = 1; yr <= simulationYears; yr++) {
-            labels.push('Year ' + yr);
+        try {
+            // Input Validation and Sanity Safeguards
+            const seed = Math.max(0, parseFloat(document.getElementById('input-seed').value) || 100000);
+            const premium = Math.max(0, parseFloat(document.getElementById('input-premium').value) || 12000);
+            const pYield = (parseFloat(document.getElementById('input-yield').value) || 20) / 100;
+            const mCost = (parseFloat(document.getElementById('input-margin').value) || 4.15) / 100;
+            const dta = Math.min(0.45, (parseFloat(document.getElementById('input-dta').value) || 20) / 100); // Caps DTA input for leverage dividing protection
+            const iulYield = (parseFloat(document.getElementById('input-iul').value) || 7) / 100;
+            const loanCost = (parseFloat(document.getElementById('input-loan').value) || 5) / 100;
+            const simulationYears = parseInt(document.getElementById('input-years').value) || 30;
             
-            // Strategy 1 Calculations
-            let p1_net_policy = (p1_cv * iulYield) - (p1_loan * loanCost);
-            let p1_net_port = (p1_port_assets * pYield) - (p1_margin * mCost);
-            let p1_total_return = p1_net_policy + p1_net_port;
-            let p1_nav = (p1_cv - p1_loan) + (p1_port_assets - p1_margin);
-            p1_data.push(p1_nav + p1_total_return);
+            const leverageRatio = 1 / (1 - dta);
+            const loadFee = 0.05;
+            const iulLtv = 0.90;
 
-            // Strategy 2 Calculations
-            let p2_total_return = (p2_port_assets * pYield) - (p2_margin * mCost);
-            let p2_nav = p2_port_assets - p2_margin;
-            p2_data.push(p2_nav + p2_total_return);
+            let p1_data = [seed], p2_data = [seed], p3_data = [seed];
+            let labels = ['Initial'];
 
-            // Strategy 3 (Hybrid Engine Optimization)
-            let p3_net_policy = (p3_cv * iulYield) - (p3_loan * loanCost);
-            let p3_net_port = (p3_port_assets * pYield) - (p3_margin * mCost);
-            let p3_total_return = p3_net_policy + p3_net_port;
-            let p3_nav = (p3_cv - p3_loan) + (p3_port_assets - p3_margin);
-            p3_data.push(p3_nav + p3_total_return + (premium * 0.05));
+            // Balance Setup Calculations (Day 1)
+            let p1_cv = seed * (1 - loadFee); let p1_loan = p1_cv * iulLtv;
+            let p1_port_assets = p1_loan * leverageRatio; let p1_margin = p1_port_assets - p1_loan;
 
-            // Compounding Multipliers Updates for Subsequent Loops
-            p1_cv += p1_cv * iulYield; p1_loan += p1_loan * loanCost;
-            p1_port_assets += p1_total_return * leverageRatio; p1_margin += p1_total_return * (leverageRatio - 1);
+            let p2_port_assets = seed * leverageRatio; let p2_margin = p2_port_assets - seed;
 
-            p2_port_assets += p2_total_return * leverageRatio; p2_margin += p2_total_return * (leverageRatio - 1);
+            let p3_cv = seed * (1 - loadFee); let p3_loan = p3_cv * iulLtv;
+            let p3_port_assets = p3_loan * leverageRatio; let p3_margin = p3_port_assets - p3_loan;
 
-            p3_cv += p3_cv * iulYield; p3_loan += p3_loan * loanCost;
-            p3_port_assets += (p3_total_return + (premium * 0.05)) * leverageRatio;
-            p3_margin += (p3_total_return + (premium * 0.05)) * (leverageRatio - 1);
+            let tableHtml = "";
 
-            tableHtml += `<tr>
-                <td><strong>Year ${yr}</strong></td>
-                <td>${formatCurrency(p2_data[yr])}</td>
-                <td>${formatCurrency(p1_data[yr])}</td>
-                <td style="background-color: var(--primary-light); font-weight: bold; color: var(--primary);">${formatCurrency(p3_data[yr])}</td>
-                <td style="color: #2ED573; font-weight: bold;">+${formatCurrency(p3_data[yr] - p2_data[yr])}</td>
-            </tr>`;
+            for (let yr = 1; yr <= simulationYears; yr++) {
+                labels.push('Year ' + yr);
+                
+                // Strategy 1 Calculations
+                let p1_net_policy = (p1_cv * iulYield) - (p1_loan * loanCost);
+                let p1_net_port = (p1_port_assets * pYield) - (p1_margin * mCost);
+                let p1_total_return = p1_net_policy + p1_net_port;
+                let p1_nav = (p1_cv - p1_loan) + (p1_port_assets - p1_margin);
+                p1_data.push(p1_nav + p1_total_return);
+
+                // Strategy 2 Calculations
+                let p2_total_return = (p2_port_assets * pYield) - (p2_margin * mCost);
+                let p2_nav = p2_port_assets - p2_margin;
+                p2_data.push(p2_nav + p2_total_return);
+
+                // Strategy 3 Calculations
+                let p3_net_policy = (p3_cv * iulYield) - (p3_loan * loanCost);
+                let p3_net_port = (p3_port_assets * pYield) - (p3_margin * mCost);
+                let p3_total_return = p3_net_policy + p3_net_port;
+                let p3_nav = (p3_cv - p3_loan) + (p3_port_assets - p3_margin);
+                p3_data.push(p3_nav + p3_total_return + (premium * 0.05));
+
+                // Compound Balance Metrics for Successive Steps
+                p1_cv += p1_cv * iulYield; p1_loan += p1_loan * loanCost;
+                p1_port_assets += p1_total_return * leverageRatio; p1_margin += p1_total_return * (leverageRatio - 1);
+
+                p2_port_assets += p2_total_return * leverageRatio; p2_margin += p2_total_return * (leverageRatio - 1);
+
+                p3_cv += p3_cv * iulYield; p3_loan += p3_loan * loanCost;
+                p3_port_assets += (p3_total_return + (premium * 0.05)) * leverageRatio;
+                p3_margin += (p3_total_return + (premium * 0.05)) * (leverageRatio - 1);
+
+                tableHtml += `<tr>
+                    <td><strong>Year ${yr}</strong></td>
+                    <td>${formatCurrency(p2_data[yr])}</td>
+                    <td>${formatCurrency(p1_data[yr])}</td>
+                    <td style="background-color: var(--primary-light); font-weight: bold; color: var(--primary);">${formatCurrency(p3_data[yr])}</td>
+                    <td style="color: #2ED573; font-weight: bold;">+${formatCurrency(p3_data[yr] - p2_data[yr])}</td>
+                </tr>`;
+            }
+
+            document.getElementById('ledger-body').innerHTML = tableHtml;
+            document.getElementById('metric-p2').innerText = formatCurrency(p2_data[simulationYears]);
+            document.getElementById('metric-p3').innerText = formatCurrency(p3_data[simulationYears]);
+            document.getElementById('metric-alpha').innerText = "+" + formatCurrency(p3_data[simulationYears] - p2_data[simulationYears]);
+
+            updateChart(labels, p1_data, p2_data, p3_data);
+
+        } catch (err) {
+            console.error("Simulation Engine Calculation Failure: ", err);
         }
-
-        document.getElementById('ledger-body').innerHTML = tableHtml;
-        document.getElementById('metric-p2').innerText = formatCurrency(p2_data[simulationYears]);
-        document.getElementById('metric-p3').innerText = formatCurrency(p3_data[simulationYears]);
-        document.getElementById('metric-alpha').innerText = "+" + formatCurrency(p3_data[simulationYears] - p2_data[simulationYears]);
-
-        updateChart(labels, p1_data, p2_data, p3_data);
     }
 
     function updateChart(labels, p1, p2, p3) {
-        if (chart) { chart.destroy(); }
-        chart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: labels,
-                datasets: [
-                    {
-                        label: 'Portfolio-First (Single Engine)',
-                        data: p2,
-                        borderColor: '#747D8C',
-                        backgroundColor: 'transparent',
-                        borderDash: [5, 5],
-                        lineWidth: 2,
-                        tension: 0.1
-                    },
-                    {
-                        label: 'Policy-First (Standard Flow)',
-                        data: p1,
-                        borderColor: '#2E86DE',
-                        backgroundColor: 'transparent',
-                        lineWidth: 2,
-                        tension: 0.1
-                    },
-                    {
-                        label: 'Hybrid Bridge Strategy (Max Velocity)',
-                        data: p3,
-                        borderColor: '#1F4E79',
-                        backgroundColor: 'rgba(31, 78, 121, 0.05)',
-                        fill: true,
-                        lineWidth: 4,
-                        pointRadius: simulationYears > 10 ? 1 : 3,
-                        tension: 0.1
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { position: 'top', labels: { font: { weight: 'bold' } } }
+        try {
+            const canvasElement = document.getElementById('trajectoryChart');
+            if (!canvasElement) {
+                console.warn("Canvas container target target not found in active window DOM.");
+                return;
+            }
+
+            // Secure condition query to protect initialization loops
+            if (chart !== null && typeof chart.destroy === 'function') { 
+                chart.destroy(); 
+            }
+            
+            const simulationYears = p1.length - 1;
+
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Portfolio-First (Single Engine)',
+                            data: p2,
+                            borderColor: '#747D8C',
+                            backgroundColor: 'transparent',
+                            borderDash: [5, 5],
+                            lineWidth: 2,
+                            tension: 0.1
+                        },
+                        {
+                            label: 'Policy-First (Standard Flow)',
+                            data: p1,
+                            borderColor: '#2E86DE',
+                            backgroundColor: 'transparent',
+                            lineWidth: 2,
+                            tension: 0.1
+                        },
+                        {
+                            label: 'Hybrid Bridge Strategy (Max Velocity)',
+                            data: p3,
+                            borderColor: '#1F4E79',
+                            backgroundColor: 'rgba(31, 78, 121, 0.05)',
+                            fill: true,
+                            lineWidth: 4,
+                            pointRadius: simulationYears > 10 ? 1 : 3,
+                            tension: 0.1
+                        }
+                    ]
                 },
-                scales: {
-                    y: {
-                        ticks: { callback: function(value) { return formatCurrency(value); } },
-                        grid: { color: '#E4E7EB' }
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'top', labels: { font: { weight: 'bold' } } }
+                    },
+                    scales: {
+                        y: {
+                            ticks: { callback: function(value) { return formatCurrency(value); } },
+                            grid: { color: '#E4E7EB' }
+                        }
                     }
                 }
-            }
-        });
+            });
+        } catch (chartError) {
+            console.error("Chart.js Module Canvas Bind Engine Intercept: ", chartError);
+        }
     }
 
-    const inputs = ['seed', 'premium', 'yield', 'margin', 'dta', 'iul', 'loan'];
-    inputs.forEach(id => {
-        document.getElementById(`input-${id}`).addEventListener('input', (e) => {
-            let suffix = id === 'seed' || id === 'premium' ? '' : '%';
-            let val = suffix === '' ? formatCurrency(e.target.value) : e.target.value + suffix;
-            document.getElementById(`lbl-${id}`).innerText = val;
-            runSimulation();
+    // Wrap lifecycle event binders inside an insulated DOMContentLoaded listener block
+    document.addEventListener("DOMContentLoaded", () => {
+        const inputs = ['seed', 'premium', 'yield', 'margin', 'dta', 'iul', 'loan'];
+        inputs.forEach(id => {
+            const el = document.getElementById(`input-${id}`);
+            if (el) {
+                el.addEventListener('input', (e) => {
+                    let suffix = id === 'seed' || id === 'premium' ? '' : '%';
+                    let val = suffix === '' ? formatCurrency(e.target.value) : e.target.value + suffix;
+                    const lbl = document.getElementById(`lbl-${id}`);
+                    if (lbl) lbl.innerText = val;
+                    runSimulation();
+                });
+            }
         });
-    });
-    
-    document.getElementById('input-years').addEventListener('change', runSimulation);
+        
+        const yearsSelect = document.getElementById('input-years');
+        if (yearsSelect) {
+            yearsSelect.addEventListener('change', runSimulation);
+        }
 
-    window.onload = runSimulation;
+        // Run initial configuration render safely after setup structures bind
+        runSimulation();
+    });
 </script>
 </body>
 </html>
