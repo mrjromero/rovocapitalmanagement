@@ -108,6 +108,18 @@
         .warn-val { color: var(--color-warning) !important; }
         .bad-val { color: var(--color-danger) !important; }
 
+        /* Mode Badges */
+        .badge-baseline {
+            background-color: rgba(0, 181, 174, 0.1);
+            color: var(--color-success);
+            border: 1px solid var(--color-success);
+        }
+        .badge-simulation {
+            background-color: rgba(46, 128, 156, 0.1);
+            color: var(--color-accent);
+            border: 1px solid var(--color-accent);
+        }
+
         /* Flash Animation for Margin Call */
         @keyframes marginCallFlash {
             0%, 100% { color: var(--color-danger); opacity: 1; text-shadow: 0 0 8px rgba(255, 127, 80, 0.4); }
@@ -139,6 +151,9 @@
             background-color: var(--surface-edu);
             border: 1px solid var(--border-dominant);
             border-radius: 12px;
+        }
+        .edu-box h3 {
+            border-bottom: 1px solid var(--border-dominant);
         }
         .edu-box strong {
             color: var(--text-primary);
@@ -219,9 +234,12 @@
             </div>
 
             <div class="card p-5">
-                <h2 class="text-xl font-bold border-b border-[#E8ECF2] pb-2 mb-4">Dashboard</h2>
+                <div class="flex justify-between items-center border-b border-[#E8ECF2] pb-2 mb-4">
+                    <h2 class="text-xl font-bold m-0">Dashboard</h2>
+                    <div id="modeBadge" class="px-2.5 py-1 rounded text-[11px] font-bold tracking-wider uppercase font-['Poppins'] badge-baseline">LIVE BASELINE</div>
+                </div>
                 
-                <div class="metric-row">
+                <div class="metric-row pt-0">
                     <span class="metric-label font-bold text-[#0d1728]" id="outPortValueLabel">Base Portfolio Value</span>
                     <span class="metric-value font-bold" id="outPortValue">$0.00</span>
                 </div>
@@ -264,14 +282,20 @@
                     <span class="metric-value" id="outUtilReinvest">0.00%</span>
                 </div>
                 
-                <div class="py-3 mt-2">
-                    <div class="flex justify-between mb-3">
-                        <span class="metric-label font-bold text-[#0d1728]">Margin Health (Max Drop)</span>
-                        <span class="metric-value font-bold" id="outMaxDrop">0.00%</span>
+                <div class="mt-4 p-6 rounded-xl border border-[var(--border-soft)] bg-[#fdfdfd] flex flex-col items-center text-center shadow-sm">
+                    <h4 class="text-xs font-bold tracking-widest text-[var(--text-secondary)] uppercase mb-2 font-['DM_Sans']">Cushion to Margin Call</h4>
+                    
+                    <div id="outMaxDropLarge" class="text-4xl font-bold font-['Roboto_Mono'] mb-2">0.00%</div>
+                    
+                    <div id="dangerZoneText" class="hidden text-sm font-bold tracking-widest uppercase mb-3 font-['Poppins'] flash-margin-call text-[var(--color-danger)]">Danger Zone!</div>
+                    
+                    <div class="w-full h-2.5 rounded-full relative mb-5" style="background: linear-gradient(to right, var(--color-danger) 0%, var(--color-warning) 45%, var(--color-success) 90%); box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);">
+                        <div id="healthIndicator" class="absolute h-5 w-1.5 bg-[#0d1728] rounded-[2px]" style="top: -5px; left: 0%; transition: left 0.4s cubic-bezier(0.4, 0, 0.2, 1); transform: translateX(-50%); box-shadow: 0 0 0 1.5px #fff, 0 2px 4px rgba(0,0,0,0.4);"></div>
                     </div>
-                    <div class="w-full h-2 rounded-full relative" style="background: linear-gradient(to right, #ff7f50 0%, #e4bd52 45%, #00b5ae 90%); box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);">
-                        <div id="healthIndicator" class="absolute h-4 w-2 bg-white rounded-sm" style="top: -4px; left: 0%; transition: left 0.4s cubic-bezier(0.4, 0, 0.2, 1); transform: translateX(-50%); box-shadow: 0 1px 3px rgba(0,0,0,0.2); border: 1px solid #DFDFE6;"></div>
-                    </div>
+
+                    <p class="text-[13px] text-[var(--text-secondary)] font-['DM_Sans'] leading-relaxed" id="outMaxDropDesc">
+                        The value of your current investments would have to drop <strong class="text-[var(--text-primary)]">0.00%</strong> (<strong class="text-[var(--text-primary)]">$0.00</strong>) to face a margin call.
+                    </p>
                 </div>
 
                 <details class="mt-4 p-4 edu-box text-sm text-[#595959] font-['DM_Sans'] group">
@@ -566,7 +590,17 @@
             // Check if simulating vs viewing base
             const isSimulating = Math.abs(simSecValue - baseSecValue) > 0.01 || Math.abs(simBorrowed - baseBorrowed) > 0.01;
 
-            // Update DOM Elements
+            // Update DOM Badge
+            const modeBadge = document.getElementById('modeBadge');
+            if (isSimulating) {
+                modeBadge.innerText = 'SIMULATION';
+                modeBadge.className = "px-2.5 py-1 rounded text-[11px] font-bold tracking-wider uppercase font-['Poppins'] badge-simulation";
+            } else {
+                modeBadge.innerText = 'LIVE BASELINE';
+                modeBadge.className = "px-2.5 py-1 rounded text-[11px] font-bold tracking-wider uppercase font-['Poppins'] badge-baseline";
+            }
+
+            // Update Basic DOM Elements
             document.getElementById('outPortValueLabel').innerText = isSimulating ? 'Simulated Portfolio Value' : 'Base Portfolio Value';
             document.getElementById('outPortValue').innerText = fmtC.format(simSecValue);
 
@@ -581,33 +615,45 @@
             document.getElementById('outUtilWithdraw').innerText = fmtP(utilWithdraw * 100);
             document.getElementById('outUtilReinvest').innerText = fmtP(utilReinvest * 100);
             
-            // Logic for visual health indicator and Margin Call triggers
+            // --- Margin Health UI Update (The new Card Style) ---
+            const outMaxDropLarge = document.getElementById('outMaxDropLarge');
+            const outMaxDropDesc = document.getElementById('outMaxDropDesc');
+            const healthIndicator = document.getElementById('healthIndicator');
+
             if (simExcess < 0) {
-                document.getElementById('outMaxDrop').innerText = 'MARGIN CALL TRIGGERED';
-                document.getElementById('outMaxDrop').className = 'metric-value font-bold bad-val flash-margin-call';
-                document.getElementById('healthIndicator').style.left = '0%';
+                outMaxDropLarge.innerText = 'MARGIN CALL';
+                outMaxDropLarge.className = 'text-4xl font-bold font-["Roboto_Mono"] mb-2 bad-val flash-margin-call';
+                outMaxDropDesc.innerHTML = 'Your account is currently in a <strong>margin call</strong>. Deposit cash or sell securities immediately.';
+                healthIndicator.style.left = '0%';
             } else if (simSecValue <= 0) {
-                document.getElementById('outMaxDrop').innerText = 'N/A (No Securities)';
-                document.getElementById('outMaxDrop').className = 'metric-value font-bold text-[#595959]';
-                document.getElementById('healthIndicator').style.left = '0%';
+                outMaxDropLarge.innerText = 'N/A';
+                outMaxDropLarge.className = 'text-4xl font-bold font-["Roboto_Mono"] mb-2 text-[#595959]';
+                outMaxDropDesc.innerHTML = 'You have no securities to drop in value.';
+                healthIndicator.style.left = '0%';
             } else if (maxDropPct >= 1) {
-                document.getElementById('outMaxDrop').innerText = '100.00% (No Risk)';
-                document.getElementById('outMaxDrop').className = 'metric-value font-bold good-val';
-                document.getElementById('healthIndicator').style.left = '100%';
+                outMaxDropLarge.innerText = '100.00%';
+                outMaxDropLarge.className = 'text-4xl font-bold font-["Roboto_Mono"] mb-2 good-val';
+                outMaxDropDesc.innerHTML = 'Your investments could drop <strong class="text-[var(--text-primary)]">100.00%</strong> to zero without facing a margin call.';
+                healthIndicator.style.left = '100%';
             } else {
-                document.getElementById('outMaxDrop').innerText = fmtP(maxDropPct * 100) + ` (${fmtC.format(maxDropValue)})`;
-                document.getElementById('outMaxDrop').className = 'metric-value font-bold ' + (maxDropPct > 0.4 ? 'good-val' : maxDropPct > 0.25 ? 'warn-val' : 'bad-val');
+                const pctText = fmtP(maxDropPct * 100);
+                const valText = fmtC.format(maxDropValue);
+                outMaxDropLarge.innerText = pctText;
+                outMaxDropLarge.className = 'text-4xl font-bold font-["Roboto_Mono"] mb-2 ' + (maxDropPct > 0.4 ? 'good-val' : maxDropPct > 0.25 ? 'warn-val' : 'bad-val');
+                
+                outMaxDropDesc.innerHTML = `The value of your current investments would have to drop <strong class="text-[var(--text-primary)]">${pctText}</strong> (<strong class="text-[var(--text-primary)]">${valText}</strong>) to face a margin call.`;
                 
                 let indicatorPos = Math.min(Math.max(maxDropPct * 100, 0), 100);
                 if (isNaN(indicatorPos)) indicatorPos = 0;
-                document.getElementById('healthIndicator').style.left = indicatorPos + '%';
+                healthIndicator.style.left = indicatorPos + '%';
             }
 
             document.getElementById('outExcess').className = 'metric-value ' + (simExcess >= 0 ? 'good-val' : 'bad-val');
 
-            // --- AUDIO LOGIC (Danger Zone) ---
-            // The danger zone is triggered if Max Drop is under 25% (0.25) OR if there is an active margin call.
+            // --- AUDIO & DANGER ZONE LOGIC ---
+            const dangerZoneText = document.getElementById('dangerZoneText');
             let isDanger = false;
+            
             if (simSecValue > 0) {
                 if (simExcess <= 0 || maxDropPct < 0.25) {
                     isDanger = true;
@@ -615,16 +661,16 @@
             }
 
             if (isDanger) {
+                dangerZoneText.classList.remove('hidden');
                 if (!dangerZonePlaying) {
-                    // Browsers typically require user interaction before allowing audio to play.
-                    // Interacting with the slider counts as interaction. 
                     audioEl.play().catch(e => console.warn("Autoplay prevented by browser.", e));
                     dangerZonePlaying = true;
                 }
             } else {
+                dangerZoneText.classList.add('hidden');
                 if (dangerZonePlaying) {
                     audioEl.pause();
-                    audioEl.currentTime = 0; // Rewind for next time
+                    audioEl.currentTime = 0; 
                     dangerZonePlaying = false;
                 }
             }
@@ -632,6 +678,10 @@
             // --- Safely Update Charts ---
             const visualExcess = Math.max(0, simExcess);
             compChart.data.datasets[0].data = [simBorrowed, baseRequired, highMmrRequired, visualExcess];
+            
+            // Dynamically calculate and display the High-MMR percentage in the chart label
+            const highMmrPct = Math.max(0, maintRatio - 0.25);
+            compChart.data.labels[2] = `M1 High-MMR Req. (${fmtP(highMmrPct * 100)})`;
             
             if (!compChart.options.plugins) compChart.options.plugins = {};
             compChart.options.plugins.centerText = {
