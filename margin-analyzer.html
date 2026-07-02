@@ -43,60 +43,64 @@
         
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             
-            <!-- Left Column: Inputs -->
-            <div class="card p-5">
-                <h2 class="text-xl font-bold border-b border-slate-700 pb-2 mb-4">1. Account Data</h2>
-                <div class="input-group">
-                    <label>Securities Value ($)</label>
-                    <input type="number" id="secValue" step="any" value="183727.65" oninput="calculate()">
-                </div>
-                <div class="input-group">
-                    <label>Cash Balance ($) - Derived</label>
-                    <input type="number" id="cash" step="any" value="203.92" oninput="calculate()">
-                </div>
-                <div class="input-group">
-                    <label>Total Borrowed ($)</label>
-                    <input type="number" id="borrowed" step="any" value="45974.06" oninput="calculate()">
-                </div>
-                <div class="input-group">
-                    <label>Required Equity ($)</label>
-                    <input type="number" id="reqEquity" step="any" value="54556.27" oninput="calculate()">
-                </div>
-
-                <h2 class="text-xl font-bold border-b border-slate-700 pb-2 mb-4 mt-6">2. Market Variables</h2>
-                <div class="grid grid-cols-2 gap-4">
+            <div class="card p-5 flex flex-col justify-between">
+                <div>
+                    <h2 class="text-xl font-bold border-b border-slate-700 pb-2 mb-4">1. Account Data</h2>
                     <div class="input-group">
-                        <label>Margin Rate (%)</label>
-                        <input type="number" id="marginRate" step="any" value="5.65" oninput="calculate()">
+                        <label>Securities Value ($)</label>
+                        <input type="number" id="secValue" step="any" value="100000" oninput="calculate()">
                     </div>
                     <div class="input-group">
-                        <label>Expected Yield (%)</label>
-                        <input type="number" id="yieldRate" step="any" value="7.50" oninput="calculate()">
+                        <label>Cash Balance ($)</label>
+                        <input type="number" id="cash" step="any" value="0" oninput="calculate()">
+                    </div>
+                    <div class="input-group">
+                        <label>Total Borrowed ($)</label>
+                        <input type="number" id="borrowed" step="any" value="25000" oninput="calculate()">
+                    </div>
+                    <div class="input-group">
+                        <label>Required Equity ($)</label>
+                        <input type="number" id="reqEquity" step="any" value="25000" oninput="calculate()">
+                    </div>
+
+                    <h2 class="text-xl font-bold border-b border-slate-700 pb-2 mb-4 mt-6">2. Market Variables</h2>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="input-group">
+                            <label>Margin Rate (%)</label>
+                            <input type="number" id="marginRate" step="any" value="5.65" oninput="calculate()">
+                        </div>
+                        <div class="input-group">
+                            <label>Expected Yield (%)</label>
+                            <input type="number" id="yieldRate" step="any" value="7.50" oninput="calculate()">
+                        </div>
+                    </div>
+
+                    <h2 class="text-xl font-bold border-b border-slate-700 pb-2 mb-4 mt-6">3. Simulation Actions</h2>
+                    
+                    <div class="input-group">
+                        <label>Simulate Borrowing Change (+/- Cash)</label>
+                        <div class="flex items-center gap-3">
+                            <input type="range" id="simWithdrawSlider" min="-25000" max="100000" step="500" value="0" oninput="syncWithdraw('slider')">
+                            <input type="number" id="simWithdraw" class="w-1/3" step="any" value="0" oninput="syncWithdraw('number')">
+                        </div>
+                        <p class="text-xs text-slate-500 mt-1 text-right">Negative = Pay Down | Positive = Withdraw</p>
+                    </div>
+
+                    <div class="input-group mt-3">
+                        <label>Simulate Margin Reinvest (+/- Securities)</label>
+                        <div class="flex items-center gap-3">
+                            <input type="range" id="simReinvestSlider" min="-100000" max="100000" step="500" value="0" oninput="syncReinvest('slider')">
+                            <input type="number" id="simReinvest" class="w-1/3" step="any" value="0" oninput="syncReinvest('number')">
+                        </div>
+                        <p class="text-xs text-slate-500 mt-1 text-right">Negative = Sell to Pay Debt | Positive = Buy on Margin</p>
                     </div>
                 </div>
-
-                <h2 class="text-xl font-bold border-b border-slate-700 pb-2 mb-4 mt-6">3. Simulation Actions</h2>
                 
-                <div class="input-group">
-                    <label>Simulate Borrowing Change (+/- Cash)</label>
-                    <div class="flex items-center gap-3">
-                        <input type="range" id="simWithdrawSlider" min="-50000" max="100000" step="500" value="0" oninput="syncWithdraw('slider')">
-                        <input type="number" id="simWithdraw" class="w-1/3" step="any" value="0" oninput="syncWithdraw('number')">
-                    </div>
-                    <p class="text-xs text-slate-500 mt-1 text-right">Negative = Pay Down | Positive = Withdraw</p>
-                </div>
-
-                <div class="input-group mt-3">
-                    <label>Simulate Margin Reinvest (+/- Securities)</label>
-                    <div class="flex items-center gap-3">
-                        <input type="range" id="simReinvestSlider" min="-50000" max="100000" step="500" value="0" oninput="syncReinvest('slider')">
-                        <input type="number" id="simReinvest" class="w-1/3" step="any" value="0" oninput="syncReinvest('number')">
-                    </div>
-                    <p class="text-xs text-slate-500 mt-1 text-right">Negative = Sell to Pay Debt | Positive = Buy on Margin</p>
-                </div>
+                <button onclick="resetDefaults()" class="w-full mt-8 bg-slate-700 hover:bg-slate-600 border border-slate-600 text-white font-medium py-2 px-4 rounded-md transition shadow-sm">
+                    Reset Default Values
+                </button>
             </div>
 
-            <!-- Middle Column: Metrics -->
             <div class="card p-5">
                 <h2 class="text-xl font-bold border-b border-slate-700 pb-2 mb-4">Simulated Dashboard</h2>
                 
@@ -140,7 +144,6 @@
                 </div>
             </div>
 
-            <!-- Right Column: Visuals -->
             <div class="card p-5 flex flex-col gap-8">
                 <div>
                     <h2 class="text-xl font-bold border-b border-slate-700 pb-2 mb-4">Detailed Portfolio Composition</h2>
@@ -225,6 +228,25 @@
             const num = document.getElementById('simReinvest');
             if (source === 'slider') num.value = slider.value;
             else slider.value = num.value;
+            calculate();
+        }
+
+        // Reset to Default Function
+        function resetDefaults() {
+            document.getElementById('secValue').value = 100000;
+            document.getElementById('cash').value = 0;
+            document.getElementById('borrowed').value = 25000;
+            document.getElementById('reqEquity').value = 25000;
+            
+            document.getElementById('marginRate').value = 5.65;
+            document.getElementById('yieldRate').value = 7.50;
+            
+            document.getElementById('simWithdraw').value = 0;
+            document.getElementById('simWithdrawSlider').value = 0;
+            
+            document.getElementById('simReinvest').value = 0;
+            document.getElementById('simReinvestSlider').value = 0;
+            
             calculate();
         }
 
