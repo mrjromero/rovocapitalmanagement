@@ -120,6 +120,10 @@
                     <span class="metric-label">Maintenance Req. (Blended)</span>
                     <span class="metric-value" id="outMaintRatio">0.00%</span>
                 </div>
+                <div class="metric-row">
+                    <span class="metric-label">Multiplier (Leverage Factor)</span>
+                    <span class="metric-value" id="outMultiplier">0.00x</span>
+                </div>
 
                 <h3 class="text-lg font-semibold mt-6 mb-2 text-white">Risk & Health Metrics</h3>
                 <div class="metric-row">
@@ -141,6 +145,14 @@
                 <div class="metric-row">
                     <span class="metric-label font-bold text-white">Margin Health (Max Drop)</span>
                     <span class="metric-value font-bold" id="outMaxDrop">0.00%</span>
+                </div>
+
+                <div class="mt-5 p-4 bg-slate-800 rounded-md border border-slate-700 text-xs text-slate-300 space-y-2 leading-relaxed">
+                    <p><strong class="text-white">Multiplier:</strong> Represents your total assets per $1 of your own equity. A 1.33x multiplier means you control $1.33 in the market for every $1 you own.</p>
+                    <p><strong class="text-white">DSCR:</strong> Measures if your portfolio's income covers its margin interest. A ratio above 1.0x means your debt is paying for itself without you injecting cash.</p>
+                    <p><strong class="text-white">DTA (Debt-to-Asset):</strong> The strict percentage of your total portfolio funded by borrowed money. Lower means less risk.</p>
+                    <p><strong class="text-white">Margin Utilization:</strong> How much of your borrowing limit you are actively using. <em>Withdrawal</em> assumes taking cash out of the account, while <em>Reinvestment</em> assumes buying more stock (which adds its own equity buffer to your limit).</p>
+                    <p><strong class="text-white">Margin Health:</strong> The exact portfolio drop required to wipe out your excess equity, resulting in a margin call. The dollar figure shows the absolute market value loss at that threshold.</p>
                 </div>
             </div>
 
@@ -289,6 +301,7 @@
             const highMmrRequired = Math.max(0, simReqEquity - baseRequired);
             
             // Metrics Math
+            const multiplier = simEquity > 0 ? ((simSecValue + simCash) / simEquity) : 0;
             const annualIncome = simSecValue * yieldRate;
             const annualMarginCost = simBorrowed * marginRate;
             const netCarry = annualIncome - annualMarginCost;
@@ -313,6 +326,7 @@
             document.getElementById('outReqEquity').innerText = fmtC.format(simReqEquity);
             document.getElementById('outExcess').innerText = fmtC.format(simExcess);
             document.getElementById('outMaintRatio').innerText = fmtP(maintRatio * 100);
+            document.getElementById('outMultiplier').innerText = multiplier > 0 ? multiplier.toFixed(2) + 'x' : '0.00x';
             
             document.getElementById('outDscr').innerText = annualMarginCost > 0 ? dscr.toFixed(2) + 'x' : (dscr === 0 && annualIncome > 0 ? '∞' : '0.00x');
             document.getElementById('outDta').innerText = fmtP(dta * 100);
