@@ -214,7 +214,17 @@
                 maintainAspectRatio: false,
                 plugins: { 
                     legend: { position: 'right', labels: { boxWidth: 12, font: { size: 11 } } },
-                    tooltip: { callbacks: { label: function(context) { return context.label + ': ' + fmtC.format(context.raw); } } }
+                    tooltip: { 
+                        callbacks: { 
+                            label: function(context) {
+                                // Calculate total sum to derive percentage
+                                const total = context.dataset.data.reduce((acc, curr) => acc + curr, 0);
+                                const value = context.raw;
+                                const percentage = total > 0 ? ((value / total) * 100).toFixed(2) + '%' : '0.00%';
+                                return context.label + ': ' + fmtC.format(value) + ' (' + percentage + ')';
+                            } 
+                        } 
+                    }
                 }, 
                 cutout: '65%' 
             }
