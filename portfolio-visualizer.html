@@ -7,45 +7,133 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body { background-color: #111318; color: #e8eaed; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
-        .card { background-color: #1c1f26; border: 1px solid #2d313b; border-radius: 12px; }
-        .input-group { display: flex; flex-direction: column; margin-bottom: 12px; }
-        .input-group label { font-size: 0.85rem; color: #9aa0a6; margin-bottom: 4px; font-weight: 500; }
-        .input-group input[type="number"] { background-color: #2d313b; border: 1px solid #4a505c; color: #e8eaed; padding: 8px 12px; border-radius: 6px; outline: none; transition: border-color 0.2s; }
-        .input-group input[type="number"]:focus { border-color: #8ab4f8; }
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;600;700&display=swap');
+
+        body { 
+            background-color: #f5f5f5; 
+            color: #0d1728; 
+            font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+        }
         
-        /* Custom Slider Styling - Cross Browser */
+        h1, h2, h3 {
+            font-family: 'Poppins', sans-serif;
+            color: #0d1728;
+        }
+
+        .card { 
+            background-color: #fff; 
+            border: 1px solid #DFDFE6; 
+            border-radius: 16px; 
+            box-shadow: 0 0.5px 2.5px #0000001a, 0 0 0 0.5px #0000000d;
+        }
+
+        .border-slate-700 {
+            border-color: #E8ECF2 !important;
+        }
+
+        .input-group { display: flex; flex-direction: column; margin-bottom: 12px; }
+        
+        .input-group label { 
+            font-family: 'DM Sans', sans-serif;
+            font-size: 14px; 
+            color: #595959; 
+            margin-bottom: 4px; 
+            font-weight: 700; 
+        }
+        
+        .input-group input[type="number"] { 
+            font-family: 'Roboto Mono', monospace;
+            background-color: #fff; 
+            border: 1px solid #D2DBE9; 
+            color: #0d1728; 
+            padding: 8px 12px; 
+            border-radius: 6px; 
+            outline: none; 
+            transition: border-color 0.2s, box-shadow 0.2s; 
+        }
+
+        .input-group input[type="number"]:focus { 
+            border-color: #2e809c; 
+            box-shadow: 0 0 0 2px rgba(46, 128, 156, 0.2);
+        }
+        
+        /* Custom Slider Styling - Light Theme */
         input[type=range] { -webkit-appearance: none; appearance: none; background: transparent; width: 100%; }
         input[type=range]:focus { outline: none; }
         
         /* WebKit (Chrome, Safari, Edge) */
-        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 6px; cursor: pointer; background: #4a505c; border-radius: 3px; }
-        input[type=range]::-webkit-slider-thumb { height: 18px; width: 18px; border-radius: 50%; background: #8ab4f8; cursor: pointer; -webkit-appearance: none; margin-top: -6px; box-shadow: 0 0 4px rgba(0,0,0,0.5); }
-        input[type=range]:focus::-webkit-slider-runnable-track { background: #5a606c; }
+        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 6px; cursor: pointer; background: #E8ECF2; border-radius: 3px; }
+        input[type=range]::-webkit-slider-thumb { height: 18px; width: 18px; border-radius: 50%; background: #2e809c; cursor: pointer; -webkit-appearance: none; margin-top: -6px; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        input[type=range]:focus::-webkit-slider-runnable-track { background: #D2DBE9; }
 
         /* Firefox */
-        input[type=range]::-moz-range-track { width: 100%; height: 6px; cursor: pointer; background: #4a505c; border-radius: 3px; }
-        input[type=range]::-moz-range-thumb { height: 18px; width: 18px; border-radius: 50%; background: #8ab4f8; cursor: pointer; border: none; box-shadow: 0 0 4px rgba(0,0,0,0.5); }
-        input[type=range]:focus::-moz-range-track { background: #5a606c; }
+        input[type=range]::-moz-range-track { width: 100%; height: 6px; cursor: pointer; background: #E8ECF2; border-radius: 3px; }
+        input[type=range]::-moz-range-thumb { height: 18px; width: 18px; border-radius: 50%; background: #2e809c; cursor: pointer; border: none; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        input[type=range]:focus::-moz-range-track { background: #D2DBE9; }
         
-        .metric-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #2d313b; }
+        .metric-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #E8ECF2; }
         .metric-row:last-child { border-bottom: none; }
-        .metric-label { color: #9aa0a6; font-size: 0.9rem; }
-        .metric-value { font-weight: 600; font-size: 0.95rem; text-align: right; }
-        .good-val { color: #81c995; }
-        .warn-val { color: #fdd663; }
-        .bad-val { color: #f28b82; }
+        
+        .metric-label { 
+            font-family: 'DM Sans', sans-serif;
+            color: #595959; 
+            font-size: 14px; 
+            font-weight: 500;
+        }
+        
+        .metric-value { 
+            font-family: 'Roboto Mono', monospace;
+            font-weight: 600; 
+            font-size: 16px; 
+            text-align: right; 
+            color: #0d1728;
+        }
+
+        /* Color States */
+        .good-val { color: #00b5ae !important; }
+        .warn-val { color: #e4bd52 !important; }
+        .bad-val { color: #ff7f50 !important; }
+
+        /* Custom Button */
+        .btn-primary {
+            background-color: #2e809c;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 24px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+        .btn-primary:hover {
+            background-color: #256b7c;
+        }
+
+        /* Educational Box */
+        .edu-box {
+            background-color: #edf1fb;
+            border: 1px solid #D2DBE9;
+            border-radius: 12px;
+        }
+        .edu-box strong {
+            color: #0d1728;
+            font-weight: 700;
+        }
     </style>
 </head>
 <body class="p-4 md:p-8">
     <div class="max-w-7xl mx-auto">
-        <h1 class="text-2xl font-bold mb-6 text-white">Positive Carry Portfolio Visualizer</h1>
+        <h1 class="text-3xl font-bold mb-6">Positive Carry Portfolio Visualizer</h1>
         
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             
             <div class="card p-5 flex flex-col justify-between">
                 <div>
-                    <h2 class="text-xl font-bold border-b border-slate-700 pb-2 mb-4">1. Account Data</h2>
+                    <h2 class="text-xl font-bold border-b pb-2 mb-4">1. Account Data</h2>
                     <div class="input-group">
                         <label>Securities Value ($)</label>
                         <input type="number" id="secValue" step="any" value="100000" oninput="calculate()">
@@ -63,7 +151,7 @@
                         <input type="number" id="reqEquity" step="any" value="30000" oninput="calculate()">
                     </div>
 
-                    <h2 class="text-xl font-bold border-b border-slate-700 pb-2 mb-4 mt-6">2. Market Variables</h2>
+                    <h2 class="text-xl font-bold border-b pb-2 mb-4 mt-6">2. Market Variables</h2>
                     <div class="grid grid-cols-2 gap-4">
                         <div class="input-group">
                             <label>Margin Rate (%)</label>
@@ -75,7 +163,7 @@
                         </div>
                     </div>
 
-                    <h2 class="text-xl font-bold border-b border-slate-700 pb-2 mb-4 mt-6">3. Simulation Actions</h2>
+                    <h2 class="text-xl font-bold border-b pb-2 mb-4 mt-6">3. Simulation Actions</h2>
                     
                     <div class="input-group">
                         <label>Simulate Borrowing Change (+/- Cash)</label>
@@ -83,7 +171,7 @@
                             <input type="range" id="simWithdrawSlider" min="-25000" max="100000" step="500" value="0" oninput="syncWithdraw('slider')">
                             <input type="number" id="simWithdraw" class="w-1/3" step="any" value="0" oninput="syncWithdraw('number')">
                         </div>
-                        <p class="text-xs text-slate-500 mt-1 text-right">Negative = Pay Down | Positive = Withdraw</p>
+                        <p class="text-xs text-[#595959] mt-1 text-right font-['DM_Sans']">Negative = Pay Down | Positive = Withdraw</p>
                     </div>
 
                     <div class="input-group mt-3">
@@ -92,17 +180,17 @@
                             <input type="range" id="simReinvestSlider" min="-100000" max="100000" step="500" value="0" oninput="syncReinvest('slider')">
                             <input type="number" id="simReinvest" class="w-1/3" step="any" value="0" oninput="syncReinvest('number')">
                         </div>
-                        <p class="text-xs text-slate-500 mt-1 text-right">Negative = Sell to Pay Debt | Positive = Buy on Margin</p>
+                        <p class="text-xs text-[#595959] mt-1 text-right font-['DM_Sans']">Negative = Sell to Pay Debt | Positive = Buy on Margin</p>
                     </div>
                 </div>
                 
-                <button onclick="resetDefaults()" class="w-full mt-8 bg-slate-700 hover:bg-slate-600 border border-slate-600 text-white font-medium py-2 px-4 rounded-md transition shadow-sm">
+                <button onclick="resetDefaults()" class="btn-primary w-full mt-8 shadow-sm">
                     Reset Default Values
                 </button>
             </div>
 
             <div class="card p-5">
-                <h2 class="text-xl font-bold border-b border-slate-700 pb-2 mb-4">Simulated Dashboard</h2>
+                <h2 class="text-xl font-bold border-b pb-2 mb-4">Simulated Dashboard</h2>
                 
                 <div class="metric-row">
                     <span class="metric-label">Total Equity Value</span>
@@ -125,7 +213,7 @@
                     <span class="metric-value" id="outMultiplier">0.00x</span>
                 </div>
 
-                <h3 class="text-lg font-semibold mt-6 mb-2 text-white">Risk & Health Metrics</h3>
+                <h3 class="text-lg font-semibold mt-6 mb-2">Risk & Health Metrics</h3>
                 <div class="metric-row">
                     <span class="metric-label" title="Debt Service Coverage Ratio">DSCR</span>
                     <span class="metric-value" id="outDscr">0.00x</span>
@@ -145,43 +233,43 @@
                 
                 <div class="py-3">
                     <div class="flex justify-between mb-3">
-                        <span class="metric-label font-bold text-white">Margin Health (Max Drop)</span>
+                        <span class="metric-label font-bold text-[#0d1728]">Margin Health (Max Drop)</span>
                         <span class="metric-value font-bold" id="outMaxDrop">0.00%</span>
                     </div>
-                    <div class="w-full h-2 rounded-full relative" style="background: linear-gradient(to right, #f28b82 0%, #fdd663 45%, #81c995 90%); box-shadow: inset 0 1px 2px rgba(0,0,0,0.2);">
-                        <div id="healthIndicator" class="absolute h-4 w-2 bg-slate-200 rounded-sm" style="top: -4px; left: 0%; transition: left 0.4s cubic-bezier(0.4, 0, 0.2, 1); transform: translateX(-50%); box-shadow: 0 1px 3px rgba(0,0,0,0.8); border: 1px solid #111318;"></div>
+                    <div class="w-full h-2 rounded-full relative" style="background: linear-gradient(to right, #ff7f50 0%, #e4bd52 45%, #00b5ae 90%); box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);">
+                        <div id="healthIndicator" class="absolute h-4 w-2 bg-white rounded-sm" style="top: -4px; left: 0%; transition: left 0.4s cubic-bezier(0.4, 0, 0.2, 1); transform: translateX(-50%); box-shadow: 0 1px 3px rgba(0,0,0,0.2); border: 1px solid #D2DBE9;"></div>
                     </div>
                 </div>
 
-                <div class="mt-4 p-4 bg-slate-800 rounded-md border border-slate-700 text-xs text-slate-300 space-y-2 leading-relaxed">
-                    <h3 class="text-sm font-bold text-white mb-3 border-b border-slate-700 pb-2">Understanding Your Metrics</h3>
-                    <p><strong class="text-white">Multiplier:</strong> Represents your total assets per $1 of your own equity. A 1.33x multiplier means you control $1.33 in the market for every $1 you own.</p>
-                    <p><strong class="text-white">DSCR:</strong> Measures if your portfolio's income covers its margin interest. A ratio above 1.0x means your debt is paying for itself without you injecting cash.</p>
-                    <p><strong class="text-white">DTA (Debt-to-Asset):</strong> The strict percentage of your total portfolio funded by borrowed money. Lower means less risk.</p>
-                    <p><strong class="text-white">Margin Utilization:</strong> How much of your borrowing limit you are actively using. <em>Withdrawal</em> assumes taking cash out of the account, while <em>Reinvestment</em> assumes buying more stock (which adds its own equity buffer to your limit).</p>
-                    <p><strong class="text-white">Margin Health:</strong> The exact portfolio drop required to wipe out your excess equity, resulting in a margin call. The dollar figure shows the absolute market value loss at that threshold.</p>
+                <div class="mt-4 p-4 edu-box text-sm text-[#595959] space-y-2 leading-relaxed font-['DM_Sans']">
+                    <h3 class="text-[15px] font-bold text-[#0d1728] mb-3 border-b border-[#D2DBE9] pb-2 font-['Poppins']">Understanding Your Metrics</h3>
+                    <p><strong>Multiplier:</strong> Represents your total assets per $1 of your own equity. A 1.33x multiplier means you control $1.33 in the market for every $1 you own.</p>
+                    <p><strong>DSCR:</strong> Measures if your portfolio's income covers its margin interest. A ratio above 1.0x means your debt is paying for itself without you injecting cash.</p>
+                    <p><strong>DTA (Debt-to-Asset):</strong> The strict percentage of your total portfolio funded by borrowed money. Lower means less risk.</p>
+                    <p><strong>Margin Utilization:</strong> How much of your borrowing limit you are actively using. <em>Withdrawal</em> assumes taking cash out of the account, while <em>Reinvestment</em> assumes buying more stock (which adds its own equity buffer to your limit).</p>
+                    <p><strong>Margin Health:</strong> The exact portfolio drop required to wipe out your excess equity, resulting in a margin call. The dollar figure shows the absolute market value loss at that threshold.</p>
                 </div>
             </div>
 
             <div class="card p-5 flex flex-col gap-8">
                 <div>
-                    <h2 class="text-xl font-bold border-b border-slate-700 pb-2 mb-4">Detailed Portfolio Composition</h2>
-                    <p class="text-xs text-slate-400 mb-2">Breakdown of Total Assets (Debt vs. Protective Equity vs. Usable Equity)</p>
+                    <h2 class="text-xl font-bold border-b pb-2 mb-4">Detailed Portfolio Composition</h2>
+                    <p class="text-xs text-[#595959] mb-2 font-['DM_Sans']">Breakdown of Total Assets (Debt vs. Protective Equity vs. Usable Equity)</p>
                     <div style="position: relative; height: 250px; width: 100%;">
                         <canvas id="compositionChart"></canvas>
                     </div>
                 </div>
                 
                 <div>
-                    <h2 class="text-xl font-bold border-b border-slate-700 pb-2 mb-4">Annual Carry Analysis</h2>
+                    <h2 class="text-xl font-bold border-b pb-2 mb-4">Annual Carry Analysis</h2>
                     <div style="position: relative; height: 180px; width: 100%;">
                         <canvas id="carryChart"></canvas>
                     </div>
                 </div>
 
                 <div>
-                    <h2 class="text-xl font-bold border-b border-slate-700 pb-2 mb-4">10-Year Growth Projection</h2>
-                    <p class="text-xs text-slate-400 mb-2">Assumes simulated DTA leverage is maintained and Net Carry is reinvested.</p>
+                    <h2 class="text-xl font-bold border-b pb-2 mb-4">10-Year Growth Projection</h2>
+                    <p class="text-xs text-[#595959] mb-2 font-['DM_Sans']">Assumes simulated DTA leverage is maintained and Net Carry is reinvested.</p>
                     <div style="position: relative; height: 250px; width: 100%;">
                         <canvas id="projectionChart"></canvas>
                     </div>
@@ -195,19 +283,23 @@
         const fmtC = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' });
         const fmtP = (val) => val.toFixed(2) + '%';
 
-        Chart.defaults.color = '#9aa0a6';
-        Chart.defaults.font.family = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
+        // Apply global chart defaults based on the new light theme CSS
+        Chart.defaults.color = '#595959';
+        Chart.defaults.font.family = "'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
+
+        const gridOptions = { color: '#E8ECF2', drawBorder: false };
 
         // 1. Nuanced Doughnut Chart for Portfolio Composition
         const ctxComp = document.getElementById('compositionChart').getContext('2d');
         const compChart = new Chart(ctxComp, {
             type: 'doughnut',
             data: {
-                labels: ['Total Borrowed', 'Base Req. (25%)', 'High-MMR Req.', 'Usable (Excess) Equity'],
+                labels: ['Total Borrowed', 'M1 Base Req. (25%)', 'M1 High-MMR Req.', 'Usable (Excess) Equity'],
                 datasets: [{ 
                     data: [0, 0, 0, 0], 
-                    backgroundColor: ['#f28b82', '#a8dabc', '#5db075', '#1e8e3e'], 
-                    borderWidth: 0 
+                    backgroundColor: ['#ff7f50', '#96BFCD', '#2e809c', '#00b5ae'], 
+                    borderWidth: 1,
+                    borderColor: '#ffffff'
                 }]
             },
             options: { 
@@ -216,9 +308,11 @@
                 plugins: { 
                     legend: { position: 'right', labels: { boxWidth: 12, font: { size: 11 } } },
                     tooltip: { 
+                        backgroundColor: 'rgba(13, 23, 40, 0.9)',
+                        titleFont: { family: "'DM Sans', sans-serif" },
+                        bodyFont: { family: "'Roboto Mono', monospace" },
                         callbacks: { 
                             label: function(context) {
-                                // Calculate total sum to derive percentage
                                 const total = context.dataset.data.reduce((acc, curr) => acc + curr, 0);
                                 const value = context.raw;
                                 const percentage = total > 0 ? ((value / total) * 100).toFixed(2) + '%' : '0.00%';
@@ -237,13 +331,23 @@
             type: 'bar',
             data: { 
                 labels: ['Est. Income', 'Margin Cost', 'Net Carry'], 
-                datasets: [{ data: [0, 0, 0], backgroundColor: ['#81c995', '#f28b82', '#8ab4f8'] }] 
+                datasets: [{ data: [0, 0, 0], backgroundColor: ['#00b5ae', '#ff7f50', '#2e809c'] }] 
             },
             options: { 
                 responsive: true,
                 maintainAspectRatio: false,
-                plugins: { legend: { display: false } }, 
-                scales: { y: { beginAtZero: true, grid: { color: '#2d313b' } } } 
+                plugins: { 
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: 'rgba(13, 23, 40, 0.9)',
+                        titleFont: { family: "'DM Sans', sans-serif" },
+                        bodyFont: { family: "'Roboto Mono', monospace" }
+                    }
+                }, 
+                scales: { 
+                    y: { beginAtZero: true, grid: gridOptions },
+                    x: { grid: { display: false } }
+                } 
             }
         });
 
@@ -254,8 +358,8 @@
             data: {
                 labels: [],
                 datasets: [
-                    { label: 'Total Assets', data: [], borderColor: '#8ab4f8', backgroundColor: 'transparent', tension: 0.3, pointRadius: 0, borderWidth: 2 },
-                    { label: 'Base Equity', data: [], borderColor: '#81c995', backgroundColor: 'transparent', tension: 0.3, borderDash: [5, 5], pointRadius: 0, borderWidth: 2 }
+                    { label: 'Total Assets', data: [], borderColor: '#2e809c', backgroundColor: 'transparent', tension: 0.3, pointRadius: 0, borderWidth: 2 },
+                    { label: 'Base Equity', data: [], borderColor: '#00b5ae', backgroundColor: 'transparent', tension: 0.3, borderDash: [5, 5], pointRadius: 0, borderWidth: 2 }
                 ]
             },
             options: {
@@ -263,11 +367,18 @@
                 maintainAspectRatio: false,
                 plugins: {
                     legend: { position: 'top', labels: { boxWidth: 15, font: { size: 11 } } },
-                    tooltip: { mode: 'index', intersect: false, callbacks: { label: function(context) { return context.dataset.label + ': ' + fmtC.format(context.raw); } } }
+                    tooltip: { 
+                        mode: 'index', 
+                        intersect: false, 
+                        backgroundColor: 'rgba(13, 23, 40, 0.9)',
+                        titleFont: { family: "'DM Sans', sans-serif" },
+                        bodyFont: { family: "'Roboto Mono', monospace" },
+                        callbacks: { label: function(context) { return context.dataset.label + ': ' + fmtC.format(context.raw); } } 
+                    }
                 },
                 scales: {
-                    x: { grid: { color: '#2d313b', drawBorder: false }, ticks: { maxTicksLimit: 12, maxRotation: 0 } },
-                    y: { grid: { color: '#2d313b', drawBorder: false }, ticks: { callback: function(value) { return '$' + (value/1000) + 'k'; } } }
+                    x: { grid: { display: false }, ticks: { maxTicksLimit: 12, maxRotation: 0 } },
+                    y: { grid: gridOptions, ticks: { callback: function(value) { return '$' + (value/1000) + 'k'; } } }
                 }
             }
         });
@@ -379,7 +490,7 @@
             // Logic for visual health indicator and text mapping (0 to 100% calibration)
             if (simSecValue <= 0) {
                 document.getElementById('outMaxDrop').innerText = 'N/A (No Securities)';
-                document.getElementById('outMaxDrop').className = 'metric-value font-bold text-gray-500';
+                document.getElementById('outMaxDrop').className = 'metric-value font-bold text-[#595959]';
                 document.getElementById('healthIndicator').style.left = '0%';
             } else if (maxDropPct >= 1) {
                 document.getElementById('outMaxDrop').innerText = '100.00% (No Risk)';
@@ -389,7 +500,6 @@
                 document.getElementById('outMaxDrop').innerText = fmtP(maxDropPct * 100) + ` (${fmtC.format(maxDropValue)})`;
                 document.getElementById('outMaxDrop').className = 'metric-value font-bold ' + (maxDropPct > 0.4 ? 'good-val' : maxDropPct > 0.25 ? 'warn-val' : 'bad-val');
                 
-                // Map max drop percentage (0% to 100%) to the 0-100% physical width of the gradient bar
                 let indicatorPos = Math.min(Math.max(maxDropPct * 100, 0), 100);
                 document.getElementById('healthIndicator').style.left = indicatorPos + '%';
             }
@@ -409,21 +519,19 @@
             const projBase = [];
 
             let targetDta = dta; 
-            if (targetDta >= 1 || targetDta < 0) targetDta = 0; // Prevent infinite loops if deeply insolvent
+            if (targetDta >= 1 || targetDta < 0) targetDta = 0; 
 
             let curEq = simEquity;
 
             for (let i = 0; i <= 120; i++) {
                 projLabels.push('Month ' + i);
                 
-                // Maintain DTA Ratio: Assets = Equity / (1 - DTA)
                 let cAssets = curEq > 0 ? curEq / (1 - targetDta) : 0;
                 let cDebt = cAssets - curEq;
                 
                 projAssets.push(cAssets);
                 projBase.push(curEq);
 
-                // Compounding Net Carry
                 let mYield = cAssets * (yieldRate / 12);
                 let mCost = cDebt * (marginRate / 12);
                 let mNet = mYield - mCost;
@@ -438,9 +546,7 @@
             projChart.update();
         }
 
-        // Run once on load
         calculate();
     </script>
 </body>
 </html>
-
