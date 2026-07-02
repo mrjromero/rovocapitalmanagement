@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Positive Carry Portfolio Visualizer</title>
+    <title>PLEX Strategy Visualizer</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -39,7 +39,7 @@
 </head>
 <body class="p-4 md:p-8">
     <div class="max-w-7xl mx-auto">
-        <h1 class="text-2xl font-bold mb-6 text-white">Positive Carry Portfolio Visualizer</h1>
+        <h1 class="text-2xl font-bold mb-6 text-white">PLEX Strategy Visualizer</h1>
         
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             
@@ -154,6 +154,7 @@
                 </div>
 
                 <div class="mt-4 p-4 bg-slate-800 rounded-md border border-slate-700 text-xs text-slate-300 space-y-2 leading-relaxed">
+                    <h3 class="text-sm font-bold text-white mb-3 border-b border-slate-700 pb-2">Understanding Your Metrics</h3>
                     <p><strong class="text-white">Multiplier:</strong> Represents your total assets per $1 of your own equity. A 1.33x multiplier means you control $1.33 in the market for every $1 you own.</p>
                     <p><strong class="text-white">DSCR:</strong> Measures if your portfolio's income covers its margin interest. A ratio above 1.0x means your debt is paying for itself without you injecting cash.</p>
                     <p><strong class="text-white">DTA (Debt-to-Asset):</strong> The strict percentage of your total portfolio funded by borrowed money. Lower means less risk.</p>
@@ -202,7 +203,7 @@
         const compChart = new Chart(ctxComp, {
             type: 'doughnut',
             data: {
-                labels: ['Total Borrowed', 'Base Req. (25%)', 'High-MMR Req.', 'Usable (Excess) Equity'],
+                labels: ['Total Borrowed', 'M1 Base Req. (25%)', 'M1 High-MMR Req.', 'Usable (Excess) Equity'],
                 datasets: [{ 
                     data: [0, 0, 0, 0], 
                     backgroundColor: ['#f28b82', '#a8dabc', '#5db075', '#1e8e3e'], 
