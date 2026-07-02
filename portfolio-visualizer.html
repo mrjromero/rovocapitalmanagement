@@ -180,7 +180,7 @@
                     <p class="text-xs text-[#595959] mb-4 font-['DM_Sans']">Used to establish your baseline M1 Maintenance Margin Ratio.</p>
                     <div class="input-group">
                         <label>Base Portfolio Value ($)</label>
-                        <input type="number" id="secValue" step="any" value="100000" oninput="calculate()">
+                        <input type="number" id="secValue" step="any" value="100000" oninput="syncBaseSec()">
                     </div>
                     <div class="input-group">
                         <label>Cash Balance ($)</label>
@@ -188,7 +188,7 @@
                     </div>
                     <div class="input-group">
                         <label>Base Total Borrowed ($)</label>
-                        <input type="number" id="borrowed" step="any" value="25000" oninput="calculate()">
+                        <input type="number" id="borrowed" step="any" value="25000" oninput="syncBaseBorrow()">
                     </div>
                     <div class="input-group">
                         <label>Required Equity ($)</label>
@@ -499,6 +499,37 @@
             }
         });
 
+        // Tracks whether the user has intentionally moved away from the baseline.
+        let simulationMode = false;
+
+        function setSimulationValue(numberId, sliderId, value) {
+            const numberInput = document.getElementById(numberId);
+            const slider = document.getElementById(sliderId);
+            const safeValue = Number.isFinite(value) ? value : 0;
+
+            numberInput.value = safeValue;
+            if (safeValue > parseFloat(slider.max)) slider.max = safeValue;
+            if (safeValue < parseFloat(slider.min)) slider.min = safeValue;
+            slider.value = safeValue;
+        }
+
+        // Keep simulation inputs aligned with edited base values while viewing the baseline.
+        function syncBaseSec() {
+            const value = parseFloat(document.getElementById('secValue').value);
+            if (!simulationMode) {
+                setSimulationValue('simSecValue', 'simSecValueSlider', Number.isFinite(value) ? value : 0);
+            }
+            calculate();
+        }
+
+        function syncBaseBorrow() {
+            const value = parseFloat(document.getElementById('borrowed').value);
+            if (!simulationMode) {
+                setSimulationValue('simBorrowed', 'simBorrowedSlider', Number.isFinite(value) ? value : 0);
+            }
+            calculate();
+        }
+
         // Simulation synchronization functions
         function syncSimSec(source) {
             const slider = document.getElementById('simSecValueSlider');
@@ -508,6 +539,7 @@
                 if (parseFloat(num.value) > parseFloat(slider.max)) slider.max = num.value;
                 slider.value = num.value;
             }
+            simulationMode = true;
             calculate();
         }
 
@@ -519,6 +551,7 @@
                 if (parseFloat(num.value) > parseFloat(slider.max)) slider.max = num.value;
                 slider.value = num.value;
             }
+            simulationMode = true;
             calculate();
         }
 
@@ -537,7 +570,8 @@
             
             document.getElementById('simBorrowed').value = 25000;
             document.getElementById('simBorrowedSlider').value = 25000;
-            
+
+            simulationMode = false;
             calculate();
         }
 
@@ -589,6 +623,7 @@
 
             // Check if simulating vs viewing base
             const isSimulating = Math.abs(simSecValue - baseSecValue) > 0.01 || Math.abs(simBorrowed - baseBorrowed) > 0.01;
+            simulationMode = isSimulating;
 
             // Update DOM Badge
             const modeBadge = document.getElementById('modeBadge');
