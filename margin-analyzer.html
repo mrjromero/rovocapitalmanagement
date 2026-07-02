@@ -164,10 +164,19 @@
                         <canvas id="compositionChart"></canvas>
                     </div>
                 </div>
+                
                 <div>
                     <h2 class="text-xl font-bold border-b border-slate-700 pb-2 mb-4">Annual Carry Analysis</h2>
-                    <div style="position: relative; height: 200px; width: 100%;">
+                    <div style="position: relative; height: 180px; width: 100%;">
                         <canvas id="carryChart"></canvas>
+                    </div>
+                </div>
+
+                <div>
+                    <h2 class="text-xl font-bold border-b border-slate-700 pb-2 mb-4">10-Year Growth Projection</h2>
+                    <p class="text-xs text-slate-400 mb-2">Assumes simulated DTA leverage is maintained and Net Carry is reinvested.</p>
+                    <div style="position: relative; height: 250px; width: 100%;">
+                        <canvas id="projectionChart"></canvas>
                     </div>
                 </div>
             </div>
@@ -180,6 +189,7 @@
         const fmtP = (val) => val.toFixed(2) + '%';
 
         Chart.defaults.color = '#9aa0a6';
+        Chart.defaults.font.family = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
 
         // 1. Nuanced Doughnut Chart for Portfolio Composition
         const ctxComp = document.getElementById('compositionChart').getContext('2d');
@@ -198,13 +208,7 @@
                 maintainAspectRatio: false,
                 plugins: { 
                     legend: { position: 'right', labels: { boxWidth: 12, font: { size: 11 } } },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                return context.label + ': ' + fmtC.format(context.raw);
-                            }
-                        }
-                    }
+                    tooltip: { callbacks: { label: function(context) { return context.label + ': ' + fmtC.format(context.raw); } } }
                 }, 
                 cutout: '65%' 
             }
@@ -223,6 +227,31 @@
                 maintainAspectRatio: false,
                 plugins: { legend: { display: false } }, 
                 scales: { y: { beginAtZero: true, grid: { color: '#2d313b' } } } 
+            }
+        });
+
+        // 3. 120-Month Projection Line Chart
+        const ctxProj = document.getElementById('projectionChart').getContext('2d');
+        const projChart = new Chart(ctxProj, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [
+                    { label: 'Total Assets', data: [], borderColor: '#4285F4', backgroundColor: 'transparent', tension: 0.3, pointRadius: 0, borderWidth: 2 },
+                    { label: 'Base Equity', data: [], borderColor: '#34A853', backgroundColor: 'transparent', tension: 0.3, borderDash: [5, 5], pointRadius: 0, borderWidth: 2 }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'top', labels: { boxWidth: 15, font: { size: 11 } } },
+                    tooltip: { mode: 'index', intersect: false, callbacks: { label: function(context) { return context.dataset.label + ': ' + fmtC.format(context.raw); } } }
+                },
+                scales: {
+                    x: { grid: { color: '#2d313b', drawBorder: false }, ticks: { maxTicksLimit: 12, maxRotation: 0 } },
+                    y: { grid: { color: '#2d313b', drawBorder: false }, ticks: { callback: function(value) { return '$' + (value/1000) + 'k'; } } }
+                }
             }
         });
 
@@ -273,30 +302,28 @@
             const simWithdraw = parseFloat(document.getElementById('simWithdraw').value) || 0;
             const simReinvest = parseFloat(document.getElementById('simReinvest').value) || 0;
 
-            // Update slider boundaries dynamically so you can't pay off more debt than you have
+            // Update slider boundaries dynamically
             document.getElementById('simWithdrawSlider').min = -borrowed;
-            document.getElementById('simReinvestSlider').min = -secValue; // You theoretically can't sell more securities than you have
+            document.getElementById('simReinvestSlider').min = -secValue;
 
-            // Base Math (M1 Blended Maintenance Ratio)
-            const maintRatio = reqEquity / secValue;
+            // Base Math
+            const maintRatio = secValue > 0 ? (reqEquity / secValue) : 0;
 
             // Simulation Math
             const simSecValue = Math.max(0, secValue + simReinvest);
             let simBorrowed = borrowed + simWithdraw + simReinvest;
             let simCash = cash;
 
-            // If you pay down more debt than exists, the excess simply becomes cash
             if (simBorrowed < 0) {
                 simCash += Math.abs(simBorrowed);
                 simBorrowed = 0;
             }
             
-            // Equity Math
             const simEquity = simSecValue + simCash - simBorrowed; 
             const simReqEquity = simSecValue * maintRatio;
             const simExcess = simEquity - simReqEquity;
 
-            // Composition Math (Breaking down equity into protective vs usable)
+            // Composition Breakdown
             const baseRequired = Math.min(simReqEquity, simSecValue * 0.25);
             const highMmrRequired = Math.max(0, simReqEquity - baseRequired);
             
@@ -318,10 +345,9 @@
 
             // Utilization Math
             const utilWithdraw = simBorrowed > 0 ? (simBorrowed / (simBorrowed + Math.max(0, simExcess))) : 0;
-            // Assuming Reg T 50% initial margin for new purchasing power
             const utilReinvest = simBorrowed > 0 ? (simBorrowed / (simBorrowed + Math.max(0, simExcess / 0.5))) : 0;
 
-            // Update DOM
+            // Update DOM Elements
             document.getElementById('outEquity').innerText = fmtC.format(simEquity);
             document.getElementById('outReqEquity').innerText = fmtC.format(simReqEquity);
             document.getElementById('outExcess').innerText = fmtC.format(simExcess);
@@ -346,18 +372,46 @@
 
             document.getElementById('outExcess').className = 'metric-value ' + (simExcess >= 0 ? 'good-val' : 'bad-val');
 
-            // Update Charts
-            // Structure: Borrowed, Base Req, High-MMR Req, Usable Excess
-            compChart.data.datasets[0].data = [
-                simBorrowed, 
-                baseRequired, 
-                highMmrRequired, 
-                Math.max(0, simExcess)
-            ];
+            // --- Update Charts ---
+            compChart.data.datasets[0].data = [simBorrowed, baseRequired, highMmrRequired, Math.max(0, simExcess)];
             compChart.update();
 
             carryChart.data.datasets[0].data = [annualIncome, annualMarginCost, netCarry];
             carryChart.update();
+
+            // --- 120-Month Projection Math (Constant Leverage Reinvestment) ---
+            const projLabels = [];
+            const projAssets = [];
+            const projBase = [];
+
+            let targetDta = dta; 
+            if (targetDta >= 1 || targetDta < 0) targetDta = 0; // Prevent infinite loops if deeply insolvent
+
+            let curEq = simEquity;
+
+            for (let i = 0; i <= 120; i++) {
+                projLabels.push('Month ' + i);
+                
+                // Maintain DTA Ratio: Assets = Equity / (1 - DTA)
+                let cAssets = curEq > 0 ? curEq / (1 - targetDta) : 0;
+                let cDebt = cAssets - curEq;
+                
+                projAssets.push(cAssets);
+                projBase.push(curEq);
+
+                // Compounding Net Carry
+                let mYield = cAssets * (yieldRate / 12);
+                let mCost = cDebt * (marginRate / 12);
+                let mNet = mYield - mCost;
+                
+                curEq += mNet; 
+                if (curEq < 0) curEq = 0;
+            }
+
+            projChart.data.labels = projLabels;
+            projChart.data.datasets[0].data = projAssets;
+            projChart.data.datasets[1].data = projBase;
+            projChart.update();
         }
 
         // Run once on load
