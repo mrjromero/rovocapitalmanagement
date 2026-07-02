@@ -138,16 +138,22 @@
                     <span class="metric-label">Margin Util. (Withdrawal)</span>
                     <span class="metric-value" id="outUtilWithdraw">0.00%</span>
                 </div>
-                <div class="metric-row">
+                <div class="metric-row border-b-0 pb-1">
                     <span class="metric-label">Margin Util. (Reinvestment)</span>
                     <span class="metric-value" id="outUtilReinvest">0.00%</span>
                 </div>
-                <div class="metric-row">
-                    <span class="metric-label font-bold text-white">Margin Health (Max Drop)</span>
-                    <span class="metric-value font-bold" id="outMaxDrop">0.00%</span>
+                
+                <div class="py-3">
+                    <div class="flex justify-between mb-3">
+                        <span class="metric-label font-bold text-white">Margin Health (Max Drop)</span>
+                        <span class="metric-value font-bold" id="outMaxDrop">0.00%</span>
+                    </div>
+                    <div class="w-full h-2 rounded-full relative" style="background: linear-gradient(to right, #f28b82 0%, #fdd663 45%, #81c995 90%); box-shadow: inset 0 1px 2px rgba(0,0,0,0.2);">
+                        <div id="healthIndicator" class="absolute h-4 w-2 bg-slate-200 rounded-sm" style="top: -4px; left: 0%; transition: left 0.4s cubic-bezier(0.4, 0, 0.2, 1); transform: translateX(-50%); box-shadow: 0 1px 3px rgba(0,0,0,0.8); border: 1px solid #111318;"></div>
+                    </div>
                 </div>
 
-                <div class="mt-5 p-4 bg-slate-800 rounded-md border border-slate-700 text-xs text-slate-300 space-y-2 leading-relaxed">
+                <div class="mt-4 p-4 bg-slate-800 rounded-md border border-slate-700 text-xs text-slate-300 space-y-2 leading-relaxed">
                     <p><strong class="text-white">Multiplier:</strong> Represents your total assets per $1 of your own equity. A 1.33x multiplier means you control $1.33 in the market for every $1 you own.</p>
                     <p><strong class="text-white">DSCR:</strong> Measures if your portfolio's income covers its margin interest. A ratio above 1.0x means your debt is paying for itself without you injecting cash.</p>
                     <p><strong class="text-white">DTA (Debt-to-Asset):</strong> The strict percentage of your total portfolio funded by borrowed money. Lower means less risk.</p>
@@ -359,15 +365,22 @@
             document.getElementById('outUtilWithdraw').innerText = fmtP(utilWithdraw * 100);
             document.getElementById('outUtilReinvest').innerText = fmtP(utilReinvest * 100);
             
+            // Logic for visual health indicator and text mapping (0 to 100% calibration)
             if (simSecValue <= 0) {
                 document.getElementById('outMaxDrop').innerText = 'N/A (No Securities)';
                 document.getElementById('outMaxDrop').className = 'metric-value font-bold text-gray-500';
+                document.getElementById('healthIndicator').style.left = '0%';
             } else if (maxDropPct >= 1) {
                 document.getElementById('outMaxDrop').innerText = '100.00% (No Risk)';
                 document.getElementById('outMaxDrop').className = 'metric-value font-bold good-val';
+                document.getElementById('healthIndicator').style.left = '100%';
             } else {
                 document.getElementById('outMaxDrop').innerText = fmtP(maxDropPct * 100) + ` (${fmtC.format(maxDropValue)})`;
                 document.getElementById('outMaxDrop').className = 'metric-value font-bold ' + (maxDropPct > 0.4 ? 'good-val' : maxDropPct > 0.25 ? 'warn-val' : 'bad-val');
+                
+                // Map max drop percentage (0% to 100%) to the 0-100% physical width of the gradient bar
+                let indicatorPos = Math.min(Math.max(maxDropPct * 100, 0), 100);
+                document.getElementById('healthIndicator').style.left = indicatorPos + '%';
             }
 
             document.getElementById('outExcess').className = 'metric-value ' + (simExcess >= 0 ? 'good-val' : 'bad-val');
