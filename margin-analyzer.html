@@ -365,7 +365,7 @@
             document.getElementById('outUtilWithdraw').innerText = fmtP(utilWithdraw * 100);
             document.getElementById('outUtilReinvest').innerText = fmtP(utilReinvest * 100);
             
-            // Logic for visual health indicator and text mapping
+            // Logic for visual health indicator and text mapping (0 to 100% calibration)
             if (simSecValue <= 0) {
                 document.getElementById('outMaxDrop').innerText = 'N/A (No Securities)';
                 document.getElementById('outMaxDrop').className = 'metric-value font-bold text-gray-500';
@@ -378,8 +378,8 @@
                 document.getElementById('outMaxDrop').innerText = fmtP(maxDropPct * 100) + ` (${fmtC.format(maxDropValue)})`;
                 document.getElementById('outMaxDrop').className = 'metric-value font-bold ' + (maxDropPct > 0.4 ? 'good-val' : maxDropPct > 0.25 ? 'warn-val' : 'bad-val');
                 
-                // Map max drop percentage (0% to 65%) to the 0-100% physical width of the gradient bar
-                let indicatorPos = Math.min(Math.max((maxDropPct / 0.65) * 100, 0), 100);
+                // Map max drop percentage (0% to 100%) to the 0-100% physical width of the gradient bar
+                let indicatorPos = Math.min(Math.max(maxDropPct * 100, 0), 100);
                 document.getElementById('healthIndicator').style.left = indicatorPos + '%';
             }
 
