@@ -117,13 +117,15 @@
                 <div>
                     <h2 class="text-xl font-bold border-b border-slate-700 pb-2 mb-4">Detailed Portfolio Composition</h2>
                     <p class="text-xs text-slate-400 mb-2">Breakdown of Total Assets (Debt vs. Protective Equity vs. Usable Equity)</p>
-                    <div style="height: 150px;">
+                    <div style="position: relative; height: 250px; width: 100%;">
                         <canvas id="compositionChart"></canvas>
                     </div>
                 </div>
                 <div>
                     <h2 class="text-xl font-bold border-b border-slate-700 pb-2 mb-4">Annual Carry Analysis</h2>
-                    <canvas id="carryChart" height="200"></canvas>
+                    <div style="position: relative; height: 200px; width: 100%;">
+                        <canvas id="carryChart"></canvas>
+                    </div>
                 </div>
             </div>
 
@@ -136,37 +138,32 @@
 
         Chart.defaults.color = '#9aa0a6';
 
-        // 1. Stacked Horizontal Bar Chart for Portfolio Composition
+        // 1. Nuanced Doughnut Chart for Portfolio Composition
         const ctxComp = document.getElementById('compositionChart').getContext('2d');
         const compChart = new Chart(ctxComp, {
-            type: 'bar',
+            type: 'doughnut',
             data: {
-                labels: ['Portfolio Assets'],
-                datasets: [
-                    { label: 'Total Borrowed', data: [0], backgroundColor: '#f28b82' },
-                    { label: 'Base Req. Equity (25%)', data: [0], backgroundColor: '#a8dabc' },
-                    { label: 'High-MMR Req. Equity', data: [0], backgroundColor: '#5db075' },
-                    { label: 'Usable (Excess) Equity', data: [0], backgroundColor: '#1e8e3e' }
-                ]
+                labels: ['Total Borrowed', 'Base Req. (25%)', 'High-MMR Req.', 'Usable (Excess) Equity'],
+                datasets: [{ 
+                    data: [0, 0, 0, 0], 
+                    backgroundColor: ['#f28b82', '#a8dabc', '#5db075', '#1e8e3e'], 
+                    borderWidth: 0 
+                }]
             },
-            options: {
-                indexAxis: 'y',
-                responsive: true,
+            options: { 
+                responsive: true, 
                 maintainAspectRatio: false,
-                scales: {
-                    x: { stacked: true, display: false },
-                    y: { stacked: true, display: false }
-                },
-                plugins: {
-                    legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 10 } } },
+                plugins: { 
+                    legend: { position: 'right', labels: { boxWidth: 12, font: { size: 11 } } },
                     tooltip: {
                         callbacks: {
                             label: function(context) {
-                                return context.dataset.label + ': ' + fmtC.format(context.raw);
+                                return context.label + ': ' + fmtC.format(context.raw);
                             }
                         }
                     }
-                }
+                }, 
+                cutout: '65%' 
             }
         });
 
@@ -179,7 +176,8 @@
                 datasets: [{ data: [0, 0, 0], backgroundColor: ['#81c995', '#f28b82', '#8ab4f8'] }] 
             },
             options: { 
-                responsive: true, 
+                responsive: true,
+                maintainAspectRatio: false,
                 plugins: { legend: { display: false } }, 
                 scales: { y: { beginAtZero: true, grid: { color: '#2d313b' } } } 
             }
@@ -249,11 +247,13 @@
             document.getElementById('outExcess').className = 'metric-value ' + (simExcess >= 0 ? 'good-val' : 'bad-val');
 
             // Update Charts
-            // Datasets: 0=Borrowed, 1=Base Req, 2=High-MMR Req, 3=Usable Excess
-            compChart.data.datasets[0].data = [simBorrowed];
-            compChart.data.datasets[1].data = [baseRequired];
-            compChart.data.datasets[2].data = [highMmrRequired];
-            compChart.data.datasets[3].data = [Math.max(0, simExcess)];
+            // Structure: Borrowed, Base Req, High-MMR Req, Usable Excess
+            compChart.data.datasets[0].data = [
+                simBorrowed, 
+                baseRequired, 
+                highMmrRequired, 
+                Math.max(0, simExcess)
+            ];
             compChart.update();
 
             carryChart.data.datasets[0].data = [annualIncome, annualMarginCost, netCarry];
