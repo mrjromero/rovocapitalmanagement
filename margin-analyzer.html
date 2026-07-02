@@ -6,390 +6,271 @@
     <title>Positive Carry Portfolio Visualizer</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&family=Roboto+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --surface-primary: #0d1728;
-            --surface-white: #ffffff;
-            --surface-white-background: rgba(255, 255, 255, .65);
-            --surface-success: #00b5ae;
-            --text-text: #0D1728;
-            --text-muted: #595959;
-            --text-destructive: #b50007;
-            --border-dominant: #dfdfe6;
-            --border-soft: #eeeef2;
-            --chart-categorical-1: #2e809c;
-            --chart-categorical-2: #00b5ae;
-            --chart-categorical-3: #1b4a7b;
-            --chart-categorical-4: #8fa7de;
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;600;700&display=swap');
+
+        body { 
+            background-color: #f5f5f5; 
+            color: #0d1728; 
+            font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+        }
+        
+        h1, h2, h3 {
+            font-family: 'Poppins', sans-serif;
+            color: #0d1728;
         }
 
-        body {
-            font-family: 'DM Sans', sans-serif;
-            background-color: #f5f5f5;
-            color: var(--text-text);
-            margin: 0;
-            padding: 0;
-            min-height: 100vh;
+        .card { 
+            background-color: #fff; 
+            border: 1px solid #DFDFE6; 
+            border-radius: 16px; 
+            box-shadow: 0 0.5px 2.5px #0000001a, 0 0 0 0.5px #0000000d;
         }
 
-        /* Form Inputs Customization */
-        .input-group {
-            display: flex;
-            flex-direction: column;
-            margin-bottom: 16px;
+        .border-slate-700 {
+            border-color: #E8ECF2 !important;
         }
-        .input-group label {
+
+        .input-group { display: flex; flex-direction: column; margin-bottom: 12px; }
+        
+        .input-group label { 
             font-family: 'DM Sans', sans-serif;
-            font-size: 14px;
-            font-weight: 700;
-            color: var(--text-muted);
-            margin-bottom: 6px;
+            font-size: 14px; 
+            color: #595959; 
+            margin-bottom: 4px; 
+            font-weight: 700; 
         }
-        .input-group input[type="number"] {
-            background-color: #fff;
-            border: 1px solid var(--border-dominant);
-            color: var(--text-text);
-            padding: 10px 14px;
-            border-radius: 8px;
+        
+        .input-group input[type="number"] { 
             font-family: 'Roboto Mono', monospace;
-            font-size: 14px;
-            outline: none;
-            transition: border-color 0.2s, box-shadow 0.2s;
-            box-shadow: inset 0 1px 2px rgba(0,0,0,0.02);
-        }
-        .input-group input[type="number"]:focus {
-            border-color: #00b5ae;
-            box-shadow: 0 0 0 3px rgba(0, 181, 174, 0.1);
+            background-color: #fff; 
+            border: 1px solid #D2DBE9; 
+            color: #0d1728; 
+            padding: 8px 12px; 
+            border-radius: 6px; 
+            outline: none; 
+            transition: border-color 0.2s, box-shadow 0.2s; 
         }
 
-        /* Sliders */
-        input[type=range] {
-            -webkit-appearance: none;
-            appearance: none;
-            background: transparent;
-            width: 100%;
+        .input-group input[type="number"]:focus { 
+            border-color: #2e809c; 
+            box-shadow: 0 0 0 2px rgba(46, 128, 156, 0.2);
         }
+        
+        /* Custom Slider Styling - Light Theme */
+        input[type=range] { -webkit-appearance: none; appearance: none; background: transparent; width: 100%; }
         input[type=range]:focus { outline: none; }
         
-        input[type=range]::-webkit-slider-runnable-track {
-            width: 100%; height: 6px; cursor: pointer; background: var(--border-dominant); border-radius: 3px;
-        }
-        input[type=range]::-webkit-slider-thumb {
-            height: 20px; width: 20px; border-radius: 50%; background: #00b5ae; cursor: pointer; -webkit-appearance: none; margin-top: -7px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); border: 2px solid #fff;
-        }
-        input[type=range]:focus::-webkit-slider-runnable-track { background: #c0c0ca; }
+        /* WebKit (Chrome, Safari, Edge) */
+        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 6px; cursor: pointer; background: #E8ECF2; border-radius: 3px; }
+        input[type=range]::-webkit-slider-thumb { height: 18px; width: 18px; border-radius: 50%; background: #2e809c; cursor: pointer; -webkit-appearance: none; margin-top: -6px; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        input[type=range]:focus::-webkit-slider-runnable-track { background: #D2DBE9; }
 
-        input[type=range]::-moz-range-track {
-            width: 100%; height: 6px; cursor: pointer; background: var(--border-dominant); border-radius: 3px;
-        }
-        input[type=range]::-moz-range-thumb {
-            height: 20px; width: 20px; border-radius: 50%; background: #00b5ae; cursor: pointer; border: 2px solid #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-        }
-        input[type=range]:focus::-moz-range-track { background: #c0c0ca; }
-
-        /* Dashboard Core Classes */
-        .margin-health-analyzer-dashboard {
-            width: 100%;
-            min-height: 100vh;
-            padding: 32px;
-        }
-        .margin-health-analyzer-dashboard-header {
-            margin-bottom: 32px;
-            max-width: 1400px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-        .margin-health-analyzer-dashboard-title {
-            font-family: 'Poppins', sans-serif;
-            font-size: 32px;
-            font-weight: 600;
-            color: #0d1728;
-            margin: 0 0 8px;
-        }
-        .margin-health-analyzer-dashboard-subtitle {
+        /* Firefox */
+        input[type=range]::-moz-range-track { width: 100%; height: 6px; cursor: pointer; background: #E8ECF2; border-radius: 3px; }
+        input[type=range]::-moz-range-thumb { height: 18px; width: 18px; border-radius: 50%; background: #2e809c; cursor: pointer; border: none; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        input[type=range]:focus::-moz-range-track { background: #D2DBE9; }
+        
+        .metric-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #E8ECF2; }
+        .metric-row:last-child { border-bottom: none; }
+        
+        .metric-label { 
             font-family: 'DM Sans', sans-serif;
-            font-size: 15px;
-            color: #595959;
-            margin: 0;
-        }
-        .margin-health-analyzer-dashboard-content {
-            display: flex;
-            gap: 24px;
-            max-width: 1400px;
-            margin: 0 auto;
-            align-items: stretch;
-        }
-        .margin-health-analyzer-dashboard-left-panel {
-            flex: 0 0 400px;
-            background-color: rgba(255, 255, 255, 0.9);
-            border-radius: 16px;
-            padding: 24px;
-            box-shadow: 0 4px 20px rgba(38, 91, 140, 0.06), 0 1px 3px rgba(0,0,0,0.04);
-            border: 1px solid rgba(230, 230, 235, 0.8);
-            display: flex;
-            flex-direction: column;
-        }
-        .margin-health-analyzer-dashboard-right-panel {
-            flex: 1;
-            background-color: transparent;
-            display: flex;
-            flex-direction: column;
-            gap: 24px;
-        }
-
-        /* Titles inside panels */
-        .margin-health-analyzer-section-title {
-            font-family: 'Poppins', sans-serif;
-            font-size: 20px;
-            font-weight: 600;
-            color: #0d1728;
-            margin: 0 0 20px;
-            border-bottom: 2px solid var(--border-soft);
-            padding-bottom: 12px;
-        }
-
-        /* Metric Cards */
-        .margin-health-analyzer-current-analysis-cards {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 16px;
-            width: 100%;
-        }
-        .margin-health-analyzer-dta-dscr-cards {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 16px;
-            width: 100%;
-        }
-        .margin-health-analyzer-metric-card {
-            background-color: #fff;
-            border: 1px solid var(--border-dominant);
-            border-radius: 12px;
-            padding: 20px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        }
-        .margin-health-analyzer-metric-card-label {
-            font-family: 'DM Sans', sans-serif;
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--text-muted);
-            margin-bottom: 8px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        .margin-health-analyzer-metric-card-value {
-            font-family: 'Roboto Mono', monospace;
-            font-size: 28px;
-            font-weight: 700;
-            color: #0d1728;
+            color: #595959; 
+            font-size: 14px; 
+            font-weight: 500;
         }
         
-        /* Health Colors */
-        .text-good { color: #00b5ae !important; }
-        .text-warn { color: #e4bd52 !important; }
-        .text-bad { color: #ff7f50 !important; }
-
-        /* Explanations Box */
-        .margin-health-analyzer-result-details {
-            background-color: #edf1fb;
-            border: 1px solid #D2DBE9;
-            border-radius: 12px;
-            padding: 20px;
-            font-family: 'DM Sans', sans-serif;
-            font-size: 13px;
-            color: #595959;
-            line-height: 1.6;
-        }
-        .margin-health-analyzer-result-details strong {
-            color: #1b4a7b;
-            font-weight: 700;
+        .metric-value { 
+            font-family: 'Roboto Mono', monospace;
+            font-weight: 600; 
+            font-size: 16px; 
+            text-align: right; 
+            color: #0d1728;
         }
 
-        /* Buttons */
-        .btn-restart {
-            width: 100%;
-            background: linear-gradient(180deg, #0dbcb5 0%, #00b5ae 49%, #00a59f 50%, #00b5ae 100%);
+        /* Color States */
+        .good-val { color: #00b5ae !important; }
+        .warn-val { color: #e4bd52 !important; }
+        .bad-val { color: #ff7f50 !important; }
+
+        /* Custom Button */
+        .btn-primary {
+            background-color: #2e809c;
             color: #fff;
             border: none;
             border-radius: 8px;
-            padding: 14px 24px;
+            padding: 12px 24px;
             font-family: 'DM Sans', sans-serif;
-            font-size: 15px;
-            font-weight: 700;
+            font-size: 14px;
+            font-weight: 600;
             cursor: pointer;
-            box-shadow: 0 4px 8px rgba(0, 181, 174, 0.2);
-            transition: all 0.2s ease;
+            transition: background-color 0.2s ease;
         }
-        .btn-restart:hover {
-            background: linear-gradient(180deg, #00a59f 0%, #00918B 49%, #007E79 50%, #00918B 100%);
-        }
-
-        /* Visual Panels */
-        .chart-panel {
-            background-color: #fff;
-            border: 1px solid var(--border-dominant);
-            border-radius: 16px;
-            padding: 24px;
-            box-shadow: 0 4px 20px rgba(38, 91, 140, 0.04);
+        .btn-primary:hover {
+            background-color: #256b7c;
         }
 
-        @media (max-width: 1024px) {
-            .margin-health-analyzer-dashboard-content { flex-direction: column; }
-            .margin-health-analyzer-dashboard-left-panel { flex: none; width: 100%; }
-            .margin-health-analyzer-current-analysis-cards, .margin-health-analyzer-dta-dscr-cards { grid-template-columns: 1fr; }
+        /* Educational Box */
+        .edu-box {
+            background-color: #edf1fb;
+            border: 1px solid #D2DBE9;
+            border-radius: 12px;
+        }
+        .edu-box strong {
+            color: #0d1728;
+            font-weight: 700;
         }
     </style>
 </head>
-<body>
-    <div class="margin-health-analyzer-dashboard">
+<body class="p-4 md:p-8">
+    <div class="max-w-7xl mx-auto">
+        <h1 class="text-3xl font-bold mb-6">Positive Carry Portfolio Visualizer</h1>
         
-        <div class="margin-health-analyzer-dashboard-header">
-            <h1 class="margin-health-analyzer-dashboard-title">Positive Carry Portfolio Visualizer</h1>
-            <p class="margin-health-analyzer-dashboard-subtitle">Simulate margin utility, debt-to-asset leverage, and compounding net carry.</p>
-        </div>
-        
-        <div class="margin-health-analyzer-dashboard-content">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             
-            <div class="margin-health-analyzer-dashboard-left-panel">
-                <div class="margin-health-analyzer-section-title">1. Account Data</div>
-                
-                <div class="input-group">
-                    <label>Securities Value ($)</label>
-                    <input type="number" id="secValue" step="any" value="100000" oninput="calculate()">
-                </div>
-                <div class="input-group">
-                    <label>Cash Balance ($)</label>
-                    <input type="number" id="cash" step="any" value="0" oninput="calculate()">
-                </div>
-                <div class="input-group">
-                    <label>Total Borrowed ($)</label>
-                    <input type="number" id="borrowed" step="any" value="25000" oninput="calculate()">
-                </div>
-                <div class="input-group">
-                    <label>Required Equity ($)</label>
-                    <input type="number" id="reqEquity" step="any" value="30000" oninput="calculate()">
-                </div>
-
-                <div class="margin-health-analyzer-section-title mt-6">2. Market Variables</div>
-                <div class="grid grid-cols-2 gap-4">
+            <div class="card p-5 flex flex-col justify-between">
+                <div>
+                    <h2 class="text-xl font-bold border-b pb-2 mb-4">1. Account Data</h2>
                     <div class="input-group">
-                        <label>Margin Rate (%)</label>
-                        <input type="number" id="marginRate" step="any" value="5.65" oninput="calculate()">
+                        <label>Securities Value ($)</label>
+                        <input type="number" id="secValue" step="any" value="100000" oninput="calculate()">
                     </div>
                     <div class="input-group">
-                        <label>Expected Yield (%)</label>
-                        <input type="number" id="yieldRate" step="any" value="15" oninput="calculate()">
+                        <label>Cash Balance ($)</label>
+                        <input type="number" id="cash" step="any" value="0" oninput="calculate()">
                     </div>
-                </div>
+                    <div class="input-group">
+                        <label>Total Borrowed ($)</label>
+                        <input type="number" id="borrowed" step="any" value="25000" oninput="calculate()">
+                    </div>
+                    <div class="input-group">
+                        <label>Required Equity ($)</label>
+                        <input type="number" id="reqEquity" step="any" value="30000" oninput="calculate()">
+                    </div>
 
-                <div class="margin-health-analyzer-section-title mt-6">3. Simulation Actions</div>
-                
-                <div class="input-group">
-                    <label>Simulate Borrowing Change (+/- Cash)</label>
-                    <div class="flex items-center gap-3">
-                        <input type="range" id="simWithdrawSlider" min="-25000" max="100000" step="500" value="0" oninput="syncWithdraw('slider')">
-                        <input type="number" id="simWithdraw" class="w-1/3" step="any" value="0" oninput="syncWithdraw('number')">
+                    <h2 class="text-xl font-bold border-b pb-2 mb-4 mt-6">2. Market Variables</h2>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="input-group">
+                            <label>Margin Rate (%)</label>
+                            <input type="number" id="marginRate" step="any" value="5.65" oninput="calculate()">
+                        </div>
+                        <div class="input-group">
+                            <label>Expected Yield (%)</label>
+                            <input type="number" id="yieldRate" step="any" value="15" oninput="calculate()">
+                        </div>
                     </div>
-                    <p class="text-xs text-[#8a8a8a] mt-1 text-right font-medium">Negative = Pay Down | Positive = Withdraw</p>
-                </div>
 
-                <div class="input-group mt-3">
-                    <label>Simulate Margin Reinvest (+/- Securities)</label>
-                    <div class="flex items-center gap-3">
-                        <input type="range" id="simReinvestSlider" min="-100000" max="100000" step="500" value="0" oninput="syncReinvest('slider')">
-                        <input type="number" id="simReinvest" class="w-1/3" step="any" value="0" oninput="syncReinvest('number')">
+                    <h2 class="text-xl font-bold border-b pb-2 mb-4 mt-6">3. Simulation Actions</h2>
+                    
+                    <div class="input-group">
+                        <label>Simulate Borrowing Change (+/- Cash)</label>
+                        <div class="flex items-center gap-3">
+                            <input type="range" id="simWithdrawSlider" min="-25000" max="100000" step="500" value="0" oninput="syncWithdraw('slider')">
+                            <input type="number" id="simWithdraw" class="w-1/3" step="any" value="0" oninput="syncWithdraw('number')">
+                        </div>
+                        <p class="text-xs text-[#595959] mt-1 text-right font-['DM_Sans']">Negative = Pay Down | Positive = Withdraw</p>
                     </div>
-                    <p class="text-xs text-[#8a8a8a] mt-1 text-right font-medium">Negative = Sell to Pay Debt | Positive = Buy on Margin</p>
+
+                    <div class="input-group mt-3">
+                        <label>Simulate Margin Reinvest (+/- Securities)</label>
+                        <div class="flex items-center gap-3">
+                            <input type="range" id="simReinvestSlider" min="-100000" max="100000" step="500" value="0" oninput="syncReinvest('slider')">
+                            <input type="number" id="simReinvest" class="w-1/3" step="any" value="0" oninput="syncReinvest('number')">
+                        </div>
+                        <p class="text-xs text-[#595959] mt-1 text-right font-['DM_Sans']">Negative = Sell to Pay Debt | Positive = Buy on Margin</p>
+                    </div>
                 </div>
                 
-                <button onclick="resetDefaults()" class="btn-restart mt-6">
+                <button onclick="resetDefaults()" class="btn-primary w-full mt-8 shadow-sm">
                     Reset Default Values
                 </button>
             </div>
 
-            <div class="margin-health-analyzer-dashboard-right-panel">
+            <div class="card p-5">
+                <h2 class="text-xl font-bold border-b pb-2 mb-4">Simulated Dashboard</h2>
                 
-                <div class="margin-health-analyzer-current-analysis-cards">
-                    <div class="margin-health-analyzer-metric-card">
-                        <div class="margin-health-analyzer-metric-card-label">Total Equity Value</div>
-                        <div class="margin-health-analyzer-metric-card-value" id="outEquity">$0.00</div>
+                <div class="metric-row">
+                    <span class="metric-label">Total Equity Value</span>
+                    <span class="metric-value" id="outEquity">$0.00</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Required Equity</span>
+                    <span class="metric-value" id="outReqEquity">$0.00</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Usable (Excess) Equity</span>
+                    <span class="metric-value good-val" id="outExcess">$0.00</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Maintenance Req. (Blended)</span>
+                    <span class="metric-value" id="outMaintRatio">0.00%</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Multiplier (Leverage Factor)</span>
+                    <span class="metric-value" id="outMultiplier">0.00x</span>
+                </div>
+
+                <h3 class="text-lg font-semibold mt-6 mb-2">Risk & Health Metrics</h3>
+                <div class="metric-row">
+                    <span class="metric-label" title="Debt Service Coverage Ratio">DSCR</span>
+                    <span class="metric-value" id="outDscr">0.00x</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label" title="Debt to Asset Ratio">Debt-to-Asset (DTA)</span>
+                    <span class="metric-value" id="outDta">0.00%</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Margin Util. (Withdrawal)</span>
+                    <span class="metric-value" id="outUtilWithdraw">0.00%</span>
+                </div>
+                <div class="metric-row border-b-0 pb-1">
+                    <span class="metric-label">Margin Util. (Reinvestment)</span>
+                    <span class="metric-value" id="outUtilReinvest">0.00%</span>
+                </div>
+                
+                <div class="py-3">
+                    <div class="flex justify-between mb-3">
+                        <span class="metric-label font-bold text-[#0d1728]">Margin Health (Max Drop)</span>
+                        <span class="metric-value font-bold" id="outMaxDrop">0.00%</span>
                     </div>
-                    <div class="margin-health-analyzer-metric-card">
-                        <div class="margin-health-analyzer-metric-card-label">Usable (Excess) Equity</div>
-                        <div class="margin-health-analyzer-metric-card-value text-good" id="outExcess">$0.00</div>
-                    </div>
-                    <div class="margin-health-analyzer-metric-card">
-                        <div class="margin-health-analyzer-metric-card-label">Maint. Req. (Blended)</div>
-                        <div class="margin-health-analyzer-metric-card-value" id="outMaintRatio">0.00%</div>
+                    <div class="w-full h-2 rounded-full relative" style="background: linear-gradient(to right, #ff7f50 0%, #e4bd52 45%, #00b5ae 90%); box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);">
+                        <div id="healthIndicator" class="absolute h-4 w-2 bg-white rounded-sm" style="top: -4px; left: 0%; transition: left 0.4s cubic-bezier(0.4, 0, 0.2, 1); transform: translateX(-50%); box-shadow: 0 1px 3px rgba(0,0,0,0.2); border: 1px solid #D2DBE9;"></div>
                     </div>
                 </div>
 
-                <div class="margin-health-analyzer-dta-dscr-cards">
-                    <div class="margin-health-analyzer-metric-card">
-                        <div class="margin-health-analyzer-metric-card-label">Debt-to-Asset (DTA)</div>
-                        <div class="margin-health-analyzer-metric-card-value" id="outDta">0.00%</div>
-                    </div>
-                    <div class="margin-health-analyzer-metric-card">
-                        <div class="margin-health-analyzer-metric-card-label">Multiplier (Leverage)</div>
-                        <div class="margin-health-analyzer-metric-card-value" id="outMultiplier">0.00x</div>
-                    </div>
-                    <div class="margin-health-analyzer-metric-card">
-                        <div class="margin-health-analyzer-metric-card-label">DSCR</div>
-                        <div class="margin-health-analyzer-metric-card-value" id="outDscr">0.00x</div>
-                    </div>
-                    <div class="margin-health-analyzer-metric-card">
-                        <div class="margin-health-analyzer-metric-card-label">Margin Util. (Reinvest)</div>
-                        <div class="margin-health-analyzer-metric-card-value" id="outUtilReinvest">0.00%</div>
-                    </div>
-                </div>
-                
-                <div class="chart-panel">
-                    <div class="flex justify-between items-end mb-4">
-                        <div>
-                            <div class="margin-health-analyzer-metric-card-label text-left mb-1">Margin Health (Max Drop)</div>
-                            <div class="text-sm text-[#595959] font-medium">The drop required to wipe out excess equity and trigger a margin call.</div>
-                        </div>
-                        <div class="margin-health-analyzer-metric-card-value text-right" id="outMaxDrop">0.00%</div>
-                    </div>
-                    
-                    <div class="w-full h-3 rounded-full relative bg-[#E9ECEF]" style="background: linear-gradient(to right, #ff7f50 0%, #e4bd52 45%, #00b5ae 90%); box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);">
-                        <div id="healthIndicator" class="absolute h-6 w-3 bg-[#fff] rounded-sm" style="top: -6px; left: 0%; transition: left 0.4s cubic-bezier(0.4, 0, 0.2, 1); transform: translateX(-50%); box-shadow: 0 2px 6px rgba(0,0,0,0.3); border: 1px solid #DFDFE6;"></div>
-                    </div>
-                </div>
-
-                <div class="margin-health-analyzer-result-details space-y-3">
-                    <h3 class="text-base font-bold text-[#0d1728] mb-2 border-b border-[#D2DBE9] pb-2">Understanding Your Metrics</h3>
+                <div class="mt-4 p-4 edu-box text-sm text-[#595959] space-y-2 leading-relaxed font-['DM_Sans']">
+                    <h3 class="text-[15px] font-bold text-[#0d1728] mb-3 border-b border-[#D2DBE9] pb-2 font-['Poppins']">Understanding Your Metrics</h3>
                     <p><strong>Multiplier:</strong> Represents your total assets per $1 of your own equity. A 1.33x multiplier means you control $1.33 in the market for every $1 you own.</p>
                     <p><strong>DSCR:</strong> Measures if your portfolio's income covers its margin interest. A ratio above 1.0x means your debt is paying for itself without you injecting cash.</p>
                     <p><strong>DTA (Debt-to-Asset):</strong> The strict percentage of your total portfolio funded by borrowed money. Lower means less risk.</p>
-                    <p><strong>Margin Utilization:</strong> How much of your borrowing limit you are actively using. <em>Withdrawal</em> assumes taking cash out, while <em>Reinvestment</em> assumes buying more stock (which adds its own equity buffer to your limit).</p>
+                    <p><strong>Margin Utilization:</strong> How much of your borrowing limit you are actively using. <em>Withdrawal</em> assumes taking cash out of the account, while <em>Reinvestment</em> assumes buying more stock (which adds its own equity buffer to your limit).</p>
+                    <p><strong>Margin Health:</strong> The exact portfolio drop required to wipe out your excess equity, resulting in a margin call. The dollar figure shows the absolute market value loss at that threshold.</p>
                 </div>
+            </div>
 
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div class="chart-panel">
-                        <div class="margin-health-analyzer-metric-card-label text-left">Detailed Portfolio Composition</div>
-                        <div style="position: relative; height: 220px; width: 100%; margin-top: 16px;">
-                            <canvas id="compositionChart"></canvas>
-                        </div>
-                    </div>
-                    <div class="chart-panel">
-                        <div class="margin-health-analyzer-metric-card-label text-left">Annual Carry Analysis</div>
-                        <div style="position: relative; height: 220px; width: 100%; margin-top: 16px;">
-                            <canvas id="carryChart"></canvas>
-                        </div>
+            <div class="card p-5 flex flex-col gap-8">
+                <div>
+                    <h2 class="text-xl font-bold border-b pb-2 mb-4">Detailed Portfolio Composition</h2>
+                    <p class="text-xs text-[#595959] mb-2 font-['DM_Sans']">Breakdown of Total Assets (Debt vs. Protective Equity vs. Usable Equity)</p>
+                    <div style="position: relative; height: 250px; width: 100%;">
+                        <canvas id="compositionChart"></canvas>
                     </div>
                 </div>
+                
+                <div>
+                    <h2 class="text-xl font-bold border-b pb-2 mb-4">Annual Carry Analysis</h2>
+                    <div style="position: relative; height: 180px; width: 100%;">
+                        <canvas id="carryChart"></canvas>
+                    </div>
+                </div>
 
-                <div class="chart-panel">
-                    <div class="margin-health-analyzer-metric-card-label text-left">10-Year Growth Projection</div>
-                    <p class="text-xs text-[#595959] mb-4 font-medium">Assumes simulated DTA leverage is maintained and Net Carry is continuously reinvested.</p>
-                    <div style="position: relative; height: 300px; width: 100%;">
+                <div>
+                    <h2 class="text-xl font-bold border-b pb-2 mb-4">10-Year Growth Projection</h2>
+                    <p class="text-xs text-[#595959] mb-2 font-['DM_Sans']">Assumes simulated DTA leverage is maintained and Net Carry is reinvested.</p>
+                    <div style="position: relative; height: 250px; width: 100%;">
                         <canvas id="projectionChart"></canvas>
                     </div>
                 </div>
@@ -402,10 +283,11 @@
         const fmtC = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' });
         const fmtP = (val) => val.toFixed(2) + '%';
 
-        // Apply new light-theme styling to Chart.js defaults
+        // Apply global chart defaults based on the new light theme CSS
         Chart.defaults.color = '#595959';
-        Chart.defaults.font.family = '"DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-        Chart.defaults.scale.grid.color = '#E8ECF2';
+        Chart.defaults.font.family = "'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
+
+        const gridOptions = { color: '#E8ECF2', drawBorder: false };
 
         // 1. Nuanced Doughnut Chart for Portfolio Composition
         const ctxComp = document.getElementById('compositionChart').getContext('2d');
@@ -415,8 +297,8 @@
                 labels: ['Total Borrowed', 'Base Req. (25%)', 'High-MMR Req.', 'Usable (Excess) Equity'],
                 datasets: [{ 
                     data: [0, 0, 0, 0], 
-                    backgroundColor: ['#ff7f50', '#8fa7de', '#1b4a7b', '#00b5ae'], 
-                    borderWidth: 2,
+                    backgroundColor: ['#ff7f50', '#96BFCD', '#2e809c', '#00b5ae'], 
+                    borderWidth: 1,
                     borderColor: '#ffffff'
                 }]
             },
@@ -424,18 +306,17 @@
                 responsive: true, 
                 maintainAspectRatio: false,
                 plugins: { 
-                    legend: { position: 'bottom', labels: { boxWidth: 12, padding: 15, font: { size: 11, weight: '500' } } },
+                    legend: { position: 'right', labels: { boxWidth: 12, font: { size: 11 } } },
                     tooltip: { 
-                        backgroundColor: '#2c3e50',
-                        padding: 12,
-                        titleFont: { size: 13, family: 'DM Sans' },
-                        bodyFont: { size: 13, family: 'Roboto Mono' },
+                        backgroundColor: 'rgba(13, 23, 40, 0.9)',
+                        titleFont: { family: "'DM Sans', sans-serif" },
+                        bodyFont: { family: "'Roboto Mono', monospace" },
                         callbacks: { 
                             label: function(context) {
                                 const total = context.dataset.data.reduce((acc, curr) => acc + curr, 0);
                                 const value = context.raw;
                                 const percentage = total > 0 ? ((value / total) * 100).toFixed(2) + '%' : '0.00%';
-                                return ' ' + context.label + ': ' + fmtC.format(value) + ' (' + percentage + ')';
+                                return context.label + ': ' + fmtC.format(value) + ' (' + percentage + ')';
                             } 
                         } 
                     }
@@ -450,7 +331,7 @@
             type: 'bar',
             data: { 
                 labels: ['Est. Income', 'Margin Cost', 'Net Carry'], 
-                datasets: [{ data: [0, 0, 0], backgroundColor: ['#00b5ae', '#ff7f50', '#1b4a7b'], borderRadius: 4 }] 
+                datasets: [{ data: [0, 0, 0], backgroundColor: ['#00b5ae', '#ff7f50', '#2e809c'] }] 
             },
             options: { 
                 responsive: true,
@@ -458,14 +339,13 @@
                 plugins: { 
                     legend: { display: false },
                     tooltip: {
-                        backgroundColor: '#2c3e50',
-                        padding: 12,
-                        bodyFont: { size: 13, family: 'Roboto Mono' },
-                        callbacks: { label: function(context) { return ' ' + fmtC.format(context.raw); } }
+                        backgroundColor: 'rgba(13, 23, 40, 0.9)',
+                        titleFont: { family: "'DM Sans', sans-serif" },
+                        bodyFont: { family: "'Roboto Mono', monospace" }
                     }
                 }, 
                 scales: { 
-                    y: { beginAtZero: true, border: { dash: [4, 4] } },
+                    y: { beginAtZero: true, grid: gridOptions },
                     x: { grid: { display: false } }
                 } 
             }
@@ -478,24 +358,27 @@
             data: {
                 labels: [],
                 datasets: [
-                    { label: 'Total Assets', data: [], borderColor: '#1b4a7b', backgroundColor: 'transparent', tension: 0.3, pointRadius: 0, borderWidth: 3 },
-                    { label: 'Base Equity', data: [], borderColor: '#00b5ae', backgroundColor: 'transparent', tension: 0.3, borderDash: [6, 4], pointRadius: 0, borderWidth: 3 }
+                    { label: 'Total Assets', data: [], borderColor: '#2e809c', backgroundColor: 'transparent', tension: 0.3, pointRadius: 0, borderWidth: 2 },
+                    { label: 'Base Equity', data: [], borderColor: '#00b5ae', backgroundColor: 'transparent', tension: 0.3, borderDash: [5, 5], pointRadius: 0, borderWidth: 2 }
                 ]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                interaction: { mode: 'index', intersect: false },
                 plugins: {
-                    legend: { position: 'top', labels: { boxWidth: 20, font: { size: 12, weight: '500' } } },
+                    legend: { position: 'top', labels: { boxWidth: 15, font: { size: 11 } } },
                     tooltip: { 
-                        backgroundColor: '#2c3e50', padding: 12, bodyFont: { size: 13, family: 'Roboto Mono' },
-                        callbacks: { label: function(context) { return ' ' + context.dataset.label + ': ' + fmtC.format(context.raw); } } 
+                        mode: 'index', 
+                        intersect: false, 
+                        backgroundColor: 'rgba(13, 23, 40, 0.9)',
+                        titleFont: { family: "'DM Sans', sans-serif" },
+                        bodyFont: { family: "'Roboto Mono', monospace" },
+                        callbacks: { label: function(context) { return context.dataset.label + ': ' + fmtC.format(context.raw); } } 
                     }
                 },
                 scales: {
-                    x: { grid: { display: false }, ticks: { maxTicksLimit: 12, maxRotation: 0, font: { family: 'Roboto Mono' } } },
-                    y: { border: { dash: [4, 4] }, ticks: { font: { family: 'Roboto Mono' }, callback: function(value) { return '$' + (value/1000) + 'k'; } } }
+                    x: { grid: { display: false }, ticks: { maxTicksLimit: 12, maxRotation: 0 } },
+                    y: { grid: gridOptions, ticks: { callback: function(value) { return '$' + (value/1000) + 'k'; } } }
                 }
             }
         });
@@ -607,22 +490,21 @@
             // Logic for visual health indicator and text mapping (0 to 100% calibration)
             if (simSecValue <= 0) {
                 document.getElementById('outMaxDrop').innerText = 'N/A (No Securities)';
-                document.getElementById('outMaxDrop').className = 'margin-health-analyzer-metric-card-value text-right text-muted';
+                document.getElementById('outMaxDrop').className = 'metric-value font-bold text-[#595959]';
                 document.getElementById('healthIndicator').style.left = '0%';
             } else if (maxDropPct >= 1) {
                 document.getElementById('outMaxDrop').innerText = '100.00% (No Risk)';
-                document.getElementById('outMaxDrop').className = 'margin-health-analyzer-metric-card-value text-right text-good';
+                document.getElementById('outMaxDrop').className = 'metric-value font-bold good-val';
                 document.getElementById('healthIndicator').style.left = '100%';
             } else {
                 document.getElementById('outMaxDrop').innerText = fmtP(maxDropPct * 100) + ` (${fmtC.format(maxDropValue)})`;
-                document.getElementById('outMaxDrop').className = 'margin-health-analyzer-metric-card-value text-right ' + (maxDropPct > 0.4 ? 'text-good' : maxDropPct > 0.25 ? 'text-warn' : 'text-bad');
+                document.getElementById('outMaxDrop').className = 'metric-value font-bold ' + (maxDropPct > 0.4 ? 'good-val' : maxDropPct > 0.25 ? 'warn-val' : 'bad-val');
                 
-                // Map max drop percentage (0% to 100%) to the 0-100% physical width of the gradient bar
                 let indicatorPos = Math.min(Math.max(maxDropPct * 100, 0), 100);
                 document.getElementById('healthIndicator').style.left = indicatorPos + '%';
             }
 
-            document.getElementById('outExcess').className = 'margin-health-analyzer-metric-card-value ' + (simExcess >= 0 ? 'text-good' : 'text-bad');
+            document.getElementById('outExcess').className = 'metric-value ' + (simExcess >= 0 ? 'good-val' : 'bad-val');
 
             // --- Update Charts ---
             compChart.data.datasets[0].data = [simBorrowed, baseRequired, highMmrRequired, Math.max(0, simExcess)];
@@ -637,21 +519,19 @@
             const projBase = [];
 
             let targetDta = dta; 
-            if (targetDta >= 1 || targetDta < 0) targetDta = 0; // Prevent infinite loops if deeply insolvent
+            if (targetDta >= 1 || targetDta < 0) targetDta = 0; 
 
             let curEq = simEquity;
 
             for (let i = 0; i <= 120; i++) {
                 projLabels.push('Month ' + i);
                 
-                // Maintain DTA Ratio: Assets = Equity / (1 - DTA)
                 let cAssets = curEq > 0 ? curEq / (1 - targetDta) : 0;
                 let cDebt = cAssets - curEq;
                 
                 projAssets.push(cAssets);
                 projBase.push(curEq);
 
-                // Compounding Net Carry
                 let mYield = cAssets * (yieldRate / 12);
                 let mCost = cDebt * (marginRate / 12);
                 let mNet = mYield - mCost;
@@ -666,7 +546,6 @@
             projChart.update();
         }
 
-        // Run once on load
         calculate();
     </script>
 </body>
