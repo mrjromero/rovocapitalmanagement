@@ -11,8 +11,16 @@
         .card { background-color: #1c1f26; border: 1px solid #2d313b; border-radius: 12px; }
         .input-group { display: flex; flex-direction: column; margin-bottom: 12px; }
         .input-group label { font-size: 0.85rem; color: #9aa0a6; margin-bottom: 4px; font-weight: 500; }
-        .input-group input { background-color: #2d313b; border: 1px solid #4a505c; color: #e8eaed; padding: 8px 12px; border-radius: 6px; outline: none; transition: border-color 0.2s; }
-        .input-group input:focus { border-color: #8ab4f8; }
+        .input-group input[type="number"] { background-color: #2d313b; border: 1px solid #4a505c; color: #e8eaed; padding: 8px 12px; border-radius: 6px; outline: none; transition: border-color 0.2s; }
+        .input-group input[type="number"]:focus { border-color: #8ab4f8; }
+        
+        /* Custom Slider Styling */
+        input[type=range] { -webkit-appearance: none; background: transparent; width: 100%; }
+        input[type=range]:focus { outline: none; }
+        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; cursor: pointer; background: #4a505c; border-radius: 2px; }
+        input[type=range]::-webkit-slider-thumb { height: 16px; width: 16px; border-radius: 50%; background: #8ab4f8; cursor: pointer; -webkit-appearance: none; margin-top: -6px; }
+        input[type=range]:focus::-webkit-slider-runnable-track { background: #5a606c; }
+        
         .metric-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #2d313b; }
         .metric-row:last-child { border-bottom: none; }
         .metric-label { color: #9aa0a6; font-size: 0.9rem; }
@@ -28,6 +36,7 @@
         
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             
+            <!-- Left Column: Inputs -->
             <div class="card p-5">
                 <h2 class="text-xl font-bold border-b border-slate-700 pb-2 mb-4">1. Account Data</h2>
                 <div class="input-group">
@@ -60,16 +69,27 @@
                 </div>
 
                 <h2 class="text-xl font-bold border-b border-slate-700 pb-2 mb-4 mt-6">3. Simulation Actions</h2>
+                
                 <div class="input-group">
-                    <label>Simulate Cash Withdrawal ($)</label>
-                    <input type="number" id="simWithdraw" step="any" value="0" oninput="calculate()">
+                    <label>Simulate Borrowing Change (+/- Cash)</label>
+                    <div class="flex items-center gap-3">
+                        <input type="range" id="simWithdrawSlider" min="-50000" max="100000" step="500" value="0" oninput="syncWithdraw('slider')">
+                        <input type="number" id="simWithdraw" class="w-1/3" step="any" value="0" oninput="syncWithdraw('number')">
+                    </div>
+                    <p class="text-xs text-slate-500 mt-1 text-right">Negative = Pay Down | Positive = Withdraw</p>
                 </div>
-                <div class="input-group">
-                    <label>Simulate Margin Reinvest ($)</label>
-                    <input type="number" id="simReinvest" step="any" value="0" oninput="calculate()">
+
+                <div class="input-group mt-3">
+                    <label>Simulate Margin Reinvest (+/- Securities)</label>
+                    <div class="flex items-center gap-3">
+                        <input type="range" id="simReinvestSlider" min="-50000" max="100000" step="500" value="0" oninput="syncReinvest('slider')">
+                        <input type="number" id="simReinvest" class="w-1/3" step="any" value="0" oninput="syncReinvest('number')">
+                    </div>
+                    <p class="text-xs text-slate-500 mt-1 text-right">Negative = Sell to Pay Debt | Positive = Buy on Margin</p>
                 </div>
             </div>
 
+            <!-- Middle Column: Metrics -->
             <div class="card p-5">
                 <h2 class="text-xl font-bold border-b border-slate-700 pb-2 mb-4">Simulated Dashboard</h2>
                 
@@ -113,6 +133,7 @@
                 </div>
             </div>
 
+            <!-- Right Column: Visuals -->
             <div class="card p-5 flex flex-col gap-8">
                 <div>
                     <h2 class="text-xl font-bold border-b border-slate-700 pb-2 mb-4">Detailed Portfolio Composition</h2>
@@ -183,6 +204,23 @@
             }
         });
 
+        // Synchronization functions for the sliders
+        function syncWithdraw(source) {
+            const slider = document.getElementById('simWithdrawSlider');
+            const num = document.getElementById('simWithdraw');
+            if (source === 'slider') num.value = slider.value;
+            else slider.value = num.value;
+            calculate();
+        }
+
+        function syncReinvest(source) {
+            const slider = document.getElementById('simReinvestSlider');
+            const num = document.getElementById('simReinvest');
+            if (source === 'slider') num.value = slider.value;
+            else slider.value = num.value;
+            calculate();
+        }
+
         function calculate() {
             // Inputs
             const secValue = parseFloat(document.getElementById('secValue').value) || 0;
@@ -194,15 +232,26 @@
             const simWithdraw = parseFloat(document.getElementById('simWithdraw').value) || 0;
             const simReinvest = parseFloat(document.getElementById('simReinvest').value) || 0;
 
+            // Update slider boundaries dynamically so you can't pay off more debt than you have
+            document.getElementById('simWithdrawSlider').min = -borrowed;
+            document.getElementById('simReinvestSlider').min = -secValue; // You theoretically can't sell more securities than you have
+
             // Base Math (M1 Blended Maintenance Ratio)
             const maintRatio = reqEquity / secValue;
 
             // Simulation Math
-            const simSecValue = secValue + simReinvest;
-            const simBorrowed = borrowed + simWithdraw + simReinvest;
+            const simSecValue = Math.max(0, secValue + simReinvest);
+            let simBorrowed = borrowed + simWithdraw + simReinvest;
+            let simCash = cash;
+
+            // If you pay down more debt than exists, the excess simply becomes cash
+            if (simBorrowed < 0) {
+                simCash += Math.abs(simBorrowed);
+                simBorrowed = 0;
+            }
             
             // Equity Math
-            const simEquity = simSecValue + cash - simBorrowed; 
+            const simEquity = simSecValue + simCash - simBorrowed; 
             const simReqEquity = simSecValue * maintRatio;
             const simExcess = simEquity - simReqEquity;
 
@@ -216,11 +265,11 @@
             const netCarry = annualIncome - annualMarginCost;
             
             const dscr = annualMarginCost > 0 ? (annualIncome / annualMarginCost) : 0;
-            const dta = (simSecValue + cash) > 0 ? (simBorrowed / (simSecValue + cash)) : 0;
+            const dta = (simSecValue + simCash) > 0 ? (simBorrowed / (simSecValue + simCash)) : 0;
             
             // Health / Margin Call Risk
             let maxDropValue = 0, maxDropPct = 0;
-            if (simExcess > 0 && maintRatio < 1) {
+            if (simExcess > 0 && maintRatio < 1 && simSecValue > 0) {
                 maxDropValue = simExcess / (1 - maintRatio);
                 maxDropPct = maxDropValue / simSecValue;
             }
@@ -236,14 +285,22 @@
             document.getElementById('outExcess').innerText = fmtC.format(simExcess);
             document.getElementById('outMaintRatio').innerText = fmtP(maintRatio * 100);
             
-            document.getElementById('outDscr').innerText = annualMarginCost > 0 ? dscr.toFixed(2) + 'x' : '∞';
+            document.getElementById('outDscr').innerText = annualMarginCost > 0 ? dscr.toFixed(2) + 'x' : (dscr === 0 && annualIncome > 0 ? '∞' : '0.00x');
             document.getElementById('outDta').innerText = fmtP(dta * 100);
             document.getElementById('outUtilWithdraw').innerText = fmtP(utilWithdraw * 100);
             document.getElementById('outUtilReinvest').innerText = fmtP(utilReinvest * 100);
-            document.getElementById('outMaxDrop').innerText = fmtP(maxDropPct * 100) + ` (${fmtC.format(maxDropValue)})`;
+            
+            if (simSecValue <= 0) {
+                document.getElementById('outMaxDrop').innerText = 'N/A (No Securities)';
+                document.getElementById('outMaxDrop').className = 'metric-value font-bold text-gray-500';
+            } else if (maxDropPct >= 1) {
+                document.getElementById('outMaxDrop').innerText = '100.00% (No Risk)';
+                document.getElementById('outMaxDrop').className = 'metric-value font-bold good-val';
+            } else {
+                document.getElementById('outMaxDrop').innerText = fmtP(maxDropPct * 100) + ` (${fmtC.format(maxDropValue)})`;
+                document.getElementById('outMaxDrop').className = 'metric-value font-bold ' + (maxDropPct > 0.4 ? 'good-val' : maxDropPct > 0.25 ? 'warn-val' : 'bad-val');
+            }
 
-            // Color coding health
-            document.getElementById('outMaxDrop').className = 'metric-value font-bold ' + (maxDropPct > 0.4 ? 'good-val' : maxDropPct > 0.25 ? 'warn-val' : 'bad-val');
             document.getElementById('outExcess').className = 'metric-value ' + (simExcess >= 0 ? 'good-val' : 'bad-val');
 
             // Update Charts
