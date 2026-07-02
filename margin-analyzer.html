@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Positive Carry Portfolio Visualizer</title>
+    <title>PLEX Strategy Visualizer</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -127,7 +127,7 @@
 </head>
 <body class="p-4 md:p-8">
     <div class="max-w-7xl mx-auto">
-        <h1 class="text-3xl font-bold mb-6">Positive Carry Portfolio Visualizer</h1>
+        <h1 class="text-3xl font-bold mb-6">PLEX Strategy Visualizer</h1>
         
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             
@@ -294,7 +294,7 @@
         const compChart = new Chart(ctxComp, {
             type: 'doughnut',
             data: {
-                labels: ['Total Borrowed', 'Base Req. (25%)', 'High-MMR Req.', 'Usable (Excess) Equity'],
+                labels: ['Total Borrowed', 'M1 Base Req. (25%)', 'M1 High-MMR Req.', 'Usable (Excess) Equity'],
                 datasets: [{ 
                     data: [0, 0, 0, 0], 
                     backgroundColor: ['#ff7f50', '#96BFCD', '#2e809c', '#00b5ae'], 
