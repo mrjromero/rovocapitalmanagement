@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>M1 Margin Educational Analyzer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { background-color: #111318; color: #e8eaed; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+        .card { background-color: #1c1f26; border: 1px solid #2d313b; border-radius: 12px; }
+        .input-group { display: flex; flex-direction: column; margin-bottom: 12px; }
+        .input-group label { font-size: 0.85rem; color: #9aa0a6; margin-bottom: 4px; font-weight: 500; }
+        .input-group input { background-color: #2d313b; border: 1px solid #4a505c; color: #e8eaed; padding: 8px 12px; border-radius: 6px; outline: none; transition: border-color 0.2s; }
+        .input-group input:focus { border-color: #8ab4f8; }
+        .metric-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #2d313b; }
+        .metric-row:last-child { border-bottom: none; }
+        .metric-label { color: #9aa0a6; font-size: 0.9rem; }
+        .metric-value { font-weight: 600; font-size: 0.95rem; text-align: right; }
+        .good-val { color: #81c995; }
+        .warn-val { color: #fdd663; }
+        .bad-val { color: #f28b82; }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+    <div class="max-w-7xl mx-auto">
+        <h1 class="text-2xl font-bold mb-6 text-white">M1 Finance: Positive Carry & Margin Simulator</h1>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <div class="card p-5">
+                <h2 class="text-xl font-bold border-b border-slate-700 pb-2 mb-4">1. Account Data</h2>
+                <div class="input-group">
+                    <label>Securities Value ($)</label>
+                    <input type="number" id="secValue" step="any" value="183727.65" oninput="calculate()">
+                </div>
+                <div class="input-group">
+                    <label>Cash Balance ($) - Derived</label>
+                    <input type="number" id="cash" step="any" value="203.92" oninput="calculate()">
+                </div>
+                <div class="input-group">
+                    <label>Total Borrowed ($)</label>
+                    <input type="number" id="borrowed" step="any" value="45974.06" oninput="calculate()">
+                </div>
+                <div class="input-group">
+                    <label>Required Equity ($)</label>
+                    <input type="number" id="reqEquity" step="any" value="54556.27" oninput="calculate()">
+                </div>
+
+                <h2 class="text-xl font-bold border-b border-slate-700 pb-2 mb-4 mt-6">2. Market Variables</h2>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="input-group">
+                        <label>Margin Rate (%)</label>
+                        <input type="number" id="marginRate" step="any" value="5.65" oninput="calculate()">
+                    </div>
+                    <div class="input-group">
+                        <label>Expected Yield (%)</label>
+                        <input type="number" id="yieldRate" step="any" value="7.50" oninput="calculate()">
+                    </div>
+                </div>
+
+                <h2 class="text-xl font-bold border-b border-slate-700 pb-2 mb-4 mt-6">3. Simulation Actions</h2>
+                <div class="input-group">
+                    <label>Simulate Cash Withdrawal ($)</label>
+                    <input type="number" id="simWithdraw" step="any" value="0" oninput="calculate()">
+                </div>
+                <div class="input-group">
+                    <label>Simulate Margin Reinvest ($)</label>
+                    <input type="number" id="simReinvest" step="any" value="0" oninput="calculate()">
+                </div>
+            </div>
+
+            <div class="card p-5">
+                <h2 class="text-xl font-bold border-b border-slate-700 pb-2 mb-4">Simulated Dashboard</h2>
+                
+                <div class="metric-row">
+                    <span class="metric-label">Total Equity Value</span>
+                    <span class="metric-value" id="outEquity">$0.00</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Required Equity</span>
+                    <span class="metric-value" id="outReqEquity">$0.00</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Excess Equity</span>
+                    <span class="metric-value good-val" id="outExcess">$0.00</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Maintenance Req.</span>
+                    <span class="metric-value" id="outMaintRatio">0.00%</span>
+                </div>
+
+                <h3 class="text-lg font-semibold mt-6 mb-2 text-white">Risk & Health Metrics</h3>
+                <div class="metric-row">
+                    <span class="metric-label" title="Debt Service Coverage Ratio">DSCR</span>
+                    <span class="metric-value" id="outDscr">0.00x</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label" title="Debt to Asset Ratio">Debt-to-Asset (DTA)</span>
+                    <span class="metric-value" id="outDta">0.00%</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Margin Util. (Withdrawal)</span>
+                    <span class="metric-value" id="outUtilWithdraw">0.00%</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Margin Util. (Reinvestment)</span>
+                    <span class="metric-value" id="outUtilReinvest">0.00%</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label font-bold text-white">Margin Health (Max Drop)</span>
+                    <span class="metric-value font-bold" id="outMaxDrop">0.00%</span>
+                </div>
+            </div>
+
+            <div class="card p-5 flex flex-col gap-8">
+                <div>
+                    <h2 class="text-xl font-bold border-b border-slate-700 pb-2 mb-4">Portfolio Composition</h2>
+                    <canvas id="compositionChart" height="200"></canvas>
+                </div>
+                <div>
+                    <h2 class="text-xl font-bold border-b border-slate-700 pb-2 mb-4">Annual Carry Analysis</h2>
+                    <canvas id="carryChart" height="200"></canvas>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const fmtC = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' });
+        const fmtP = (val) => val.toFixed(2) + '%';
+
+        // Initialize Charts
+        Chart.defaults.color = '#9aa0a6';
+        const ctxComp = document.getElementById('compositionChart').getContext('2d');
+        const compChart = new Chart(ctxComp, {
+            type: 'doughnut',
+            data: { labels: ['Equity', 'Borrowed'], datasets: [{ data: [0, 0], backgroundColor: ['#81c995', '#f28b82'], borderWidth: 0 }] },
+            options: { responsive: true, plugins: { legend: { position: 'bottom' } }, cutout: '70%' }
+        });
+
+        const ctxCarry = document.getElementById('carryChart').getContext('2d');
+        const carryChart = new Chart(ctxCarry, {
+            type: 'bar',
+            data: { labels: ['Est. Income', 'Margin Cost', 'Net Carry'], datasets: [{ data: [0, 0, 0], backgroundColor: ['#81c995', '#f28b82', '#8ab4f8'] }] },
+            options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: '#2d313b' } } } }
+        });
+
+        function calculate() {
+            // Inputs
+            const secValue = parseFloat(document.getElementById('secValue').value) || 0;
+            const cash = parseFloat(document.getElementById('cash').value) || 0;
+            const borrowed = parseFloat(document.getElementById('borrowed').value) || 0;
+            const reqEquity = parseFloat(document.getElementById('reqEquity').value) || 0;
+            const marginRate = (parseFloat(document.getElementById('marginRate').value) || 0) / 100;
+            const yieldRate = (parseFloat(document.getElementById('yieldRate').value) || 0) / 100;
+            const simWithdraw = parseFloat(document.getElementById('simWithdraw').value) || 0;
+            const simReinvest = parseFloat(document.getElementById('simReinvest').value) || 0;
+
+            // Base Math (M1 Maintenance Ratio)
+            const maintRatio = reqEquity / secValue;
+
+            // Simulation Math
+            const simSecValue = secValue + simReinvest;
+            const simBorrowed = borrowed + simWithdraw + simReinvest;
+            
+            // Reinvesting increases Securities and Debt equally (Equity unaffected). 
+            // Withdrawing increases Debt only (Equity drops).
+            const simEquity = simSecValue + cash - simBorrowed; 
+            const simReqEquity = simSecValue * maintRatio;
+            const simExcess = simEquity - simReqEquity;
+
+            // Metrics Math
+            const annualIncome = simSecValue * yieldRate;
+            const annualMarginCost = simBorrowed * marginRate;
+            const netCarry = annualIncome - annualMarginCost;
+            
+            const dscr = annualMarginCost > 0 ? (annualIncome / annualMarginCost) : 0;
+            const dta = (simSecValue + cash) > 0 ? (simBorrowed / (simSecValue + cash)) : 0;
+            
+            // Health / Margin Call Risk
+            let maxDropValue = 0, maxDropPct = 0;
+            if (simExcess > 0 && maintRatio < 1) {
+                maxDropValue = simExcess / (1 - maintRatio);
+                maxDropPct = maxDropValue / simSecValue;
+            }
+
+            // Utilization Math
+            const utilWithdraw = simBorrowed > 0 ? (simBorrowed / (simBorrowed + simExcess)) : 0;
+            // Assuming Reg T 50% initial margin for new purchasing power
+            const utilReinvest = simBorrowed > 0 ? (simBorrowed / (simBorrowed + (simExcess / 0.5))) : 0;
+
+            // Update DOM
+            document.getElementById('outEquity').innerText = fmtC.format(simEquity);
+            document.getElementById('outReqEquity').innerText = fmtC.format(simReqEquity);
+            document.getElementById('outExcess').innerText = fmtC.format(simExcess);
+            document.getElementById('outMaintRatio').innerText = fmtP(maintRatio * 100);
+            
+            document.getElementById('outDscr').innerText = annualMarginCost > 0 ? dscr.toFixed(2) + 'x' : '∞';
+            document.getElementById('outDta').innerText = fmtP(dta * 100);
+            document.getElementById('outUtilWithdraw').innerText = fmtP(utilWithdraw * 100);
+            document.getElementById('outUtilReinvest').innerText = fmtP(utilReinvest * 100);
+            document.getElementById('outMaxDrop').innerText = fmtP(maxDropPct * 100) + ` (${fmtC.format(maxDropValue)})`;
+
+            // Color coding health
+            document.getElementById('outMaxDrop').className = 'metric-value font-bold ' + (maxDropPct > 0.4 ? 'good-val' : maxDropPct > 0.25 ? 'warn-val' : 'bad-val');
+            document.getElementById('outExcess').className = 'metric-value ' + (simExcess >= 0 ? 'good-val' : 'bad-val');
+
+            // Update Charts
+            compChart.data.datasets[0].data = [simEquity, simBorrowed];
+            compChart.update();
+
+            carryChart.data.datasets[0].data = [annualIncome, annualMarginCost, netCarry];
+            carryChart.update();
+        }
+
+        // Run once on load
+        calculate();
+    </script>
+</body>
+</html>
