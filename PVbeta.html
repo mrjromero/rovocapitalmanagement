@@ -369,8 +369,6 @@
     <script>
         const fmtC = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' });
         const fmtP = (val) => val.toFixed(2) + '%';
-
-        // Custom Number format for whole numbers on Tooltips
         const fmtCNoDecimals = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
 
         // Apply global chart defaults
@@ -502,38 +500,68 @@
             }
         });
 
-        // 3. 120-Month Projection Line Chart
+        // 3. 120-Month Projection Chart (Stacked Area)
         const ctxProj = document.getElementById('projectionChart').getContext('2d');
         const projChart = new Chart(ctxProj, {
             type: 'line',
             data: {
                 labels: [],
                 datasets: [
-                    { label: 'Total Assets', data: [], borderColor: '#2e809c', backgroundColor: 'transparent', tension: 0.3, pointRadius: 0, borderWidth: 2 },
-                    { label: 'Base Equity', data: [], borderColor: '#00b5ae', backgroundColor: 'transparent', tension: 0.3, borderDash: [5, 5], pointRadius: 0, borderWidth: 2 }
+                    { 
+                        label: 'Total Equity', 
+                        data: [], 
+                        borderColor: '#00b5ae', 
+                        backgroundColor: 'rgba(0, 181, 174, 0.25)', 
+                        fill: true,
+                        tension: 0.3, 
+                        pointRadius: 0, 
+                        borderWidth: 2 
+                    },
+                    { 
+                        label: 'Margin Debt', 
+                        data: [], 
+                        borderColor: '#ff7f50', 
+                        backgroundColor: 'rgba(255, 127, 80, 0.25)', 
+                        fill: true,
+                        tension: 0.3, 
+                        pointRadius: 0, 
+                        borderWidth: 2 
+                    }
                 ]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                interaction: {
+                    mode: 'index',
+                    intersect: false,
+                },
                 plugins: {
                     legend: { position: 'top', labels: { boxWidth: 15, font: { size: 11 } } },
                     tooltip: { 
-                        mode: 'index', 
-                        intersect: false, 
                         backgroundColor: 'rgba(13, 23, 40, 0.9)',
                         titleFont: { family: "'DM Sans', sans-serif" },
                         bodyFont: { family: "'Roboto Mono', monospace" },
+                        footerFont: { family: "'Roboto Mono', monospace", weight: 'bold' },
+                        footerMarginTop: 10,
                         callbacks: { 
                             label: function(context) { 
                                 return context.dataset.label + ': ' + fmtCNoDecimals.format(context.raw); 
-                            } 
+                            },
+                            footer: function(tooltipItems) {
+                                let total = 0;
+                                tooltipItems.forEach(function(item) {
+                                    total += item.raw;
+                                });
+                                return 'Total Assets: ' + fmtCNoDecimals.format(total);
+                            }
                         } 
                     }
                 },
                 scales: {
                     x: { grid: { display: false }, ticks: { maxTicksLimit: 12, maxRotation: 0 } },
                     y: { 
+                        stacked: true,
                         grid: gridOptions, 
                         ticks: { 
                             callback: function(value) { 
@@ -824,10 +852,10 @@
             carryChart.data.datasets[0].data = [annualIncome, annualMarginCost, netCarry];
             carryChart.update();
 
-            // --- 120-Month Projection Math (Constant Leverage Reinvestment) ---
+            // --- 120-Month Projection Math (Stacked Area - Constant Leverage Reinvestment) ---
             const projLabels = [];
-            const projAssets = [];
-            const projBase = [];
+            const projEquity = [];
+            const projDebt = [];
 
             let targetDta = dta; 
             if (targetDta >= 1 || targetDta < 0 || isNaN(targetDta)) targetDta = 0; 
@@ -840,8 +868,8 @@
                 let cAssets = curEq > 0 ? curEq / (1 - targetDta) : 0;
                 let cDebt = cAssets - curEq;
                 
-                projAssets.push(cAssets);
-                projBase.push(curEq);
+                projEquity.push(curEq);
+                projDebt.push(cDebt);
 
                 let mYield = cAssets * (yieldRate / 12);
                 let mCost = cDebt * (marginRate / 12);
@@ -853,8 +881,8 @@
             }
 
             projChart.data.labels = projLabels;
-            projChart.data.datasets[0].data = projAssets;
-            projChart.data.datasets[1].data = projBase;
+            projChart.data.datasets[0].data = projEquity; // Total Equity (Bottom stack)
+            projChart.data.datasets[1].data = projDebt;   // Margin Debt (Top stack)
             projChart.update();
         }
 
