@@ -755,7 +755,7 @@
             const dangerZoneText = document.getElementById('dangerZoneText');
             let isDanger = false;
             
-            if (simSecValue > 0) {
+            if (simSecValue > 0 && isSimulating) {
                 if (simExcess <= 0 || maxDropPct < 0.25) {
                     isDanger = true;
                 }
