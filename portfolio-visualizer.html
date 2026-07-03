@@ -370,6 +370,9 @@
         const fmtC = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' });
         const fmtP = (val) => val.toFixed(2) + '%';
 
+        // Custom Number format for whole numbers on Tooltips
+        const fmtCNoDecimals = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
+
         // Apply global chart defaults
         Chart.defaults.color = '#595959';
         Chart.defaults.font.family = "'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
@@ -480,11 +483,20 @@
                     tooltip: {
                         backgroundColor: 'rgba(13, 23, 40, 0.9)',
                         titleFont: { family: "'DM Sans', sans-serif" },
-                        bodyFont: { family: "'Roboto Mono', monospace" }
+                        bodyFont: { family: "'Roboto Mono', monospace" },
+                        callbacks: { 
+                            label: function(context) { return fmtC.format(context.raw); } 
+                        }
                     }
                 }, 
                 scales: { 
-                    y: { beginAtZero: true, grid: gridOptions },
+                    y: { 
+                        beginAtZero: true, 
+                        grid: gridOptions,
+                        ticks: {
+                            callback: function(value) { return fmtC.format(value); }
+                        }
+                    },
                     x: { grid: { display: false } }
                 } 
             }
@@ -512,12 +524,28 @@
                         backgroundColor: 'rgba(13, 23, 40, 0.9)',
                         titleFont: { family: "'DM Sans', sans-serif" },
                         bodyFont: { family: "'Roboto Mono', monospace" },
-                        callbacks: { label: function(context) { return context.dataset.label + ': ' + fmtC.format(context.raw); } } 
+                        callbacks: { 
+                            label: function(context) { 
+                                return context.dataset.label + ': ' + fmtCNoDecimals.format(context.raw); 
+                            } 
+                        } 
                     }
                 },
                 scales: {
                     x: { grid: { display: false }, ticks: { maxTicksLimit: 12, maxRotation: 0 } },
-                    y: { grid: gridOptions, ticks: { callback: function(value) { return '$' + (value/1000) + 'k'; } } }
+                    y: { 
+                        grid: gridOptions, 
+                        ticks: { 
+                            callback: function(value) { 
+                                if (value >= 1000000) {
+                                    return '$' + (value / 1000000).toFixed(1) + 'M';
+                                } else if (value >= 1000) {
+                                    return '$' + (value / 1000).toFixed(0) + 'k';
+                                }
+                                return '$' + value;
+                            } 
+                        } 
+                    }
                 }
             }
         });
