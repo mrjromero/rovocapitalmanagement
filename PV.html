@@ -181,6 +181,7 @@
     <audio id="dangerZoneAudio" src="danger_zone.mp3" loop></audio>
 
     <div class="w-full mx-auto">
+        
         <div class="flex items-center gap-3 mb-6">
             <h1 class="text-3xl font-bold">Positive Carry Portfolio Visualizer</h1>
             <div class="tooltip mt-1">
@@ -200,8 +201,12 @@
                         <input type="number" id="secValue" step="any" value="100000" oninput="syncBaseSec()">
                     </div>
                     <div class="input-group">
+                        <label>Monthly Contributions ($)</label>
+                        <input type="number" id="monthlyContrib" step="any" value="0" oninput="calculate()">
+                    </div>
+                    <div class="input-group">
                         <label>Cash Balance ($)</label>
-                        <input type="number" id="cash" step="any" value="0" oninput="syncBaseGeneric()">
+                        <input type="number" id="cash" step="any" value="0" oninput="calculate()">
                     </div>
                     <div class="input-group">
                         <label>Base Total Borrowed ($)</label>
@@ -209,18 +214,18 @@
                     </div>
                     <div class="input-group">
                         <label>Required Equity ($)</label>
-                        <input type="number" id="reqEquity" step="any" value="30000" oninput="syncBaseGeneric()">
+                        <input type="number" id="reqEquity" step="any" value="30000" oninput="calculate()">
                     </div>
 
                     <h2 class="text-xl font-bold border-b border-[#E8ECF2] pb-2 mb-4 mt-6">2. Market Variables</h2>
                     <div class="grid grid-cols-2 gap-4">
                         <div class="input-group">
                             <label>Margin Rate (%)</label>
-                            <input type="number" id="marginRate" step="any" value="5.65" oninput="syncBaseGeneric()">
+                            <input type="number" id="marginRate" step="any" value="5.65" oninput="calculate()">
                         </div>
                         <div class="input-group">
                             <label>Expected Yield (%)</label>
-                            <input type="number" id="yieldRate" step="any" value="15" oninput="syncBaseGeneric()">
+                            <input type="number" id="yieldRate" step="any" value="15" oninput="calculate()">
                         </div>
                     </div>
 
@@ -245,8 +250,8 @@
                     </div>
                 </div>
                 
-                <button onclick="resetSimulation()" class="btn-primary w-full mt-8 shadow-sm">
-                    Reset Simulation
+                <button onclick="resetDefaults()" class="btn-primary w-full mt-8 shadow-sm">
+                    Reset Default Values
                 </button>
             </div>
 
@@ -351,7 +356,7 @@
 
                 <div>
                     <h2 class="text-xl font-bold border-b border-[#E8ECF2] pb-2 mb-4">10-Year Growth Projection</h2>
-                    <p class="text-xs text-[#595959] mb-2 font-['DM_Sans']">Assumes simulated DTA leverage is maintained and Net Carry is reinvested.</p>
+                    <p class="text-xs text-[#595959] mb-2 font-['DM_Sans']">Assumes simulated DTA leverage is maintained, Net Carry is reinvested, and Monthly Contributions are added.</p>
                     <div style="position: relative; height: 250px; width: 100%;">
                         <canvas id="projectionChart"></canvas>
                     </div>
@@ -517,47 +522,6 @@
             }
         });
 
-        // --- Local Storage Management ---
-        const STORAGE_KEY = 'positiveCarryBaseData';
-
-        function saveBaseData() {
-            const data = {
-                secValue: document.getElementById('secValue').value,
-                cash: document.getElementById('cash').value,
-                borrowed: document.getElementById('borrowed').value,
-                reqEquity: document.getElementById('reqEquity').value,
-                marginRate: document.getElementById('marginRate').value,
-                yieldRate: document.getElementById('yieldRate').value
-            };
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-        }
-
-        function loadBaseData() {
-            const saved = localStorage.getItem(STORAGE_KEY);
-            if (saved) {
-                try {
-                    const data = JSON.parse(saved);
-                    if (data.secValue !== undefined) document.getElementById('secValue').value = data.secValue;
-                    if (data.cash !== undefined) document.getElementById('cash').value = data.cash;
-                    if (data.borrowed !== undefined) document.getElementById('borrowed').value = data.borrowed;
-                    if (data.reqEquity !== undefined) document.getElementById('reqEquity').value = data.reqEquity;
-                    if (data.marginRate !== undefined) document.getElementById('marginRate').value = data.marginRate;
-                    if (data.yieldRate !== undefined) document.getElementById('yieldRate').value = data.yieldRate;
-                } catch (e) {
-                    console.error("Error loading base data", e);
-                }
-            }
-            
-            // Align simulation to the loaded/default base data on startup
-            const baseSec = document.getElementById('secValue').value;
-            const baseBorr = document.getElementById('borrowed').value;
-            
-            setSimulationValue('simSecValue', 'simSecValueSlider', parseFloat(baseSec) || 0);
-            setSimulationValue('simBorrowed', 'simBorrowedSlider', parseFloat(baseBorr) || 0);
-            
-            simulationMode = false;
-        }
-
         // Tracks whether the user has intentionally moved away from the baseline.
         let simulationMode = false;
 
@@ -578,7 +542,6 @@
             if (!simulationMode) {
                 setSimulationValue('simSecValue', 'simSecValueSlider', Number.isFinite(value) ? value : 0);
             }
-            saveBaseData();
             calculate();
         }
 
@@ -587,13 +550,6 @@
             if (!simulationMode) {
                 setSimulationValue('simBorrowed', 'simBorrowedSlider', Number.isFinite(value) ? value : 0);
             }
-            saveBaseData();
-            calculate();
-        }
-
-        // Generic sync function for base inputs that don't drive a slider
-        function syncBaseGeneric() {
-            saveBaseData();
             calculate();
         }
 
@@ -622,13 +578,22 @@
             calculate();
         }
 
-        // Reset the simulation to strictly match the base inputs
-        function resetSimulation() {
-            const baseSec = document.getElementById('secValue').value;
-            const baseBorr = document.getElementById('borrowed').value;
+        // Reset to Default Function
+        function resetDefaults() {
+            document.getElementById('secValue').value = 100000;
+            document.getElementById('monthlyContrib').value = 0;
+            document.getElementById('cash').value = 0;
+            document.getElementById('borrowed').value = 25000;
+            document.getElementById('reqEquity').value = 30000;
             
-            setSimulationValue('simSecValue', 'simSecValueSlider', parseFloat(baseSec) || 0);
-            setSimulationValue('simBorrowed', 'simBorrowedSlider', parseFloat(baseBorr) || 0);
+            document.getElementById('marginRate').value = 5.65;
+            document.getElementById('yieldRate').value = 15;
+            
+            document.getElementById('simSecValue').value = 100000;
+            document.getElementById('simSecValueSlider').value = 100000;
+            
+            document.getElementById('simBorrowed').value = 25000;
+            document.getElementById('simBorrowedSlider').value = 25000;
 
             simulationMode = false;
             calculate();
@@ -637,6 +602,7 @@
         function calculate() {
             // Base Inputs
             const baseSecValue = parseFloat(document.getElementById('secValue').value) || 0;
+            const monthlyContrib = parseFloat(document.getElementById('monthlyContrib').value) || 0;
             const cash = parseFloat(document.getElementById('cash').value) || 0;
             const baseBorrowed = parseFloat(document.getElementById('borrowed').value) || 0;
             const baseReqEquity = parseFloat(document.getElementById('reqEquity').value) || 0;
@@ -812,7 +778,7 @@
                 let mCost = cDebt * (marginRate / 12);
                 let mNet = mYield - mCost;
                 
-                curEq += mNet; 
+                curEq += mNet + monthlyContrib; 
                 if (curEq < 0) curEq = 0;
             }
 
@@ -822,8 +788,7 @@
             projChart.update();
         }
 
-        // Load persisted data and initialize App
-        loadBaseData();
+        // Initialize App
         calculate();
     </script>
 </body>
