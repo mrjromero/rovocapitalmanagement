@@ -356,7 +356,7 @@
 
                 <div>
                     <h2 class="text-xl font-bold border-b border-[#E8ECF2] pb-2 mb-4">10-Year Growth Projection</h2>
-                    <p class="text-xs text-[#595959] mb-2 font-['DM_Sans'] leading-relaxed">Assumes simulated DTA leverage is maintained, Net Carry is reinvested, and Monthly Contributions are added. <strong>Margin Debt</strong> and <strong>Total Equity</strong> are stacked together to visualize the exact composition of your <strong>Total Assets</strong> over time.</p>
+                    <p class="text-xs text-[#595959] mb-2 font-['DM_Sans'] leading-relaxed">Assumes simulated DTA leverage is maintained, Net Carry is reinvested, and Monthly Contributions are added. The <strong>Total Portfolio Value</strong> is the sum of your <strong>Total Equity</strong> and <strong>Margin Debt</strong> at any given time.</p>
                     <div style="position: relative; height: 250px; width: 100%;">
                         <canvas id="projectionChart"></canvas>
                     </div>
@@ -500,7 +500,7 @@
             }
         });
 
-        // 3. 120-Month Projection Chart (Stacked Area with Total Assets boundary line)
+        // 3. 120-Month Projection Chart (Line Chart)
         const ctxProj = document.getElementById('projectionChart').getContext('2d');
         const projChart = new Chart(ctxProj, {
             type: 'line',
@@ -508,41 +508,34 @@
                 labels: [],
                 datasets: [
                     { 
-                        // Index 0: Bottom Layer
-                        label: 'Margin Debt', 
+                        label: 'Total Portfolio Value', 
                         data: [], 
-                        borderColor: '#ff7f50', 
-                        backgroundColor: 'rgba(255, 127, 80, 0.4)', 
-                        fill: true,
-                        tension: 0.3, 
-                        pointRadius: 0, 
-                        borderWidth: 2,
-                        stack: 'Area'
-                    },
-                    { 
-                        // Index 1: Stacked on top of Margin Debt
-                        label: 'Total Equity', 
-                        data: [], 
-                        borderColor: '#00b5ae', 
-                        backgroundColor: 'rgba(0, 181, 174, 0.4)', 
-                        fill: true,
-                        tension: 0.3, 
-                        pointRadius: 0, 
-                        borderWidth: 2,
-                        stack: 'Area'
-                    },
-                    { 
-                        // Index 2: Drawn last to overlay perfectly on top
-                        label: 'Total Assets', 
-                        data: [], 
-                        borderColor: '#0d1728', 
+                        borderColor: '#0D1728', 
                         backgroundColor: 'transparent',
-                        borderDash: [5, 5],
                         fill: false,
                         tension: 0.3, 
                         pointRadius: 0, 
-                        borderWidth: 2,
-                        stack: 'Line'
+                        borderWidth: 2
+                    },
+                    { 
+                        label: 'Total Equity', 
+                        data: [], 
+                        borderColor: '#00b5ae', 
+                        backgroundColor: 'transparent', 
+                        fill: false,
+                        tension: 0.3, 
+                        pointRadius: 0, 
+                        borderWidth: 2
+                    },
+                    { 
+                        label: 'Margin Debt', 
+                        data: [], 
+                        borderColor: '#ff7f50', 
+                        backgroundColor: 'transparent', 
+                        fill: false,
+                        tension: 0.3, 
+                        pointRadius: 0, 
+                        borderWidth: 2
                     }
                 ]
             },
@@ -569,7 +562,6 @@
                 scales: {
                     x: { grid: { display: false }, ticks: { maxTicksLimit: 12, maxRotation: 0 } },
                     y: { 
-                        stacked: true,
                         grid: gridOptions, 
                         ticks: { 
                             callback: function(value) { 
@@ -860,7 +852,7 @@
             carryChart.data.datasets[0].data = [annualIncome, annualMarginCost, netCarry];
             carryChart.update();
 
-            // --- 120-Month Projection Math (Stacked Area - Constant Leverage Reinvestment) ---
+            // --- 120-Month Projection Math (Line Chart - Constant Leverage Reinvestment) ---
             const projLabels = [];
             const projAssets = [];
             const projEquity = [];
@@ -891,9 +883,9 @@
             }
 
             projChart.data.labels = projLabels;
-            projChart.data.datasets[0].data = projDebt;   // Index 0: Bottom Stack (Margin Debt)
-            projChart.data.datasets[1].data = projEquity; // Index 1: Top Stack (Total Equity)
-            projChart.data.datasets[2].data = projAssets; // Index 2: Overlay Line (Total Assets)
+            projChart.data.datasets[0].data = projAssets; // Index 0: Total Portfolio Value
+            projChart.data.datasets[1].data = projEquity; // Index 1: Total Equity
+            projChart.data.datasets[2].data = projDebt;   // Index 2: Margin Debt
             projChart.update();
         }
 
