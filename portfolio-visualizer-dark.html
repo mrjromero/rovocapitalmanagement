@@ -11,26 +11,38 @@
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
         @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;600;700&display=swap');
 
+        :root {
+            --surface-background: #f5f5f5;
+            --surface-card: #ffffff;
+            --surface-edu: #edf1fb;
+            --text-primary: #0D1728;
+            --text-secondary: #595959;
+            --border-soft: #E8ECF2;
+            --border-dominant: #DFDFE6;
+            --border-focus: #2e809c;
+            --color-success: #00b5ae;
+            --color-warning: #E4BD52;
+            --color-danger: #ff7f50;
+            --color-accent: #2e809c;
+            --color-accent-hover: #256b7c;
+        }
+
         body { 
-            background-color: #f5f5f5; 
-            color: #0d1728; 
+            background-color: var(--surface-background); 
+            color: var(--text-primary); 
             font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
         }
         
         h1, h2, h3 {
             font-family: 'Poppins', sans-serif;
-            color: #0d1728;
+            color: var(--text-primary);
         }
 
         .card { 
-            background-color: #fff; 
-            border: 1px solid #DFDFE6; 
+            background-color: var(--surface-card); 
+            border: 1px solid var(--border-dominant); 
             border-radius: 16px; 
-            box-shadow: 0 0.5px 2.5px #0000001a, 0 0 0 0.5px #0000000d;
-        }
-
-        .border-slate-700 {
-            border-color: #E8ECF2 !important;
+            box-shadow: 0 0.5px 2.5px rgba(0,0,0,0.1), 0 0 0 0.5px rgba(0,0,0,0.05);
         }
 
         .input-group { display: flex; flex-direction: column; margin-bottom: 12px; }
@@ -38,16 +50,16 @@
         .input-group label { 
             font-family: 'DM Sans', sans-serif;
             font-size: 14px; 
-            color: #595959; 
+            color: var(--text-secondary); 
             margin-bottom: 4px; 
             font-weight: 700; 
         }
         
         .input-group input[type="number"] { 
             font-family: 'Roboto Mono', monospace;
-            background-color: #fff; 
-            border: 1px solid #D2DBE9; 
-            color: #0d1728; 
+            background-color: var(--surface-card); 
+            border: 1px solid var(--border-dominant); 
+            color: var(--text-primary); 
             padding: 8px 12px; 
             border-radius: 6px; 
             outline: none; 
@@ -55,7 +67,7 @@
         }
 
         .input-group input[type="number"]:focus { 
-            border-color: #2e809c; 
+            border-color: var(--border-focus); 
             box-shadow: 0 0 0 2px rgba(46, 128, 156, 0.2);
         }
         
@@ -64,23 +76,23 @@
         input[type=range]:focus { outline: none; }
         
         /* WebKit (Chrome, Safari, Edge) */
-        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 6px; cursor: pointer; background: #E8ECF2; border-radius: 3px; }
-        input[type=range]::-webkit-slider-thumb { height: 18px; width: 18px; border-radius: 50%; background: #2e809c; cursor: pointer; -webkit-appearance: none; margin-top: -6px; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
-        input[type=range]:focus::-webkit-slider-runnable-track { background: #D2DBE9; }
+        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 6px; cursor: pointer; background: var(--border-soft); border-radius: 3px; }
+        input[type=range]::-webkit-slider-thumb { height: 18px; width: 18px; border-radius: 50%; background: var(--color-accent); cursor: pointer; -webkit-appearance: none; margin-top: -6px; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        input[type=range]:focus::-webkit-slider-runnable-track { background: var(--border-dominant); }
 
         /* Firefox */
-        input[type=range]::-moz-range-track { width: 100%; height: 6px; cursor: pointer; background: #E8ECF2; border-radius: 3px; }
-        input[type=range]::-moz-range-thumb { height: 18px; width: 18px; border-radius: 50%; background: #2e809c; cursor: pointer; border: none; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
-        input[type=range]:focus::-moz-range-track { background: #D2DBE9; }
+        input[type=range]::-moz-range-track { width: 100%; height: 6px; cursor: pointer; background: var(--border-soft); border-radius: 3px; }
+        input[type=range]::-moz-range-thumb { height: 18px; width: 18px; border-radius: 50%; background: var(--color-accent); cursor: pointer; border: none; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        input[type=range]:focus::-moz-range-track { background: var(--border-dominant); }
         
-        .metric-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #E8ECF2; }
+        .metric-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border-soft); }
         .metric-row:last-child { border-bottom: none; }
         
         .metric-label { 
             font-family: 'DM Sans', sans-serif;
-            color: #595959; 
+            color: var(--text-secondary); 
             font-size: 14px; 
-            font-weight: 500;
+            font-weight: 400;
         }
         
         .metric-value { 
@@ -88,110 +100,171 @@
             font-weight: 600; 
             font-size: 16px; 
             text-align: right; 
-            color: #0d1728;
+            color: var(--text-primary);
         }
 
         /* Color States */
-        .good-val { color: #00b5ae !important; }
-        .warn-val { color: #e4bd52 !important; }
-        .bad-val { color: #ff7f50 !important; }
+        .good-val { color: var(--color-success) !important; }
+        .warn-val { color: var(--color-warning) !important; }
+        .bad-val { color: var(--color-danger) !important; }
+
+        /* Mode Badges */
+        .badge-baseline {
+            background-color: rgba(0, 181, 174, 0.1);
+            color: var(--color-success);
+            border: 1px solid var(--color-success);
+        }
+        .badge-simulation {
+            background-color: rgba(255, 127, 80, 0.1);
+            color: var(--color-danger);
+            border: 1px solid var(--color-danger);
+        }
+
+        /* Flash Animation for Margin Call */
+        @keyframes marginCallFlash {
+            0%, 100% { color: var(--color-danger); opacity: 1; text-shadow: 0 0 8px rgba(255, 127, 80, 0.4); }
+            50% { color: #d94e00; opacity: 0.6; text-shadow: none; }
+        }
+        .flash-margin-call {
+            animation: marginCallFlash 1.2s ease-in-out infinite;
+        }
 
         /* Custom Button */
         .btn-primary {
-            background-color: #2e809c;
+            background-color: var(--color-accent);
             color: #fff;
             border: none;
             border-radius: 8px;
             padding: 12px 24px;
             font-family: 'DM Sans', sans-serif;
-            font-size: 14px;
+            font-size: 16px;
             font-weight: 600;
             cursor: pointer;
             transition: background-color 0.2s ease;
         }
         .btn-primary:hover {
-            background-color: #256b7c;
+            background-color: var(--color-accent-hover);
         }
 
         /* Educational Box */
         .edu-box {
-            background-color: #edf1fb;
-            border: 1px solid #D2DBE9;
+            background-color: var(--surface-edu);
+            border: 1px solid var(--border-dominant);
             border-radius: 12px;
         }
+        .edu-box h3 {
+            border-bottom: 1px solid var(--border-dominant);
+        }
         .edu-box strong {
-            color: #0d1728;
+            color: var(--text-primary);
             font-weight: 700;
         }
+
+        /* Hide native details arrow */
+        details > summary { list-style: none; }
+        details > summary::-webkit-details-marker { display: none; }
+
+        /* Tooltip styling */
+        .tooltip { position: relative; display: inline-flex; align-items: center; cursor: help; }
+        .tooltip .tooltip-text {
+            visibility: hidden; width: 280px; background-color: #2c3e50; color: #fff; text-align: left;
+            border-radius: 6px; padding: 10px; position: absolute; z-index: 10000;
+            top: 125%; left: 0%; transform: translateX(-50%); opacity: 0; transition: opacity 0.3s;
+            font-size: 12px; font-weight: 400; line-height: 1.4; pointer-events: none;
+            font-family: 'DM Sans', sans-serif;
+        }
+        .tooltip:hover .tooltip-text { visibility: visible; opacity: 1; }
     </style>
 </head>
 <body class="p-4 md:p-8">
-    <div class="max-w-7xl mx-auto">
-        <h1 class="text-3xl font-bold mb-6">Positive Carry Portfolio Visualizer</h1>
+
+    <audio id="dangerZoneAudio" src="danger_zone.mp3" loop></audio>
+
+    <div class="w-full mx-auto">
+        
+        <div class="flex items-center gap-3 mb-6">
+            <h1 class="text-3xl font-bold">Positive Carry Portfolio Visualizer</h1>
+            <div class="tooltip mt-1">
+                <svg class="w-6 h-6 text-gray-400 hover:text-[var(--color-accent)] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <span class="tooltip-text">A <strong>Positive Carry Portfolio</strong> is an investment strategy where the income yield generated by your assets consistently exceeds the cost of borrowing (margin interest) used to acquire them, creating a self-sustaining cash flow engine.</span>
+            </div>
+        </div>
         
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             
             <div class="card p-5 flex flex-col justify-between">
                 <div>
-                    <h2 class="text-xl font-bold border-b pb-2 mb-4">1. Account Data</h2>
+                    <h2 class="text-xl font-bold border-b border-[#E8ECF2] pb-2 mb-4">1. Base Account Data</h2>
+                    <p class="text-xs text-[#595959] mb-4 font-['DM_Sans']">Used to establish your baseline metrics and projection variables.</p>
                     <div class="input-group">
-                        <label>Securities Value ($)</label>
-                        <input type="number" id="secValue" step="any" value="100000" oninput="calculate()">
+                        <label>Base Portfolio Value ($)</label>
+                        <input type="number" id="secValue" step="any" value="100000" oninput="syncBaseSec()">
+                    </div>
+                    <div class="input-group">
+                        <label>Monthly Contributions ($)</label>
+                        <input type="number" id="monthlyContrib" step="any" value="0" oninput="syncBaseGeneric()">
                     </div>
                     <div class="input-group">
                         <label>Cash Balance ($)</label>
-                        <input type="number" id="cash" step="any" value="0" oninput="calculate()">
+                        <input type="number" id="cash" step="any" value="0" oninput="syncBaseGeneric()">
                     </div>
                     <div class="input-group">
-                        <label>Total Borrowed ($)</label>
-                        <input type="number" id="borrowed" step="any" value="25000" oninput="calculate()">
+                        <label>Base Total Borrowed ($)</label>
+                        <input type="number" id="borrowed" step="any" value="25000" oninput="syncBaseBorrow()">
                     </div>
                     <div class="input-group">
                         <label>Required Equity ($)</label>
-                        <input type="number" id="reqEquity" step="any" value="30000" oninput="calculate()">
+                        <input type="number" id="reqEquity" step="any" value="30000" oninput="syncBaseGeneric()">
                     </div>
 
-                    <h2 class="text-xl font-bold border-b pb-2 mb-4 mt-6">2. Market Variables</h2>
+                    <h2 class="text-xl font-bold border-b border-[#E8ECF2] pb-2 mb-4 mt-6">2. Market Variables</h2>
                     <div class="grid grid-cols-2 gap-4">
                         <div class="input-group">
                             <label>Margin Rate (%)</label>
-                            <input type="number" id="marginRate" step="any" value="5.65" oninput="calculate()">
+                            <input type="number" id="marginRate" step="any" value="5.65" oninput="syncBaseGeneric()">
                         </div>
                         <div class="input-group">
                             <label>Expected Yield (%)</label>
-                            <input type="number" id="yieldRate" step="any" value="15" oninput="calculate()">
+                            <input type="number" id="yieldRate" step="any" value="15" oninput="syncBaseGeneric()">
                         </div>
                     </div>
 
-                    <h2 class="text-xl font-bold border-b pb-2 mb-4 mt-6">3. Simulation Actions</h2>
+                    <h2 class="text-xl font-bold border-b border-[#E8ECF2] pb-2 mb-4 mt-6">3. Simulation</h2>
                     
                     <div class="input-group">
-                        <label>Simulate Borrowing Change (+/- Cash)</label>
+                        <label>Simulated Portfolio Value ($)</label>
                         <div class="flex items-center gap-3">
-                            <input type="range" id="simWithdrawSlider" min="-25000" max="100000" step="500" value="0" oninput="syncWithdraw('slider')">
-                            <input type="number" id="simWithdraw" class="w-1/3" step="any" value="0" oninput="syncWithdraw('number')">
+                            <input type="range" id="simSecValueSlider" min="0" max="1000000" step="1000" value="100000" oninput="syncSimSec('slider')" class="w-full">
+                            <input type="number" id="simSecValue" class="w-36" step="any" value="100000" oninput="syncSimSec('number')">
                         </div>
-                        <p class="text-xs text-[#595959] mt-1 text-right font-['DM_Sans']">Negative = Pay Down | Positive = Withdraw</p>
+                        <p class="text-xs text-[#595959] mt-1 text-right font-['DM_Sans']">Drag to simulate market growth or crashes</p>
                     </div>
 
                     <div class="input-group mt-3">
-                        <label>Simulate Margin Reinvest (+/- Securities)</label>
+                        <label>Simulated Total Borrowed ($)</label>
                         <div class="flex items-center gap-3">
-                            <input type="range" id="simReinvestSlider" min="-100000" max="100000" step="500" value="0" oninput="syncReinvest('slider')">
-                            <input type="number" id="simReinvest" class="w-1/3" step="any" value="0" oninput="syncReinvest('number')">
+                            <input type="range" id="simBorrowedSlider" min="0" max="500000" step="1000" value="25000" oninput="syncSimBorrow('slider')" class="w-full">
+                            <input type="number" id="simBorrowed" class="w-36" step="any" value="25000" oninput="syncSimBorrow('number')">
                         </div>
-                        <p class="text-xs text-[#595959] mt-1 text-right font-['DM_Sans']">Negative = Sell to Pay Debt | Positive = Buy on Margin</p>
+                        <p class="text-xs text-[#595959] mt-1 text-right font-['DM_Sans']">Drag to simulate taking margin or paying debt</p>
                     </div>
                 </div>
                 
-                <button onclick="resetDefaults()" class="btn-primary w-full mt-8 shadow-sm">
-                    Reset Default Values
+                <button onclick="resetSimulation()" class="btn-primary w-full mt-8 shadow-sm">
+                    Reset Simulation
                 </button>
             </div>
 
             <div class="card p-5">
-                <h2 class="text-xl font-bold border-b pb-2 mb-4">Simulated Dashboard</h2>
+                <div class="flex justify-between items-center border-b border-[#E8ECF2] pb-2 mb-4">
+                    <h2 class="text-xl font-bold m-0">Dashboard</h2>
+                    <div id="modeBadge" class="px-2.5 py-1 rounded text-[11px] font-bold tracking-wider uppercase font-['Poppins'] badge-baseline">LIVE BASELINE</div>
+                </div>
                 
+                <div class="metric-row pt-0">
+                    <span class="metric-label font-bold text-[#0d1728]" id="outPortValueLabel">Base Portfolio Value</span>
+                    <span class="metric-value font-bold" id="outPortValue">$0.00</span>
+                </div>
                 <div class="metric-row">
                     <span class="metric-label">Total Equity Value</span>
                     <span class="metric-value" id="outEquity">$0.00</span>
@@ -231,29 +304,43 @@
                     <span class="metric-value" id="outUtilReinvest">0.00%</span>
                 </div>
                 
-                <div class="py-3">
-                    <div class="flex justify-between mb-3">
-                        <span class="metric-label font-bold text-[#0d1728]">Margin Health (Max Drop)</span>
-                        <span class="metric-value font-bold" id="outMaxDrop">0.00%</span>
+                <div class="mt-4 p-6 rounded-xl border border-[var(--border-soft)] bg-[#fdfdfd] flex flex-col items-center text-center shadow-sm">
+                    <h4 class="text-xs font-bold tracking-widest text-[var(--text-secondary)] uppercase mb-2 font-['DM_Sans']">Cushion to Margin Call</h4>
+                    
+                    <div id="outMaxDropLarge" class="text-4xl font-bold font-['Roboto_Mono'] mb-2">0.00%</div>
+                    
+                    <div id="dangerZoneText" class="hidden text-sm font-bold tracking-widest uppercase mb-3 font-['Poppins'] flash-margin-call text-[var(--color-danger)]">Danger Zone!</div>
+                    
+                    <div class="w-full h-2.5 rounded-full relative mb-5" style="background: linear-gradient(to right, var(--color-danger) 0%, var(--color-warning) 45%, var(--color-success) 90%); box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);">
+                        <div id="healthIndicator" class="absolute h-5 w-1.5 bg-[#0d1728] rounded-[2px]" style="top: -5px; left: 0%; transition: left 0.4s cubic-bezier(0.4, 0, 0.2, 1); transform: translateX(-50%); box-shadow: 0 0 0 1.5px #fff, 0 2px 4px rgba(0,0,0,0.4);"></div>
                     </div>
-                    <div class="w-full h-2 rounded-full relative" style="background: linear-gradient(to right, #ff7f50 0%, #e4bd52 45%, #00b5ae 90%); box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);">
-                        <div id="healthIndicator" class="absolute h-4 w-2 bg-white rounded-sm" style="top: -4px; left: 0%; transition: left 0.4s cubic-bezier(0.4, 0, 0.2, 1); transform: translateX(-50%); box-shadow: 0 1px 3px rgba(0,0,0,0.2); border: 1px solid #D2DBE9;"></div>
-                    </div>
+
+                    <p class="text-[13px] text-[var(--text-secondary)] font-['DM_Sans'] leading-relaxed" id="outMaxDropDesc">
+                        The value of your current investments would have to drop <strong class="text-[var(--text-primary)]">0.00%</strong> (<strong class="text-[var(--text-primary)]">$0.00</strong>) to face a margin call.
+                    </p>
                 </div>
 
-                <div class="mt-4 p-4 edu-box text-sm text-[#595959] space-y-2 leading-relaxed font-['DM_Sans']">
-                    <h3 class="text-[15px] font-bold text-[#0d1728] mb-3 border-b border-[#D2DBE9] pb-2 font-['Poppins']">Understanding Your Metrics</h3>
-                    <p><strong>Multiplier:</strong> Represents your total assets per $1 of your own equity. A 1.33x multiplier means you control $1.33 in the market for every $1 you own.</p>
-                    <p><strong>DSCR:</strong> Measures if your portfolio's income covers its margin interest. A ratio above 1.0x means your debt is paying for itself without you injecting cash.</p>
-                    <p><strong>DTA (Debt-to-Asset):</strong> The strict percentage of your total portfolio funded by borrowed money. Lower means less risk.</p>
-                    <p><strong>Margin Utilization:</strong> How much of your borrowing limit you are actively using. <em>Withdrawal</em> assumes taking cash out of the account, while <em>Reinvestment</em> assumes buying more stock (which adds its own equity buffer to your limit).</p>
-                    <p><strong>Margin Health:</strong> The exact portfolio drop required to wipe out your excess equity, resulting in a margin call. The dollar figure shows the absolute market value loss at that threshold.</p>
-                </div>
+                <details class="mt-4 p-4 edu-box text-sm text-[#595959] font-['DM_Sans'] group">
+                    <summary class="text-[15px] font-bold text-[#0d1728] font-['Poppins'] cursor-pointer outline-none flex justify-between items-center select-none">
+                        Understanding Your Metrics
+                        <svg class="w-4 h-4 text-[#595959] transition-transform duration-200 group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </summary>
+                    <div class="mt-3 pt-3 border-t border-[#D2DBE9] space-y-2 leading-relaxed">
+                        <p><strong>Positive Carry Portfolio:</strong> An investment strategy where the income yield generated by your assets consistently exceeds the cost of borrowing (margin interest) used to acquire them, creating a self-sustaining cash flow engine.</p>
+                        <p><strong>Multiplier:</strong> Represents your total assets per $1 of your own equity. A 1.33x multiplier means you control $1.33 in the market for every $1 you own.</p>
+                        <p><strong>DSCR:</strong> Measures if your portfolio's income covers its margin interest. A ratio above 1.0x means your debt is paying for itself without you injecting cash.</p>
+                        <p><strong>DTA (Debt-to-Asset):</strong> The strict percentage of your total portfolio funded by borrowed money. Lower means less risk.</p>
+                        <p><strong>Margin Utilization:</strong> How much of your borrowing limit you are actively using. <em>Withdrawal</em> assumes taking cash out of the account, while <em>Reinvestment</em> assumes buying more stock (which adds its own equity buffer to your limit).</p>
+                        <p><strong>Margin Health:</strong> The exact portfolio drop required to wipe out your excess equity, resulting in a margin call. The dollar figure shows the absolute market value loss at that threshold.</p>
+                    </div>
+                </details>
             </div>
 
             <div class="card p-5 flex flex-col gap-8">
                 <div>
-                    <h2 class="text-xl font-bold border-b pb-2 mb-4">Detailed Portfolio Composition</h2>
+                    <h2 class="text-xl font-bold border-b border-[#E8ECF2] pb-2 mb-4">Detailed Portfolio Composition</h2>
                     <p class="text-xs text-[#595959] mb-2 font-['DM_Sans']">Breakdown of Total Assets (Debt vs. Protective Equity vs. Usable Equity)</p>
                     <div style="position: relative; height: 250px; width: 100%;">
                         <canvas id="compositionChart"></canvas>
@@ -261,15 +348,15 @@
                 </div>
                 
                 <div>
-                    <h2 class="text-xl font-bold border-b pb-2 mb-4">Annual Carry Analysis</h2>
+                    <h2 class="text-xl font-bold border-b border-[#E8ECF2] pb-2 mb-4">Annual Carry Analysis</h2>
                     <div style="position: relative; height: 180px; width: 100%;">
                         <canvas id="carryChart"></canvas>
                     </div>
                 </div>
 
                 <div>
-                    <h2 class="text-xl font-bold border-b pb-2 mb-4">10-Year Growth Projection</h2>
-                    <p class="text-xs text-[#595959] mb-2 font-['DM_Sans']">Assumes simulated DTA leverage is maintained and Net Carry is reinvested.</p>
+                    <h2 class="text-xl font-bold border-b border-[#E8ECF2] pb-2 mb-4">10-Year Growth Projection</h2>
+                    <p class="text-xs text-[#595959] mb-2 font-['DM_Sans']">Assumes simulated DTA leverage is maintained, Net Carry is reinvested, and Monthly Contributions are added.</p>
                     <div style="position: relative; height: 250px; width: 100%;">
                         <canvas id="projectionChart"></canvas>
                     </div>
@@ -283,11 +370,62 @@
         const fmtC = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' });
         const fmtP = (val) => val.toFixed(2) + '%';
 
-        // Apply global chart defaults based on the new light theme CSS
+        // Apply global chart defaults
         Chart.defaults.color = '#595959';
         Chart.defaults.font.family = "'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
 
         const gridOptions = { color: '#E8ECF2', drawBorder: false };
+
+        // Audio State Management
+        let dangerZonePlaying = false;
+        const audioEl = document.getElementById('dangerZoneAudio');
+
+        // Custom Plugin to draw text in the center of the Doughnut Chart
+        const centerTextPlugin = {
+            id: 'centerText',
+            beforeDraw(chart) {
+                if (chart.config.type !== 'doughnut') return;
+                
+                const { ctx, chartArea } = chart;
+                if (!chartArea) return; 
+                
+                const { left, right, top, bottom } = chartArea;
+                const centerX = left + (right - left) / 2;
+                const centerY = top + (bottom - top) / 2;
+
+                const opts = (chart.options && chart.options.plugins && chart.options.plugins.centerText) ? chart.options.plugins.centerText : {};
+                const portValue = opts.portValue || '$0.00';
+                const usableEquity = opts.usableEquity || '$0.00';
+                const isMarginCall = opts.isMarginCall || false;
+                const portfolioLabel = opts.portfolioLabel || 'Portfolio Value';
+
+                ctx.save();
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+
+                // Top Line: Base or Simulated Label
+                ctx.font = "500 11px 'DM Sans', sans-serif";
+                ctx.fillStyle = '#595959';
+                ctx.fillText(portfolioLabel, centerX, centerY - 20);
+                
+                // Second Line: Portfolio Value Number
+                ctx.font = "700 15px 'Roboto Mono', monospace";
+                ctx.fillStyle = '#0d1728';
+                ctx.fillText(portValue, centerX, centerY - 4);
+
+                // Third Line: "Usable Equity" (Turns red on Margin Call)
+                ctx.font = "500 11px 'DM Sans', sans-serif";
+                ctx.fillStyle = isMarginCall ? '#ff7f50' : '#00b5ae'; 
+                ctx.fillText('Usable Equity', centerX, centerY + 14);
+
+                // Fourth Line: Usable Equity Number
+                ctx.font = "700 14px 'Roboto Mono', monospace";
+                ctx.fillStyle = isMarginCall ? '#ff7f50' : '#00b5ae';
+                ctx.fillText(usableEquity, centerX, centerY + 30);
+
+                ctx.restore();
+            }
+        };
 
         // 1. Nuanced Doughnut Chart for Portfolio Composition
         const ctxComp = document.getElementById('compositionChart').getContext('2d');
@@ -321,8 +459,9 @@
                         } 
                     }
                 }, 
-                cutout: '65%' 
-            }
+                cutout: '72%' 
+            },
+            plugins: [centerTextPlugin]
         });
 
         // 2. Net Carry Bar Chart
@@ -383,71 +522,144 @@
             }
         });
 
-        // Synchronization functions for the sliders
-        function syncWithdraw(source) {
-            const slider = document.getElementById('simWithdrawSlider');
-            const num = document.getElementById('simWithdraw');
-            if (source === 'slider') num.value = slider.value;
-            else slider.value = num.value;
+        // --- Local Storage Management ---
+        const STORAGE_KEY = 'positiveCarryBaseData';
+
+        function saveBaseData() {
+            const data = {
+                secValue: document.getElementById('secValue').value,
+                monthlyContrib: document.getElementById('monthlyContrib').value,
+                cash: document.getElementById('cash').value,
+                borrowed: document.getElementById('borrowed').value,
+                reqEquity: document.getElementById('reqEquity').value,
+                marginRate: document.getElementById('marginRate').value,
+                yieldRate: document.getElementById('yieldRate').value
+            };
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        }
+
+        function loadBaseData() {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                try {
+                    const data = JSON.parse(saved);
+                    if (data.secValue !== undefined) document.getElementById('secValue').value = data.secValue;
+                    if (data.monthlyContrib !== undefined) document.getElementById('monthlyContrib').value = data.monthlyContrib;
+                    if (data.cash !== undefined) document.getElementById('cash').value = data.cash;
+                    if (data.borrowed !== undefined) document.getElementById('borrowed').value = data.borrowed;
+                    if (data.reqEquity !== undefined) document.getElementById('reqEquity').value = data.reqEquity;
+                    if (data.marginRate !== undefined) document.getElementById('marginRate').value = data.marginRate;
+                    if (data.yieldRate !== undefined) document.getElementById('yieldRate').value = data.yieldRate;
+                } catch (e) {
+                    console.error("Error loading base data", e);
+                }
+            }
+            
+            // Align simulation to the loaded base data
+            const baseSec = document.getElementById('secValue').value;
+            const baseBorr = document.getElementById('borrowed').value;
+            
+            setSimulationValue('simSecValue', 'simSecValueSlider', parseFloat(baseSec) || 0);
+            setSimulationValue('simBorrowed', 'simBorrowedSlider', parseFloat(baseBorr) || 0);
+            
+            simulationMode = false;
+        }
+
+        // Tracks whether the user has intentionally moved away from the baseline.
+        let simulationMode = false;
+
+        function setSimulationValue(numberId, sliderId, value) {
+            const numberInput = document.getElementById(numberId);
+            const slider = document.getElementById(sliderId);
+            const safeValue = Number.isFinite(value) ? value : 0;
+
+            numberInput.value = safeValue;
+            if (safeValue > parseFloat(slider.max)) slider.max = safeValue;
+            if (safeValue < parseFloat(slider.min)) slider.min = safeValue;
+            slider.value = safeValue;
+        }
+
+        // Keep simulation inputs aligned with edited base values while viewing the baseline.
+        function syncBaseSec() {
+            const value = parseFloat(document.getElementById('secValue').value);
+            if (!simulationMode) {
+                setSimulationValue('simSecValue', 'simSecValueSlider', Number.isFinite(value) ? value : 0);
+            }
+            saveBaseData();
             calculate();
         }
 
-        function syncReinvest(source) {
-            const slider = document.getElementById('simReinvestSlider');
-            const num = document.getElementById('simReinvest');
-            if (source === 'slider') num.value = slider.value;
-            else slider.value = num.value;
+        function syncBaseBorrow() {
+            const value = parseFloat(document.getElementById('borrowed').value);
+            if (!simulationMode) {
+                setSimulationValue('simBorrowed', 'simBorrowedSlider', Number.isFinite(value) ? value : 0);
+            }
+            saveBaseData();
             calculate();
         }
 
-        // Reset to Default Function
-        function resetDefaults() {
-            document.getElementById('secValue').value = 100000;
-            document.getElementById('cash').value = 0;
-            document.getElementById('borrowed').value = 25000;
-            document.getElementById('reqEquity').value = 30000;
+        function syncBaseGeneric() {
+            saveBaseData();
+            calculate();
+        }
+
+        // Simulation synchronization functions
+        function syncSimSec(source) {
+            const slider = document.getElementById('simSecValueSlider');
+            const num = document.getElementById('simSecValue');
+            if (source === 'slider') num.value = slider.value;
+            else {
+                if (parseFloat(num.value) > parseFloat(slider.max)) slider.max = num.value;
+                slider.value = num.value;
+            }
+            simulationMode = true;
+            calculate();
+        }
+
+        function syncSimBorrow(source) {
+            const slider = document.getElementById('simBorrowedSlider');
+            const num = document.getElementById('simBorrowed');
+            if (source === 'slider') num.value = slider.value;
+            else {
+                if (parseFloat(num.value) > parseFloat(slider.max)) slider.max = num.value;
+                slider.value = num.value;
+            }
+            simulationMode = true;
+            calculate();
+        }
+
+        // Reset the simulation to explicitly mirror the base values
+        function resetSimulation() {
+            const baseSec = document.getElementById('secValue').value;
+            const baseBorr = document.getElementById('borrowed').value;
             
-            document.getElementById('marginRate').value = 5.65;
-            document.getElementById('yieldRate').value = 15;
-            
-            document.getElementById('simWithdraw').value = 0;
-            document.getElementById('simWithdrawSlider').value = 0;
-            
-            document.getElementById('simReinvest').value = 0;
-            document.getElementById('simReinvestSlider').value = 0;
-            
+            setSimulationValue('simSecValue', 'simSecValueSlider', parseFloat(baseSec) || 0);
+            setSimulationValue('simBorrowed', 'simBorrowedSlider', parseFloat(baseBorr) || 0);
+
+            simulationMode = false;
             calculate();
         }
 
         function calculate() {
-            // Inputs
-            const secValue = parseFloat(document.getElementById('secValue').value) || 0;
+            // Base Inputs
+            const baseSecValue = parseFloat(document.getElementById('secValue').value) || 0;
+            const monthlyContrib = parseFloat(document.getElementById('monthlyContrib').value) || 0;
             const cash = parseFloat(document.getElementById('cash').value) || 0;
-            const borrowed = parseFloat(document.getElementById('borrowed').value) || 0;
-            const reqEquity = parseFloat(document.getElementById('reqEquity').value) || 0;
+            const baseBorrowed = parseFloat(document.getElementById('borrowed').value) || 0;
+            const baseReqEquity = parseFloat(document.getElementById('reqEquity').value) || 0;
+            
             const marginRate = (parseFloat(document.getElementById('marginRate').value) || 0) / 100;
             const yieldRate = (parseFloat(document.getElementById('yieldRate').value) || 0) / 100;
-            const simWithdraw = parseFloat(document.getElementById('simWithdraw').value) || 0;
-            const simReinvest = parseFloat(document.getElementById('simReinvest').value) || 0;
-
-            // Update slider boundaries dynamically
-            document.getElementById('simWithdrawSlider').min = -borrowed;
-            document.getElementById('simReinvestSlider').min = -secValue;
-
-            // Base Math
-            const maintRatio = secValue > 0 ? (reqEquity / secValue) : 0;
-
-            // Simulation Math
-            const simSecValue = Math.max(0, secValue + simReinvest);
-            let simBorrowed = borrowed + simWithdraw + simReinvest;
-            let simCash = cash;
-
-            if (simBorrowed < 0) {
-                simCash += Math.abs(simBorrowed);
-                simBorrowed = 0;
-            }
             
-            const simEquity = simSecValue + simCash - simBorrowed; 
+            // Simulated Inputs
+            const simSecValue = parseFloat(document.getElementById('simSecValue').value) || 0;
+            const simBorrowed = parseFloat(document.getElementById('simBorrowed').value) || 0;
+
+            // Derive Maintenance Ratio from the Base data
+            const maintRatio = baseSecValue > 0 ? (baseReqEquity / baseSecValue) : 0;
+
+            // --- Core Simulation Math ---
+            const simEquity = simSecValue + cash - simBorrowed; 
             const simReqEquity = simSecValue * maintRatio;
             const simExcess = simEquity - simReqEquity;
 
@@ -456,13 +668,13 @@
             const highMmrRequired = Math.max(0, simReqEquity - baseRequired);
             
             // Metrics Math
-            const multiplier = simEquity > 0 ? ((simSecValue + simCash) / simEquity) : 0;
+            const multiplier = simEquity > 0 ? ((simSecValue + cash) / simEquity) : 0;
             const annualIncome = simSecValue * yieldRate;
             const annualMarginCost = simBorrowed * marginRate;
             const netCarry = annualIncome - annualMarginCost;
             
             const dscr = annualMarginCost > 0 ? (annualIncome / annualMarginCost) : 0;
-            const dta = (simSecValue + simCash) > 0 ? (simBorrowed / (simSecValue + simCash)) : 0;
+            const dta = (simSecValue + cash) > 0 ? (simBorrowed / (simSecValue + cash)) : 0;
             
             // Health / Margin Call Risk
             let maxDropValue = 0, maxDropPct = 0;
@@ -475,7 +687,24 @@
             const utilWithdraw = simBorrowed > 0 ? (simBorrowed / (simBorrowed + Math.max(0, simExcess))) : 0;
             const utilReinvest = simBorrowed > 0 ? (simBorrowed / (simBorrowed + Math.max(0, simExcess / 0.5))) : 0;
 
-            // Update DOM Elements
+            // Check if simulating vs viewing base
+            const isSimulating = Math.abs(simSecValue - baseSecValue) > 0.01 || Math.abs(simBorrowed - baseBorrowed) > 0.01;
+            simulationMode = isSimulating;
+
+            // Update DOM Badge
+            const modeBadge = document.getElementById('modeBadge');
+            if (isSimulating) {
+                modeBadge.innerText = 'SIMULATION';
+                modeBadge.className = "px-2.5 py-1 rounded text-[11px] font-bold tracking-wider uppercase font-['Poppins'] badge-simulation";
+            } else {
+                modeBadge.innerText = 'LIVE BASELINE';
+                modeBadge.className = "px-2.5 py-1 rounded text-[11px] font-bold tracking-wider uppercase font-['Poppins'] badge-baseline";
+            }
+
+            // Update Basic DOM Elements
+            document.getElementById('outPortValueLabel').innerText = isSimulating ? 'Simulated Portfolio Value' : 'Base Portfolio Value';
+            document.getElementById('outPortValue').innerText = fmtC.format(simSecValue);
+
             document.getElementById('outEquity').innerText = fmtC.format(simEquity);
             document.getElementById('outReqEquity').innerText = fmtC.format(simReqEquity);
             document.getElementById('outExcess').innerText = fmtC.format(simExcess);
@@ -487,27 +716,81 @@
             document.getElementById('outUtilWithdraw').innerText = fmtP(utilWithdraw * 100);
             document.getElementById('outUtilReinvest').innerText = fmtP(utilReinvest * 100);
             
-            // Logic for visual health indicator and text mapping (0 to 100% calibration)
-            if (simSecValue <= 0) {
-                document.getElementById('outMaxDrop').innerText = 'N/A (No Securities)';
-                document.getElementById('outMaxDrop').className = 'metric-value font-bold text-[#595959]';
-                document.getElementById('healthIndicator').style.left = '0%';
+            // --- Margin Health UI Update (The new Card Style) ---
+            const outMaxDropLarge = document.getElementById('outMaxDropLarge');
+            const outMaxDropDesc = document.getElementById('outMaxDropDesc');
+            const healthIndicator = document.getElementById('healthIndicator');
+
+            if (simExcess < 0) {
+                outMaxDropLarge.innerText = 'MARGIN CALL';
+                outMaxDropLarge.className = 'text-4xl font-bold font-["Roboto_Mono"] mb-2 bad-val flash-margin-call';
+                outMaxDropDesc.innerHTML = 'Your account is currently in a <strong>margin call</strong>. Deposit cash or sell securities immediately.';
+                healthIndicator.style.left = '0%';
+            } else if (simSecValue <= 0) {
+                outMaxDropLarge.innerText = 'N/A';
+                outMaxDropLarge.className = 'text-4xl font-bold font-["Roboto_Mono"] mb-2 text-[#595959]';
+                outMaxDropDesc.innerHTML = 'You have no securities to drop in value.';
+                healthIndicator.style.left = '0%';
             } else if (maxDropPct >= 1) {
-                document.getElementById('outMaxDrop').innerText = '100.00% (No Risk)';
-                document.getElementById('outMaxDrop').className = 'metric-value font-bold good-val';
-                document.getElementById('healthIndicator').style.left = '100%';
+                outMaxDropLarge.innerText = '100.00%';
+                outMaxDropLarge.className = 'text-4xl font-bold font-["Roboto_Mono"] mb-2 good-val';
+                outMaxDropDesc.innerHTML = 'Your investments could drop <strong class="text-[var(--text-primary)]">100.00%</strong> to zero without facing a margin call.';
+                healthIndicator.style.left = '100%';
             } else {
-                document.getElementById('outMaxDrop').innerText = fmtP(maxDropPct * 100) + ` (${fmtC.format(maxDropValue)})`;
-                document.getElementById('outMaxDrop').className = 'metric-value font-bold ' + (maxDropPct > 0.4 ? 'good-val' : maxDropPct > 0.25 ? 'warn-val' : 'bad-val');
+                const pctText = fmtP(maxDropPct * 100);
+                const valText = fmtC.format(maxDropValue);
+                outMaxDropLarge.innerText = pctText;
+                outMaxDropLarge.className = 'text-4xl font-bold font-["Roboto_Mono"] mb-2 ' + (maxDropPct > 0.4 ? 'good-val' : maxDropPct > 0.25 ? 'warn-val' : 'bad-val');
+                
+                outMaxDropDesc.innerHTML = `The value of your current investments would have to drop <strong class="text-[var(--text-primary)]">${pctText}</strong> (<strong class="text-[var(--text-primary)]">${valText}</strong>) to face a margin call.`;
                 
                 let indicatorPos = Math.min(Math.max(maxDropPct * 100, 0), 100);
-                document.getElementById('healthIndicator').style.left = indicatorPos + '%';
+                if (isNaN(indicatorPos)) indicatorPos = 0;
+                healthIndicator.style.left = indicatorPos + '%';
             }
 
             document.getElementById('outExcess').className = 'metric-value ' + (simExcess >= 0 ? 'good-val' : 'bad-val');
 
-            // --- Update Charts ---
-            compChart.data.datasets[0].data = [simBorrowed, baseRequired, highMmrRequired, Math.max(0, simExcess)];
+            // --- AUDIO & DANGER ZONE LOGIC ---
+            const dangerZoneText = document.getElementById('dangerZoneText');
+            let isDanger = false;
+            
+            if (simSecValue > 0 && isSimulating) {
+                if (simExcess <= 0 || maxDropPct < 0.25) {
+                    isDanger = true;
+                }
+            }
+
+            if (isDanger) {
+                dangerZoneText.classList.remove('hidden');
+                if (!dangerZonePlaying) {
+                    audioEl.play().catch(e => console.warn("Autoplay prevented by browser.", e));
+                    dangerZonePlaying = true;
+                }
+            } else {
+                dangerZoneText.classList.add('hidden');
+                if (dangerZonePlaying) {
+                    audioEl.pause();
+                    audioEl.currentTime = 0; 
+                    dangerZonePlaying = false;
+                }
+            }
+
+            // --- Safely Update Charts ---
+            const visualExcess = Math.max(0, simExcess);
+            compChart.data.datasets[0].data = [simBorrowed, baseRequired, highMmrRequired, visualExcess];
+            
+            // Dynamically calculate and display the High-MMR percentage in the chart label
+            const highMmrPct = Math.max(0, maintRatio - 0.25);
+            compChart.data.labels[2] = `M1 High-MMR Req. (${fmtP(highMmrPct * 100)})`;
+            
+            if (!compChart.options.plugins) compChart.options.plugins = {};
+            compChart.options.plugins.centerText = {
+                portValue: fmtC.format(simSecValue + cash),
+                usableEquity: fmtC.format(simExcess), 
+                isMarginCall: simExcess < 0,
+                portfolioLabel: isSimulating ? 'Simulated Portfolio' : 'Base Portfolio'
+            };
             compChart.update();
 
             carryChart.data.datasets[0].data = [annualIncome, annualMarginCost, netCarry];
@@ -519,7 +802,7 @@
             const projBase = [];
 
             let targetDta = dta; 
-            if (targetDta >= 1 || targetDta < 0) targetDta = 0; 
+            if (targetDta >= 1 || targetDta < 0 || isNaN(targetDta)) targetDta = 0; 
 
             let curEq = simEquity;
 
@@ -536,7 +819,8 @@
                 let mCost = cDebt * (marginRate / 12);
                 let mNet = mYield - mCost;
                 
-                curEq += mNet; 
+                // Add the Monthly Contribution to the equity base each month
+                curEq += mNet + monthlyContrib; 
                 if (curEq < 0) curEq = 0;
             }
 
@@ -546,6 +830,8 @@
             projChart.update();
         }
 
+        // Load persisted data and initialize App
+        loadBaseData();
         calculate();
     </script>
 </body>
