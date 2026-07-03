@@ -189,10 +189,9 @@
             </div>
         </div>
         
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-6">
             
-            <!-- Column 1: Inputs -->
-            <div class="card p-5 flex flex-col justify-between h-full lg:col-span-4 xl:col-span-3">
+            <div class="card p-5 flex flex-col justify-between h-full col-span-1 lg:col-span-4 xl:col-span-3">
                 <div class="flex-grow">
                     <h2 class="text-lg font-bold border-b border-[#E8ECF2] pb-1.5 mb-4">1. Base Account Data</h2>
                     
@@ -251,11 +250,9 @@
                         <p class="text-[12px] text-[#595959] mt-1.5 text-right font-['DM_Sans']">Drag to simulate taking margin or paying debt</p>
                     </div>
 
-                    <!-- Quick Scenarios Grid -->
                     <div class="mt-6 border-t border-[#E8ECF2] pt-4">
                         <label class="font-['DM_Sans'] text-[11px] font-bold text-[#595959] uppercase tracking-widest mb-3 block">Quick Market Scenarios</label>
                         
-                        <!-- Value Scenarios -->
                         <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 gap-2.5 mb-2.5">
                             <button onclick="applyScenario('rally')" class="group flex flex-col items-center justify-center py-2 bg-[#f0fdfa] border border-[#ccfbf1] rounded-lg hover:bg-[#ccfbf1] transition-colors cursor-pointer shadow-sm">
                                 <span class="text-[#00b5ae] font-bold text-[12px] mb-0.5">+20%</span>
@@ -275,7 +272,6 @@
                             </button>
                         </div>
                         
-                        <!-- Rate & Yield Scenarios -->
                         <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 gap-2.5 mb-2.5">
                             <button onclick="applyScenario('rate_hike')" class="group flex flex-col items-center justify-center py-2 bg-[#fef2f2] border border-[#fecaca] rounded-lg hover:bg-[#fee2e2] transition-colors cursor-pointer shadow-sm">
                                 <span class="text-[#ef4444] font-bold text-[12px] mb-0.5">+1.5%</span>
@@ -295,7 +291,6 @@
                             </button>
                         </div>
                         
-                        <!-- Historical Stress Tests -->
                         <label class="font-['DM_Sans'] text-[11px] font-bold text-[#595959] uppercase tracking-widest mt-4 mb-3 block">Historical Stress Tests</label>
                         <div class="grid grid-cols-2 gap-2.5">
                             <button onclick="applyScenario('covid')" class="group flex flex-col items-center justify-center py-2 bg-[#1e293b] border border-[#0f172a] rounded-lg hover:bg-[#334155] transition-colors cursor-pointer shadow-sm">
@@ -320,8 +315,7 @@
                 </div>
             </div>
 
-            <!-- Column 2: Dashboard -->
-            <div class="card p-5 flex flex-col h-full lg:col-span-4 xl:col-span-4">
+            <div class="card p-5 flex flex-col h-full col-span-1 lg:col-span-4 xl:col-span-4">
                 <div class="flex justify-between items-center border-b border-[#E8ECF2] pb-2 mb-4">
                     <div class="flex items-center gap-3">
                         <h2 class="text-xl font-bold m-0">Dashboard</h2>
@@ -376,7 +370,6 @@
                     <span class="metric-value" id="outUtilReinvest">0.00%</span>
                 </div>
                 
-                <!-- Cushion to Margin Call Section -->
                 <div class="mt-4 p-5 rounded-xl border border-[var(--border-soft)] bg-[#fdfdfd] flex flex-col items-center justify-center shadow-sm flex-grow transition-all duration-300 relative overflow-hidden" id="cushionCard">
                     <div class="w-full flex justify-between items-center border-b border-[#E8ECF2] pb-1.5 mb-4 z-10">
                         <h4 class="text-xs font-bold tracking-widest text-[var(--text-secondary)] uppercase font-['DM_Sans']">Cushion to Call</h4>
@@ -388,21 +381,15 @@
                     
                     <div id="zoneIndicatorText" class="text-sm font-bold tracking-widest uppercase mb-3 font-['Poppins'] text-[#00b5ae] text-center z-10">Optimal Zone</div>
                     
-                    <!-- Unobstructed Minimalist Gauge Container -->
                     <div class="relative w-[240px] mx-auto flex flex-col items-center z-10">
                         <div class="relative w-[240px] h-[120px] overflow-hidden shrink-0">
-                            <!-- Multi-Stage Hard-Stop Gradient -->
-                            <!-- 0-15% Drop (Red), 15-30% Drop (Yellow), 30%+ Drop (Green) -->
                             <div class="w-[240px] h-[240px] rounded-full absolute top-0 left-0" style="background: conic-gradient(from 270deg, var(--color-critical) 0%, var(--color-critical) 15%, var(--color-warning) 15%, var(--color-warning) 30%, var(--color-success) 30%, var(--color-success) 50%, transparent 50%);"></div>
-                            <!-- Inner Cutout -->
                             <div class="w-[180px] h-[180px] rounded-full bg-[#fdfdfd] absolute top-[30px] left-[30px]" id="innerGaugeCutout"></div>
                             
-                            <!-- Sleek Outer Pointer Track -->
                             <div id="healthIndicator" class="absolute bottom-0 left-1/2 w-[4px] h-[120px] origin-bottom transition-transform duration-500 ease-out z-10" style="transform: translateX(-50%) rotate(-90deg);">
                                 <div class="absolute top-0 left-1/2 -translate-x-1/2 w-3.5 h-[34px] bg-[#0d1728] rounded-[3px] shadow-[0_0_0_2px_#ffffff,0_3px_6px_rgba(0,0,0,0.3)] -mt-[2px]"></div>
                             </div>
                         </div>
-                        <!-- Unobstructed Value Display beneath the arch -->
                         <div id="outMaxDropLarge" class="text-4xl font-bold font-['Roboto_Mono'] leading-none mt-5 text-center">0.00%</div>
                     </div>
 
@@ -410,7 +397,6 @@
                         The value of your current investments would have to drop <strong class="text-[var(--text-primary)]">0.00%</strong> (<strong class="text-[var(--text-primary)]">$0</strong>) to face a margin call.
                     </p>
                     
-                    <!-- Dynamic Margin Call Emergency Action Panel (Hidden until Call) -->
                     <div id="marginCallAlertBlock" class="hidden w-full mt-4 border-t border-[#fca5a5] pt-4 z-10">
                         <h4 class="text-[13px] font-bold text-[#b91c1c] uppercase tracking-widest text-center mb-3">Required Cure Actions</h4>
                         
@@ -425,7 +411,6 @@
                             </div>
                         </div>
 
-                        <!-- Ticking Clock Timeline -->
                         <div class="flex justify-between items-center mb-3 px-2">
                             <div class="timeline-step">
                                 <div class="timeline-dot"></div>
@@ -455,50 +440,37 @@
                 </div>
             </div>
 
-            <!-- Column 3: Charts Container -->
-            <div class="card p-5 flex flex-col gap-6 h-full lg:col-span-4 xl:col-span-5">
+            <div class="card p-5 flex flex-col gap-6 h-full col-span-1 md:col-span-2 lg:col-span-4 xl:col-span-5">
                 
-                <!-- Chart 1: Composition (Flex-grow absolute wrapper) -->
-                <div class="flex-1 flex flex-col w-full min-h-[260px]">
+                <div class="flex flex-col w-full">
                     <h2 class="text-xl font-bold border-b border-[#E8ECF2] pb-2 mb-4">Detailed Portfolio Composition</h2>
-                    <div class="relative w-full flex-grow min-h-[220px]">
-                        <div class="absolute inset-0">
-                            <canvas id="compositionChart"></canvas>
-                        </div>
+                    <div style="position: relative; height: 260px; width: 100%;">
+                        <canvas id="compositionChart"></canvas>
                     </div>
                 </div>
                 
-                <!-- Chart 2: Carry Analysis (Flex-grow absolute wrapper) -->
-                <div class="flex-1 flex flex-col w-full min-h-[260px]">
+                <div class="flex flex-col w-full">
                     <h2 class="text-xl font-bold border-b border-[#E8ECF2] pb-2 mb-4">Annual Carry Analysis</h2>
-                    
-                    <div class="relative w-full flex-grow min-h-[160px]">
-                        <div class="absolute inset-0">
-                            <canvas id="carryChart"></canvas>
+                    <div style="position: relative; height: 260px; width: 100%;">
+                        <canvas id="carryChart"></canvas>
+                    </div>
+                    <div id="carryExplanation" class="text-[13px] text-[#595959] mt-5 font-['DM_Sans'] leading-relaxed bg-[#fdfdfd] p-4 rounded-xl border border-[var(--border-soft)] shadow-sm">
                         </div>
-                    </div>
-                    
-                    <!-- Dynamic Explainer Box -->
-                    <div id="carryExplanation" class="text-[13px] text-[#595959] mt-5 font-['DM_Sans'] leading-relaxed bg-[#fdfdfd] p-4 rounded-xl border border-[var(--border-soft)] shadow-sm relative z-10">
-                        <!-- Injected via Javascript -->
-                    </div>
                 </div>
             </div>
 
         </div>
 
-        <!-- Full Width Bottom Row Chart -->
         <div class="card p-5 mt-6">
             <h2 class="text-xl font-bold border-b border-[#E8ECF2] pb-2 mb-4">10-Year Growth Projection</h2>
             <p class="text-xs text-[#595959] mb-4 font-['DM_Sans'] leading-relaxed">Assumes simulated DTA leverage is maintained, Net Carry is reinvested, and Monthly Contributions are added. The <strong>Total Portfolio Value</strong> is the sum of your <strong>Total Equity</strong> and <strong>Margin Debt</strong> at any given time.</p>
-            <div class="relative w-full h-[400px]">
+            <div style="position: relative; height: 400px; width: 100%;">
                 <canvas id="projectionChart"></canvas>
             </div>
         </div>
 
     </div>
 
-    <!-- Modal 1: Metrics Guide Pop-up -->
     <div id="metricsModal" class="fixed inset-0 bg-[#0d1728]/60 z-50 flex items-center justify-center hidden backdrop-blur-sm transition-opacity opacity-0 duration-200">
         <div class="bg-white rounded-xl shadow-2xl max-w-lg w-full p-6 m-4 transform scale-95 transition-transform duration-200">
             <div class="flex justify-between items-center border-b border-[#E8ECF2] pb-3 mb-4">
@@ -521,7 +493,6 @@
         </div>
     </div>
 
-    <!-- Modal 2: Margin Safety Guide Pop-up -->
     <div id="safetyModal" class="fixed inset-0 bg-[#0d1728]/60 z-50 flex items-center justify-center hidden backdrop-blur-sm transition-opacity opacity-0 duration-200">
         <div class="bg-white rounded-xl shadow-2xl max-w-xl w-full p-6 m-4 transform scale-95 transition-transform duration-200">
             <div class="flex justify-between items-center border-b border-[#E8ECF2] pb-3 mb-4">
@@ -555,7 +526,6 @@
         </div>
     </div>
 
-    <!-- Modal 3: Forced Liquidation Impact Pop-up -->
     <div id="liquidationModal" class="fixed inset-0 bg-[#0d1728]/80 z-[60] flex items-center justify-center hidden backdrop-blur-md transition-opacity opacity-0 duration-200">
         <div class="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 m-4 transform scale-95 transition-transform duration-200 border border-[#fca5a5]">
             <div class="flex justify-between items-center border-b border-[#E8ECF2] pb-3 mb-4">
@@ -607,7 +577,7 @@
 
         Chart.defaults.color = '#595959';
         Chart.defaults.font.family = "'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
-        Chart.defaults.maintainAspectRatio = false; // Forces charts to stretch to absolute wrappers
+        Chart.defaults.maintainAspectRatio = false; 
         
         const gridOptions = { color: '#E8ECF2', drawBorder: false };
 
