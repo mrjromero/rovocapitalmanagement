@@ -181,6 +181,7 @@
     <audio id="dangerZoneAudio" src="danger_zone.mp3" loop></audio>
 
     <div class="w-full mx-auto">
+        
         <div class="flex items-center gap-3 mb-6">
             <h1 class="text-3xl font-bold">Positive Carry Portfolio Visualizer</h1>
             <div class="tooltip mt-1">
@@ -194,10 +195,14 @@
             <div class="card p-5 flex flex-col justify-between">
                 <div>
                     <h2 class="text-xl font-bold border-b border-[#E8ECF2] pb-2 mb-4">1. Base Account Data</h2>
-                    <p class="text-xs text-[#595959] mb-4 font-['DM_Sans']">Used to establish your baseline M1 Maintenance Margin Ratio.</p>
+                    <p class="text-xs text-[#595959] mb-4 font-['DM_Sans']">Used to establish your baseline metrics and projection variables.</p>
                     <div class="input-group">
                         <label>Base Portfolio Value ($)</label>
                         <input type="number" id="secValue" step="any" value="100000" oninput="syncBaseSec()">
+                    </div>
+                    <div class="input-group">
+                        <label>Monthly Contributions ($)</label>
+                        <input type="number" id="monthlyContrib" step="any" value="0" oninput="syncBaseGeneric()">
                     </div>
                     <div class="input-group">
                         <label>Cash Balance ($)</label>
@@ -351,7 +356,7 @@
 
                 <div>
                     <h2 class="text-xl font-bold border-b border-[#E8ECF2] pb-2 mb-4">10-Year Growth Projection</h2>
-                    <p class="text-xs text-[#595959] mb-2 font-['DM_Sans']">Assumes simulated DTA leverage is maintained and Net Carry is reinvested.</p>
+                    <p class="text-xs text-[#595959] mb-2 font-['DM_Sans']">Assumes simulated DTA leverage is maintained, Net Carry is reinvested, and Monthly Contributions are added.</p>
                     <div style="position: relative; height: 250px; width: 100%;">
                         <canvas id="projectionChart"></canvas>
                     </div>
@@ -523,6 +528,7 @@
         function saveBaseData() {
             const data = {
                 secValue: document.getElementById('secValue').value,
+                monthlyContrib: document.getElementById('monthlyContrib').value,
                 cash: document.getElementById('cash').value,
                 borrowed: document.getElementById('borrowed').value,
                 reqEquity: document.getElementById('reqEquity').value,
@@ -538,6 +544,7 @@
                 try {
                     const data = JSON.parse(saved);
                     if (data.secValue !== undefined) document.getElementById('secValue').value = data.secValue;
+                    if (data.monthlyContrib !== undefined) document.getElementById('monthlyContrib').value = data.monthlyContrib;
                     if (data.cash !== undefined) document.getElementById('cash').value = data.cash;
                     if (data.borrowed !== undefined) document.getElementById('borrowed').value = data.borrowed;
                     if (data.reqEquity !== undefined) document.getElementById('reqEquity').value = data.reqEquity;
@@ -548,7 +555,7 @@
                 }
             }
             
-            // Align simulation to the loaded/default base data on startup
+            // Align simulation to the loaded base data
             const baseSec = document.getElementById('secValue').value;
             const baseBorr = document.getElementById('borrowed').value;
             
@@ -591,7 +598,6 @@
             calculate();
         }
 
-        // Generic sync function for base inputs that don't drive a slider
         function syncBaseGeneric() {
             saveBaseData();
             calculate();
@@ -622,7 +628,7 @@
             calculate();
         }
 
-        // Reset the simulation to strictly match the base inputs
+        // Reset the simulation to explicitly mirror the base values
         function resetSimulation() {
             const baseSec = document.getElementById('secValue').value;
             const baseBorr = document.getElementById('borrowed').value;
@@ -637,6 +643,7 @@
         function calculate() {
             // Base Inputs
             const baseSecValue = parseFloat(document.getElementById('secValue').value) || 0;
+            const monthlyContrib = parseFloat(document.getElementById('monthlyContrib').value) || 0;
             const cash = parseFloat(document.getElementById('cash').value) || 0;
             const baseBorrowed = parseFloat(document.getElementById('borrowed').value) || 0;
             const baseReqEquity = parseFloat(document.getElementById('reqEquity').value) || 0;
@@ -812,7 +819,8 @@
                 let mCost = cDebt * (marginRate / 12);
                 let mNet = mYield - mCost;
                 
-                curEq += mNet; 
+                // Add the Monthly Contribution to the equity base each month
+                curEq += mNet + monthlyContrib; 
                 if (curEq < 0) curEq = 0;
             }
 
