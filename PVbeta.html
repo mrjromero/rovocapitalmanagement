@@ -508,18 +508,19 @@
                 labels: [],
                 datasets: [
                     { 
-                        label: 'Total Assets', 
+                        // Index 0: Bottom Layer
+                        label: 'Margin Debt', 
                         data: [], 
-                        borderColor: '#0d1728', 
-                        backgroundColor: 'transparent',
-                        borderDash: [5, 5],
-                        fill: false,
+                        borderColor: '#ff7f50', 
+                        backgroundColor: 'rgba(255, 127, 80, 0.4)', 
+                        fill: true,
                         tension: 0.3, 
                         pointRadius: 0, 
                         borderWidth: 2,
-                        stack: 'Line'
+                        stack: 'Area'
                     },
                     { 
+                        // Index 1: Stacked on top of Margin Debt
                         label: 'Total Equity', 
                         data: [], 
                         borderColor: '#00b5ae', 
@@ -531,15 +532,17 @@
                         stack: 'Area'
                     },
                     { 
-                        label: 'Margin Debt', 
+                        // Index 2: Drawn last to overlay perfectly on top
+                        label: 'Total Assets', 
                         data: [], 
-                        borderColor: '#ff7f50', 
-                        backgroundColor: 'rgba(255, 127, 80, 0.4)', 
-                        fill: true,
+                        borderColor: '#0d1728', 
+                        backgroundColor: 'transparent',
+                        borderDash: [5, 5],
+                        fill: false,
                         tension: 0.3, 
                         pointRadius: 0, 
                         borderWidth: 2,
-                        stack: 'Area'
+                        stack: 'Line'
                     }
                 ]
             },
@@ -888,9 +891,9 @@
             }
 
             projChart.data.labels = projLabels;
-            projChart.data.datasets[0].data = projAssets; // Total Assets (Line)
-            projChart.data.datasets[1].data = projEquity; // Total Equity (Area)
-            projChart.data.datasets[2].data = projDebt;   // Margin Debt (Area)
+            projChart.data.datasets[0].data = projDebt;   // Index 0: Bottom Stack (Margin Debt)
+            projChart.data.datasets[1].data = projEquity; // Index 1: Top Stack (Total Equity)
+            projChart.data.datasets[2].data = projAssets; // Index 2: Overlay Line (Total Assets)
             projChart.update();
         }
 
