@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Positive Carry | Educational Simulator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #0f172a; }
+        
+        /* Custom Input Styling */
+        .input-box {
+            width: 100%; padding: 0.5rem 0.75rem; border-radius: 0.5rem; 
+            border: 1px solid #cbd5e1; background: #fff; font-variant-numeric: tabular-nums;
+            transition: all 0.2s; outline: none;
+        }
+        .input-box:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
+        
+        /* Custom Slider */
+        input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none; height: 20px; width: 20px; border-radius: 50%;
+            background: #3b82f6; cursor: pointer; margin-top: -8px; box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%; height: 6px; cursor: pointer; background: #e2e8f0; border-radius: 4px;
+        }
+        input[type=range]:focus::-webkit-slider-runnable-track { background: #cbd5e1; }
+        
+        /* Utility */
+        .glass-card { background: white; border: 1px solid #e2e8f0; border-radius: 1rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <div class="max-w-7xl mx-auto">
+        <!-- Header -->
+        <header class="mb-8">
+            <h1 class="text-3xl md:text-4xl font-bold text-slate-800 tracking-tight">Positive Carry Simulator</h1>
+            <p class="text-slate-500 mt-2 max-w-2xl text-sm md:text-base leading-relaxed">
+                <strong>Educational Tool:</strong> Positive carry is a strategy where you borrow money at a low interest rate to buy assets that pay a high dividend yield. If the income generated is greater than your loan cost, the strategy pays for itself.
+            </p>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            
+            <!-- Left Column: Inputs -->
+            <div class="lg:col-span-4 space-y-6">
+                
+                <div class="glass-card p-6 border-t-4 border-t-blue-500">
+                    <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
+                        <span class="bg-blue-100 text-blue-700 w-6 h-6 rounded-full flex items-center justify-center text-sm">1</span> 
+                        Your Capital
+                    </h2>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-600 mb-1">Your Money (Equity) $</label>
+                            <input type="number" id="inputEquity" class="input-box" value="100000" step="1000">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-600 mb-1">Borrowed Money (Margin) $</label>
+                            <input type="number" id="inputDebt" class="input-box" value="25000" step="1000">
+                            <p class="text-xs text-slate-400 mt-1">Total Portfolio = Equity + Borrowed</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-card p-6 border-t-4 border-t-emerald-500">
+                    <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
+                        <span class="bg-emerald-100 text-emerald-700 w-6 h-6 rounded-full flex items-center justify-center text-sm">2</span> 
+                        The Rates
+                    </h2>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-600 mb-1">Expected Asset Yield %</label>
+                            <input type="number" id="inputYield" class="input-box" value="10.0" step="0.1">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-600 mb-1">Margin Loan Interest Rate %</label>
+                            <input type="number" id="inputInterest" class="input-box" value="6.5" step="0.1">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-card p-6 border-t-4 border-t-purple-500">
+                    <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
+                        <span class="bg-purple-100 text-purple-700 w-6 h-6 rounded-full flex items-center justify-center text-sm">3</span> 
+                        Broker Rules
+                    </h2>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-slate-600 mb-1">Maintenance Margin Req. %</label>
+                        <input type="number" id="inputMMR" class="input-box" value="30" step="1" max="100" min="1">
+                        <p class="text-xs text-slate-500 mt-2 leading-relaxed">
+                            The minimum % of your total portfolio that must be your own money. If your equity falls below this, the broker issues a <strong>Margin Call</strong>.
+                        </p>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Right Column: Outputs -->
+            <div class="lg:col-span-8 flex flex-col gap-6">
+                
+                <!-- Financial Results row -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Cash Flow Box -->
+                    <div class="glass-card p-6 flex flex-col justify-between">
+                        <div>
+                            <h3 class="text-slate-500 text-sm font-semibold uppercase tracking-wider mb-1">Annual Cash Flow</h3>
+                            <p class="text-xs text-slate-400 mb-4">Income generated minus the cost of the loan.</p>
+                            
+                            <div class="flex justify-between items-center mb-2 border-b border-slate-100 pb-2">
+                                <span class="text-slate-600">Total Asset Income</span>
+                                <span class="font-medium text-emerald-600" id="outIncome">+$0</span>
+                            </div>
+                            <div class="flex justify-between items-center mb-4 border-b border-slate-100 pb-2">
+                                <span class="text-slate-600">Cost of Loan (Interest)</span>
+                                <span class="font-medium text-rose-500" id="outCost">-$0</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="font-bold text-slate-800">Net Carry (Profit)</span>
+                                <span class="text-2xl font-bold text-emerald-500" id="outNet">+$0</span>
+                            </div>
+                        </div>
+                        
+                        <div class="h-32 mt-4 relative w-full">
+                            <canvas id="cashFlowChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Safety/Risk Box -->
+                    <div class="glass-card p-6">
+                        <h3 class="text-slate-500 text-sm font-semibold uppercase tracking-wider mb-1">Risk & Safety Buffer</h3>
+                        <p class="text-xs text-slate-400 mb-4">How far your portfolio can drop before a margin call.</p>
+                        
+                        <div class="flex flex-col items-center justify-center py-4">
+                            <div id="safetyStatus" class="px-4 py-1 rounded-full text-sm font-bold mb-4 bg-emerald-100 text-emerald-700">SAFE ZONE</div>
+                            <span class="text-4xl font-bold tracking-tighter" id="outMaxDrop" style="color: #10b981;">0.0%</span>
+                            <span class="text-sm text-slate-500 mt-1">Maximum Allowed Drop</span>
+                        </div>
+
+                        <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 mt-2">
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-slate-500">Current Portfolio Value:</span>
+                                <span class="font-medium" id="outCurrentPort">$0</span>
+                            </div>
+                            <div class="flex justify-between text-sm">
+                                <span class="text-slate-500">Margin Call Threshold:</span>
+                                <span class="font-medium text-rose-500" id="outCallValue">$0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Market Stress Test -->
+                <div class="glass-card p-6 flex-grow border border-blue-100 bg-blue-50/30">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-lg font-bold text-slate-800">Market Stress Test</h3>
+                        <button id="btnResetStress" class="text-sm bg-white border border-slate-200 px-3 py-1 rounded hover:bg-slate-50 transition text-slate-600">Reset Market</button>
+                    </div>
+                    
+                    <p class="text-sm text-slate-600 mb-6 max-w-2xl">
+                        Slide the bar to simulate what happens if the stock market goes up or crashes. Notice how your <strong>Debt stays exactly the same</strong>, meaning your Equity takes the full hit of the losses (or gains).
+                    </p>
+
+                    <div class="mb-8 px-4">
+                        <div class="flex justify-between text-sm font-bold text-slate-400 mb-2">
+                            <span class="text-rose-500">Crash -50%</span>
+                            <span>Current 0%</span>
+                            <span class="text-emerald-500">Boom +50%</span>
+                        </div>
+                        <input type="range" id="sliderStress" min="-50" max="50" step="1" value="0">
+                        <div class="text-center mt-4">
+                            <span class="inline-block bg-white border border-slate-200 px-4 py-2 rounded-lg font-bold text-lg text-blue-600 shadow-sm" id="outStressLevel">Market Shift: 0%</span>
+                        </div>
+                    </div>
+
+                    <!-- Dynamic educational feedback -->
+                    <div id="educationalFeedback" class="p-4 rounded-lg bg-white border border-slate-200 text-sm text-slate-700 leading-relaxed shadow-sm">
+                        <!-- Filled by JS -->
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Data formatters
+        const fmtC = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
+        const fmtP = (val) => val.toFixed(1) + '%';
+
+        // Get DOM Elements
+        const inputs = {
+            equity: document.getElementById('inputEquity'),
+            debt: document.getElementById('inputDebt'),
+            yield: document.getElementById('inputYield'),
+            interest: document.getElementById('inputInterest'),
+            mmr: document.getElementById('inputMMR')
+        };
+        const sliderStress = document.getElementById('sliderStress');
+        const btnResetStress = document.getElementById('btnResetStress');
+
+        // Chart Instance
+        let cashFlowChart = null;
+
+        function initChart() {
+            const ctx = document.getElementById('cashFlowChart').getContext('2d');
+            cashFlowChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Income', 'Loan Cost', 'Net Carry'],
+                    datasets: [{
+                        data: [0, 0, 0],
+                        backgroundColor: ['#10b981', '#f43f5e', '#3b82f6'],
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false }, tooltip: {
+                        callbacks: { label: function(c) { return fmtC.format(c.raw); } }
+                    }},
+                    scales: {
+                        y: { beginAtZero: true, grid: { display: false }, ticks: { callback: (v) => '$'+v } },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        function calculate() {
+            // 1. Gather Base Inputs
+            const baseEquity = parseFloat(inputs.equity.value) || 0;
+            const debt = parseFloat(inputs.debt.value) || 0;
+            const yieldRate = (parseFloat(inputs.yield.value) || 0) / 100;
+            const interestRate = (parseFloat(inputs.interest.value) || 0) / 100;
+            const mmr = (parseFloat(inputs.mmr.value) || 0) / 100;
+
+            const baseAssets = baseEquity + debt;
+
+            // 2. Apply Stress Test
+            const stressPct = parseFloat(sliderStress.value) / 100;
+            const currentAssets = baseAssets * (1 + stressPct);
+            const currentEquity = currentAssets - debt; // Debt doesn't change!
+
+            // 3. Cash Flow Math (Based on current simulated asset value)
+            const income = currentAssets * yieldRate;
+            const cost = debt * interestRate;
+            const netCarry = income - cost;
+
+            // 4. Margin Call Math
+            // Call happens when: currentEquity < currentAssets * mmr
+            // Formula for Exact Asset Value at Margin Call: Debt / (1 - mmr)
+            let callValue = 0;
+            let maxDropPct = 0;
+            let isMarginCall = false;
+
+            if (mmr < 1 && debt > 0) {
+                callValue = debt / (1 - mmr);
+                if (currentAssets > 0) {
+                    maxDropPct = (currentAssets - callValue) / currentAssets;
+                }
+            } else if (debt === 0) {
+                maxDropPct = 1; // Can drop 100% safely
+            }
+
+            if (currentAssets <= callValue) {
+                isMarginCall = true;
+                maxDropPct = 0;
+            }
+
+            // 5. Update UI
+            document.getElementById('outIncome').innerText = "+" + fmtC.format(income);
+            document.getElementById('outCost').innerText = "-" + fmtC.format(cost);
+            
+            const netEl = document.getElementById('outNet');
+            netEl.innerText = (netCarry >= 0 ? "+" : "") + fmtC.format(netCarry);
+            netEl.className = `text-2xl font-bold ${netCarry >= 0 ? 'text-emerald-500' : 'text-rose-500'}`;
+
+            document.getElementById('outCurrentPort').innerText = fmtC.format(currentAssets);
+            document.getElementById('outCallValue').innerText = fmtC.format(callValue);
+
+            const dropEl = document.getElementById('outMaxDrop');
+            const statusEl = document.getElementById('safetyStatus');
+            
+            if (isMarginCall) {
+                dropEl.innerText = "MARGIN CALL";
+                dropEl.style.color = "#f43f5e";
+                statusEl.innerText = "DANGER: LIQUIDATION";
+                statusEl.className = "px-4 py-1 rounded-full text-sm font-bold mb-4 bg-rose-100 text-rose-700";
+            } else {
+                dropEl.innerText = fmtP(maxDropPct * 100);
+                if (maxDropPct > 0.3) {
+                    dropEl.style.color = "#10b981"; // Green
+                    statusEl.innerText = "SAFE ZONE";
+                    statusEl.className = "px-4 py-1 rounded-full text-sm font-bold mb-4 bg-emerald-100 text-emerald-700";
+                } else if (maxDropPct > 0.15) {
+                    dropEl.style.color = "#eab308"; // Yellow
+                    statusEl.innerText = "WARNING ZONE";
+                    statusEl.className = "px-4 py-1 rounded-full text-sm font-bold mb-4 bg-yellow-100 text-yellow-700";
+                } else {
+                    dropEl.style.color = "#f97316"; // Orange
+                    statusEl.innerText = "CRITICAL ZONE";
+                    statusEl.className = "px-4 py-1 rounded-full text-sm font-bold mb-4 bg-orange-100 text-orange-700";
+                }
+            }
+
+            // Chart Update
+            if (cashFlowChart) {
+                cashFlowChart.data.datasets[0].data = [income, cost, netCarry];
+                cashFlowChart.data.datasets[0].backgroundColor = ['#10b981', '#f43f5e', netCarry >= 0 ? '#3b82f6' : '#f43f5e'];
+                cashFlowChart.update();
+            }
+
+            // Update Educational Feedback
+            document.getElementById('outStressLevel').innerText = `Market Shift: ${stressPct > 0 ? '+' : ''}${fmtP(stressPct * 100)}`;
+            const eduBox = document.getElementById('educationalFeedback');
+            
+            if (isMarginCall) {
+                eduBox.innerHTML = `🚨 <strong>Margin Call Triggered!</strong> Because the market dropped so heavily, your portfolio's value (${fmtC.format(currentAssets)}) has fallen below the broker's minimum safety threshold (${fmtC.format(callValue)}). The broker will now force-sell your assets at a massive loss to pay back the $${fmtC.format(debt)} loan.`;
+                eduBox.className = "p-4 rounded-lg border text-sm leading-relaxed shadow-sm bg-rose-50 border-rose-200 text-rose-800";
+            } else if (stressPct < 0) {
+                eduBox.innerHTML = `📉 <strong>Leverage works both ways.</strong> The market dropped ${fmtP(Math.abs(stressPct * 100))}. Notice how your debt stayed exactly at $${fmtC.format(debt)}. This means your Equity (your actual money) absorbed 100% of the losses. You now have a ${fmtP(maxDropPct * 100)} buffer left before a margin call.`;
+                eduBox.className = "p-4 rounded-lg border text-sm leading-relaxed shadow-sm bg-yellow-50 border-yellow-200 text-yellow-800";
+            } else if (netCarry < 0) {
+                eduBox.innerHTML = `⚠️ <strong>Negative Carry.</strong> The loan's interest rate (${inputs.interest.value}%) is eating up all your asset income (${inputs.yield.value}%). You are bleeding cash every year just to hold this position. This strategy only works if Yield > Interest Rate.`;
+                eduBox.className = "p-4 rounded-lg bg-white border border-slate-200 text-sm text-slate-700 leading-relaxed shadow-sm";
+            } else {
+                eduBox.innerHTML = `💡 <strong>The Magic of Positive Carry.</strong> You borrowed $${fmtC.format(debt)} at ${inputs.interest.value}% but are investing it at ${inputs.yield.value}%. This creates a "spread" that generates $${fmtC.format(netCarry)} in pure free cash flow every year. As long as the market doesn't crash ${fmtP(maxDropPct * 100)}, this machine pays for itself!`;
+                eduBox.className = "p-4 rounded-lg bg-white border border-slate-200 text-sm text-slate-700 leading-relaxed shadow-sm";
+            }
+        }
+
+        // Event Listeners
+        Object.values(inputs).forEach(input => input.addEventListener('input', calculate));
+        sliderStress.addEventListener('input', calculate);
+        
+        btnResetStress.addEventListener('click', () => {
+            sliderStress.value = 0;
+            calculate();
+        });
+
+        // Initialize
+        window.onload = () => {
+            initChart();
+            calculate();
+        };
+    </script>
+</body>
+</html>
