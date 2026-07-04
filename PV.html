@@ -20,12 +20,11 @@
             --border-soft: #E8ECF2;
             --border-dominant: #DFDFE6;
             --border-focus: #2e809c;
-            /* Restored Original Vibrant Theme */
-            --color-success: #00b5ae;   /* Teal */
-            --color-warning: #E4BD52;   /* Yellow */
-            --color-danger: #ff7f50;    /* Orange */
-            --color-critical: #ef4444;  /* Red */
-            --color-accent: #2e809c;    /* Blue */
+            --color-success: #00b5ae;
+            --color-warning: #E4BD52;
+            --color-danger: #ff7f50;
+            --color-critical: #ef4444; 
+            --color-accent: #2e809c;
             --color-accent-hover: #256b7c;
         }
 
@@ -122,13 +121,21 @@
             border: 1px solid var(--color-critical);
         }
 
-        /* Flash Animation */
+        /* Flash Animations */
         @keyframes marginCallFlash {
             0%, 100% { color: var(--color-critical); opacity: 1; text-shadow: 0 0 8px rgba(239, 68, 68, 0.4); }
             50% { color: #b91c1c; opacity: 0.6; text-shadow: none; }
         }
         .flash-margin-call {
             animation: marginCallFlash 1.2s ease-in-out infinite;
+        }
+
+        @keyframes highlightPulse {
+            0% { background-color: rgba(228, 189, 82, 0.4); transform: scale(1.02); box-shadow: 0 0 0 2px var(--color-warning); }
+            100% { background-color: var(--surface-card); transform: scale(1); box-shadow: 0 0 0 0px transparent; }
+        }
+        .flash-input {
+            animation: highlightPulse 0.6s ease-out;
         }
 
         /* Buttons */
@@ -191,7 +198,6 @@
 
     <div class="w-full mx-auto max-w-[1600px]">
         
-        <!-- HEADER -->
         <div class="flex items-center gap-3 mb-6">
             <h1 class="text-2xl sm:text-3xl font-bold">Freedom Engine: Positive Carry Visualizer</h1>
             <div class="relative inline-flex items-center cursor-help group mt-1">
@@ -204,7 +210,6 @@
         
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
             
-            <!-- COLUMN 1: INPUTS -->
             <div class="card p-5 flex flex-col justify-between h-full lg:col-span-4 xl:col-span-3">
                 <div class="flex-grow">
                     <h2 class="text-lg font-bold border-b border-[#E8ECF2] pb-1.5 mb-4">1. Base Account Data</h2>
@@ -329,7 +334,6 @@
                 </div>
             </div>
 
-            <!-- COLUMN 2: DASHBOARD -->
             <div class="card p-5 flex flex-col h-full lg:col-span-4 xl:col-span-4">
                 <div class="flex justify-between items-center border-b border-[#E8ECF2] pb-2 mb-4">
                     <div class="flex items-center gap-3">
@@ -385,7 +389,6 @@
                     <span class="metric-value" id="outUtilReinvest">0.00%</span>
                 </div>
                 
-                <!-- Cushion to Margin Call Section -->
                 <div class="mt-4 p-5 rounded-xl border border-[var(--border-soft)] bg-[#fdfdfd] flex flex-col items-center justify-center shadow-sm flex-grow transition-all duration-300 relative overflow-hidden" id="cushionCard">
                     <div class="w-full flex justify-between items-center border-b border-[#E8ECF2] pb-1.5 mb-4 z-10">
                         <h4 class="text-xs font-bold tracking-widest text-[var(--text-secondary)] uppercase font-['DM_Sans']">Cushion to Call</h4>
@@ -398,32 +401,21 @@
                     <div id="zoneIndicatorText" class="text-sm font-bold tracking-widest uppercase mb-3 font-['Poppins'] text-[#00b5ae] text-center z-10">Optimal Zone</div>
                     
                     <div class="relative w-[240px] h-[120px] mx-auto mt-2 shrink-0">
-                        <!-- Background Arc (Clipped to Half Circle) -->
                         <div class="absolute inset-0 overflow-hidden">
-                            <!-- 
-                              Restored original vibrant colors (Red, Orange, Yellow, Teal) mapped strictly to 0-50% conic scale 
-                              0-5% Drop = 0-2.5% Conic (Red)
-                              5-15% Drop = 2.5-7.5% Conic (Orange)
-                              15-30% Drop = 7.5-15% Conic (Yellow)
-                              30-100% Drop = 15-50% Conic (Teal)
-                            -->
                             <div class="w-[240px] h-[240px] rounded-full absolute top-0 left-0" style="background: conic-gradient(from 270deg, var(--color-critical) 0%, var(--color-critical) 2.5%, var(--color-danger) 2.5%, var(--color-danger) 7.5%, var(--color-warning) 7.5%, var(--color-warning) 15%, var(--color-success) 15%, var(--color-success) 50%, transparent 50%);"></div>
                             <div class="w-[212px] h-[216px] rounded-full bg-[#fdfdfd] absolute top-[12px] left-[14px]" id="innerGaugeCutout"></div>
                             <div class="w-[200px] h-[200px] rounded-full border border-[#e2e5ee] absolute top-[20px] left-[20px] opacity-40"></div>
                         </div>
 
-                        <!-- Nested Value Text -->
                         <div class="absolute bottom-1 left-0 w-full text-center z-30">
                             <div id="outMaxDropLarge" class="text-[38px] font-bold font-['Poppins'] tracking-tight leading-none text-[var(--color-success)]">0.00%</div>
                         </div>
                         
-                        <!-- Sharp Needle Tracker -->
                         <div id="healthIndicator" class="absolute bottom-0 left-1/2 w-[4px] h-[120px] origin-bottom transition-transform duration-500 ease-out z-20" style="transform: translateX(-50%) rotate(-90deg);">
                             <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[3px] h-[34px] bg-[#0D1728] rounded-[1px] shadow-[0_1px_3px_rgba(0,0,0,0.2)]"></div>
                         </div>
                     </div>
 
-                    <!-- Restored explicit Suggested Actions block -->
                     <div id="gaugeActionText" class="text-[13px] text-center font-['DM_Sans'] mt-5 mb-2 font-medium text-[var(--text-primary)]">
                        Cushion is broad enough to withstand normal market volatility. All broker privileges are active.
                     </div>
@@ -432,12 +424,10 @@
                         Your portfolio would have to drop <strong class="text-[var(--text-primary)]">0.00%</strong> (<strong class="text-[var(--text-primary)]">$0</strong>) to face a margin call.
                     </p>
                     
-                    <!-- Restored Educational Footer -->
                     <p class="text-[11px] text-[var(--text-secondary)] font-['DM_Sans'] leading-relaxed mt-4 pt-3 border-t border-[#E8ECF2] text-center w-full">
                         M1 Finance and other brokers establish standard thresholds at 30% of your account value but can dynamically lift maintenance requirements up to 100% for high volatility or asset concentration. Please review the safety guidelines to configure solid protective margins.
                     </p>
                     
-                    <!-- Dynamic Margin Call Emergency Action Panel -->
                     <div id="marginCallAlertBlock" class="hidden w-full mt-4 border-t border-[#fca5a5] pt-4 z-10">
                         <h4 class="text-[13px] font-bold text-[#b91c1c] uppercase tracking-widest text-center mb-3">Required Cure Actions</h4>
                         
@@ -452,7 +442,6 @@
                             </div>
                         </div>
 
-                        <!-- Ticking Clock Timeline -->
                         <div class="flex justify-between items-center mb-3 px-2">
                             <div class="timeline-step">
                                 <div class="timeline-dot"></div>
@@ -482,7 +471,6 @@
                 </div>
             </div>
 
-            <!-- COLUMN 3: CHARTS -->
             <div class="card p-5 flex flex-col gap-6 h-full lg:col-span-4 xl:col-span-5">
                 
                 <div class="w-full">
@@ -494,19 +482,16 @@
                 
                 <div class="w-full mt-2">
                     <h2 class="text-xl font-bold border-b border-[#E8ECF2] pb-2 mb-4">Annual Carry Analysis</h2>
+                    <div id="carryExplanation" class="text-[13px] text-[#595959] mb-4 font-['DM_Sans'] leading-relaxed bg-[#fdfdfd] p-4 rounded-xl border border-[var(--border-soft)] shadow-sm">
+                        </div>
                     <div style="position: relative; height: 220px; width: 100%;">
                         <canvas id="carryChart"></canvas>
-                    </div>
-                    <!-- Dynamic Explainer Box -->
-                    <div id="carryExplanation" class="text-[13px] text-[#595959] mt-5 font-['DM_Sans'] leading-relaxed bg-[#fdfdfd] p-4 rounded-xl border border-[var(--border-soft)] shadow-sm">
-                        <!-- Injected via Javascript -->
                     </div>
                 </div>
             </div>
 
         </div>
 
-        <!-- BOTTOM ROW: 10 YEAR PROJECTION -->
         <div class="card p-5 mt-6">
             <h2 class="text-xl font-bold border-b border-[#E8ECF2] pb-2 mb-4">10-Year Growth Projection</h2>
             <p class="text-xs text-[#595959] mb-4 font-['DM_Sans'] leading-relaxed">Assumes simulated DTA leverage is maintained, Net Carry is reinvested, and Monthly Contributions are added. The <strong>Total Portfolio Value</strong> is the sum of your <strong>Total Equity</strong> and <strong>Margin Debt</strong> at any given time.</p>
@@ -517,7 +502,6 @@
 
     </div>
 
-    <!-- Modal 1: Metrics Guide Pop-up -->
     <div id="metricsModal" class="fixed inset-0 bg-[#0d1728]/60 z-50 flex items-center justify-center hidden backdrop-blur-sm transition-opacity opacity-0 duration-200">
         <div class="bg-white rounded-xl shadow-2xl max-w-lg w-full p-6 m-4 transform scale-95 transition-transform duration-200">
             <div class="flex justify-between items-center border-b border-[#E8ECF2] pb-3 mb-4">
@@ -540,7 +524,6 @@
         </div>
     </div>
 
-    <!-- Modal 2: Margin Safety Guide Pop-up -->
     <div id="safetyModal" class="fixed inset-0 bg-[#0d1728]/60 z-50 flex items-center justify-center hidden backdrop-blur-sm transition-opacity opacity-0 duration-200">
         <div class="bg-white rounded-xl shadow-2xl max-w-xl w-full p-6 m-4 transform scale-95 transition-transform duration-200">
             <div class="flex justify-between items-center border-b border-[#E8ECF2] pb-3 mb-4">
@@ -574,7 +557,6 @@
         </div>
     </div>
 
-    <!-- Modal 3: Forced Liquidation Impact Pop-up -->
     <div id="liquidationModal" class="fixed inset-0 bg-[#0d1728]/80 z-[60] flex items-center justify-center hidden backdrop-blur-md transition-opacity opacity-0 duration-200">
         <div class="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 m-4 transform scale-95 transition-transform duration-200 border border-[#fca5a5]">
             <div class="flex justify-between items-center border-b border-[#E8ECF2] pb-3 mb-4">
@@ -631,7 +613,7 @@
         let dangerZonePlaying = false;
         const audioEl = document.getElementById('dangerZoneAudio');
 
-        function openModal(id) {
+        window.openModal = function(id) {
             const target = document.getElementById(id);
             target.classList.remove('hidden');
             setTimeout(() => {
@@ -640,7 +622,8 @@
                 target.firstElementChild.classList.add('scale-100');
             }, 10);
         }
-        function closeModal(id) {
+        
+        window.closeModal = function(id) {
             const target = document.getElementById(id);
             target.classList.add('opacity-0');
             target.firstElementChild.classList.remove('scale-100');
@@ -648,6 +631,15 @@
             setTimeout(() => {
                 target.classList.add('hidden');
             }, 200);
+        }
+
+        window.flashElement = function(id) {
+            const el = document.getElementById(id);
+            if(el) {
+                el.classList.remove('flash-input');
+                void el.offsetWidth; // trigger reflow
+                el.classList.add('flash-input');
+            }
         }
 
         const centerTextPlugin = {
@@ -691,7 +683,6 @@
             }
         };
 
-        // Restored Original Colors for Charts
         const ctxComp = document.getElementById('compositionChart').getContext('2d');
         const compChart = new Chart(ctxComp, {
             type: 'doughnut',
@@ -855,6 +846,7 @@
         });
 
         const STORAGE_KEY = 'positiveCarryBaseData';
+        let simulationMode = false;
 
         function saveBaseData() {
             const data = {
@@ -894,8 +886,6 @@
             
             simulationMode = false;
         }
-
-        let simulationMode = false;
 
         function setSimulationValue(numberId, sliderId, value) {
             const numberInput = document.getElementById(numberId);
@@ -961,6 +951,8 @@
             const currentMarginRate = parseFloat(document.getElementById('marginRate').value) || 0;
             const currentYieldRate = parseFloat(document.getElementById('yieldRate').value) || 0;
             
+            let isRateYieldScenario = false;
+
             if (scenario === 'crash') {
                 setSimulationValue('simSecValue', 'simSecValueSlider', baseSec * 0.8);
             } else if (scenario === 'rally') {
@@ -971,19 +963,33 @@
                 setSimulationValue('simBorrowed', 'simBorrowedSlider', baseBorr * 0.5);
             } else if (scenario === 'rate_hike') {
                 document.getElementById('marginRate').value = (currentMarginRate + 1.5).toFixed(2);
+                flashElement('marginRate');
+                isRateYieldScenario = true;
             } else if (scenario === 'rate_cut') {
                 document.getElementById('marginRate').value = Math.max(0, currentMarginRate - 1.5).toFixed(2);
+                flashElement('marginRate');
+                isRateYieldScenario = true;
             } else if (scenario === 'yield_spike') {
                 document.getElementById('yieldRate').value = (currentYieldRate + 2.0).toFixed(2);
+                flashElement('yieldRate');
+                isRateYieldScenario = true;
             } else if (scenario === 'yield_drop') {
                 document.getElementById('yieldRate').value = Math.max(0, currentYieldRate - 2.0).toFixed(2);
+                flashElement('yieldRate');
+                isRateYieldScenario = true;
             } else if (scenario === 'covid') {
                 setSimulationValue('simSecValue', 'simSecValueSlider', baseSec * 0.66);
             } else if (scenario === 'gfc') {
                 setSimulationValue('simSecValue', 'simSecValueSlider', baseSec * 0.50);
             }
 
-            simulationMode = true;
+            if (isRateYieldScenario) {
+                saveBaseData();
+                flashElement('carryExplanation');
+            } else {
+                simulationMode = true;
+            }
+            
             calculate();
         }
 
@@ -1201,7 +1207,7 @@
 
             let isDanger = false;
             if (simSecValue > 0 && isSimulating) {
-                if (simExcess <= 0 || maxDropPct < 0.05) {
+                if (simExcess <= 0 || maxDropPct < 0.15) {
                     isDanger = true;
                 }
             }
