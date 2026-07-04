@@ -25,11 +25,13 @@
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-8">
             <div class="lg:col-span-4 space-y-6">
                 <div class="glass-card p-6 border-t-4 border-t-blue-500">
-                    <h2 class="font-semibold mb-4">1. Your Capital</h2>
+                    <h2 class="font-semibold mb-4">1. Your Capital & Rates</h2>
                     <div class="space-y-4">
                         <div><label class="text-sm text-slate-600">Your Equity ($)</label><input type="number" id="inputEquity" class="input-box" value="100000"></div>
                         <div><label class="text-sm text-slate-600">Initial Borrowed ($)</label><input type="number" id="inputDebt" class="input-box" value="25000"></div>
                         <div><label class="text-sm text-slate-600 font-bold text-blue-600">Monthly Contribution ($)</label><input type="number" id="inputMonthly" class="input-box" value="1000"></div>
+                        <div><label class="text-sm text-slate-600">Asset Yield (%)</label><input type="number" id="inputYield" class="input-box" value="10"></div>
+                        <div><label class="text-sm text-slate-600">Interest Rate (%)</label><input type="number" id="inputInterest" class="input-box" value="6.5"></div>
                     </div>
                 </div>
             </div>
@@ -62,8 +64,8 @@
             equity: document.getElementById('inputEquity'),
             debt: document.getElementById('inputDebt'),
             monthly: document.getElementById('inputMonthly'),
-            yield: document.getElementById('inputYield') || {value: 10},
-            interest: document.getElementById('inputInterest') || {value: 6.5},
+            yield: document.getElementById('inputYield'),
+            interest: document.getElementById('inputInterest'),
             strategy: document.getElementById('inputStrategy')
         };
 
@@ -82,9 +84,7 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     interaction: { mode: 'index', intersect: false },
-                    plugins: {
-                        tooltip: { callbacks: { title: (items) => 'Month ' + items[0].label } }
-                    },
+                    plugins: { tooltip: { callbacks: { title: (items) => 'Month ' + items[0].label } } },
                     scales: {
                         x: { title: { display: true, text: 'Month (0 - 120)' } },
                         y: { ticks: { callback: (v) => '$' + (v/1000).toFixed(0) + 'k' } }
@@ -97,8 +97,8 @@
             const eq = parseFloat(inputs.equity.value) || 0;
             const debt = parseFloat(inputs.debt.value) || 0;
             const monthly = parseFloat(inputs.monthly.value) || 0;
-            const yieldR = 0.10 / 12;
-            const interestR = 0.065 / 12;
+            const yieldR = (parseFloat(inputs.yield.value) || 0) / 100 / 12;
+            const interestR = (parseFloat(inputs.interest.value) || 0) / 100 / 12;
             const strat = inputs.strategy.value;
             const targetDTA = debt / (eq + debt);
 
