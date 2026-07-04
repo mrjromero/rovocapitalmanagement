@@ -190,6 +190,7 @@
 
     <div class="w-full mx-auto max-w-[1600px]">
         
+        <!-- HEADER -->
         <div class="flex items-center gap-3 mb-6">
             <h1 class="text-2xl sm:text-3xl font-bold">Freedom Engine: Positive Carry Visualizer</h1>
             <div class="relative inline-flex items-center cursor-help group mt-1">
@@ -200,10 +201,12 @@
             </div>
         </div>
         
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- MAIN GRID: Strictly 3 Columns on Desktop -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-6">
             
-            <div class="card p-5 flex flex-col justify-between h-full lg:col-span-4 xl:col-span-3">
-                <div>
+            <!-- COLUMN 1: INPUTS -->
+            <div class="card p-5 flex flex-col justify-between h-full col-span-1 lg:col-span-4 xl:col-span-3">
+                <div class="flex-grow">
                     <h2 class="text-lg font-bold border-b border-[#E8ECF2] pb-1.5 mb-4">1. Base Account Data</h2>
                     
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-3 gap-y-3">
@@ -261,9 +264,11 @@
                         <p class="text-[12px] text-[#595959] mt-1.5 text-right font-['DM_Sans']">Drag to simulate taking margin or paying debt</p>
                     </div>
 
+                    <!-- Quick Scenarios Grid -->
                     <div class="mt-6 border-t border-[#E8ECF2] pt-4">
                         <label class="font-['DM_Sans'] text-[11px] font-bold text-[#595959] uppercase tracking-widest mb-3 block">Quick Market Scenarios</label>
                         
+                        <!-- Value Scenarios -->
                         <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 gap-2.5 mb-2.5">
                             <button onclick="applyScenario('rally')" class="group flex flex-col items-center justify-center py-2 bg-[#f0fdfa] border border-[#ccfbf1] rounded-lg hover:bg-[#ccfbf1] transition-colors cursor-pointer shadow-sm">
                                 <span class="text-[#00b5ae] font-bold text-[12px] mb-0.5">+20%</span>
@@ -283,6 +288,7 @@
                             </button>
                         </div>
                         
+                        <!-- Rate & Yield Scenarios -->
                         <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 gap-2.5 mb-2.5">
                             <button onclick="applyScenario('rate_hike')" class="group flex flex-col items-center justify-center py-2 bg-[#fef2f2] border border-[#fecaca] rounded-lg hover:bg-[#fee2e2] transition-colors cursor-pointer shadow-sm">
                                 <span class="text-[#ef4444] font-bold text-[12px] mb-0.5">+1.5%</span>
@@ -302,6 +308,7 @@
                             </button>
                         </div>
                         
+                        <!-- Historical Stress Tests -->
                         <label class="font-['DM_Sans'] text-[11px] font-bold text-[#595959] uppercase tracking-widest mt-4 mb-3 block">Historical Stress Tests</label>
                         <div class="grid grid-cols-2 gap-2.5">
                             <button onclick="applyScenario('covid')" class="group flex flex-col items-center justify-center py-2 bg-[#1e293b] border border-[#0f172a] rounded-lg hover:bg-[#334155] transition-colors cursor-pointer shadow-sm">
@@ -326,7 +333,8 @@
                 </div>
             </div>
 
-            <div class="card p-5 flex flex-col h-full lg:col-span-4 xl:col-span-5">
+            <!-- COLUMN 2: DASHBOARD -->
+            <div class="card p-5 flex flex-col h-full col-span-1 lg:col-span-4 xl:col-span-4">
                 <div class="flex justify-between items-center border-b border-[#E8ECF2] pb-2 mb-4">
                     <div class="flex items-center gap-3">
                         <h2 class="text-xl font-bold m-0">Dashboard</h2>
@@ -381,6 +389,7 @@
                     <span class="metric-value" id="outUtilReinvest">0.00%</span>
                 </div>
                 
+                <!-- Cushion to Margin Call Section -->
                 <div class="mt-4 p-5 rounded-xl border border-[var(--border-soft)] bg-[#fdfdfd] flex flex-col items-center justify-center shadow-sm flex-grow transition-all duration-300 relative overflow-hidden" id="cushionCard">
                     <div class="w-full flex justify-between items-center border-b border-[#E8ECF2] pb-1.5 mb-4 z-10">
                         <h4 class="text-xs font-bold tracking-widest text-[var(--text-secondary)] uppercase font-['DM_Sans']">Cushion to Call</h4>
@@ -392,8 +401,10 @@
                     
                     <div id="zoneIndicatorText" class="text-sm font-bold tracking-widest uppercase mb-3 font-['Poppins'] text-[#00b5ae] text-center z-10">Optimal Zone</div>
                     
+                    <!-- Unobstructed Minimalist Gauge Container -->
                     <div class="relative w-[240px] mx-auto flex flex-col items-center z-10">
                         <div class="relative w-[240px] h-[120px] overflow-hidden shrink-0">
+                            <!-- Multi-Stage Hard-Stop Gradient -->
                             <div class="w-[240px] h-[240px] rounded-full absolute top-0 left-0" style="background: conic-gradient(from 270deg, var(--color-critical) 0%, var(--color-critical) 15%, var(--color-warning) 15%, var(--color-warning) 30%, var(--color-success) 30%, var(--color-success) 50%, transparent 50%);"></div>
                             <div class="w-[180px] h-[180px] rounded-full bg-[#fdfdfd] absolute top-[30px] left-[30px]" id="innerGaugeCutout"></div>
                             
@@ -408,6 +419,7 @@
                         The value of your current investments would have to drop <strong class="text-[var(--text-primary)]">0.00%</strong> (<strong class="text-[var(--text-primary)]">$0</strong>) to face a margin call.
                     </p>
                     
+                    <!-- Dynamic Margin Call Emergency Action Panel -->
                     <div id="marginCallAlertBlock" class="hidden w-full mt-4 border-t border-[#fca5a5] pt-4 z-10">
                         <h4 class="text-[13px] font-bold text-[#b91c1c] uppercase tracking-widest text-center mb-3">Required Cure Actions</h4>
                         
@@ -422,6 +434,7 @@
                             </div>
                         </div>
 
+                        <!-- Ticking Clock Timeline -->
                         <div class="flex justify-between items-center mb-3 px-2">
                             <div class="timeline-step">
                                 <div class="timeline-dot"></div>
@@ -451,8 +464,10 @@
                 </div>
             </div>
 
-            <div class="card p-5 flex flex-col gap-6 h-full lg:col-span-4 xl:col-span-4">
+            <!-- COLUMN 3: CHARTS -->
+            <div class="card p-5 flex flex-col gap-6 h-full col-span-1 md:col-span-2 lg:col-span-4 xl:col-span-5">
                 
+                <!-- Chart 1: Composition -->
                 <div class="w-full">
                     <h2 class="text-xl font-bold border-b border-[#E8ECF2] pb-2 mb-4">Detailed Portfolio Composition</h2>
                     <div style="position: relative; height: 260px; width: 100%;">
@@ -460,18 +475,22 @@
                     </div>
                 </div>
                 
+                <!-- Chart 2: Carry Analysis -->
                 <div class="w-full mt-2">
                     <h2 class="text-xl font-bold border-b border-[#E8ECF2] pb-2 mb-4">Annual Carry Analysis</h2>
                     <div style="position: relative; height: 220px; width: 100%;">
                         <canvas id="carryChart"></canvas>
                     </div>
+                    <!-- Dynamic Explainer Box -->
                     <div id="carryExplanation" class="text-[13px] text-[#595959] mt-5 font-['DM_Sans'] leading-relaxed bg-[#fdfdfd] p-4 rounded-xl border border-[var(--border-soft)] shadow-sm">
-                        </div>
+                        <!-- Injected via Javascript -->
+                    </div>
                 </div>
             </div>
 
         </div>
 
+        <!-- BOTTOM ROW: 10 YEAR PROJECTION -->
         <div class="card p-5 mt-6">
             <h2 class="text-xl font-bold border-b border-[#E8ECF2] pb-2 mb-4">10-Year Growth Projection</h2>
             <p class="text-xs text-[#595959] mb-4 font-['DM_Sans'] leading-relaxed">Assumes simulated DTA leverage is maintained, Net Carry is reinvested, and Monthly Contributions are added. The <strong>Total Portfolio Value</strong> is the sum of your <strong>Total Equity</strong> and <strong>Margin Debt</strong> at any given time.</p>
@@ -482,6 +501,7 @@
 
     </div>
 
+    <!-- Modal 1: Metrics Guide Pop-up -->
     <div id="metricsModal" class="fixed inset-0 bg-[#0d1728]/60 z-50 flex items-center justify-center hidden backdrop-blur-sm transition-opacity opacity-0 duration-200">
         <div class="bg-white rounded-xl shadow-2xl max-w-lg w-full p-6 m-4 transform scale-95 transition-transform duration-200">
             <div class="flex justify-between items-center border-b border-[#E8ECF2] pb-3 mb-4">
@@ -504,6 +524,7 @@
         </div>
     </div>
 
+    <!-- Modal 2: Margin Safety Guide Pop-up -->
     <div id="safetyModal" class="fixed inset-0 bg-[#0d1728]/60 z-50 flex items-center justify-center hidden backdrop-blur-sm transition-opacity opacity-0 duration-200">
         <div class="bg-white rounded-xl shadow-2xl max-w-xl w-full p-6 m-4 transform scale-95 transition-transform duration-200">
             <div class="flex justify-between items-center border-b border-[#E8ECF2] pb-3 mb-4">
@@ -537,6 +558,7 @@
         </div>
     </div>
 
+    <!-- Modal 3: Forced Liquidation Impact Pop-up -->
     <div id="liquidationModal" class="fixed inset-0 bg-[#0d1728]/80 z-[60] flex items-center justify-center hidden backdrop-blur-md transition-opacity opacity-0 duration-200">
         <div class="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 m-4 transform scale-95 transition-transform duration-200 border border-[#fca5a5]">
             <div class="flex justify-between items-center border-b border-[#E8ECF2] pb-3 mb-4">
@@ -666,8 +688,10 @@
                 }]
             },
             options: { 
+                responsive: true,
+                maintainAspectRatio: false,
                 plugins: { 
-                    legend: { position: 'right', labels: { boxWidth: 12, font: { size: 11 } } },
+                    legend: { position: 'right', labels: { boxWidth: 12, font: { size: 11, family: "'DM Sans', sans-serif" } } },
                     tooltip: { 
                         backgroundColor: 'rgba(13, 23, 40, 0.9)',
                         titleFont: { family: "'DM Sans', sans-serif" },
@@ -695,6 +719,8 @@
                 datasets: [{ data: [0, 0, 0], backgroundColor: ['#00b5ae', '#ff7f50', '#2e809c'] }] 
             },
             options: { 
+                responsive: true,
+                maintainAspectRatio: false,
                 plugins: { 
                     legend: { display: false },
                     tooltip: {
@@ -711,6 +737,7 @@
                         beginAtZero: true, 
                         grid: { color: '#E8ECF2', drawBorder: false },
                         ticks: {
+                            font: { family: "'DM Sans', sans-serif" },
                             callback: function(value) { 
                                 if (value >= 1000000 || value <= -1000000) {
                                     return '$' + (value / 1000000).toFixed(1) + 'M';
@@ -721,7 +748,10 @@
                             }
                         }
                     },
-                    x: { grid: { display: false } }
+                    x: { 
+                        grid: { display: false },
+                        ticks: { font: { family: "'DM Sans', sans-serif" } }
+                    }
                 } 
             }
         });
@@ -765,12 +795,14 @@
                 ]
             },
             options: {
+                responsive: true,
+                maintainAspectRatio: false,
                 interaction: {
                     mode: 'index',
                     intersect: false,
                 },
                 plugins: {
-                    legend: { position: 'top', labels: { boxWidth: 15, font: { size: 11 } } },
+                    legend: { position: 'top', labels: { boxWidth: 15, font: { size: 11, family: "'DM Sans', sans-serif" } } },
                     tooltip: { 
                         backgroundColor: 'rgba(13, 23, 40, 0.9)',
                         titleFont: { family: "'DM Sans', sans-serif" },
@@ -783,10 +815,14 @@
                     }
                 },
                 scales: {
-                    x: { grid: { display: false }, ticks: { maxTicksLimit: 12, maxRotation: 0 } },
+                    x: { 
+                        grid: { display: false }, 
+                        ticks: { maxTicksLimit: 12, maxRotation: 0, font: { family: "'DM Sans', sans-serif" } } 
+                    },
                     y: { 
                         grid: { color: '#E8ECF2', drawBorder: false }, 
                         ticks: { 
+                            font: { family: "'DM Sans', sans-serif" },
                             callback: function(value) { 
                                 if (value >= 1000000 || value <= -1000000) {
                                     return '$' + (value / 1000000).toFixed(1) + 'M';
@@ -855,7 +891,7 @@
             slider.value = safeValue;
         }
 
-        function syncBaseSec() {
+        window.syncBaseSec = function() {
             const value = parseFloat(document.getElementById('secValue').value);
             if (!simulationMode) {
                 setSimulationValue('simSecValue', 'simSecValueSlider', Number.isFinite(value) ? value : 0);
@@ -864,7 +900,7 @@
             calculate();
         }
 
-        function syncBaseBorrow() {
+        window.syncBaseBorrow = function() {
             const value = parseFloat(document.getElementById('borrowed').value);
             if (!simulationMode) {
                 setSimulationValue('simBorrowed', 'simBorrowedSlider', Number.isFinite(value) ? value : 0);
@@ -873,12 +909,12 @@
             calculate();
         }
 
-        function syncBaseGeneric() {
+        window.syncBaseGeneric = function() {
             saveBaseData();
             calculate();
         }
 
-        function syncSimSec(source) {
+        window.syncSimSec = function(source) {
             const slider = document.getElementById('simSecValueSlider');
             const num = document.getElementById('simSecValue');
             if (source === 'slider') num.value = slider.value;
@@ -890,7 +926,7 @@
             calculate();
         }
 
-        function syncSimBorrow(source) {
+        window.syncSimBorrow = function(source) {
             const slider = document.getElementById('simBorrowedSlider');
             const num = document.getElementById('simBorrowed');
             if (source === 'slider') num.value = slider.value;
@@ -902,7 +938,7 @@
             calculate();
         }
         
-        function applyScenario(scenario) {
+        window.applyScenario = function(scenario) {
             const baseSec = parseFloat(document.getElementById('secValue').value) || 0;
             const baseBorr = parseFloat(document.getElementById('borrowed').value) || 0;
             const currentMarginRate = parseFloat(document.getElementById('marginRate').value) || 0;
@@ -934,7 +970,7 @@
             calculate();
         }
 
-        function resetBaseData() {
+        window.resetBaseData = function() {
             document.getElementById('secValue').value = 100000;
             document.getElementById('monthlyContrib').value = 0;
             document.getElementById('cash').value = 0;
@@ -947,7 +983,7 @@
             resetSimulation();
         }
 
-        function resetSimulation() {
+        window.resetSimulation = function() {
             const baseSec = document.getElementById('secValue').value;
             const baseBorr = document.getElementById('borrowed').value;
             
@@ -1123,7 +1159,6 @@
             }
             document.getElementById('carryExplanation').innerHTML = carryExplanationText;
 
-            const dangerZoneText = document.getElementById('dangerZoneText');
             let isDanger = false;
             
             if (simSecValue > 0 && isSimulating) {
@@ -1133,13 +1168,14 @@
             }
 
             if (isDanger) {
-                dangerZoneText.classList.remove('hidden');
                 if (!dangerZonePlaying) {
-                    audioEl.play().catch(e => console.warn("Autoplay prevented by browser.", e));
+                    const playPromise = audioEl.play();
+                    if (playPromise !== undefined) {
+                        playPromise.catch(e => console.warn("Autoplay prevented.", e));
+                    }
                     dangerZonePlaying = true;
                 }
             } else {
-                dangerZoneText.classList.add('hidden');
                 if (dangerZonePlaying) {
                     audioEl.pause();
                     audioEl.currentTime = 0; 
