@@ -11,7 +11,6 @@
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #0f172a; }
         
-        /* Custom Input Styling */
         .input-box {
             width: 100%; padding: 0.5rem 0.75rem; border-radius: 0.5rem; 
             border: 1px solid #cbd5e1; background: #fff; font-variant-numeric: tabular-nums;
@@ -19,7 +18,6 @@
         }
         .input-box:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
         
-        /* Custom Slider */
         input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; }
         input[type=range]::-webkit-slider-thumb {
             -webkit-appearance: none; height: 20px; width: 20px; border-radius: 50%;
@@ -30,14 +28,12 @@
         }
         input[type=range]:focus::-webkit-slider-runnable-track { background: #cbd5e1; }
         
-        /* Utility */
         .glass-card { background: white; border: 1px solid #e2e8f0; border-radius: 1rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
     </style>
 </head>
 <body class="p-4 md:p-8">
 
     <div class="max-w-7xl mx-auto">
-        <!-- Header -->
         <header class="mb-8">
             <h1 class="text-3xl md:text-4xl font-bold text-slate-800 tracking-tight">Positive Carry Simulator</h1>
             <p class="text-slate-500 mt-2 max-w-2xl text-sm md:text-base leading-relaxed">
@@ -45,9 +41,8 @@
             </p>
         </header>
 
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-8">
             
-            <!-- Left Column: Inputs -->
             <div class="lg:col-span-4 space-y-6">
                 
                 <div class="glass-card p-6 border-t-4 border-t-blue-500">
@@ -64,7 +59,11 @@
                         <div>
                             <label class="block text-sm font-medium text-slate-600 mb-1">Borrowed Money (Margin) $</label>
                             <input type="number" id="inputDebt" class="input-box" value="25000" step="1000">
-                            <p class="text-xs text-slate-400 mt-1">Total Portfolio = Equity + Borrowed</p>
+                        </div>
+                        <div class="pt-2 border-t border-slate-100">
+                            <label class="block text-sm font-medium text-slate-600 mb-1 text-blue-600 font-bold">Monthly Contribution $</label>
+                            <input type="number" id="inputMonthly" class="input-box border-blue-200" value="1000" step="100">
+                            <p class="text-xs text-slate-400 mt-1">Fresh cash added out-of-pocket every month.</p>
                         </div>
                     </div>
                 </div>
@@ -104,16 +103,13 @@
 
             </div>
 
-            <!-- Right Column: Outputs -->
             <div class="lg:col-span-8 flex flex-col gap-6">
                 
-                <!-- Financial Results row -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <!-- Cash Flow Box -->
                     <div class="glass-card p-6 flex flex-col justify-between">
                         <div>
-                            <h3 class="text-slate-500 text-sm font-semibold uppercase tracking-wider mb-1">Annual Cash Flow</h3>
-                            <p class="text-xs text-slate-400 mb-4">Income generated minus the cost of the loan.</p>
+                            <h3 class="text-slate-500 text-sm font-semibold uppercase tracking-wider mb-1">Annual Cash Flow Snapshot</h3>
+                            <p class="text-xs text-slate-400 mb-4">Based on current portfolio size, ignoring monthly contributions.</p>
                             
                             <div class="flex justify-between items-center mb-2 border-b border-slate-100 pb-2">
                                 <span class="text-slate-600">Total Asset Income</span>
@@ -134,7 +130,6 @@
                         </div>
                     </div>
 
-                    <!-- Safety/Risk Box -->
                     <div class="glass-card p-6">
                         <h3 class="text-slate-500 text-sm font-semibold uppercase tracking-wider mb-1">Risk & Safety Buffer</h3>
                         <p class="text-xs text-slate-400 mb-4">How far your portfolio can drop before a margin call.</p>
@@ -158,7 +153,6 @@
                     </div>
                 </div>
 
-                <!-- Market Stress Test -->
                 <div class="glass-card p-6 flex-grow border border-blue-100 bg-blue-50/30">
                     <div class="flex justify-between items-center mb-6">
                         <h3 class="text-lg font-bold text-slate-800">Market Stress Test</h3>
@@ -181,25 +175,37 @@
                         </div>
                     </div>
 
-                    <!-- Dynamic educational feedback -->
                     <div id="educationalFeedback" class="p-4 rounded-lg bg-white border border-slate-200 text-sm text-slate-700 leading-relaxed shadow-sm">
-                        <!-- Filled by JS -->
                     </div>
                 </div>
 
             </div>
         </div>
+
+        <div class="glass-card p-6 border-t-4 border-t-indigo-500 w-full">
+            <h2 class="text-xl font-bold mb-2 flex items-center gap-2">
+                <span class="bg-indigo-100 text-indigo-700 w-6 h-6 rounded-full flex items-center justify-center text-sm">4</span> 
+                The Flywheel Effect (10-Year Projection)
+            </h2>
+            <p class="text-sm text-slate-500 mb-6 max-w-4xl leading-relaxed">
+                This chart shows the compounding power of your monthly contributions combined with reinvesting your Net Carry every month. This projection assumes no market crashes, your yield stays consistent, and you <strong>do not take out any more debt</strong>. Watch how your Equity accelerates away from your Margin Debt over 120 months.
+            </p>
+            
+            <div class="relative w-full" style="height: 400px;">
+                <canvas id="projectionChart"></canvas>
+            </div>
+        </div>
+
     </div>
 
     <script>
-        // Data formatters
         const fmtC = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
         const fmtP = (val) => val.toFixed(1) + '%';
 
-        // Get DOM Elements
         const inputs = {
             equity: document.getElementById('inputEquity'),
             debt: document.getElementById('inputDebt'),
+            monthly: document.getElementById('inputMonthly'),
             yield: document.getElementById('inputYield'),
             interest: document.getElementById('inputInterest'),
             mmr: document.getElementById('inputMMR')
@@ -207,12 +213,12 @@
         const sliderStress = document.getElementById('sliderStress');
         const btnResetStress = document.getElementById('btnResetStress');
 
-        // Chart Instance
         let cashFlowChart = null;
+        let projectionChart = null;
 
-        function initChart() {
-            const ctx = document.getElementById('cashFlowChart').getContext('2d');
-            cashFlowChart = new Chart(ctx, {
+        function initCharts() {
+            const ctxCF = document.getElementById('cashFlowChart').getContext('2d');
+            cashFlowChart = new Chart(ctxCF, {
                 type: 'bar',
                 data: {
                     labels: ['Income', 'Loan Cost', 'Net Carry'],
@@ -229,47 +235,69 @@
                         callbacks: { label: function(c) { return fmtC.format(c.raw); } }
                     }},
                     scales: {
-                        y: { beginAtZero: true, grid: { display: false }, ticks: { callback: (v) => '$'+v } },
+                        y: { beginAtZero: true, grid: { display: false }, ticks: { callback: (v) => {
+                            if (v >= 1000 || v <= -1000) return '$' + (v / 1000).toFixed(0) + 'k';
+                            return '$'+v;
+                        } } },
                         x: { grid: { display: false } }
+                    }
+                }
+            });
+
+            const ctxProj = document.getElementById('projectionChart').getContext('2d');
+            projectionChart = new Chart(ctxProj, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [
+                        { label: 'Total Portfolio Value', data: [], borderColor: '#334155', tension: 0.3, pointRadius: 0, borderWidth: 2 },
+                        { label: 'Total Equity', data: [], borderColor: '#10b981', tension: 0.3, pointRadius: 0, borderWidth: 2, fill: true, backgroundColor: 'rgba(16, 185, 129, 0.1)' },
+                        { label: 'Margin Debt', data: [], borderColor: '#f43f5e', tension: 0.3, pointRadius: 0, borderWidth: 2 }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: { tooltip: { callbacks: { label: function(c) { return c.dataset.label + ': ' + fmtC.format(c.raw); } } } },
+                    scales: {
+                        y: { ticks: { callback: (v) => {
+                            if (v >= 1000000) return '$' + (v / 1000000).toFixed(1) + 'M';
+                            if (v >= 1000) return '$' + (v / 1000).toFixed(0) + 'k';
+                            return '$'+v;
+                        } } },
+                        x: { grid: { display: false }, ticks: { maxTicksLimit: 11 } }
                     }
                 }
             });
         }
 
         function calculate() {
-            // 1. Gather Base Inputs
             const baseEquity = parseFloat(inputs.equity.value) || 0;
             const debt = parseFloat(inputs.debt.value) || 0;
+            const monthlyContrib = parseFloat(inputs.monthly.value) || 0;
             const yieldRate = (parseFloat(inputs.yield.value) || 0) / 100;
             const interestRate = (parseFloat(inputs.interest.value) || 0) / 100;
             const mmr = (parseFloat(inputs.mmr.value) || 0) / 100;
 
             const baseAssets = baseEquity + debt;
-
-            // 2. Apply Stress Test
             const stressPct = parseFloat(sliderStress.value) / 100;
             const currentAssets = baseAssets * (1 + stressPct);
-            const currentEquity = currentAssets - debt; // Debt doesn't change!
+            const currentEquity = currentAssets - debt; 
 
-            // 3. Cash Flow Math (Based on current simulated asset value)
             const income = currentAssets * yieldRate;
             const cost = debt * interestRate;
             const netCarry = income - cost;
 
-            // 4. Margin Call Math
-            // Call happens when: currentEquity < currentAssets * mmr
-            // Formula for Exact Asset Value at Margin Call: Debt / (1 - mmr)
             let callValue = 0;
             let maxDropPct = 0;
             let isMarginCall = false;
 
             if (mmr < 1 && debt > 0) {
                 callValue = debt / (1 - mmr);
-                if (currentAssets > 0) {
-                    maxDropPct = (currentAssets - callValue) / currentAssets;
-                }
+                if (currentAssets > 0) maxDropPct = (currentAssets - callValue) / currentAssets;
             } else if (debt === 0) {
-                maxDropPct = 1; // Can drop 100% safely
+                maxDropPct = 1; 
             }
 
             if (currentAssets <= callValue) {
@@ -277,7 +305,6 @@
                 maxDropPct = 0;
             }
 
-            // 5. Update UI
             document.getElementById('outIncome').innerText = "+" + fmtC.format(income);
             document.getElementById('outCost').innerText = "-" + fmtC.format(cost);
             
@@ -299,28 +326,26 @@
             } else {
                 dropEl.innerText = fmtP(maxDropPct * 100);
                 if (maxDropPct > 0.3) {
-                    dropEl.style.color = "#10b981"; // Green
+                    dropEl.style.color = "#10b981"; 
                     statusEl.innerText = "SAFE ZONE";
                     statusEl.className = "px-4 py-1 rounded-full text-sm font-bold mb-4 bg-emerald-100 text-emerald-700";
                 } else if (maxDropPct > 0.15) {
-                    dropEl.style.color = "#eab308"; // Yellow
+                    dropEl.style.color = "#eab308"; 
                     statusEl.innerText = "WARNING ZONE";
                     statusEl.className = "px-4 py-1 rounded-full text-sm font-bold mb-4 bg-yellow-100 text-yellow-700";
                 } else {
-                    dropEl.style.color = "#f97316"; // Orange
+                    dropEl.style.color = "#f97316"; 
                     statusEl.innerText = "CRITICAL ZONE";
                     statusEl.className = "px-4 py-1 rounded-full text-sm font-bold mb-4 bg-orange-100 text-orange-700";
                 }
             }
 
-            // Chart Update
             if (cashFlowChart) {
                 cashFlowChart.data.datasets[0].data = [income, cost, netCarry];
                 cashFlowChart.data.datasets[0].backgroundColor = ['#10b981', '#f43f5e', netCarry >= 0 ? '#3b82f6' : '#f43f5e'];
                 cashFlowChart.update();
             }
 
-            // Update Educational Feedback
             document.getElementById('outStressLevel').innerText = `Market Shift: ${stressPct > 0 ? '+' : ''}${fmtP(stressPct * 100)}`;
             const eduBox = document.getElementById('educationalFeedback');
             
@@ -337,9 +362,47 @@
                 eduBox.innerHTML = `💡 <strong>The Magic of Positive Carry.</strong> You borrowed $${fmtC.format(debt)} at ${inputs.interest.value}% but are investing it at ${inputs.yield.value}%. This creates a "spread" that generates $${fmtC.format(netCarry)} in pure free cash flow every year. As long as the market doesn't crash ${fmtP(maxDropPct * 100)}, this machine pays for itself!`;
                 eduBox.className = "p-4 rounded-lg bg-white border border-slate-200 text-sm text-slate-700 leading-relaxed shadow-sm";
             }
+
+            // --- 10-Year Projection Calculation ---
+            if (projectionChart) {
+                const projLabels = [];
+                const projAssets = [];
+                const projEquity = [];
+                const projDebt = [];
+                
+                // Note: We run the projection off the CURRENT stressed state to show how 
+                // the flywheel recovers (or accelerates) from the current simulated market position.
+                let runEq = currentEquity;
+                let runDebt = debt; // Debt stays constant in this educational model
+
+                for (let month = 0; month <= 120; month++) {
+                    if (month % 12 === 0) {
+                        projLabels.push('Year ' + (month / 12));
+                    } else {
+                        projLabels.push('');
+                    }
+                    
+                    let rAssets = runEq + runDebt;
+                    projAssets.push(rAssets);
+                    projEquity.push(runEq);
+                    projDebt.push(runDebt);
+                    
+                    let mYield = rAssets * (yieldRate / 12);
+                    let mCost = runDebt * (interestRate / 12);
+                    let mNet = mYield - mCost;
+                    
+                    runEq += mNet + monthlyContrib;
+                    if (runEq < 0) runEq = 0; 
+                }
+                
+                projectionChart.data.labels = projLabels;
+                projectionChart.data.datasets[0].data = projAssets;
+                projectionChart.data.datasets[1].data = projEquity;
+                projectionChart.data.datasets[2].data = projDebt;
+                projectionChart.update();
+            }
         }
 
-        // Event Listeners
         Object.values(inputs).forEach(input => input.addEventListener('input', calculate));
         sliderStress.addEventListener('input', calculate);
         
@@ -348,9 +411,8 @@
             calculate();
         });
 
-        // Initialize
         window.onload = () => {
-            initChart();
+            initCharts();
             calculate();
         };
     </script>
