@@ -2,49 +2,139 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Positive Carry | Level 1: The Basics</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Positive Carry | Educational Simulator</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #0f172a; }
+        .input-box { width: 100%; padding: 0.5rem 0.75rem; border-radius: 0.5rem; border: 1px solid #cbd5e1; background: #fff; transition: all 0.2s; outline: none; }
+        .input-box:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
+        .glass-card { background: white; border: 1px solid #e2e8f0; border-radius: 1rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+    </style>
 </head>
-<body class="bg-slate-50 p-8">
-    <div class="max-w-4xl mx-auto">
-        <h1 class="text-3xl font-bold mb-6">Level 1: The Income Engine</h1>
-        
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div class="space-y-4">
-                <div><label class="block text-sm font-bold">Total Assets ($)</label><input type="number" id="assets" class="w-full p-2 border rounded" value="100000" oninput="update()"></div>
-                <div><label class="block text-sm font-bold">Borrowed Amount ($)</label><input type="number" id="debt" class="w-full p-2 border rounded" value="25000" oninput="update()"></div>
-                <div><label class="block text-sm font-bold">Asset Yield (%)</label><input type="number" id="yield" class="w-full p-2 border rounded" value="10" oninput="update()"></div>
-                <div><label class="block text-sm font-bold">Loan Interest Rate (%)</label><input type="number" id="interest" class="w-full p-2 border rounded" value="6" oninput="update()"></div>
+<body class="p-4 md:p-8">
+
+    <div class="max-w-7xl mx-auto">
+        <header class="mb-8">
+            <h1 class="text-3xl font-bold text-slate-800">Positive Carry Simulator</h1>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-8">
+            <div class="lg:col-span-4 space-y-6">
+                <div class="glass-card p-6 border-t-4 border-t-blue-500">
+                    <h2 class="font-semibold mb-4">1. Your Capital</h2>
+                    <div class="space-y-4">
+                        <div><label class="text-sm text-slate-600">Your Equity ($)</label><input type="number" id="inputEquity" class="input-box" value="100000"></div>
+                        <div><label class="text-sm text-slate-600">Initial Borrowed ($)</label><input type="number" id="inputDebt" class="input-box" value="25000"></div>
+                        <div><label class="text-sm text-slate-600 font-bold text-blue-600">Monthly Contribution ($)</label><input type="number" id="inputMonthly" class="input-box" value="1000"></div>
+                    </div>
+                </div>
             </div>
 
-            <div class="bg-white p-6 rounded-xl border shadow-sm">
-                <h2 class="text-lg font-semibold mb-4">Annual Cash Flow</h2>
-                <div class="space-y-2 text-lg">
-                    <div class="flex justify-between"><span>Yield Income:</span> <span id="outIncome" class="font-bold">$0</span></div>
-                    <div class="flex justify-between"><span>Loan Cost:</span> <span id="outCost" class="font-bold text-rose-500">$0</span></div>
-                    <hr>
-                    <div class="flex justify-between"><span>Net Carry:</span> <span id="outNet" class="font-bold text-emerald-600">$0</span></div>
+            <div class="lg:col-span-8 flex flex-col gap-6">
+                <div class="glass-card p-6 border-t-4 border-t-indigo-500 w-full">
+                    <h2 class="text-xl font-bold mb-4">The Flywheel Effect (10-Year)</h2>
+                    
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-slate-700 mb-2">Strategy Selection:</label>
+                        <select id="inputStrategy" class="input-box w-full font-bold text-indigo-700 border-indigo-200 bg-indigo-50 cursor-pointer">
+                            <option value="releverage">Maintain Target Leverage (Aggressive)</option>
+                            <option value="flat">Keep Debt Flat (Conservative)</option>
+                        </select>
+                    </div>
+
+                    <p id="projDescription" class="text-sm text-slate-500 mb-6 italic"></p>
+                    
+                    <div class="relative w-full" style="height: 400px;">
+                        <canvas id="projectionChart"></canvas>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        function update() {
-            const assets = parseFloat(document.getElementById('assets').value) || 0;
-            const debt = parseFloat(document.getElementById('debt').value) || 0;
-            const yieldR = (parseFloat(document.getElementById('yield').value) || 0) / 100;
-            const interestR = (parseFloat(inputs.interest.value) || 0) / 100;
+        const fmtC = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
+        const inputs = {
+            equity: document.getElementById('inputEquity'),
+            debt: document.getElementById('inputDebt'),
+            monthly: document.getElementById('inputMonthly'),
+            yield: document.getElementById('inputYield') || {value: 10},
+            interest: document.getElementById('inputInterest') || {value: 6.5},
+            strategy: document.getElementById('inputStrategy')
+        };
 
-            const income = assets * yieldR;
-            const cost = debt * interestR;
-            const net = income - cost;
+        let projectionChart = null;
 
-            document.getElementById('outIncome').innerText = '$' + income.toLocaleString();
-            document.getElementById('outCost').innerText = '-$' + cost.toLocaleString();
-            document.getElementById('outNet').innerText = (net >= 0 ? '+' : '-') + '$' + Math.abs(net).toLocaleString();
+        function initChart() {
+            const ctx = document.getElementById('projectionChart').getContext('2d');
+            projectionChart = new Chart(ctx, {
+                type: 'line',
+                data: { labels: [], datasets: [
+                    { label: 'Total Portfolio', data: [], borderColor: '#334155', tension: 0.2 },
+                    { label: 'Equity', data: [], borderColor: '#10b981', tension: 0.2, fill: true, backgroundColor: 'rgba(16, 185, 129, 0.05)' },
+                    { label: 'Debt', data: [], borderColor: '#f43f5e', tension: 0.2 }
+                ]},
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: {
+                        tooltip: { callbacks: { title: (items) => 'Month ' + items[0].label } }
+                    },
+                    scales: {
+                        x: { title: { display: true, text: 'Month (0 - 120)' } },
+                        y: { ticks: { callback: (v) => '$' + (v/1000).toFixed(0) + 'k' } }
+                    }
+                }
+            });
         }
-        update();
+
+        function calculate() {
+            const eq = parseFloat(inputs.equity.value) || 0;
+            const debt = parseFloat(inputs.debt.value) || 0;
+            const monthly = parseFloat(inputs.monthly.value) || 0;
+            const yieldR = 0.10 / 12;
+            const interestR = 0.065 / 12;
+            const strat = inputs.strategy.value;
+            const targetDTA = debt / (eq + debt);
+
+            const projLabels = [], pAssets = [], pEquity = [], pDebt = [];
+            let runEq = eq, runDebt = debt;
+
+            for (let m = 0; m <= 120; m++) {
+                projLabels.push(m);
+                let rAssets = runEq + runDebt;
+                
+                if (strat === 'releverage') {
+                    rAssets = runEq / (1 - targetDTA);
+                    runDebt = rAssets - runEq;
+                }
+                
+                pAssets.push(rAssets);
+                pEquity.push(runEq);
+                pDebt.push(runDebt);
+                
+                runEq += (rAssets * yieldR) - (runDebt * interestR) + monthly;
+            }
+
+            projectionChart.data.labels = projLabels;
+            projectionChart.data.datasets[0].data = pAssets;
+            projectionChart.data.datasets[1].data = pEquity;
+            projectionChart.data.datasets[2].data = pDebt;
+            projectionChart.update();
+            
+            document.getElementById('projDescription').innerText = strat === 'releverage' 
+                ? "Aggressive: We borrow more as we grow to keep our " + (targetDTA*100).toFixed(0) + "% leverage ratio constant."
+                : "Conservative: We keep our debt fixed at $" + debt.toLocaleString() + " and pay down our risk profile over time.";
+        }
+
+        Object.values(inputs).forEach(i => i.addEventListener('input', calculate));
+        initChart();
+        calculate();
     </script>
 </body>
 </html>
