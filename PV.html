@@ -20,10 +20,10 @@
             --border-soft: #E8ECF2;
             --border-dominant: #DFDFE6;
             --border-focus: #2e809c;
-            --color-success: #00b5ae;
-            --color-warning: #E4BD52;
-            --color-danger: #ff7f50;
-            --color-critical: #ef4444; 
+            --color-success: #89cb9e; /* M1 Sage Green */
+            --color-warning: #e8cb73; /* M1 Gold/Yellow */
+            --color-danger: #d5808b;  /* M1 Rose/Light Red */
+            --color-critical: #b13d4b;/* M1 Deep Red */
             --color-accent: #2e809c;
             --color-accent-hover: #256b7c;
         }
@@ -103,85 +103,23 @@
             color: var(--text-primary);
         }
 
-        /* Color States */
-        .good-val { color: var(--color-success) !important; }
-        .warn-val { color: var(--color-warning) !important; }
-        .bad-val { color: var(--color-danger) !important; }
-        .critical-val { color: var(--color-critical) !important; }
-
         /* Mode Badges */
         .badge-baseline {
             background-color: rgba(0, 181, 174, 0.1);
-            color: var(--color-success);
-            border: 1px solid var(--color-success);
+            color: var(--color-accent);
+            border: 1px solid var(--color-accent);
         }
         .badge-simulation {
-            background-color: rgba(255, 127, 80, 0.1);
+            background-color: rgba(213, 128, 139, 0.1);
             color: var(--color-danger);
             border: 1px solid var(--color-danger);
         }
-
-        /* Flash Animation */
-        @keyframes marginCallFlash {
-            0%, 100% { color: var(--color-critical); opacity: 1; text-shadow: 0 0 8px rgba(239, 68, 68, 0.4); }
-            50% { color: #b91c1c; opacity: 0.6; text-shadow: none; }
-        }
-        .flash-margin-call {
-            animation: marginCallFlash 1.2s ease-in-out infinite;
-        }
-
-        /* Buttons */
-        .btn-primary {
-            background-color: var(--color-accent);
-            color: #fff;
-            border: none;
-            border-radius: 8px;
-            padding: 10px 16px;
-            font-family: 'DM Sans', sans-serif;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background-color 0.2s ease;
-            text-align: center;
-        }
-        .btn-primary:hover {
-            background-color: var(--color-accent-hover);
-        }
-
-        .btn-secondary {
-            background-color: var(--surface-card);
-            color: var(--text-secondary);
-            border: 1px solid var(--border-dominant);
-            border-radius: 8px;
-            padding: 10px 16px;
-            font-family: 'DM Sans', sans-serif;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background-color 0.2s ease, color 0.2s ease;
-            text-align: center;
-        }
-        .btn-secondary:hover {
-            background-color: #f9fafb;
-            color: var(--text-primary);
-        }
-
-        /* Tooltip styling */
-        .tooltip { position: relative; display: inline-flex; align-items: center; cursor: help; }
-        .tooltip .tooltip-text {
-            visibility: hidden; width: 280px; background-color: #2c3e50; color: #fff; text-align: left;
-            border-radius: 6px; padding: 10px; position: absolute; z-index: 1000;
-            top: 125%; left: 0%; transform: translateX(-50%); opacity: 0; transition: opacity 0.3s;
-            font-size: 12px; font-weight: 400; line-height: 1.4; pointer-events: none;
-            font-family: 'DM Sans', sans-serif;
-        }
-        .tooltip:hover .tooltip-text { visibility: visible; opacity: 1; }
 
         /* Timeline Stepper */
         .timeline-step { position: relative; flex: 1; text-align: center; }
         .timeline-step::before { content: ''; position: absolute; top: 10px; left: -50%; right: 50%; height: 2px; background-color: #fca5a5; z-index: 0; }
         .timeline-step:first-child::before { display: none; }
-        .timeline-dot { position: relative; width: 22px; height: 22px; background-color: #ef4444; border-radius: 50%; margin: 0 auto 8px auto; z-index: 1; border: 3px solid #fff; box-shadow: 0 0 0 1px #ef4444; }
+        .timeline-dot { position: relative; width: 22px; height: 22px; background-color: #b13d4b; border-radius: 50%; margin: 0 auto 8px auto; z-index: 1; border: 3px solid #fff; box-shadow: 0 0 0 1px #b13d4b; }
     </style>
 </head>
 <body class="p-4 sm:p-6 lg:p-8">
@@ -190,6 +128,7 @@
 
     <div class="w-full mx-auto max-w-[1600px]">
         
+        <!-- HEADER -->
         <div class="flex items-center gap-3 mb-6">
             <h1 class="text-2xl sm:text-3xl font-bold">Freedom Engine: Positive Carry Visualizer</h1>
             <div class="relative inline-flex items-center cursor-help group mt-1">
@@ -200,9 +139,11 @@
             </div>
         </div>
         
+        <!-- MAIN GRID: Strict Single Instance Columns -->
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
             
-            <div class="card p-5 flex flex-col justify-between h-full lg:col-span-4 xl:col-span-3">
+            <!-- COLUMN 1: INPUTS -->
+            <div class="card p-5 flex flex-col justify-between h-full col-span-1 lg:col-span-4 xl:col-span-3">
                 <div class="flex-grow">
                     <h2 class="text-lg font-bold border-b border-[#E8ECF2] pb-1.5 mb-4">1. Base Account Data</h2>
                     
@@ -261,6 +202,7 @@
                         <p class="text-[12px] text-[#595959] mt-1.5 text-right font-['DM_Sans']">Drag to simulate taking margin or paying debt</p>
                     </div>
 
+                    <!-- Quick Scenarios Grid -->
                     <div class="mt-6 border-t border-[#E8ECF2] pt-4">
                         <label class="font-['DM_Sans'] text-[11px] font-bold text-[#595959] uppercase tracking-widest mb-3 block">Quick Market Scenarios</label>
                         
@@ -326,6 +268,7 @@
                 </div>
             </div>
 
+            <!-- COLUMN 2: DASHBOARD -->
             <div class="card p-5 flex flex-col h-full lg:col-span-4 xl:col-span-4">
                 <div class="flex justify-between items-center border-b border-[#E8ECF2] pb-2 mb-4">
                     <div class="flex items-center gap-3">
@@ -381,6 +324,7 @@
                     <span class="metric-value" id="outUtilReinvest">0.00%</span>
                 </div>
                 
+                <!-- Cushion to Margin Call Section -->
                 <div class="mt-4 p-5 rounded-xl border border-[var(--border-soft)] bg-[#fdfdfd] flex flex-col items-center justify-center shadow-sm flex-grow transition-all duration-300 relative overflow-hidden" id="cushionCard">
                     <div class="w-full flex justify-between items-center border-b border-[#E8ECF2] pb-1.5 mb-4 z-10">
                         <h4 class="text-xs font-bold tracking-widest text-[var(--text-secondary)] uppercase font-['DM_Sans']">Cushion to Call</h4>
@@ -390,20 +334,34 @@
                         </button>
                     </div>
                     
-                    <div id="zoneIndicatorText" class="text-sm font-bold tracking-widest uppercase mb-3 font-['Poppins'] text-[#00b5ae] text-center z-10">Optimal Zone</div>
+                    <div id="zoneIndicatorText" class="text-sm font-bold tracking-widest uppercase mb-3 font-['Poppins'] text-[#89cb9e] text-center z-10">Optimal Zone</div>
                     
-                    <div class="relative w-[240px] h-[120px] mx-auto z-10 mt-2 shrink-0">
+                    <!-- UNCLIPPED NATIVE M1 4-ZONE GAUGE ARCH -->
+                    <div class="relative w-[240px] h-[120px] mx-auto mt-2 shrink-0">
+                        <!-- Background 4-Zone Color Arc -->
                         <div class="absolute inset-0 overflow-hidden">
-                            <div class="w-[240px] h-[240px] rounded-full absolute top-0 left-0" style="background: conic-gradient(from 270deg, var(--color-critical) 0%, var(--color-critical) 2.5%, var(--color-warning) 2.5%, var(--color-warning) 7.5%, var(--color-success) 7.5%, var(--color-success) 50%, transparent 50%);"></div>
-                            <div class="w-[180px] h-[180px] rounded-full bg-[#fdfdfd] absolute top-[30px] left-[30px]" id="innerGaugeCutout"></div>
+                            <!-- 
+                              M1 Conic Scale Mapping (0-100% Drop map across a 180 degree semi-circle):
+                              Zone 1 (Deep Red - Call): 0% to 1% Drop -> 0% to 0.5% Conic
+                              Zone 2 (Rose - Danger): 1% to 15% Drop -> 0.5% to 7.5% Conic
+                              Zone 3 (Yellow - Restricted): 15% to 30% Drop -> 7.5% to 15% Conic
+                              Zone 4 (Sage Green - Optimal): 30% to 100% Drop -> 15% to 50% Conic
+                            -->
+                            <div class="w-[240px] h-[240px] rounded-full absolute top-0 left-0" style="background: conic-gradient(from 270deg, #b13d4b 0%, #b13d4b 0.5%, #d5808b 0.5%, #d5808b 7.5%, #e8cb73 7.5%, #e8cb73 15%, #89cb9e 15%, #89cb9e 50%, transparent 50%);"></div>
+                            <!-- Slender Ring Cutout matching M1 profile -->
+                            <div class="w-[212px] h-[216px] rounded-full bg-[#fdfdfd] absolute top-[12px] left-[14px]"></div>
+                            <!-- Subtle Grey Inner Guide Track under the color ring -->
+                            <div class="w-[200px] h-[200px] rounded-full border border-[#e2e5ee] absolute top-[20px] left-[20px] opacity-40"></div>
                         </div>
 
+                        <!-- Inner Text Positioning: Perfectly nested inside the arch cutout -->
                         <div class="absolute bottom-1 left-0 w-full text-center z-30">
-                            <div id="outMaxDropLarge" class="text-[32px] font-bold font-['Roboto_Mono'] leading-none text-[#00b5ae]">0.00%</div>
+                            <div id="outMaxDropLarge" class="text-[38px] font-bold font-['Poppins'] tracking-tight leading-none text-[#89cb9e]">0.00%</div>
                         </div>
                         
+                        <!-- Sharp Line Selector Needle (Unclipped) -->
                         <div id="healthIndicator" class="absolute bottom-0 left-1/2 w-[4px] h-[120px] origin-bottom transition-transform duration-500 ease-out z-20" style="transform: translateX(-50%) rotate(-90deg);">
-                            <div class="absolute top-0 left-1/2 -translate-x-1/2 w-3.5 h-[34px] bg-[#0d1728] rounded-[3px] shadow-[0_0_0_2px_#ffffff,0_3px_6px_rgba(0,0,0,0.3)] -mt-[2px]"></div>
+                            <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[3px] h-[34px] bg-[#0D1728] rounded-[1px] shadow-[0_1px_3px_rgba(0,0,0,0.2)]"></div>
                         </div>
                     </div>
 
@@ -411,6 +369,7 @@
                         The value of your current investments would have to drop <strong class="text-[var(--text-primary)]">0.00%</strong> (<strong class="text-[var(--text-primary)]">$0</strong>) to face a margin call.
                     </p>
                     
+                    <!-- Dynamic Margin Call Emergency Action Panel -->
                     <div id="marginCallAlertBlock" class="hidden w-full mt-4 border-t border-[#fca5a5] pt-4 z-10">
                         <h4 class="text-[13px] font-bold text-[#b91c1c] uppercase tracking-widest text-center mb-3">Required Cure Actions</h4>
                         
@@ -425,6 +384,7 @@
                             </div>
                         </div>
 
+                        <!-- Ticking Clock Timeline -->
                         <div class="flex justify-between items-center mb-3 px-2">
                             <div class="timeline-step">
                                 <div class="timeline-dot"></div>
@@ -437,7 +397,7 @@
                                 <span class="text-[9px] text-[#7f1d1d] block leading-tight">Grace Period</span>
                             </div>
                             <div class="timeline-step">
-                                <div class="timeline-dot bg-[#b91c1c] shadow-[0_0_0_1px_#b91c1c]"></div>
+                                <div class="timeline-dot bg-[#b13d4b] shadow-[0_0_0_1px_#b13d4b]"></div>
                                 <span class="text-[10px] font-bold text-[#991b1b] block uppercase">Day 3+</span>
                                 <span class="text-[9px] text-[#7f1d1d] block leading-tight">Liquidation</span>
                             </div>
@@ -454,7 +414,8 @@
                 </div>
             </div>
 
-            <div class="card p-5 flex flex-col gap-6 h-full lg:col-span-4 xl:col-span-5">
+            <!-- COLUMN 3: CHARTS -->
+            <div class="card p-5 flex flex-col gap-6 h-full col-span-1 md:col-span-2 lg:col-span-4 xl:col-span-5">
                 
                 <div class="w-full">
                     <h2 class="text-xl font-bold border-b border-[#E8ECF2] pb-2 mb-4">Detailed Portfolio Composition</h2>
@@ -468,13 +429,16 @@
                     <div style="position: relative; height: 220px; width: 100%;">
                         <canvas id="carryChart"></canvas>
                     </div>
+                    <!-- Dynamic Explainer Box -->
                     <div id="carryExplanation" class="text-[13px] text-[#595959] mt-5 font-['DM_Sans'] leading-relaxed bg-[#fdfdfd] p-4 rounded-xl border border-[var(--border-soft)] shadow-sm">
-                        </div>
+                        <!-- Injected via Javascript -->
+                    </div>
                 </div>
             </div>
 
         </div>
 
+        <!-- BOTTOM ROW: 10 YEAR PROJECTION -->
         <div class="card p-5 mt-6">
             <h2 class="text-xl font-bold border-b border-[#E8ECF2] pb-2 mb-4">10-Year Growth Projection</h2>
             <p class="text-xs text-[#595959] mb-4 font-['DM_Sans'] leading-relaxed">Assumes simulated DTA leverage is maintained, Net Carry is reinvested, and Monthly Contributions are added. The <strong>Total Portfolio Value</strong> is the sum of your <strong>Total Equity</strong> and <strong>Margin Debt</strong> at any given time.</p>
@@ -485,6 +449,7 @@
 
     </div>
 
+    <!-- Modal 1: Metrics Guide Pop-up -->
     <div id="metricsModal" class="fixed inset-0 bg-[#0d1728]/60 z-50 flex items-center justify-center hidden backdrop-blur-sm transition-opacity opacity-0 duration-200">
         <div class="bg-white rounded-xl shadow-2xl max-w-lg w-full p-6 m-4 transform scale-95 transition-transform duration-200">
             <div class="flex justify-between items-center border-b border-[#E8ECF2] pb-3 mb-4">
@@ -507,6 +472,7 @@
         </div>
     </div>
 
+    <!-- Modal 2: Margin Safety Guide Pop-up -->
     <div id="safetyModal" class="fixed inset-0 bg-[#0d1728]/60 z-50 flex items-center justify-center hidden backdrop-blur-sm transition-opacity opacity-0 duration-200">
         <div class="bg-white rounded-xl shadow-2xl max-w-xl w-full p-6 m-4 transform scale-95 transition-transform duration-200">
             <div class="flex justify-between items-center border-b border-[#E8ECF2] pb-3 mb-4">
@@ -540,6 +506,7 @@
         </div>
     </div>
 
+    <!-- Modal 3: Forced Liquidation Impact Pop-up -->
     <div id="liquidationModal" class="fixed inset-0 bg-[#0d1728]/80 z-[60] flex items-center justify-center hidden backdrop-blur-md transition-opacity opacity-0 duration-200">
         <div class="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 m-4 transform scale-95 transition-transform duration-200 border border-[#fca5a5]">
             <div class="flex justify-between items-center border-b border-[#E8ECF2] pb-3 mb-4">
@@ -645,11 +612,11 @@
                 ctx.fillText(portValue, centerX, centerY - 4);
 
                 ctx.font = "500 11px 'DM Sans', sans-serif";
-                ctx.fillStyle = isMarginCall ? '#ff7f50' : '#00b5ae'; 
+                ctx.fillStyle = isMarginCall ? '#d5808b' : '#89cb9e'; 
                 ctx.fillText('Usable Equity', centerX, centerY + 14);
 
                 ctx.font = "700 14px 'Roboto Mono', monospace";
-                ctx.fillStyle = isMarginCall ? '#ff7f50' : '#00b5ae';
+                ctx.fillStyle = isMarginCall ? '#d5808b' : '#89cb9e';
                 ctx.fillText(usableEquity, centerX, centerY + 30);
 
                 ctx.restore();
@@ -663,7 +630,7 @@
                 labels: ['Total Borrowed', 'M1 Base Req. (25%)', 'M1 High-MMR Req.', 'Usable (Excess) Equity'],
                 datasets: [{ 
                     data: [0, 0, 0, 0], 
-                    backgroundColor: ['#ff7f50', '#96BFCD', '#2e809c', '#00b5ae'], 
+                    backgroundColor: ['#ff7f50', '#96BFCD', '#2e809c', '#89cb9e'], 
                     borderWidth: 1,
                     borderColor: '#ffffff'
                 }]
@@ -697,7 +664,7 @@
             type: 'bar',
             data: { 
                 labels: ['Est. Income', 'Margin Cost', 'Net Carry'], 
-                datasets: [{ data: [0, 0, 0], backgroundColor: ['#00b5ae', '#ff7f50', '#2e809c'] }] 
+                datasets: [{ data: [0, 0, 0], backgroundColor: ['#89cb9e', '#b13d4b', '#2e809c'] }] 
             },
             options: { 
                 responsive: true,
@@ -756,7 +723,7 @@
                     { 
                         label: 'Total Equity', 
                         data: [], 
-                        borderColor: '#00b5ae', 
+                        borderColor: '#89cb9e', 
                         backgroundColor: 'transparent',
                         fill: false,
                         tension: 0.3, 
@@ -766,7 +733,7 @@
                     { 
                         label: 'Margin Debt', 
                         data: [], 
-                        borderColor: '#ff7f50', 
+                        borderColor: '#b13d4b', 
                         backgroundColor: 'transparent',
                         fill: false,
                         tension: 0.3, 
@@ -819,6 +786,7 @@
         });
 
         const STORAGE_KEY = 'positiveCarryBaseData';
+        let simulationMode = false;
 
         function saveBaseData() {
             const data = {
@@ -858,8 +826,6 @@
             
             simulationMode = false;
         }
-
-        let simulationMode = false;
 
         function setSimulationValue(numberId, sliderId, value) {
             const numberInput = document.getElementById(numberId);
@@ -1053,15 +1019,18 @@
             cushionCard.classList.remove('border-[#fca5a5]', 'shadow-[0_0_15px_rgba(239,68,68,0.2)]');
             innerGaugeCutout.style.backgroundColor = '#fdfdfd';
 
+            let activeColor = '#89cb9e'; // Default Green
+
             if (simExcess < 0) {
-                zoneIndicatorText.innerText = 'MARGIN CALL TRIGGERED';
-                zoneIndicatorText.className = "text-sm font-bold tracking-widest uppercase mb-3 font-['Poppins'] text-[#ef4444] text-center z-10 flash-margin-call";
+                // Liquidation / Deep Call Zone (< 0%)
+                activeColor = '#b13d4b';
+                zoneIndicatorText.innerText = 'LIQUIDATION TRIGGERED';
+                zoneIndicatorText.className = "text-sm font-bold tracking-widest uppercase mb-3 font-['Poppins'] text-[#b13d4b] text-center z-10 flash-margin-call";
                 cushionCard.classList.add('border-[#fca5a5]', 'shadow-[0_0_15px_rgba(239,68,68,0.2)]');
                 innerGaugeCutout.style.backgroundColor = '#fef2f2'; 
                 
                 outMaxDropLarge.innerText = 'CALL';
-                outMaxDropLarge.className = "text-4xl font-bold font-['Roboto_Mono'] leading-none critical-val flash-margin-call";
-                
+                outMaxDropLarge.style.color = activeColor;
                 outMaxDropDesc.innerHTML = 'Grace period bypassed. Your broker is actively liquidating assets to meet margin requirements.';
                 healthIndicator.style.transform = `translateX(-50%) rotate(-90deg)`;
                 
@@ -1087,14 +1056,15 @@
                     zoneIndicatorText.innerText = 'N/A';
                     zoneIndicatorText.className = "text-sm font-bold tracking-widest uppercase mb-3 font-['Poppins'] text-[#595959] text-center z-10";
                     outMaxDropLarge.innerText = 'N/A';
-                    outMaxDropLarge.className = "text-4xl font-bold font-['Roboto_Mono'] leading-none text-[#595959]";
+                    outMaxDropLarge.style.color = '#595959';
                     outMaxDropDesc.innerHTML = 'You have no securities to drop in value.';
                     healthIndicator.style.transform = `translateX(-50%) rotate(-90deg)`;
                 } else if (maxDropPct >= 1) {
+                    activeColor = '#89cb9e';
                     zoneIndicatorText.innerText = 'OPTIMAL ZONE';
-                    zoneIndicatorText.className = "text-sm font-bold tracking-widest uppercase mb-3 font-['Poppins'] text-[#00b5ae] text-center z-10";
+                    zoneIndicatorText.className = "text-sm font-bold tracking-widest uppercase mb-3 font-['Poppins'] text-[#89cb9e] text-center z-10";
                     outMaxDropLarge.innerText = '100.0%';
-                    outMaxDropLarge.className = "text-4xl font-bold font-['Roboto_Mono'] leading-none good-val";
+                    outMaxDropLarge.style.color = activeColor;
                     outMaxDropDesc.innerHTML = 'Cushion is broad enough to withstand normal market volatility. All broker privileges are active.';
                     healthIndicator.style.transform = `translateX(-50%) rotate(90deg)`;
                 } else {
@@ -1102,23 +1072,27 @@
                     const valText = fmtCNoDecimals.format(maxDropValue);
                     outMaxDropLarge.innerText = pctText;
                     
-                    if (maxDropPct >= 0.15) {
+                    // Fixed logical mapping to mirror M1's structural 4-zone spectrum
+                    if (maxDropPct >= 0.30) {
+                        activeColor = '#89cb9e';
                         zoneIndicatorText.innerText = 'OPTIMAL ZONE';
-                        zoneIndicatorText.className = "text-sm font-bold tracking-widest uppercase mb-3 font-['Poppins'] text-[#00b5ae] text-center z-10";
-                        outMaxDropLarge.className = "text-4xl font-bold font-['Roboto_Mono'] leading-none good-val";
+                        zoneIndicatorText.className = "text-sm font-bold tracking-widest uppercase mb-3 font-['Poppins'] text-[#89cb9e] text-center z-10";
                         outMaxDropDesc.innerHTML = `Cushion is broad enough to withstand normal market volatility. All broker privileges are active. <br><br> Your portfolio would have to drop <strong class="text-[var(--text-primary)]">${pctText}</strong> (<strong class="text-[var(--text-primary)]">${valText}</strong>) to face a margin call.`;
-                    } else if (maxDropPct >= 0.05) {
+                    } else if (maxDropPct >= 0.15) {
+                        activeColor = '#e8cb73';
                         zoneIndicatorText.innerText = 'RESTRICTED ZONE';
-                        zoneIndicatorText.className = "text-sm font-bold tracking-widest uppercase mb-3 font-['Poppins'] text-[#E4BD52] text-center z-10";
-                        outMaxDropLarge.className = "text-4xl font-bold font-['Roboto_Mono'] leading-none warn-val";
+                        zoneIndicatorText.className = "text-sm font-bold tracking-widest uppercase mb-3 font-['Poppins'] text-[#e8cb73] text-center z-10";
                         outMaxDropDesc.innerHTML = `Margin expansion halted. No further cash withdrawals or margin purchases allowed. <br><br> Your portfolio would have to drop <strong class="text-[var(--text-primary)]">${pctText}</strong> (<strong class="text-[var(--text-primary)]">${valText}</strong>) to face a margin call.`;
                     } else {
+                        activeColor = '#d5808b';
                         zoneIndicatorText.innerText = 'MARGIN CALL WARNING';
-                        zoneIndicatorText.className = "text-sm font-bold tracking-widest uppercase mb-3 font-['Poppins'] text-[#ff7f50] text-center z-10";
-                        outMaxDropLarge.className = "text-4xl font-bold font-['Roboto_Mono'] leading-none bad-val";
+                        zoneIndicatorText.className = "text-sm font-bold tracking-widest uppercase mb-3 font-['Poppins'] text-[#d5808b] text-center z-10";
                         outMaxDropDesc.innerHTML = `A formal demand for capital is imminent. <br><br> Your portfolio only has to drop <strong class="text-[var(--text-primary)]">${pctText}</strong> (<strong class="text-[var(--text-primary)]">${valText}</strong>) to face a margin call.`;
                     }
                     
+                    outMaxDropLarge.style.color = activeColor;
+                    
+                    // Unified Linear Gauge Mapping (0-100% Drop dynamically paths across 180 visual degrees)
                     let indicatorPos = Math.min(Math.max(maxDropPct * 100, 0), 100);
                     if (isNaN(indicatorPos)) indicatorPos = 0;
                     const rotateDeg = (indicatorPos * 1.8) - 90; 
@@ -1148,7 +1122,7 @@
 
             let isDanger = false;
             if (simSecValue > 0 && isSimulating) {
-                if (simExcess <= 0 || maxDropPct < 0.05) {
+                if (simExcess <= 0 || maxDropPct < 0.15) {
                     isDanger = true;
                 }
             }
