@@ -43,6 +43,7 @@
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-8">
             
+            <!-- Inputs -->
             <div class="lg:col-span-4 space-y-6">
                 
                 <div class="glass-card p-6 border-t-4 border-t-blue-500">
@@ -103,6 +104,7 @@
 
             </div>
 
+            <!-- Outputs -->
             <div class="lg:col-span-8 flex flex-col gap-6">
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -182,13 +184,25 @@
             </div>
         </div>
 
-        <div class="glass-card p-6 border-t-4 border-t-indigo-500 w-full">
-            <h2 class="text-xl font-bold mb-2 flex items-center gap-2">
-                <span class="bg-indigo-100 text-indigo-700 w-6 h-6 rounded-full flex items-center justify-center text-sm">4</span> 
-                The Flywheel Effect (10-Year Projection)
-            </h2>
-            <p class="text-sm text-slate-500 mb-6 max-w-4xl leading-relaxed">
-                This chart shows the compounding power of your monthly contributions combined with reinvesting your Net Carry every month. This projection assumes no market crashes, your yield stays consistent, and you <strong>do not take out any more debt</strong>. Watch how your Equity accelerates away from your Margin Debt over 120 months.
+        <!-- 10 Year Projection Section -->
+        <div class="glass-card p-6 border-t-4 border-t-indigo-500 w-full mb-10">
+            <div class="flex flex-col md:flex-row md:items-center justify-between mb-4 gap-4">
+                <h2 class="text-xl font-bold flex items-center gap-2">
+                    <span class="bg-indigo-100 text-indigo-700 w-6 h-6 rounded-full flex items-center justify-center text-sm">4</span> 
+                    The Flywheel Effect (10-Year Projection)
+                </h2>
+                
+                <div class="flex items-center gap-3 bg-slate-50 p-2 rounded-lg border border-slate-200">
+                    <label class="text-sm font-medium text-slate-700">Debt Strategy:</label>
+                    <select id="inputStrategy" class="input-box py-1.5 px-3 text-sm font-bold text-indigo-700 border-indigo-200 bg-indigo-50 cursor-pointer w-auto m-0 shadow-sm">
+                        <option value="releverage">Maintain Target Leverage Ratio</option>
+                        <option value="flat">Keep Debt Flat (Pay Down Risk)</option>
+                    </select>
+                </div>
+            </div>
+            
+            <p id="projDescription" class="text-sm text-slate-500 mb-6 max-w-4xl leading-relaxed">
+                <!-- Dynamically filled via JS based on selected strategy -->
             </p>
             
             <div class="relative w-full" style="height: 400px;">
@@ -208,10 +222,12 @@
             monthly: document.getElementById('inputMonthly'),
             yield: document.getElementById('inputYield'),
             interest: document.getElementById('inputInterest'),
-            mmr: document.getElementById('inputMMR')
+            mmr: document.getElementById('inputMMR'),
+            strategy: document.getElementById('inputStrategy')
         };
         const sliderStress = document.getElementById('sliderStress');
         const btnResetStress = document.getElementById('btnResetStress');
+        const projDescription = document.getElementById('projDescription');
 
         let cashFlowChart = null;
         let projectionChart = null;
@@ -252,7 +268,7 @@
                     datasets: [
                         { label: 'Total Portfolio Value', data: [], borderColor: '#334155', tension: 0.3, pointRadius: 0, borderWidth: 2 },
                         { label: 'Total Equity', data: [], borderColor: '#10b981', tension: 0.3, pointRadius: 0, borderWidth: 2, fill: true, backgroundColor: 'rgba(16, 185, 129, 0.1)' },
-                        { label: 'Margin Debt', data: [], borderColor: '#f43f5e', tension: 0.3, pointRadius: 0, borderWidth: 2 }
+                        { label: 'Margin Debt', data: [], borderColor: '#f43f5e', tension: 0.3, pointRadius: 0, borderWidth: 2, fill: true, backgroundColor: 'rgba(244, 63, 94, 0.05)' }
                     ]
                 },
                 options: {
@@ -274,29 +290,32 @@
 
         function calculate() {
             const baseEquity = parseFloat(inputs.equity.value) || 0;
-            const debt = parseFloat(inputs.debt.value) || 0;
+            const baseDebt = parseFloat(inputs.debt.value) || 0;
             const monthlyContrib = parseFloat(inputs.monthly.value) || 0;
             const yieldRate = (parseFloat(inputs.yield.value) || 0) / 100;
             const interestRate = (parseFloat(inputs.interest.value) || 0) / 100;
             const mmr = (parseFloat(inputs.mmr.value) || 0) / 100;
+            const strategy = inputs.strategy.value;
 
-            const baseAssets = baseEquity + debt;
+            const baseAssets = baseEquity + baseDebt;
+            const targetDTA = baseAssets > 0 ? (baseDebt / baseAssets) : 0; 
+
             const stressPct = parseFloat(sliderStress.value) / 100;
             const currentAssets = baseAssets * (1 + stressPct);
-            const currentEquity = currentAssets - debt; 
+            const currentEquity = currentAssets - baseDebt; 
 
             const income = currentAssets * yieldRate;
-            const cost = debt * interestRate;
+            const cost = baseDebt * interestRate;
             const netCarry = income - cost;
 
             let callValue = 0;
             let maxDropPct = 0;
             let isMarginCall = false;
 
-            if (mmr < 1 && debt > 0) {
-                callValue = debt / (1 - mmr);
+            if (mmr < 1 && baseDebt > 0) {
+                callValue = baseDebt / (1 - mmr);
                 if (currentAssets > 0) maxDropPct = (currentAssets - callValue) / currentAssets;
-            } else if (debt === 0) {
+            } else if (baseDebt === 0) {
                 maxDropPct = 1; 
             }
 
@@ -305,6 +324,7 @@
                 maxDropPct = 0;
             }
 
+            // Update Snapshots
             document.getElementById('outIncome').innerText = "+" + fmtC.format(income);
             document.getElementById('outCost').innerText = "-" + fmtC.format(cost);
             
@@ -350,43 +370,61 @@
             const eduBox = document.getElementById('educationalFeedback');
             
             if (isMarginCall) {
-                eduBox.innerHTML = `🚨 <strong>Margin Call Triggered!</strong> Because the market dropped so heavily, your portfolio's value (${fmtC.format(currentAssets)}) has fallen below the broker's minimum safety threshold (${fmtC.format(callValue)}). The broker will now force-sell your assets at a massive loss to pay back the $${fmtC.format(debt)} loan.`;
+                eduBox.innerHTML = `🚨 <strong>Margin Call Triggered!</strong> Because the market dropped so heavily, your portfolio's value (${fmtC.format(currentAssets)}) has fallen below the broker's minimum safety threshold (${fmtC.format(callValue)}). The broker will now force-sell your assets at a massive loss to pay back the $${fmtC.format(baseDebt)} loan.`;
                 eduBox.className = "p-4 rounded-lg border text-sm leading-relaxed shadow-sm bg-rose-50 border-rose-200 text-rose-800";
             } else if (stressPct < 0) {
-                eduBox.innerHTML = `📉 <strong>Leverage works both ways.</strong> The market dropped ${fmtP(Math.abs(stressPct * 100))}. Notice how your debt stayed exactly at $${fmtC.format(debt)}. This means your Equity (your actual money) absorbed 100% of the losses. You now have a ${fmtP(maxDropPct * 100)} buffer left before a margin call.`;
+                eduBox.innerHTML = `📉 <strong>Leverage works both ways.</strong> The market dropped ${fmtP(Math.abs(stressPct * 100))}. Notice how your debt stayed exactly at $${fmtC.format(baseDebt)}. This means your Equity (your actual money) absorbed 100% of the losses. You now have a ${fmtP(maxDropPct * 100)} buffer left before a margin call.`;
                 eduBox.className = "p-4 rounded-lg border text-sm leading-relaxed shadow-sm bg-yellow-50 border-yellow-200 text-yellow-800";
             } else if (netCarry < 0) {
                 eduBox.innerHTML = `⚠️ <strong>Negative Carry.</strong> The loan's interest rate (${inputs.interest.value}%) is eating up all your asset income (${inputs.yield.value}%). You are bleeding cash every year just to hold this position. This strategy only works if Yield > Interest Rate.`;
                 eduBox.className = "p-4 rounded-lg bg-white border border-slate-200 text-sm text-slate-700 leading-relaxed shadow-sm";
             } else {
-                eduBox.innerHTML = `💡 <strong>The Magic of Positive Carry.</strong> You borrowed $${fmtC.format(debt)} at ${inputs.interest.value}% but are investing it at ${inputs.yield.value}%. This creates a "spread" that generates $${fmtC.format(netCarry)} in pure free cash flow every year. As long as the market doesn't crash ${fmtP(maxDropPct * 100)}, this machine pays for itself!`;
+                eduBox.innerHTML = `💡 <strong>The Magic of Positive Carry.</strong> You borrowed $${fmtC.format(baseDebt)} at ${inputs.interest.value}% but are investing it at ${inputs.yield.value}%. This creates a "spread" that generates $${fmtC.format(netCarry)} in pure free cash flow every year. As long as the market doesn't crash ${fmtP(maxDropPct * 100)}, this machine pays for itself!`;
                 eduBox.className = "p-4 rounded-lg bg-white border border-slate-200 text-sm text-slate-700 leading-relaxed shadow-sm";
             }
 
             // --- 10-Year Projection Calculation ---
+            if (strategy === 'releverage') {
+                projDescription.innerHTML = `This chart shows the compounding power of your monthly contributions, reinvesting your Net Carry, <strong>and continuously borrowing more money</strong>. As your equity grows, the system automatically takes out more margin to maintain your exact <strong>${fmtP(targetDTA * 100)} Debt-to-Asset ratio</strong>. This hyper-accelerates your asset acquisition compared to keeping debt flat.`;
+            } else {
+                projDescription.innerHTML = `This chart shows safe compounding. You are making monthly contributions and reinvesting your Net Carry, but you are <strong>not taking out any more debt</strong>. Your debt stays locked at <strong>$${fmtC.format(baseDebt)}</strong>, meaning your risk of a margin call slowly disappears as your equity outgrows the loan.`;
+            }
+
             if (projectionChart) {
                 const projLabels = [];
                 const projAssets = [];
                 const projEquity = [];
                 const projDebt = [];
                 
-                // Note: We run the projection off the CURRENT stressed state to show how 
-                // the flywheel recovers (or accelerates) from the current simulated market position.
                 let runEq = currentEquity;
-                let runDebt = debt; // Debt stays constant in this educational model
+                let runDebt = baseDebt; 
 
                 for (let month = 0; month <= 120; month++) {
-                    if (month % 12 === 0) {
-                        projLabels.push('Year ' + (month / 12));
+                    if (month % 12 === 0) projLabels.push('Year ' + (month / 12));
+                    else projLabels.push('');
+                    
+                    let rAssets = 0;
+                    
+                    if (strategy === 'releverage') {
+                        // Math: If Target DTA is 20%, Equity represents the other 80%.
+                        // Assets = Equity / 0.8
+                        if (targetDTA < 1 && runEq > 0) {
+                            rAssets = runEq / (1 - targetDTA);
+                            runDebt = rAssets - runEq;
+                        } else {
+                            rAssets = runEq + runDebt;
+                        }
                     } else {
-                        projLabels.push('');
+                        // Keep debt flat
+                        runDebt = baseDebt;
+                        rAssets = runEq + runDebt;
                     }
                     
-                    let rAssets = runEq + runDebt;
                     projAssets.push(rAssets);
                     projEquity.push(runEq);
                     projDebt.push(runDebt);
                     
+                    // Monthly growth calculation
                     let mYield = rAssets * (yieldRate / 12);
                     let mCost = runDebt * (interestRate / 12);
                     let mNet = mYield - mCost;
