@@ -191,7 +191,7 @@
         .timeline-step { position: relative; flex: 1; text-align: center; }
         .timeline-step::before { content: ''; position: absolute; top: 10px; left: -50%; right: 50%; height: 2px; background-color: #fca5a5; z-index: 0; }
         .timeline-step:first-child::before { display: none; }
-        .timeline-dot { position: relative; width: 22px; height: 22px; background-color: #ef4444; border-radius: 50%; margin: 0 auto 8px auto; z-index: 1; border: 3px solid #fff; box-shadow: 0 0 0 1px #ef4444; transition: all 0.3s ease; }
+        .timeline-dot { position: relative; width: 22px; height: 22px; background-color: #e2e8f0; border-radius: 50%; margin: 0 auto 8px auto; z-index: 1; border: 3px solid #fff; transition: all 0.3s ease; }
     </style>
 </head>
 <body class="p-4 sm:p-6 lg:p-8">
@@ -984,10 +984,7 @@
             }
 
             if (isRateYieldScenario) {
-                // Flash the info box but do not trigger full simulation mode UI flag
                 flashElement('carryExplanation');
-            } else {
-                simulationMode = true;
             }
             
             calculate();
@@ -1096,6 +1093,11 @@
             cushionCard.classList.remove('border-[#fca5a5]', 'shadow-[0_0_15px_rgba(239,68,68,0.2)]');
             innerGaugeCutout.style.backgroundColor = '#fdfdfd';
 
+            // Clean timeline reset before evaluating new state
+            document.getElementById('timelineDotCall').className = "timeline-dot";
+            document.getElementById('timelineDotGrace').className = "timeline-dot";
+            document.getElementById('timelineDotLiq').className = "timeline-dot";
+
             let activeColor = '#00b5ae'; 
 
             if (simSecValue <= 0) {
@@ -1108,7 +1110,6 @@
                 healthIndicator.style.transform = `translateX(-50%) rotate(-90deg)`;
                 marginCallAlertBlock.classList.add('hidden');
             } else if (simExcess < 0) {
-                
                 let isLiquidation = (simReqEquity > 0 && (simExcess / simReqEquity) <= -0.05);
                 activeColor = isLiquidation ? '#ef4444' : '#ff7f50'; 
                 
@@ -1128,7 +1129,6 @@
                 
                 outMaxDropDesc.innerHTML = '';
                 
-                // Mapped correctly so the needle sits inside the red zone when Liquidation is true, and Orange zone when Call Issued is true
                 let deficitPct = Math.abs(simExcess / simReqEquity); 
                 let ratio = Math.max(0, (0.10 - deficitPct) / 0.10); 
                 let rotateDeg = -90 + (ratio * 45);
@@ -1136,10 +1136,9 @@
                 
                 marginCallAlertBlock.classList.remove('hidden');
                 
-                // Restore timeline dot behavior
                 document.getElementById('timelineDotCall').className = "timeline-dot bg-[#ff7f50]";
                 document.getElementById('timelineDotGrace').className = isLiquidation ? "timeline-dot bg-[#ef4444]" : "timeline-dot bg-[#ff7f50] shadow-[0_0_0_1px_#ff7f50]";
-                document.getElementById('timelineDotLiq').className = isLiquidation ? "timeline-dot bg-[#ef4444] shadow-[0_0_0_1px_#ef4444]" : "timeline-dot bg-[#e2e8f0]";
+                document.getElementById('timelineDotLiq').className = isLiquidation ? "timeline-dot bg-[#ef4444] shadow-[0_0_0_1px_#ef4444]" : "timeline-dot";
                 
                 const cashShortfall = Math.abs(simExcess);
                 const saleRequired = maintRatio > 0 ? (cashShortfall / maintRatio) : 0;
@@ -1161,21 +1160,26 @@
                 const valText = fmtCNoDecimals.format(maxDropValue);
                 outMaxDropLarge.innerText = pctText;
 
-                if (maxDropPct >= 0.15) {
+                if (maxDropPct >= 0.30) {
                     activeColor = '#00b5ae'; 
                     zoneIndicatorText.innerText = 'OPTIMAL ZONE';
                     zoneIndicatorText.className = "text-sm font-bold tracking-widest uppercase mb-3 font-['Poppins'] text-[#00b5ae] text-center z-10";
                     gaugeActionText.innerHTML = 'Cushion is broad enough to withstand normal market volatility. All broker privileges are active.';
-                } else if (maxDropPct >= 0.05) {
+                } else if (maxDropPct >= 0.15) {
                     activeColor = '#E4BD52'; 
                     zoneIndicatorText.innerText = 'RESTRICTED ZONE';
                     zoneIndicatorText.className = "text-sm font-bold tracking-widest uppercase mb-3 font-['Poppins'] text-[#E4BD52] text-center z-10";
                     gaugeActionText.innerHTML = 'Margin expansion halted. No further cash withdrawals or margin purchases allowed.';
-                } else {
+                } else if (maxDropPct >= 0.05) {
                     activeColor = '#ff7f50'; 
-                    zoneIndicatorText.innerText = 'DANGER ZONE';
+                    zoneIndicatorText.innerText = 'WARNING ZONE';
                     zoneIndicatorText.className = "text-sm font-bold tracking-widest uppercase mb-3 font-['Poppins'] text-[#ff7f50] text-center z-10";
                     gaugeActionText.innerHTML = 'Margin cushion is critically low. A formal margin call is imminent if the market drops further.';
+                } else {
+                    activeColor = '#ef4444'; 
+                    zoneIndicatorText.innerText = 'DANGER ZONE';
+                    zoneIndicatorText.className = "text-sm font-bold tracking-widest uppercase mb-3 font-['Poppins'] text-[#ef4444] text-center z-10";
+                    gaugeActionText.innerHTML = 'A formal demand for capital is imminent. Deposit cash or deleverage immediately.';
                 }
                 
                 outMaxDropLarge.style.color = activeColor;
@@ -1189,7 +1193,6 @@
                 let indicatorPos = Math.min(Math.max(maxDropPct * 100, 0), 100);
                 if (isNaN(indicatorPos)) indicatorPos = 0;
                 let rotateDeg = (indicatorPos * 1.8) - 90; 
-                if (indicatorPos > 100) rotateDeg = 90;
                 
                 healthIndicator.style.transform = `translateX(-50%) rotate(${rotateDeg}deg)`;
             }
