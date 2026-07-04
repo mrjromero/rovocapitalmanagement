@@ -392,21 +392,22 @@
                     
                     <div id="zoneIndicatorText" class="text-sm font-bold tracking-widest uppercase mb-3 font-['Poppins'] text-[#00b5ae] text-center z-10">Optimal Zone</div>
                     
-                    <div class="relative w-[240px] mx-auto flex flex-col items-center z-10 mt-2">
-                        <div class="relative w-[240px] h-[120px] shrink-0">
-                            <div class="absolute inset-0 overflow-hidden">
-                                <div class="w-[240px] h-[240px] rounded-full absolute top-0 left-0" style="background: conic-gradient(from 270deg, var(--color-critical) 0%, var(--color-critical) 7.5%, var(--color-warning) 7.5%, var(--color-warning) 15%, var(--color-success) 15%, var(--color-success) 50%, transparent 50%);"></div>
-                                <div class="w-[180px] h-[180px] rounded-full bg-[#fdfdfd] absolute top-[30px] left-[30px]" id="innerGaugeCutout"></div>
-                            </div>
-                            
-                            <div id="healthIndicator" class="absolute bottom-0 left-1/2 w-[4px] h-[120px] origin-bottom transition-transform duration-500 ease-out z-20" style="transform: translateX(-50%) rotate(-90deg);">
-                                <div class="absolute top-0 left-1/2 -translate-x-1/2 w-3.5 h-[34px] bg-[#0d1728] rounded-[3px] shadow-[0_0_0_2px_#ffffff,0_3px_6px_rgba(0,0,0,0.3)] -mt-[2px]"></div>
-                            </div>
+                    <div class="relative w-[240px] h-[120px] mx-auto z-10 mt-2 shrink-0">
+                        <div class="absolute inset-0 overflow-hidden">
+                            <div class="w-[240px] h-[240px] rounded-full absolute top-0 left-0" style="background: conic-gradient(from 270deg, var(--color-critical) 0%, var(--color-critical) 2.5%, var(--color-warning) 2.5%, var(--color-warning) 7.5%, var(--color-success) 7.5%, var(--color-success) 50%, transparent 50%);"></div>
+                            <div class="w-[180px] h-[180px] rounded-full bg-[#fdfdfd] absolute top-[30px] left-[30px]" id="innerGaugeCutout"></div>
                         </div>
-                        <div id="outMaxDropLarge" class="text-4xl font-bold font-['Roboto_Mono'] leading-none mt-6 text-center">0.00%</div>
+
+                        <div class="absolute bottom-1 left-0 w-full text-center z-30">
+                            <div id="outMaxDropLarge" class="text-[32px] font-bold font-['Roboto_Mono'] leading-none text-[#00b5ae]">0.00%</div>
+                        </div>
+                        
+                        <div id="healthIndicator" class="absolute bottom-0 left-1/2 w-[4px] h-[120px] origin-bottom transition-transform duration-500 ease-out z-20" style="transform: translateX(-50%) rotate(-90deg);">
+                            <div class="absolute top-0 left-1/2 -translate-x-1/2 w-3.5 h-[34px] bg-[#0d1728] rounded-[3px] shadow-[0_0_0_2px_#ffffff,0_3px_6px_rgba(0,0,0,0.3)] -mt-[2px]"></div>
+                        </div>
                     </div>
 
-                    <p class="text-[13px] text-[var(--text-secondary)] font-['DM_Sans'] leading-relaxed mt-4 text-center z-10" id="outMaxDropDesc">
+                    <p class="text-[13px] text-[var(--text-secondary)] font-['DM_Sans'] leading-relaxed mt-5 text-center z-10" id="outMaxDropDesc">
                         The value of your current investments would have to drop <strong class="text-[var(--text-primary)]">0.00%</strong> (<strong class="text-[var(--text-primary)]">$0</strong>) to face a margin call.
                     </p>
                     
@@ -442,7 +443,7 @@
                             </div>
                         </div>
                         <p class="text-[10px] text-[#991b1b] text-center italic mb-4 leading-tight">
-                            *Brokerages reserve the right to bypass grace periods and liquidate immediately during extreme market volatility.
+                            *Brokerages reserve the right to bypass grace periods and liquidate immediately during extreme volatility.
                         </p>
 
                         <button onclick="openModal('liquidationModal')" class="w-full bg-[#ef4444] text-white font-bold text-[13px] py-2 rounded shadow-sm hover:bg-[#dc2626] transition-colors">
@@ -1059,7 +1060,8 @@
                 innerGaugeCutout.style.backgroundColor = '#fef2f2'; 
                 
                 outMaxDropLarge.innerText = 'CALL';
-                outMaxDropLarge.className = 'text-4xl font-bold font-["Roboto_Mono"] leading-none critical-val mt-6 text-center flash-margin-call z-10';
+                outMaxDropLarge.className = "text-4xl font-bold font-['Roboto_Mono'] leading-none critical-val flash-margin-call";
+                
                 outMaxDropDesc.innerHTML = 'Grace period bypassed. Your broker is actively liquidating assets to meet margin requirements.';
                 healthIndicator.style.transform = `translateX(-50%) rotate(-90deg)`;
                 
@@ -1085,14 +1087,14 @@
                     zoneIndicatorText.innerText = 'N/A';
                     zoneIndicatorText.className = "text-sm font-bold tracking-widest uppercase mb-3 font-['Poppins'] text-[#595959] text-center z-10";
                     outMaxDropLarge.innerText = 'N/A';
-                    outMaxDropLarge.className = 'text-4xl font-bold font-["Roboto_Mono"] leading-none text-[#595959] mt-6 text-center z-10';
+                    outMaxDropLarge.className = "text-4xl font-bold font-['Roboto_Mono'] leading-none text-[#595959]";
                     outMaxDropDesc.innerHTML = 'You have no securities to drop in value.';
                     healthIndicator.style.transform = `translateX(-50%) rotate(-90deg)`;
                 } else if (maxDropPct >= 1) {
                     zoneIndicatorText.innerText = 'OPTIMAL ZONE';
                     zoneIndicatorText.className = "text-sm font-bold tracking-widest uppercase mb-3 font-['Poppins'] text-[#00b5ae] text-center z-10";
                     outMaxDropLarge.innerText = '100.0%';
-                    outMaxDropLarge.className = 'text-4xl font-bold font-["Roboto_Mono"] leading-none good-val mt-6 text-center z-10';
+                    outMaxDropLarge.className = "text-4xl font-bold font-['Roboto_Mono'] leading-none good-val";
                     outMaxDropDesc.innerHTML = 'Cushion is broad enough to withstand normal market volatility. All broker privileges are active.';
                     healthIndicator.style.transform = `translateX(-50%) rotate(90deg)`;
                 } else {
@@ -1103,25 +1105,28 @@
                     if (maxDropPct >= 0.15) {
                         zoneIndicatorText.innerText = 'OPTIMAL ZONE';
                         zoneIndicatorText.className = "text-sm font-bold tracking-widest uppercase mb-3 font-['Poppins'] text-[#00b5ae] text-center z-10";
-                        outMaxDropLarge.className = 'text-4xl font-bold font-["Roboto_Mono"] leading-none good-val mt-6 text-center z-10';
+                        outMaxDropLarge.className = "text-4xl font-bold font-['Roboto_Mono'] leading-none good-val";
                         outMaxDropDesc.innerHTML = `Cushion is broad enough to withstand normal market volatility. All broker privileges are active. <br><br> Your portfolio would have to drop <strong class="text-[var(--text-primary)]">${pctText}</strong> (<strong class="text-[var(--text-primary)]">${valText}</strong>) to face a margin call.`;
                     } else if (maxDropPct >= 0.05) {
                         zoneIndicatorText.innerText = 'RESTRICTED ZONE';
                         zoneIndicatorText.className = "text-sm font-bold tracking-widest uppercase mb-3 font-['Poppins'] text-[#E4BD52] text-center z-10";
-                        outMaxDropLarge.className = 'text-4xl font-bold font-["Roboto_Mono"] leading-none warn-val mt-6 text-center z-10';
+                        outMaxDropLarge.className = "text-4xl font-bold font-['Roboto_Mono'] leading-none warn-val";
                         outMaxDropDesc.innerHTML = `Margin expansion halted. No further cash withdrawals or margin purchases allowed. <br><br> Your portfolio would have to drop <strong class="text-[var(--text-primary)]">${pctText}</strong> (<strong class="text-[var(--text-primary)]">${valText}</strong>) to face a margin call.`;
                     } else {
                         zoneIndicatorText.innerText = 'MARGIN CALL WARNING';
                         zoneIndicatorText.className = "text-sm font-bold tracking-widest uppercase mb-3 font-['Poppins'] text-[#ff7f50] text-center z-10";
-                        outMaxDropLarge.className = 'text-4xl font-bold font-["Roboto_Mono"] leading-none bad-val mt-6 text-center z-10';
+                        outMaxDropLarge.className = "text-4xl font-bold font-['Roboto_Mono'] leading-none bad-val";
                         outMaxDropDesc.innerHTML = `A formal demand for capital is imminent. <br><br> Your portfolio only has to drop <strong class="text-[var(--text-primary)]">${pctText}</strong> (<strong class="text-[var(--text-primary)]">${valText}</strong>) to face a margin call.`;
                     }
                     
-                    // Unclipped Gauge Mapping (0-100% Drop spans 180 visual degrees)
                     let indicatorPos = Math.min(Math.max(maxDropPct * 100, 0), 100);
                     if (isNaN(indicatorPos)) indicatorPos = 0;
                     const rotateDeg = (indicatorPos * 1.8) - 90; 
-                    healthIndicator.style.transform = `translateX(-50%) rotate(${rotateDeg}deg)`;
+                    
+                    let cappedRot = rotateDeg;
+                    if (indicatorPos > 100) cappedRot = 90;
+                    
+                    healthIndicator.style.transform = `translateX(-50%) rotate(${cappedRot}deg)`;
                 }
             }
 
