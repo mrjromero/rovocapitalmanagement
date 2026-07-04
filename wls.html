@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Freedom Engine & Liquidity Warehouse Model</title>
+    <!-- Tailwind CSS for clean UI styling -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- Chart.js for responsive graphing -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen font-sans">
+
+    <div class="max-w-7xl mx-auto px-4 py-8">
+        <!-- Header -->
+        <header class="border-b border-slate-700 pb-6 mb-8">
+            <h1 class="text-3xl font-bold text-amber-400">Freedom Engine Architecture</h1>
+            <p class="text-slate-400 mt-2 text-sm">15-Year Multi-Policy Velocity & Outside Arbitrage Simulation</p>
+        </header>
+
+        <!-- Configuration Panel -->
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
+            <div class="bg-slate-800 p-5 rounded-xl border border-slate-700">
+                <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Annual Premium</label>
+                <input type="number" id="inputPremium" value="25000" class="w-full bg-slate-900 border border-slate-600 rounded px-3 py-2 text-amber-300 font-mono focus:outline-none focus:border-amber-400">
+            </div>
+            <div class="bg-slate-800 p-5 rounded-xl border border-slate-700">
+                <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Outside Asset Yield</label>
+                <input type="number" id="inputYield" value="15.0" step="0.1" class="w-full bg-slate-900 border border-slate-600 rounded px-3 py-2 text-amber-300 font-mono focus:outline-none focus:border-amber-400">
+            </div>
+            <div class="bg-slate-800 p-5 rounded-xl border border-slate-700">
+                <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Outside Borrow Rate</label>
+                <input type="number" id="inputOutsideBorrow" value="4.15" step="0.01" class="w-full bg-slate-900 border border-slate-600 rounded px-3 py-2 text-amber-300 font-mono focus:outline-none focus:border-amber-400">
+            </div>
+            <div class="bg-slate-800 p-5 rounded-xl border border-slate-700">
+                <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Policy Loan Rate</label>
+                <input type="number" id="inputPolicyLoan" value="5.30" step="0.01" class="w-full bg-slate-900 border border-slate-600 rounded px-3 py-2 text-amber-300 font-mono focus:outline-none focus:border-amber-400">
+            </div>
+        </div>
+
+        <!-- Call to Action button to recalculate -->
+        <div class="mb-8">
+            <button onclick="calculateModel()" class="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-6 py-3 rounded-lg shadow-lg transition duration-200 cursor-pointer">
+                Run Simulation Loop
+            </button>
+        </div>
+
+        <!-- Visual Graphs Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+            <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-xl">
+                <h3 class="text-lg font-bold text-slate-200 mb-4">Ecosystem Asset Allocation Balance</h3>
+                <div class="relative h-80">
+                    <canvas id="assetChart"></canvas>
+                </div>
+            </div>
+            <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-xl">
+                <h3 class="text-lg font-bold text-slate-200 mb-4">Warehouse Equity vs. Debt Accumulation</h3>
+                <div class="relative h-80">
+                    <canvas id="debtChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Data Ledger Table -->
+        <div class="bg-slate-800 rounded-xl border border-slate-700 shadow-xl overflow-hidden">
+            <div class="px-6 py-4 bg-slate-750 border-b border-slate-700">
+                <h3 class="text-lg font-bold text-slate-200">System Annual Ledger</h3>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm border-collapse">
+                    <thead>
+                        <tr class="bg-slate-900 text-slate-400 font-semibold uppercase text-xs tracking-wider border-b border-slate-700">
+                            <th class="p-4">Year</th>
+                            <th class="p-4">Active Policies</th>
+                            <th class="p-4">Gross Whl Cash Value</th>
+                            <th class="p-4">Outstanding Policy Debt</th>
+                            <th class="p-4">Net Warehouse Equity</th>
+                            <th class="p-4">Freedom Engine Assets</th>
+                            <th class="p-4">Annual Net Positive Carry</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ledgerBody" class="divide-y divide-slate-700 font-mono">
+                        <!-- Dynamic lines generated via JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modeling Engine Script -->
+    <script>
+        let assetChartInstance = null;
+        let debtChartInstance = null;
+
+        // Base whole life contract cash value progression scale per $25k premium (anchored directly to your contract illustrations)
+        const baseCvCurve = [
+            0, 19619, 46500, 71800, 100100, 124632, 142000, 162000, 175000, 198000, 
+            221138, 234000, 247000, 261000, 275000, 290831, 305000, 320000
+        ];
+
+        function getPolicyCv(policyAge) {
+            if (policyAge <= 0) return 0;
+            if (policyAge >= baseCvCurve.length) return baseCvCurve[baseCvCurve.length - 1] * Math.pow(1.045, policyAge - baseCvCurve.length + 1);
+            return baseCvCurve[policyAge];
+        }
+
+        function calculateModel() {
+            // Read UI inputs
+            const premium = parseFloat(document.getElementById('inputPremium').value);
+            const grossYield = parseFloat(document.getElementById('inputYield').value) / 100;
+            const outsideBorrow = parseFloat(document.getElementById('inputOutsideBorrow').value) / 100;
+            const policyLoanRate = parseFloat(document.getElementById('inputPolicyLoan').value) / 100;
+
+            const outsideCarryRate = grossYield - outsideBorrow; // Net +10.85% outside target spread
+
+            // Tracking arrays for charts
+            const labels = [];
+            const grossCvData = [];
+            const debtData = [];
+            const netCvData = [];
+            const outsideAssetData = [];
+            const netCarryData = [];
+
+            let totalOutsideAssetsDeployed = 0;
+            let currentOutstandingPolicyDebt = 0;
+
+            let tableHtml = "";
+
+            // Loop 15-Year Timeline
+            for (let year = 1; year <= 15; year++) {
+                labels.push("Year " + year);
+
+                // Define policy rollout lifecycle ages
+                let p1Age = year;
+                let p2Age = year >= 6 ? (year - 5) : 0;  // Policy 2 launches Year 6
+                let p3Age = year >= 12 ? (year - 11) : 0; // Policy 3 launches Year 12
+
+                // 1. Calculate Gross Cash Value base lines
+                let p1Cv = getPolicyCv(p1Age);
+                let p2Cv = getPolicyCv(p2Age);
+                let p3Cv = getPolicyCv(p3Age);
+
+                let totalGrossCv = p1Cv + p2Cv + p3Cv;
+
+                // 2. Track execution of immediate debt-swap logic and continuous arbitrage extraction
+                // Model targets a conservative 55% portfolio utilization deployment rate into the outside income facility
+                let structuralTargetDebt = totalGrossCv * 0.55;
+                
+                if (year === 1) {
+                    // Day 1 specific max leverage draw to clear HELOC safety floor
+                    structuralTargetDebt = p1Cv * 0.90; 
+                }
+
+                let newDebtExtracted = Math.max(0, structuralTargetDebt - currentOutstandingPolicyDebt);
+                currentOutstandingPolicyDebt += newDebtExtracted;
+                totalOutsideAssetsDeployed += newDebtExtracted;
+
+                // 3. Process direct recognition adjustments and outside yields to verify net system carry
+                let insideDragRate = (year <= 10) ? 0.0065 : 0.00; // Year 11 Contractual 0% cost-wash step up
+                let insideDragCost = currentOutstandingPolicyDebt * insideDragRate;
+                
+                let annualOutsideNetProfit = totalOutsideAssetsDeployed * outsideCarryRate;
+                let combinedSystemNetCarry = annualOutsideNetProfit - insideDragCost;
+
+                // Compound the outside distributions back into the overall asset ledger matrix
+                totalOutsideAssetsDeployed += (combinedSystemNetCarry * 0.4); // Assume 40% re-investment velocity
+
+                let totalNetWarehouseEquity = totalGrossCv - currentOutstandingPolicyDebt;
+
+                // Count active policies for display
+                let activeCount = 1;
+                if (year >= 6) activeCount++;
+                if (year >= 12) activeCount++;
+
+                // Push values to arrays
+                grossCvData.push(Math.round(totalGrossCv));
+                debtData.push(Math.round(currentOutstandingPolicyDebt));
+                netCvData.push(Math.round(totalNetWarehouseEquity));
+                outsideAssetData.push(Math.round(totalOutsideAssetsDeployed));
+                netCarryData.push(Math.round(combinedSystemNetCarry));
+
+                // Formatter helper
+                const fmt = (num) => "$" + Math.round(num).toLocaleString();
+
+                tableHtml += `
+                    <tr class="hover:bg-slate-750 transition duration-150">
+                        <td class="p-4 font-bold text-slate-300">${year}</td>
+                        <td class="p-4 text-slate-400">${activeCount} Policy(s)</td>
+                        <td class="p-4 text-emerald-400">${fmt(totalGrossCv)}</td>
+                        <td class="p-4 text-rose-400">${fmt(currentOutstandingPolicyDebt)}</td>
+                        <td class="p-4 text-blue-400 font-bold">${fmt(totalNetWarehouseEquity)}</td>
+                        <td class="p-4 text-amber-400 font-bold">${fmt(totalOutsideAssetsDeployed)}</td>
+                        <td class="p-4 text-purple-400">${fmt(combinedSystemNetCarry)}</td>
+                    </tr>
+                `;
+            }
+
+            document.getElementById('ledgerBody').innerHTML = tableHtml;
+            renderCharts(labels, grossCvData, debtData, netCvData, outsideAssetData);
+        }
+
+        function renderCharts(labels, grossCv, debt, netCv, outsideAssets) {
+            const chartOptions = {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { labels: { color: '#cbd5e1', font: { family: 'monospace' } } }
+                },
+                scales: {
+                    x: { grid: { color: '#334155' }, ticks: { color: '#94a3b8' } },
+                    y: { grid: { color: '#334155' }, ticks: { color: '#94a3b8' } }
+                }
+            };
+
+            // Asset chart processing
+            if (assetChartInstance) assetChartInstance.destroy();
+            const ctxAsset = document.getElementById('assetChart').getContext('2d');
+            assetChartInstance = new Chart(ctxAsset, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        { label: 'Warehouse Gross Cash Value', data: grossCv, borderColor: '#10b981', backgroundColor: 'transparent', borderWidth: 3 },
+                        { label: 'Freedom Engine Outside Assets', data: outsideAssets, borderColor: '#f59e0b', backgroundColor: 'transparent', borderWidth: 3 }
+                    ]
+                },
+                options: chartOptions
+            });
+
+            // Debt equity chart processing
+            if (debtChartInstance) debtChartInstance.destroy();
+            const ctxDebt = document.getElementById('debtChart').getContext('2d');
+            debtChartInstance = new Chart(ctxDebt, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        { label: 'Outstanding Policy Debt', data: debt, backgroundColor: '#f43f5e' },
+                        { label: 'Net Policy Equity Core', data: netCv, backgroundColor: '#3b82f6' }
+                    ]
+                },
+                options: { ...chartOptions, scales: { x: { stacked: true, grid: { color: '#334155' } }, y: { stacked: true, grid: { color: '#334155' } } } }
+            });
+        }
+
+        // Initialize engine on window load
+        window.onload = function() {
+            calculateModel();
+        };
+    </script>
+</body>
+</html>
