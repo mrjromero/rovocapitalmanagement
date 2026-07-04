@@ -20,11 +20,12 @@
             --border-soft: #E8ECF2;
             --border-dominant: #DFDFE6;
             --border-focus: #2e809c;
-            --color-success: #00b5ae;
-            --color-warning: #E4BD52;
-            --color-danger: #ff7f50;
-            --color-critical: #ef4444; 
-            --color-accent: #2e809c;
+            /* Vibrant Theme Colors */
+            --color-success: #00b5ae;   /* Teal */
+            --color-warning: #E4BD52;   /* Yellow */
+            --color-danger: #ff7f50;    /* Orange */
+            --color-critical: #ef4444;  /* Red */
+            --color-accent: #2e809c;    /* Blue */
             --color-accent-hover: #256b7c;
         }
 
@@ -189,7 +190,7 @@
         .timeline-step { position: relative; flex: 1; text-align: center; }
         .timeline-step::before { content: ''; position: absolute; top: 10px; left: -50%; right: 50%; height: 2px; background-color: #fca5a5; z-index: 0; }
         .timeline-step:first-child::before { display: none; }
-        .timeline-dot { position: relative; width: 22px; height: 22px; background-color: #e2e8f0; border-radius: 50%; margin: 0 auto 8px auto; z-index: 1; border: 3px solid #fff; transition: all 0.3s ease; }
+        .timeline-dot { position: relative; width: 22px; height: 22px; background-color: #ef4444; border-radius: 50%; margin: 0 auto 8px auto; z-index: 1; border: 3px solid #fff; box-shadow: 0 0 0 1px #ef4444; transition: all 0.3s ease; }
     </style>
 </head>
 <body class="p-4 sm:p-6 lg:p-8">
@@ -198,7 +199,6 @@
 
     <div class="w-full mx-auto max-w-[1600px]">
         
-        <!-- HEADER -->
         <div class="flex items-center gap-3 mb-6">
             <h1 class="text-2xl sm:text-3xl font-bold">Freedom Engine: Positive Carry Visualizer</h1>
             <div class="relative inline-flex items-center cursor-help group mt-1">
@@ -211,7 +211,6 @@
         
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
             
-            <!-- COLUMN 1: INPUTS -->
             <div class="card p-5 flex flex-col justify-between h-full lg:col-span-4 xl:col-span-3">
                 <div class="flex-grow">
                     <h2 class="text-lg font-bold border-b border-[#E8ECF2] pb-1.5 mb-4">1. Base Account Data</h2>
@@ -271,7 +270,6 @@
                         <p class="text-[12px] text-[#595959] mt-1.5 text-right font-['DM_Sans']">Drag to simulate taking margin or paying debt</p>
                     </div>
 
-                    <!-- Quick Scenarios Grid -->
                     <div class="mt-6 border-t border-[#E8ECF2] pt-4">
                         <label class="font-['DM_Sans'] text-[11px] font-bold text-[#595959] uppercase tracking-widest mb-3 block">Quick Market Scenarios</label>
                         
@@ -337,7 +335,6 @@
                 </div>
             </div>
 
-            <!-- COLUMN 2: DASHBOARD -->
             <div class="card p-5 flex flex-col h-full lg:col-span-4 xl:col-span-4">
                 <div class="flex justify-between items-center border-b border-[#E8ECF2] pb-2 mb-4">
                     <div class="flex items-center gap-3">
@@ -393,7 +390,6 @@
                     <span class="metric-value" id="outUtilReinvest">0.00%</span>
                 </div>
                 
-                <!-- Cushion to Margin Call Section -->
                 <div class="mt-4 p-5 rounded-xl border border-[var(--border-soft)] bg-[#fdfdfd] flex flex-col items-center justify-center shadow-sm flex-grow transition-all duration-300 relative overflow-hidden" id="cushionCard">
                     <div class="w-full flex justify-between items-center border-b border-[#E8ECF2] pb-1.5 mb-4 z-10">
                         <h4 class="text-xs font-bold tracking-widest text-[var(--text-secondary)] uppercase font-['DM_Sans']">Cushion to Call</h4>
@@ -403,35 +399,25 @@
                         </button>
                     </div>
                     
-                    <div id="zoneIndicatorText" class="text-sm font-bold tracking-widest uppercase mb-3 font-['Poppins'] text-center z-10 transition-colors">Optimal Zone</div>
+                    <div id="zoneIndicatorText" class="text-sm font-bold tracking-widest uppercase mb-3 font-['Poppins'] text-[#00b5ae] text-center z-10">Optimal Zone</div>
                     
-                    <div class="relative w-[240px] h-[120px] mx-auto mt-2 shrink-0">
-                        <!-- Background Arc -->
+                    <div class="relative w-[240px] h-[120px] mx-auto mt-4 shrink-0">
                         <div class="absolute inset-0 overflow-hidden">
-                            <!-- 
-                              4-Zone CSS Color Mapping 
-                              0% - 1% Conic = Red (Liquidation <0%)
-                              1% - 2.5% Conic = Orange (Danger 0-5%)
-                              2.5% - 7.5% Conic = Yellow (Restricted 5-15%)
-                              7.5% - 50% Conic = Teal (Optimal >15%)
-                            -->
-                            <div class="w-[240px] h-[240px] rounded-full absolute top-0 left-0" style="background: conic-gradient(from 270deg, var(--color-critical) 0%, var(--color-critical) 1%, var(--color-danger) 1%, var(--color-danger) 2.5%, var(--color-warning) 2.5%, var(--color-warning) 7.5%, var(--color-success) 7.5%, var(--color-success) 50%, transparent 50%);"></div>
-                            <div class="w-[212px] h-[216px] rounded-full bg-[#fdfdfd] absolute top-[12px] left-[14px]" id="innerGaugeCutout"></div>
-                            <div class="w-[200px] h-[200px] rounded-full border border-[#e2e5ee] absolute top-[20px] left-[20px] opacity-40"></div>
+                            <div class="w-[240px] h-[240px] rounded-full absolute top-0 left-0" style="background: conic-gradient(from 270deg, var(--color-critical) 0%, var(--color-critical) 12.5%, var(--color-danger) 12.5%, var(--color-danger) 25%, var(--color-warning) 25%, var(--color-warning) 37.5%, var(--color-success) 37.5%, var(--color-success) 50%, transparent 50%);"></div>
+                            <div class="w-[180px] h-[180px] rounded-full bg-[#fdfdfd] absolute top-[30px] left-[30px]" id="innerGaugeCutout"></div>
+                            <div class="w-[200px] h-[200px] rounded-full border border-[#e2e5ee] absolute top-[20px] left-[20px] opacity-40 pointer-events-none"></div>
                         </div>
 
-                        <!-- Nested Value Text -->
-                        <div class="absolute bottom-1 left-0 w-full text-center z-30">
-                            <div id="outMaxDropLarge" class="text-[38px] font-bold font-['Poppins'] tracking-tight leading-none transition-colors">0.00%</div>
+                        <div class="absolute bottom-2 left-0 w-full flex flex-col items-center justify-end z-30 h-full pb-1">
+                            <div id="outMaxDropLarge" class="text-4xl font-bold font-['Roboto_Mono'] tracking-tight leading-none text-[#00b5ae] transition-colors duration-300">0.00%</div>
+                            <div class="text-[10px] font-bold tracking-widest uppercase mt-1 opacity-60 font-['Poppins'] text-[#0d1728]">Max Drop</div>
                         </div>
                         
-                        <!-- Sharp Needle Tracker -->
                         <div id="healthIndicator" class="absolute bottom-0 left-1/2 w-[4px] h-[120px] origin-bottom transition-transform duration-500 ease-out z-20" style="transform: translateX(-50%) rotate(-90deg);">
                             <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[3px] h-[34px] bg-[#0D1728] rounded-[1px] shadow-[0_1px_3px_rgba(0,0,0,0.2)]"></div>
                         </div>
                     </div>
 
-                    <!-- Dynamic Action Text -->
                     <div id="gaugeActionText" class="text-[13px] text-center font-['DM_Sans'] mt-5 mb-2 font-medium text-[var(--text-primary)]">
                        Cushion is broad enough to withstand normal market volatility. All broker privileges are active.
                     </div>
@@ -440,7 +426,6 @@
                         Your portfolio would have to drop <strong class="text-[var(--text-primary)]">0.00%</strong> (<strong class="text-[var(--text-primary)]">$0</strong>) to face a margin call.
                     </p>
                     
-                    <!-- Dynamic Margin Call Emergency Action Panel -->
                     <div id="marginCallAlertBlock" class="hidden w-full mt-4 border-t border-[#fca5a5] pt-4 z-10">
                         <h4 class="text-[13px] font-bold text-[#b91c1c] uppercase tracking-widest text-center mb-3">Required Cure Actions</h4>
                         
@@ -455,7 +440,6 @@
                             </div>
                         </div>
 
-                        <!-- Ticking Clock Timeline -->
                         <div class="flex justify-between items-center mb-3 px-2">
                             <div class="timeline-step">
                                 <div id="timelineDotCall" class="timeline-dot"></div>
@@ -473,7 +457,7 @@
                                 <span class="text-[9px] text-[#7f1d1d] block leading-tight">Liquidation</span>
                             </div>
                         </div>
-                        <p id="timelineWarningText" class="text-[10px] text-[#991b1b] text-center italic mb-4 leading-tight">
+                        <p class="text-[10px] text-[#991b1b] text-center italic mb-4 leading-tight">
                             *Brokerages reserve the right to bypass grace periods and liquidate immediately during extreme volatility.
                         </p>
 
@@ -485,7 +469,6 @@
                 </div>
             </div>
 
-            <!-- COLUMN 3: CHARTS -->
             <div class="card p-5 flex flex-col gap-6 h-full lg:col-span-4 xl:col-span-5">
                 
                 <div class="w-full">
@@ -498,8 +481,7 @@
                 <div class="w-full mt-2">
                     <h2 class="text-xl font-bold border-b border-[#E8ECF2] pb-2 mb-4">Annual Carry Analysis</h2>
                     <div id="carryExplanation" class="text-[13px] text-[#595959] mb-4 font-['DM_Sans'] leading-relaxed bg-[#fdfdfd] p-4 rounded-xl border border-[var(--border-soft)] shadow-sm">
-                        <!-- Injected via Javascript -->
-                    </div>
+                        </div>
                     <div style="position: relative; height: 220px; width: 100%;">
                         <canvas id="carryChart"></canvas>
                     </div>
@@ -508,7 +490,6 @@
 
         </div>
 
-        <!-- BOTTOM ROW: 10 YEAR PROJECTION -->
         <div class="card p-5 mt-6">
             <h2 class="text-xl font-bold border-b border-[#E8ECF2] pb-2 mb-4">10-Year Growth Projection</h2>
             <p class="text-xs text-[#595959] mb-4 font-['DM_Sans'] leading-relaxed">Assumes simulated DTA leverage is maintained, Net Carry is reinvested, and Monthly Contributions are added. The <strong>Total Portfolio Value</strong> is the sum of your <strong>Total Equity</strong> and <strong>Margin Debt</strong> at any given time.</p>
@@ -519,7 +500,6 @@
 
     </div>
 
-    <!-- Modal 1: Metrics Guide Pop-up -->
     <div id="metricsModal" class="fixed inset-0 bg-[#0d1728]/60 z-50 flex items-center justify-center hidden backdrop-blur-sm transition-opacity opacity-0 duration-200">
         <div class="bg-white rounded-xl shadow-2xl max-w-lg w-full p-6 m-4 transform scale-95 transition-transform duration-200">
             <div class="flex justify-between items-center border-b border-[#E8ECF2] pb-3 mb-4">
@@ -542,7 +522,6 @@
         </div>
     </div>
 
-    <!-- Modal 2: Margin Safety Guide Pop-up -->
     <div id="safetyModal" class="fixed inset-0 bg-[#0d1728]/60 z-50 flex items-center justify-center hidden backdrop-blur-sm transition-opacity opacity-0 duration-200">
         <div class="bg-white rounded-xl shadow-2xl max-w-xl w-full p-6 m-4 transform scale-95 transition-transform duration-200">
             <div class="flex justify-between items-center border-b border-[#E8ECF2] pb-3 mb-4">
@@ -576,7 +555,6 @@
         </div>
     </div>
 
-    <!-- Modal 3: Forced Liquidation Impact Pop-up -->
     <div id="liquidationModal" class="fixed inset-0 bg-[#0d1728]/80 z-[60] flex items-center justify-center hidden backdrop-blur-md transition-opacity opacity-0 duration-200">
         <div class="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 m-4 transform scale-95 transition-transform duration-200 border border-[#fca5a5]">
             <div class="flex justify-between items-center border-b border-[#E8ECF2] pb-3 mb-4">
@@ -1118,44 +1096,30 @@
             innerGaugeCutout.style.backgroundColor = '#fdfdfd';
 
             let activeColor = '#00b5ae'; 
-            let maintDeficitPct = simReqEquity > 0 ? (simExcess / simReqEquity) : 0;
 
-            if (simSecValue <= 0) {
-                zoneIndicatorText.innerText = 'N/A';
-                zoneIndicatorText.className = "text-sm font-bold tracking-widest uppercase mb-3 font-['Poppins'] text-[#595959] text-center z-10";
-                outMaxDropLarge.innerText = 'N/A';
-                outMaxDropLarge.style.color = '#595959';
-                gaugeActionText.innerHTML = 'You have no securities to drop in value.';
-                outMaxDropDesc.innerHTML = '';
-                healthIndicator.style.transform = `translateX(-50%) rotate(-90deg)`;
-                marginCallAlertBlock.classList.add('hidden');
-            } else if (simExcess < 0) {
-                let isLiquidation = maintDeficitPct <= -0.05;
-                activeColor = isLiquidation ? '#ef4444' : '#ff7f50'; 
-                
-                zoneIndicatorText.innerText = isLiquidation ? 'LIQUIDATION TRIGGERED' : 'MARGIN CALL ISSUED';
-                
-                let textColorClass = isLiquidation ? 'text-[#ef4444]' : 'text-[#ff7f50]';
-                zoneIndicatorText.className = `text-sm font-bold tracking-widest uppercase mb-3 font-['Poppins'] ${textColorClass} text-center z-10 flash-margin-call`;
-                
+            if (simExcess < 0) {
+                activeColor = '#ef4444'; 
+                zoneIndicatorText.innerText = 'LIQUIDATION TRIGGERED';
+                zoneIndicatorText.className = "text-sm font-bold tracking-widest uppercase mb-3 font-['Poppins'] text-[#ef4444] text-center z-10 flash-margin-call";
                 cushionCard.classList.add('border-[#fca5a5]', 'shadow-[0_0_15px_rgba(239,68,68,0.2)]');
                 innerGaugeCutout.style.backgroundColor = '#fef2f2'; 
                 
                 outMaxDropLarge.innerText = 'CALL';
                 outMaxDropLarge.style.color = activeColor;
                 
-                gaugeActionText.innerHTML = isLiquidation 
-                    ? 'Grace period bypassed. Your broker is actively liquidating assets to meet margin requirements.'
-                    : 'A formal demand for capital has been issued. Deposit cash or sell securities before the grace period expires.';
-                
+                gaugeActionText.innerHTML = 'Grace period bypassed. Your broker is actively liquidating assets to meet margin requirements.';
                 outMaxDropDesc.innerHTML = '';
-                healthIndicator.style.transform = `translateX(-50%) rotate(-90deg)`;
+                
+                let deficitPct = Math.abs(simExcess / simReqEquity); 
+                let ratio = Math.max(0, (0.10 - deficitPct) / 0.10); 
+                let rotateDeg = -90 + (ratio * 45);
+                healthIndicator.style.transform = `translateX(-50%) rotate(${rotateDeg}deg)`;
                 
                 marginCallAlertBlock.classList.remove('hidden');
                 
-                document.getElementById('timelineDotCall').className = "timeline-dot bg-[#ff7f50]";
-                document.getElementById('timelineDotGrace').className = isLiquidation ? "timeline-dot bg-[#ef4444]" : "timeline-dot bg-[#ff7f50] shadow-[0_0_0_1px_#ff7f50]";
-                document.getElementById('timelineDotLiq').className = isLiquidation ? "timeline-dot bg-[#ef4444] shadow-[0_0_0_1px_#ef4444]" : "timeline-dot bg-[#e2e8f0]";
+                document.getElementById('timelineDotCall').className = "timeline-dot bg-[#ef4444]";
+                document.getElementById('timelineDotGrace').className = "timeline-dot bg-[#ef4444]";
+                document.getElementById('timelineDotLiq').className = "timeline-dot bg-[#ef4444] shadow-[0_0_0_1px_#ef4444]";
                 
                 const cashShortfall = Math.abs(simExcess);
                 const saleRequired = maintRatio > 0 ? (cashShortfall / maintRatio) : 0;
@@ -1173,41 +1137,61 @@
             } else {
                 marginCallAlertBlock.classList.add('hidden');
                 
-                const pctText = fmtP(maxDropPct * 100);
-                const valText = fmtCNoDecimals.format(maxDropValue);
-                outMaxDropLarge.innerText = pctText;
-
-                if (maxDropPct >= 0.15) {
-                    activeColor = '#00b5ae'; 
+                if (simSecValue <= 0) {
+                    zoneIndicatorText.innerText = 'N/A';
+                    zoneIndicatorText.className = "text-sm font-bold tracking-widest uppercase mb-3 font-['Poppins'] text-[#595959] text-center z-10";
+                    outMaxDropLarge.innerText = 'N/A';
+                    outMaxDropLarge.style.color = '#595959';
+                    gaugeActionText.innerHTML = 'You have no securities to drop in value.';
+                    outMaxDropDesc.innerHTML = '';
+                    healthIndicator.style.transform = `translateX(-50%) rotate(-90deg)`;
+                } else if (maxDropPct >= 1) {
+                    activeColor = '#00b5ae';
                     zoneIndicatorText.innerText = 'OPTIMAL ZONE';
                     zoneIndicatorText.className = "text-sm font-bold tracking-widest uppercase mb-3 font-['Poppins'] text-[#00b5ae] text-center z-10";
+                    outMaxDropLarge.innerText = '100.0%';
+                    outMaxDropLarge.style.color = activeColor;
                     gaugeActionText.innerHTML = 'Cushion is broad enough to withstand normal market volatility. All broker privileges are active.';
-                } else if (maxDropPct >= 0.05) {
-                    activeColor = '#E4BD52'; 
-                    zoneIndicatorText.innerText = 'RESTRICTED ZONE';
-                    zoneIndicatorText.className = "text-sm font-bold tracking-widest uppercase mb-3 font-['Poppins'] text-[#E4BD52] text-center z-10";
-                    gaugeActionText.innerHTML = 'Margin expansion halted. No further cash withdrawals or margin purchases allowed.';
-                } else {
-                    activeColor = '#ff7f50'; 
-                    zoneIndicatorText.innerText = 'DANGER ZONE';
-                    zoneIndicatorText.className = "text-sm font-bold tracking-widest uppercase mb-3 font-['Poppins'] text-[#ff7f50] text-center z-10";
-                    gaugeActionText.innerHTML = 'Margin cushion is critically low. A formal margin call is imminent if the market drops further.';
-                }
-                
-                outMaxDropLarge.style.color = activeColor;
-                
-                if (maxDropPct >= 1) {
                     outMaxDropDesc.innerHTML = 'Your investments could drop <strong class="text-[var(--text-primary)]">100.00%</strong> to zero without facing a margin call.';
+                    healthIndicator.style.transform = `translateX(-50%) rotate(90deg)`;
                 } else {
-                    outMaxDropDesc.innerHTML = `Your portfolio would have to drop <strong class="text-[var(--text-primary)]">${pctText}</strong> (<strong class="text-[var(--text-primary)]">${valText}</strong>) to face a margin call.`;
-                }
+                    const pctText = fmtP(maxDropPct * 100);
+                    const valText = fmtCNoDecimals.format(maxDropValue);
+                    outMaxDropLarge.innerText = pctText;
+                    
+                    let rotateDeg = 0;
 
-                let indicatorPos = Math.min(Math.max(maxDropPct * 100, 0), 100);
-                if (isNaN(indicatorPos)) indicatorPos = 0;
-                let rotateDeg = (indicatorPos * 1.8) - 90; 
-                if (indicatorPos > 100) rotateDeg = 90;
-                
-                healthIndicator.style.transform = `translateX(-50%) rotate(${rotateDeg}deg)`;
+                    if (maxDropPct >= 0.15) {
+                        activeColor = '#00b5ae'; 
+                        zoneIndicatorText.innerText = 'OPTIMAL ZONE';
+                        zoneIndicatorText.className = "text-sm font-bold tracking-widest uppercase mb-3 font-['Poppins'] text-[#00b5ae] text-center z-10";
+                        gaugeActionText.innerHTML = 'Cushion is broad enough to withstand normal market volatility. All broker privileges are active.';
+                        
+                        let capDrop = Math.min(maxDropPct, 1.0);
+                        let ratio = (capDrop - 0.15) / 0.85; 
+                        rotateDeg = 45 + (ratio * 45);
+                    } else if (maxDropPct >= 0.05) {
+                        activeColor = '#E4BD52'; 
+                        zoneIndicatorText.innerText = 'RESTRICTED ZONE';
+                        zoneIndicatorText.className = "text-sm font-bold tracking-widest uppercase mb-3 font-['Poppins'] text-[#E4BD52] text-center z-10";
+                        gaugeActionText.innerHTML = 'Margin expansion halted. No further cash withdrawals or margin purchases allowed.';
+                        
+                        let ratio = (maxDropPct - 0.05) / 0.10;
+                        rotateDeg = 0 + (ratio * 45);
+                    } else {
+                        activeColor = '#ff7f50'; 
+                        zoneIndicatorText.innerText = 'DANGER ZONE';
+                        zoneIndicatorText.className = "text-sm font-bold tracking-widest uppercase mb-3 font-['Poppins'] text-[#ff7f50] text-center z-10";
+                        gaugeActionText.innerHTML = 'A formal demand for capital is imminent. Deposit cash or deleverage immediately.';
+                        
+                        let ratio = maxDropPct / 0.05;
+                        rotateDeg = -45 + (ratio * 45);
+                    }
+                    
+                    outMaxDropLarge.style.color = activeColor;
+                    outMaxDropDesc.innerHTML = `Your portfolio would have to drop <strong class="text-[var(--text-primary)]">${pctText}</strong> (<strong class="text-[var(--text-primary)]">${valText}</strong>) to face a margin call.`;
+                    healthIndicator.style.transform = `translateX(-50%) rotate(${rotateDeg}deg)`;
+                }
             }
 
             document.getElementById('outExcess').className = 'metric-value ' + (simExcess >= 0 ? 'good-val' : 'bad-val');
@@ -1228,7 +1212,7 @@
 
             let isDanger = false;
             if (simSecValue > 0 && isSimulating) {
-                if (simExcess < 0 || maxDropPct < 0.05) {
+                if (simExcess <= 0 || maxDropPct < 0.05) {
                     isDanger = true;
                 }
             }
