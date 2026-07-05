@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>M1 Leverage Simulator & Smart Transfer Guardrails</title>
+    <title>Smart Transfer Rule Workstation</title>
     <style>
         /* Typography Imports From Target Stylesheet */
         @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&family=Poppins:wght@400;500;600;700&family=Roboto+Mono:wght@400;500;600;700&display=swap');
@@ -299,6 +299,78 @@
             font-size: 1rem;
             min-width: 15px;
             text-align: right;
+        }
+
+        /* Detailed Portfolio Composition Chart Components */
+        .comp-container {
+            margin-top: 1.5rem;
+            margin-bottom: 1rem;
+            background-color: #fafafa;
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-dominant);
+        }
+
+        .comp-title {
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            margin-bottom: 0.75rem;
+            text-align: center;
+        }
+
+        .comp-bar {
+            display: flex;
+            height: 12px;
+            border-radius: 6px;
+            overflow: hidden;
+            background: var(--border-soft);
+            margin-bottom: 0.85rem;
+        }
+
+        .comp-segment {
+            transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .comp-legend {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            flex-wrap: nowrap;
+        }
+
+        .legend-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            gap: 0.2rem;
+            text-align: center;
+            flex: 1;
+        }
+
+        .legend-dot-label {
+            display: flex;
+            align-items: center;
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+        }
+
+        .legend-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 4px;
+        }
+
+        .legend-val {
+            font-family: 'Roboto Mono', monospace;
+            font-size: 0.8rem;
+            color: var(--text-main);
         }
 
         /* Banner Displays */
@@ -604,8 +676,8 @@
 
 <div class="wrapper">
     <div class="app-header">
-        <h1>M1 Smart Transfer Workstation</h1>
-        <p>M1 Smart Transfer Risk Framework &amp; Simulator</p>
+        <h1>Smart Transfer Workstation</h1>
+        <p>Smart Transfer Rule Settings and Risk Framework &amp; Simulator</p>
     </div>
 
     <div class="dashboard-grid">
@@ -615,12 +687,12 @@
             <div class="accordion-content">
                 <div class="instructions-text">
                     <p><strong>What is this tool?</strong><br>
-                    This tool bridges the gap between your portfolio's <strong>Leverage (Debt-to-Asset / DTA Ratio)</strong> and your M1 "Current balance and limits" screen: <strong>Borrow Capacity (Margin Utilization Rate)</strong>.</p>
+                    This tool is a workstation that helps understand play between <strong>Smart Transfer Rules utilization</strong> vs. your porfolio's <strong>Leverage (Debt-to-Asset / DTA Ratio)</strong>. You can bi-directionally convert between Smart Rule utilization percent and DTA (which is usually around half due to M1 allowing you to borrow 50% minus MMR). The tool also helps you set your floor and celing limits for living expense operating boundaries when utilizing margin for billpay.</p>
                     <p><strong>Why does M1 have two different modes?</strong><br>
                     The platform calculates your borrow boundaries using two distinct risk frameworks:
                     </p>
-                    <p>• <strong>Withdrawal Basis (Cash Extraction Framework):</strong> Use this when taking physical cash out of the account or modeling automated <strong>Smart Transfer Rules</strong>. Because cash leaves the Invest overall account pie entirely, M1 enforces a strict, rigid credit ceiling.</p>
-                    <p>• <strong>Reinvestment Basis (Collateralized Buying Power):</strong> Use this only when using margin to buy more stocks/funds inside M1. The platform is showing a synthetic/calculated ceiling rather than a raw, absolute regulatory limit because the newly bought shares stay inside the account as extra backup collateral.</p>
+                    <p>• <strong>Withdrawal Basis (Cash Extraction Framework):</strong> Use this when taking physical cash out of the account or modeling automated <strong>Smart Transfer Rules</strong>. Because cash leaves the Invest overall account pie entirely, M1 enforces a strict, rigid withdraw up to amount.</p>
+                    <p>• <strong>Reinvestment Basis (Collateralized Buying Power):</strong> Use this only when using margin to buy more stocks/funds inside M1. The platform is showing a synthetic/calculated invest up to amount rather than a raw, absolute regulatory limit because the newly bought shares stay inside the account as extra backup collateral.</p>
                 </div>
             </div>
         </details>
@@ -659,6 +731,34 @@
                     <label id="credit-limit-label" for="cal-credit-limit">Withdraw up to</label>
                     <div class="input-wrapper">
                         <input type="text" id="cal-credit-limit" value="$50,000">
+                    </div>
+                </div>
+
+                <div class="comp-container">
+                    <div class="comp-title">Portfolio Composition</div>
+                    <div class="comp-bar">
+                        <div id="comp-bar-borrowed" class="comp-segment" style="background-color: var(--accent-danger); width: 20%;"></div>
+                        <div id="comp-bar-base" class="comp-segment" style="background-color: var(--accent-blue); width: 25%;"></div>
+                        <div id="comp-bar-high" class="comp-segment" style="background-color: var(--accent-warning); width: 0%;"></div>
+                        <div id="comp-bar-excess" class="comp-segment" style="background-color: var(--accent-green); width: 55%;"></div>
+                    </div>
+                    <div class="comp-legend">
+                        <div class="legend-item">
+                            <span class="legend-dot-label"><span class="legend-dot" style="background-color: var(--accent-danger);"></span>Borrowed</span>
+                            <span class="legend-val" id="comp-val-borrowed">--</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-dot-label"><span class="legend-dot" style="background-color: var(--accent-blue);"></span>Base Req</span>
+                            <span class="legend-val" id="comp-val-base">--</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-dot-label"><span class="legend-dot" style="background-color: var(--accent-warning);"></span>High MMR</span>
+                            <span class="legend-val" id="comp-val-high">--</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-dot-label"><span class="legend-dot" style="background-color: var(--accent-green);"></span>Excess</span>
+                            <span class="legend-val" id="comp-val-excess">--</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -743,7 +843,7 @@
                 <div class="card-title">3. Living Expense Operating Boundaries</div>
                 
                 <p class="instructions-text" style="margin-bottom: 1.25rem; font-size: 0.8rem; line-height: 1.5;">
-                    Define your operational bandwidth for covering expenses. <strong>Click anywhere on the bar track or physically drag the black pointer pin to manipulate your active simulation thresholds in real-time.</strong>
+                    Define your operational bandwidth for covering expenses. <strong>Click anywhere on the bar track or physically drag the black pointer pin to manipulate your active simulation in real-time.</strong>
                 </p>
 
                 <div class="grid-2">
@@ -804,11 +904,11 @@
 
                 <div class="derived-factor-banner" style="background-color: rgba(0, 181, 174, 0.05); border: 1px dashed var(--accent-green); text-align: left; font-family: inherit; font-size: 0.82rem; color: var(--text-main); padding: 0.85rem 1rem;">
                     <div style="font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; color: var(--accent-blue); margin-bottom: 0.5rem; font-family: 'Poppins', sans-serif;">
-                        Calculated M1 Smart Transfer Targets
+                        M1 Smart Transfer Rule Examples
                     </div>
                     <ul style="margin-left: 1.1rem; display: flex; flex-direction: column; gap: 0.5rem; color: var(--text-muted); line-height: 1.5; list-style-type: square;">
-                        <li><strong>Rule 1 (Underbalance):</strong> If Cash drops below <strong>$0.00</strong>, borrow from your credit line <span style="color: var(--text-main); font-weight: 600;">until reaching a utilization limit of <strong id="m1-rule-floor-pct">--</strong>%</span> (Simulated Balance Target: <strong id="m1-rule-floor-cash" style="color: var(--text-main); font-family: 'Roboto Mono';">--</strong>).</li>
-                        <li><strong>Rule 2 (Overbalance):</strong> If Cash inside your incoming Yield/Holding vehicle exceeds your threshold, pay down Borrow <span style="color: var(--text-main); font-weight: 600;">until reaching a utilization limit of <strong id="m1-rule-ceiling-pct">--</strong>%</span> (Simulated Balance Target: <strong id="m1-rule-ceiling-cash" style="color: var(--text-main); font-family: 'Roboto Mono';">--</strong>).</li>
+                        <li><strong>Rule 1 (Overbalance):</strong> When the cash balance of sweep account is over <strong>$0.00</strong>, transfer excess to margin on portfolio account <span style="color: var(--text-main); font-weight: 600;">until reaching a total borrowed percent of <strong id="m1-rule-floor-pct">--</strong>%</span> (Simulated Balance Target: <strong id="m1-rule-floor-cash" style="color: var(--text-main); font-family: 'Roboto Mono';">--</strong>), else transfer to portfolio account to buy more assets. </li>
+                        <li><strong>Rule 2 (Underbalance):</strong> When cash in outgoing hub (billpay account) is under your largest bill transfer deficit from margin on portfolio account <span style="color: var(--text-main); font-weight: 600;">until reaching a total borrowed percent of <strong id="m1-rule-ceiling-pct">--</strong>%</span> (Simulated Balance Target: <strong id="m1-rule-ceiling-cash" style="color: var(--text-main); font-family: 'Roboto Mono';">--</strong>).</li>
                     </ul>
                 </div>
             </div>
@@ -825,13 +925,13 @@
                 <ul class="instructions-list">
                     <li><strong>Withdrawal Limit Dependency (Cash Extraction):</strong> Automated rules treat sweeps as capital extractions. Because the cash leaves the portfolio shell, the maximum transfer size is strictly capped by your <strong>Available for Withdrawal</strong> credit limit.</li>
                     <li><strong>Reinvestment Rules Ignored:</strong> The expanded internal buying power ("Available to Invest") is completely bypassed by Smart Transfers since no balancing stock collateral is added duly to the account.</li>
-                    <li><strong>How to use for Smart Transfer calculations:</strong> Keep the toggle set to <strong>Withdrawal Basis</strong>. Input different target cash sweep amounts as simulated debt into Card 2 to see exactly what your dashboard <strong>Margin Utilization Rate</strong> and macro <strong>DTA</strong> will look like post-transfer, ensuring your automated rules never cross critical risk limits. You may also change the simulator to the desired <strong>DTA</strong> or <strong>Margin Utilization Rate</strong> to convert the values bi-directionally.</li>
+                    <li><strong>How to use for Smart Transfer calculations:</strong> Keep the framework toggle set to <strong>Withdrawal Basis</strong>. Use Card 2 to convert bi-directionally between <strong>DTA %</strong> and <strong>Margin Utilization Rate % (total borrowed)</strong>. Changing either metric will instantly compute the other and reveal the corresponding <strong>Simulated Debt Balance</strong> (Withdraw up to vs Invest up to depending on basis selected). This lets you easily audit how your target risk percentages translate into real-world dollar limits before finalizing your automated rules.</li>
                 </ul>
             </div>
         </div>
 
     </div> <div class="legal-disclosure">
-        <p><strong>Purely Educational Sandbox Disclaimer (Potential for Errors):</strong> This software application is provided completely free of charge strictly as an experimental, mathematical modeling sandbox for personal informational, planning, and educational exploration. **This tool has not been verified by certified financial compliance software and could contain logical, formatting, analytical, data-masking, or calculation errors.** It does not link dynamically to any live stock market feeds, financial institutions, or the M1 Finance backend API network. All metrics, cushions, price anchors, and cash rules displayed are nothing more than automated calculations derived entirely from the data values you manually provide in Step 1.</p>
+        <p><strong>Purely Educational Sandbox Disclaimer (Potential for Errors):</strong> This software application is provided completely free of charge strictly as an experimental, mathematical modeling sandbox for personal informational, planning, and educational exploration. <strong>This tool has not been verified by certified financial compliance software and could contain logical, formatting, analytical, data-masking, or calculation errors.</strong> It does not link dynamically to any live stock market feeds, financial institutions, or the M1 Finance backend API network. All metrics, cushions, price anchors, and cash rules displayed are nothing more than automated calculations derived entirely from the data values you manually provide in Step 1.</p>
         <p><strong>No Financial Advice or Guarantee:</strong> The mathematical algorithms executed by this framework do not constitute specialized financial, investment, legal, or tax advisory services. Operating a collateralized leverage line or automated transfer matrix introduces extreme risk components—including sudden margin interest hikes, asset valuation contractions, and unexpected, absolute account liquidation parameters enforced by clearing brokers. Past positive carry performance matrices or historical asset distribution streams do not guarantee structural safety levels under future market contractions. You remain entirely and uniquely liable for auditing your own calculations, confirming your live maintenance equity rules directly inside your official portal, and managing all automated transfer rules safely.</p>
     </div>
 </div>
@@ -846,6 +946,16 @@
     const factorReadout = document.getElementById('factor-readout');
     const contextIndicator = document.getElementById('context-indicator');
     
+    // Portfolio Composition Variables
+    const compBarBorrowed = document.getElementById('comp-bar-borrowed');
+    const compBarBase = document.getElementById('comp-bar-base');
+    const compBarHigh = document.getElementById('comp-bar-high');
+    const compBarExcess = document.getElementById('comp-bar-excess');
+    const compValBorrowed = document.getElementById('comp-val-borrowed');
+    const compValBase = document.getElementById('comp-val-base');
+    const compValHigh = document.getElementById('comp-val-high');
+    const compValExcess = document.getElementById('comp-val-excess');
+
     const btnWithdraw = document.getElementById('mode-withdraw');
     const btnReinvest = document.getElementById('mode-reinvest');
     const btnResetDefaults = document.getElementById('reset-defaults-btn');
@@ -891,6 +1001,13 @@
         withdrawal: 50000.00,
         reinvestment: 65000.00
     };
+
+    // Helper: Compact Currency Formatter for the Legend
+    function formatCompactCurrency(val) {
+        if (val >= 1000000) return '$' + (val / 1000000).toFixed(2) + 'M';
+        if (val >= 1000) return '$' + (val / 1000).toFixed(1) + 'k';
+        return '$' + Math.round(val);
+    }
 
     // UI Input Auto-Mask Formatter Engine
     function formatInputField(input) {
@@ -975,6 +1092,41 @@
 
         if (!isNaN(creditLimit) && calCreditLimit.value !== '') {
             snapshotValues[activeMode] = creditLimit;
+        }
+
+        if (value > 0) {
+            // Render Portfolio Composition Chart
+            let baseReqVal = value * 0.25;
+            let highReqVal = 0;
+            
+            if (reqEquity > baseReqVal) {
+                highReqVal = reqEquity - baseReqVal;
+            } else {
+                baseReqVal = reqEquity; // Fallback if user types an MMR under 25%
+            }
+            
+            let excessVal = value - borrowed - reqEquity;
+            if (excessVal < 0) excessVal = 0;
+
+            // Handle normalization if account is in a severe margin call
+            let visualTotal = Math.max(value, borrowed + reqEquity);
+            
+            let pctBorrowed = (borrowed / visualTotal) * 100;
+            let pctBase = (baseReqVal / visualTotal) * 100;
+            let pctHigh = (highReqVal / visualTotal) * 100;
+            let pctExcess = (excessVal / visualTotal) * 100;
+
+            if (compBarBorrowed) {
+                compBarBorrowed.style.width = pctBorrowed + '%';
+                compBarBase.style.width = pctBase + '%';
+                compBarHigh.style.width = pctHigh + '%';
+                compBarExcess.style.width = pctExcess + '%';
+
+                compValBorrowed.textContent = formatCompactCurrency(borrowed);
+                compValBase.textContent = formatCompactCurrency(baseReqVal);
+                compValHigh.textContent = formatCompactCurrency(highReqVal);
+                compValExcess.textContent = formatCompactCurrency(excessVal);
+            }
         }
 
         if (value > 0 && !isNaN(creditLimit)) {
@@ -1062,7 +1214,7 @@
 
         if (isSimulated) {
             simStatusBadge.className = "status-badge status-simulated";
-            simStatusBadge.textContent = "Simulated Future";
+            simStatusBadge.textContent = "Simulation";
         } else {
             simStatusBadge.className = "status-badge status-live";
             simStatusBadge.textContent = "Live Baseline";
