@@ -20,12 +20,18 @@
             --border-soft: #E8ECF2;
             --border-dominant: #DFDFE6;
             --border-focus: #2e809c;
-            --color-success: #00b5ae;
-            --color-warning: #E4BD52;
-            --color-danger: #ff7f50;
-            --color-critical: #ef4444; /* True red for actual margin calls */
-            --color-accent: #2e809c;
+            
+            /* Vibrant Theme Colors */
+            --color-success: #00b5ae;   /* Teal */
+            --color-warning: #E4BD52;   /* Yellow */
+            --color-danger: #ff7f50;    /* Orange */
+            --color-critical: #ef4444;  /* Red */
+            --color-accent: #2e809c;    /* Blue */
             --color-accent-hover: #256b7c;
+
+            /* Toolbox Navigation Colors */
+            --accent-blue: #2e809c;
+            --accent-green: #00b5ae;
         }
 
         body { 
@@ -46,7 +52,7 @@
             box-shadow: 0 0.5px 2.5px rgba(0,0,0,0.1), 0 0 0 0.5px rgba(0,0,0,0.05);
         }
 
-        .input-group { display: flex; flex-direction: column; margin-bottom: 12px; }
+        .input-group { display: flex; flex-direction: column; margin-bottom: 10px; }
         
         .input-group label { 
             font-family: 'DM Sans', sans-serif;
@@ -73,16 +79,14 @@
             box-shadow: 0 0 0 2px rgba(46, 128, 156, 0.2);
         }
         
-        /* Custom Slider Styling - Light Theme */
+        /* Custom Slider Styling */
         input[type=range] { -webkit-appearance: none; appearance: none; background: transparent; width: 100%; }
         input[type=range]:focus { outline: none; }
         
-        /* WebKit (Chrome, Safari, Edge) */
         input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 6px; cursor: pointer; background: var(--border-soft); border-radius: 3px; }
         input[type=range]::-webkit-slider-thumb { height: 18px; width: 18px; border-radius: 50%; background: var(--color-accent); cursor: pointer; -webkit-appearance: none; margin-top: -6px; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
         input[type=range]:focus::-webkit-slider-runnable-track { background: var(--border-dominant); }
 
-        /* Firefox */
         input[type=range]::-moz-range-track { width: 100%; height: 6px; cursor: pointer; background: var(--border-soft); border-radius: 3px; }
         input[type=range]::-moz-range-thumb { height: 18px; width: 18px; border-radius: 50%; background: var(--color-accent); cursor: pointer; border: none; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
         input[type=range]:focus::-moz-range-track { background: var(--border-dominant); }
@@ -118,18 +122,26 @@
             border: 1px solid var(--color-success);
         }
         .badge-simulation {
-            background-color: rgba(255, 127, 80, 0.1);
-            color: var(--color-danger);
-            border: 1px solid var(--color-danger);
+            background-color: rgba(239, 68, 68, 0.1);
+            color: var(--color-critical);
+            border: 1px solid var(--color-critical);
         }
 
-        /* Flash Animation for True Margin Call (Stark Red) */
+        /* Flash Animations */
         @keyframes marginCallFlash {
             0%, 100% { color: var(--color-critical); opacity: 1; text-shadow: 0 0 8px rgba(239, 68, 68, 0.4); }
             50% { color: #b91c1c; opacity: 0.6; text-shadow: none; }
         }
         .flash-margin-call {
             animation: marginCallFlash 1.2s ease-in-out infinite;
+        }
+
+        @keyframes highlightPulse {
+            0% { background-color: rgba(228, 189, 82, 0.4); transform: scale(1.02); box-shadow: 0 0 0 2px var(--color-warning); }
+            100% { background-color: var(--surface-card); transform: scale(1); box-shadow: 0 0 0 0px transparent; }
+        }
+        .flash-input {
+            animation: highlightPulse 0.6s ease-out;
         }
 
         /* Buttons */
@@ -178,6 +190,37 @@
             font-family: 'DM Sans', sans-serif;
         }
         .tooltip:hover .tooltip-text { visibility: visible; opacity: 1; }
+
+        /* Timeline Stepper */
+        .timeline-step { position: relative; flex: 1; text-align: center; }
+        .timeline-step::before { content: ''; position: absolute; top: 10px; left: -50%; right: 50%; height: 2px; background-color: #fca5a5; z-index: 0; }
+        .timeline-step:first-child::before { display: none; }
+        .timeline-dot { position: relative; width: 22px; height: 22px; background-color: #e2e8f0; border-radius: 50%; margin: 0 auto 8px auto; z-index: 1; border: 3px solid #fff; transition: all 0.3s ease; }
+
+        /* --- BREADCRUMB CSS --- */
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            text-decoration: none;
+            color: var(--accent-blue);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 1.25rem;
+            transition: color 0.2s ease, opacity 0.2s ease;
+            opacity: 0.85;
+        }
+
+        .back-link:hover {
+            color: var(--accent-green);
+            opacity: 1;
+        }
+
+        .back-link svg {
+            width: 16px;
+            height: 16px;
+        }
     </style>
 </head>
 <body class="p-4 sm:p-6 lg:p-8">
@@ -186,21 +229,24 @@
 
     <div class="w-full mx-auto max-w-[1600px]">
         
-        <div class="flex items-center gap-3 mb-6">
-            <h1 class="text-2xl sm:text-3xl font-bold">Positive Carry Portfolio Visualizer</h1>
-            <div class="tooltip mt-1">
-                <svg class="w-6 h-6 text-gray-400 hover:text-[var(--color-accent)] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                <span class="tooltip-text">A <strong>Positive Carry Portfolio</strong> is an investment strategy where the income yield generated by your assets consistently exceeds the cost of borrowing (margin interest) used to acquire them, creating a self-sustaining cash flow engine.</span>
+        <div class="app-header">
+            <a href="toolbox.html" class="back-link">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+                Back to Toolbox
+            </a>
+            
+            <div class="flex items-center gap-3 mb-6">
+                <h1 class="text-2xl sm:text-3xl font-bold">Positive Carry Portfolio Visualizer</h1>
             </div>
         </div>
         
-        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-12 gap-6">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
             
-            <div class="card p-5 flex flex-col justify-between h-full col-span-1 xl:col-span-3">
-                <div class="flex-grow">
-                    <h2 class="text-lg font-bold border-b border-[#E8ECF2] pb-1.5 mb-4">1. Base Account Data</h2>
+            <div class="card p-5 flex flex-col justify-between h-full lg:col-span-4 xl:col-span-3">
+                <div>
+                    <h2 class="text-lg font-bold border-b border-[#E8ECF2] pb-1.5 mb-3">1. Base Account Data</h2>
                     
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-3 gap-y-3">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-3 gap-y-2">
                         <div class="input-group">
                             <label>Base Portfolio ($)</label>
                             <input type="number" id="secValue" step="1" value="100000" oninput="syncBaseSec()">
@@ -218,13 +264,13 @@
                             <input type="number" id="cash" step="1" value="0" oninput="syncBaseGeneric()">
                         </div>
                     </div>
-                    <div class="input-group mt-3">
+                    <div class="input-group mt-2">
                         <label>Required Equity ($)</label>
                         <input type="number" id="reqEquity" step="1" value="30000" oninput="syncBaseGeneric()">
                     </div>
 
-                    <h2 class="text-lg font-bold border-b border-[#E8ECF2] pb-1.5 mb-4 mt-6">2. Market Variables</h2>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-3 gap-y-3">
+                    <h2 class="text-lg font-bold border-b border-[#E8ECF2] pb-1.5 mb-3 mt-5">2. Market Variables</h2>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-3 gap-y-2">
                         <div class="input-group">
                             <label>Margin Rate (%)</label>
                             <input type="number" id="marginRate" step="any" value="5.65" oninput="syncBaseGeneric()">
@@ -235,15 +281,14 @@
                         </div>
                     </div>
 
-                    <h2 class="text-lg font-bold border-b border-[#E8ECF2] pb-1.5 mb-4 mt-6">3. Simulation</h2>
+                    <h2 class="text-lg font-bold border-b border-[#E8ECF2] pb-1.5 mb-3 mt-5">3. Simulation</h2>
                     
-                    <div class="input-group mb-5">
+                    <div class="input-group mb-4">
                         <label>Simulated Portfolio Value ($)</label>
                         <div class="flex items-center gap-3">
                             <input type="range" id="simSecValueSlider" min="0" max="1000000" step="1000" value="100000" oninput="syncSimSec('slider')" class="w-full">
                             <input type="number" id="simSecValue" class="w-28 shrink-0" step="1" value="100000" oninput="syncSimSec('number')">
                         </div>
-                        <p class="text-[12px] text-[#595959] mt-1.5 text-right font-['DM_Sans']">Drag to simulate market growth or crashes</p>
                     </div>
 
                     <div class="input-group">
@@ -252,53 +297,64 @@
                             <input type="range" id="simBorrowedSlider" min="0" max="500000" step="1000" value="25000" oninput="syncSimBorrow('slider')" class="w-full">
                             <input type="number" id="simBorrowed" class="w-28 shrink-0" step="1" value="25000" oninput="syncSimBorrow('number')">
                         </div>
-                        <p class="text-[12px] text-[#595959] mt-1.5 text-right font-['DM_Sans']">Drag to simulate taking margin or paying debt</p>
                     </div>
 
-                    <div class="mt-6 border-t border-[#E8ECF2] pt-4">
-                        <label class="font-['DM_Sans'] text-[11px] font-bold text-[#595959] uppercase tracking-widest mb-3 block">Quick Market Scenarios</label>
+                    <div class="mt-5 border-t border-[#E8ECF2] pt-4">
+                        <label class="font-['DM_Sans'] text-[11px] font-bold text-[#595959] uppercase tracking-widest mb-2 block">Quick Market Scenarios</label>
                         
-                        <div class="grid grid-cols-2 sm:grid-cols-4 xl:grid-cols-2 gap-2.5 mb-2.5">
-                            <button onclick="applyScenario('crash')" class="group flex flex-col items-center justify-center py-2 bg-[#fef2f2] border border-[#fecaca] rounded-lg hover:bg-[#fee2e2] transition-colors cursor-pointer shadow-sm">
-                                <span class="text-[#ef4444] font-bold text-[12px] mb-0.5">-20%</span>
-                                <span class="text-[#991b1b] text-[9px] uppercase tracking-wider font-semibold">Market Crash</span>
-                            </button>
-                            <button onclick="applyScenario('rally')" class="group flex flex-col items-center justify-center py-2 bg-[#f0fdfa] border border-[#ccfbf1] rounded-lg hover:bg-[#ccfbf1] transition-colors cursor-pointer shadow-sm">
+                        <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 gap-2 mb-2">
+                            <button onclick="applyScenario('rally')" class="group flex flex-col items-center justify-center py-1.5 bg-[#f0fdfa] border border-[#ccfbf1] rounded-lg hover:bg-[#ccfbf1] transition-colors cursor-pointer shadow-sm">
                                 <span class="text-[#00b5ae] font-bold text-[12px] mb-0.5">+20%</span>
                                 <span class="text-[#115e59] text-[9px] uppercase tracking-wider font-semibold">Bull Rally</span>
                             </button>
-                            <button onclick="applyScenario('leverage_up')" class="group flex flex-col items-center justify-center py-2 bg-[#fff7ed] border border-[#ffedd5] rounded-lg hover:bg-[#ffedd5] transition-colors cursor-pointer shadow-sm">
+                            <button onclick="applyScenario('crash')" class="group flex flex-col items-center justify-center py-1.5 bg-[#fef2f2] border border-[#fecaca] rounded-lg hover:bg-[#fee2e2] transition-colors cursor-pointer shadow-sm">
+                                <span class="text-[#ef4444] font-bold text-[12px] mb-0.5">-20%</span>
+                                <span class="text-[#991b1b] text-[9px] uppercase tracking-wider font-semibold">Market Crash</span>
+                            </button>
+                            <button onclick="applyScenario('leverage_up')" class="group flex flex-col items-center justify-center py-1.5 bg-[#fff7ed] border border-[#ffedd5] rounded-lg hover:bg-[#ffedd5] transition-colors cursor-pointer shadow-sm">
                                 <span class="text-[#ff7f50] font-bold text-[12px] mb-0.5">+50%</span>
                                 <span class="text-[#9a3412] text-[9px] uppercase tracking-wider font-semibold">Margin Debt</span>
                             </button>
-                            <button onclick="applyScenario('deleverage')" class="group flex flex-col items-center justify-center py-2 bg-[#f8fafc] border border-[#e2e8f0] rounded-lg hover:bg-[#f1f5f9] transition-colors cursor-pointer shadow-sm">
+                            <button onclick="applyScenario('deleverage')" class="group flex flex-col items-center justify-center py-1.5 bg-[#f8fafc] border border-[#e2e8f0] rounded-lg hover:bg-[#f1f5f9] transition-colors cursor-pointer shadow-sm">
                                 <span class="text-[#0d1728] font-bold text-[12px] mb-0.5">-50%</span>
                                 <span class="text-[#334155] text-[9px] uppercase tracking-wider font-semibold">Pay Down Debt</span>
                             </button>
                         </div>
                         
-                        <div class="grid grid-cols-2 sm:grid-cols-4 xl:grid-cols-2 gap-2.5">
-                            <button onclick="applyScenario('rate_hike')" class="group flex flex-col items-center justify-center py-2 bg-[#fef2f2] border border-[#fecaca] rounded-lg hover:bg-[#fee2e2] transition-colors cursor-pointer shadow-sm">
+                        <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 gap-2 mb-2">
+                            <button onclick="applyScenario('rate_hike')" class="group flex flex-col items-center justify-center py-1.5 bg-[#fef2f2] border border-[#fecaca] rounded-lg hover:bg-[#fee2e2] transition-colors cursor-pointer shadow-sm">
                                 <span class="text-[#ef4444] font-bold text-[12px] mb-0.5">+1.5%</span>
                                 <span class="text-[#991b1b] text-[9px] uppercase tracking-wider font-semibold">Rate Hike</span>
                             </button>
-                            <button onclick="applyScenario('rate_cut')" class="group flex flex-col items-center justify-center py-2 bg-[#f0fdfa] border border-[#ccfbf1] rounded-lg hover:bg-[#ccfbf1] transition-colors cursor-pointer shadow-sm">
+                            <button onclick="applyScenario('rate_cut')" class="group flex flex-col items-center justify-center py-1.5 bg-[#f0fdfa] border border-[#ccfbf1] rounded-lg hover:bg-[#ccfbf1] transition-colors cursor-pointer shadow-sm">
                                 <span class="text-[#00b5ae] font-bold text-[12px] mb-0.5">-1.5%</span>
                                 <span class="text-[#115e59] text-[9px] uppercase tracking-wider font-semibold">Rate Cut</span>
                             </button>
-                            <button onclick="applyScenario('yield_spike')" class="group flex flex-col items-center justify-center py-2 bg-[#f0fdfa] border border-[#ccfbf1] rounded-lg hover:bg-[#ccfbf1] transition-colors cursor-pointer shadow-sm">
+                            <button onclick="applyScenario('yield_spike')" class="group flex flex-col items-center justify-center py-1.5 bg-[#f0fdfa] border border-[#ccfbf1] rounded-lg hover:bg-[#ccfbf1] transition-colors cursor-pointer shadow-sm">
                                 <span class="text-[#00b5ae] font-bold text-[12px] mb-0.5">+2.0%</span>
                                 <span class="text-[#115e59] text-[9px] uppercase tracking-wider font-semibold">Yield Spike</span>
                             </button>
-                            <button onclick="applyScenario('yield_drop')" class="group flex flex-col items-center justify-center py-2 bg-[#fef2f2] border border-[#fecaca] rounded-lg hover:bg-[#fee2e2] transition-colors cursor-pointer shadow-sm">
+                            <button onclick="applyScenario('yield_drop')" class="group flex flex-col items-center justify-center py-1.5 bg-[#fef2f2] border border-[#fecaca] rounded-lg hover:bg-[#fee2e2] transition-colors cursor-pointer shadow-sm">
                                 <span class="text-[#ef4444] font-bold text-[12px] mb-0.5">-2.0%</span>
                                 <span class="text-[#991b1b] text-[9px] uppercase tracking-wider font-semibold">Yield Drop</span>
+                            </button>
+                        </div>
+                        
+                        <label class="font-['DM_Sans'] text-[11px] font-bold text-[#595959] uppercase tracking-widest mt-3 mb-2 block">Historical Stress Tests</label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button onclick="applyScenario('covid')" class="group flex flex-col items-center justify-center py-1.5 bg-[#1e293b] border border-[#0f172a] rounded-lg hover:bg-[#334155] transition-colors cursor-pointer shadow-sm">
+                                <span class="text-[#f8fafc] font-bold text-[12px] mb-0.5">-34%</span>
+                                <span class="text-[#cbd5e1] text-[9px] uppercase tracking-wider font-semibold">2020 COVID</span>
+                            </button>
+                            <button onclick="applyScenario('gfc')" class="group flex flex-col items-center justify-center py-1.5 bg-[#1e293b] border border-[#0f172a] rounded-lg hover:bg-[#334155] transition-colors cursor-pointer shadow-sm">
+                                <span class="text-[#f8fafc] font-bold text-[12px] mb-0.5">-50%</span>
+                                <span class="text-[#cbd5e1] text-[9px] uppercase tracking-wider font-semibold">2008 Crisis</span>
                             </button>
                         </div>
                     </div>
                 </div>
                 
-                <div class="flex flex-col sm:flex-row gap-3 mt-8">
+                <div class="flex flex-col sm:flex-row gap-3 mt-6">
                     <button onclick="resetBaseData()" class="btn-secondary w-full shadow-sm">
                         Reset Data
                     </button>
@@ -308,7 +364,7 @@
                 </div>
             </div>
 
-            <div class="card p-5 flex flex-col h-full col-span-1 xl:col-span-4">
+            <div class="card p-5 flex flex-col h-full lg:col-span-4 xl:col-span-4">
                 <div class="flex justify-between items-center border-b border-[#E8ECF2] pb-2 mb-4">
                     <div class="flex items-center gap-3">
                         <h2 class="text-xl font-bold m-0">Dashboard</h2>
@@ -363,56 +419,115 @@
                     <span class="metric-value" id="outUtilReinvest">0.00%</span>
                 </div>
                 
-                <div class="mt-4 p-5 rounded-xl border border-[var(--border-soft)] bg-[#fdfdfd] flex flex-col items-center justify-center shadow-sm flex-grow">
-                    <div class="w-full flex justify-between items-center border-b border-[#E8ECF2] pb-1.5 mb-4">
-                        <h4 class="text-xs font-bold tracking-widest text-[var(--text-secondary)] uppercase font-['DM_Sans']">Cushion to Margin Call</h4>
+                <div class="mt-4 p-5 rounded-xl border border-[var(--border-soft)] bg-[#fdfdfd] flex flex-col items-center justify-center shadow-sm flex-grow transition-all duration-300 relative overflow-hidden" id="cushionCard">
+                    <div class="w-full flex justify-between items-center border-b border-[#E8ECF2] pb-1.5 mb-4 z-10">
+                        <h4 class="text-xs font-bold tracking-widest text-[var(--text-secondary)] uppercase font-['DM_Sans']">Cushion to Call</h4>
                         <button onclick="openModal('safetyModal')" class="flex items-center gap-1 text-[10px] font-bold tracking-wider uppercase font-['Poppins'] bg-[#fff5f5] text-[#ef4444] border border-[#fecaca] px-2 py-0.5 rounded hover:bg-[#fee2e2] transition-colors">
                             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
                             Safety Guide
                         </button>
                     </div>
                     
-                    <div id="dangerZoneText" class="hidden text-sm font-bold tracking-widest uppercase mb-3 font-['Poppins'] text-[var(--color-critical)] text-center flash-margin-call">Danger Zone!</div>
+                    <div id="zoneIndicatorText" class="text-sm font-bold tracking-widest uppercase mb-3 font-['Poppins'] text-[#00b5ae] text-center z-10">Optimal Zone</div>
                     
-                    <div class="relative w-[240px] mx-auto flex flex-col items-center">
-                        <div class="relative w-[240px] h-[120px] overflow-hidden shrink-0">
-                            <div class="w-[240px] h-[240px] rounded-full absolute top-0 left-0" style="background: conic-gradient(from 270deg, var(--color-danger) 0%, var(--color-danger) 15%, var(--color-warning) 25%, var(--color-success) 40%, var(--color-success) 50%, transparent 50%);"></div>
-                            <div class="w-[180px] h-[180px] rounded-full bg-[#fdfdfd] absolute top-[30px] left-[30px]"></div>
-                            
-                            <div id="healthIndicator" class="absolute bottom-0 left-1/2 w-[4px] h-[120px] origin-bottom transition-transform duration-500 ease-out z-10" style="transform: translateX(-50%) rotate(-90deg);">
-                                <div class="absolute top-0 left-1/2 -translate-x-1/2 w-3.5 h-[34px] bg-[#0d1728] rounded-[3px] shadow-[0_0_0_2px_#ffffff,0_3px_6px_rgba(0,0,0,0.3)] -mt-[2px]"></div>
+                    <div class="relative w-[240px] h-[120px] mx-auto mt-2 shrink-0">
+                        <div class="absolute inset-0 overflow-hidden">
+                            <div class="w-[240px] h-[240px] rounded-full absolute top-0 left-0" style="background: conic-gradient(from 270deg, var(--color-critical) 0%, var(--color-critical) 2.5%, var(--color-danger) 2.5%, var(--color-danger) 7.5%, var(--color-warning) 7.5%, var(--color-warning) 15%, var(--color-success) 15%, var(--color-success) 50%, transparent 50%);"></div>
+                            <div class="w-[212px] h-[216px] rounded-full bg-[#fdfdfd] absolute top-[12px] left-[14px]" id="innerGaugeCutout"></div>
+                            <div class="w-[200px] h-[200px] rounded-full border border-[#e2e5ee] absolute top-[20px] left-[20px] opacity-40"></div>
+                        </div>
+
+                        <div class="absolute bottom-2 left-0 w-full flex flex-col items-center justify-end z-30 h-full pb-1">
+                            <div id="outMaxDropLarge" class="text-[36px] font-bold font-['Roboto_Mono'] tracking-tight leading-none text-[#00b5ae] transition-colors duration-300">0.00%</div>
+                            <div class="text-[10px] font-bold tracking-widest uppercase mt-1.5 opacity-50 font-['Poppins'] text-[#0d1728]">Max Drop</div>
+                        </div>
+                        
+                        <div id="healthIndicator" class="absolute bottom-0 left-1/2 w-[4px] h-[120px] origin-bottom transition-transform duration-500 ease-out z-20" style="transform: translateX(-50%) rotate(-90deg);">
+                            <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[3px] h-[34px] bg-[#0D1728] rounded-[1px] shadow-[0_1px_3px_rgba(0,0,0,0.2)]"></div>
+                        </div>
+                    </div>
+
+                    <div id="gaugeActionText" class="text-[13px] text-center font-['DM_Sans'] mt-6 mb-2 font-medium text-[var(--text-primary)]">
+                       Cushion is broad enough to withstand normal market volatility. All broker privileges are active.
+                    </div>
+                    
+                    <div id="marginCallAlertBlock" class="hidden w-full mt-4 border-t border-[#fca5a5] pt-4 z-10">
+                        <h4 class="text-[13px] font-bold text-[#b91c1c] uppercase tracking-widest text-center mb-3">Required Cure Actions</h4>
+                        
+                        <div class="grid grid-cols-2 gap-3 mb-4">
+                            <div class="bg-[#fef2f2] border border-[#fecaca] rounded p-2 text-center">
+                                <span class="block text-[11px] text-[#991b1b] uppercase font-bold mb-1">Deposit Cash</span>
+                                <span class="block font-['Roboto_Mono'] font-bold text-[#b91c1c] text-lg" id="cureCashRequired">$0</span>
+                            </div>
+                            <div class="bg-[#fef2f2] border border-[#fecaca] rounded p-2 text-center">
+                                <span class="block text-[11px] text-[#991b1b] uppercase font-bold mb-1">- OR - Sell Stock</span>
+                                <span class="block font-['Roboto_Mono'] font-bold text-[#b91c1c] text-lg" id="cureSaleRequired">$0</span>
                             </div>
                         </div>
 
-                        <div id="outMaxDropLarge" class="text-4xl font-bold font-['Roboto_Mono'] leading-none mt-5 text-center">0.00%</div>
+                        <div class="flex justify-between items-center mb-3 px-2">
+                            <div class="timeline-step">
+                                <div id="timelineDotCall" class="timeline-dot"></div>
+                                <span class="text-[10px] font-bold text-[#991b1b] block uppercase">Day 0</span>
+                                <span class="text-[9px] text-[#7f1d1d] block leading-tight">Call Issued</span>
+                            </div>
+                            <div class="timeline-step">
+                                <div id="timelineDotGrace" class="timeline-dot"></div>
+                                <span class="text-[10px] font-bold text-[#991b1b] block uppercase">Day 1-2</span>
+                                <span class="text-[9px] text-[#7f1d1d] block leading-tight">Grace Period</span>
+                            </div>
+                            <div class="timeline-step">
+                                <div id="timelineDotLiq" class="timeline-dot"></div>
+                                <span class="text-[10px] font-bold text-[#991b1b] block uppercase">Day 3+</span>
+                                <span class="text-[9px] text-[#7f1d1d] block leading-tight">Liquidation</span>
+                            </div>
+                        </div>
+                        <p class="text-[10px] text-[#991b1b] text-center italic mb-4 leading-tight">
+                            *Brokerages reserve the right to bypass grace periods and liquidate immediately during extreme volatility.
+                        </p>
+
+                        <button onclick="openModal('liquidationModal')" class="w-full bg-[#ef4444] text-white font-bold text-[13px] py-2 rounded shadow-sm hover:bg-[#dc2626] transition-colors">
+                            View Liquidation Impact
+                        </button>
                     </div>
 
-                    <p class="text-[13px] text-[var(--text-secondary)] font-['DM_Sans'] leading-relaxed mt-4 text-center" id="outMaxDropDesc">
-                        The value of your current investments would have to drop <strong class="text-[var(--text-primary)]">0.00%</strong> (<strong class="text-[var(--text-primary)]">$0</strong>) to face a margin call.
-                    </p>
-                    
-                    <p class="text-[11px] text-[var(--text-secondary)] font-['DM_Sans'] leading-relaxed mt-3 pt-3 border-t border-[#E8ECF2] text-center w-full">
+                    <p class="text-[11px] text-[var(--text-secondary)] font-['DM_Sans'] leading-relaxed mt-4 pt-4 border-t border-[#E8ECF2] text-center w-full">
                         M1 Finance and other brokers establish standard thresholds at 30% of your account value but can dynamically lift maintenance requirements up to 100% for high volatility or asset concentration. Please review the safety guidelines to configure solid protective margins.
                     </p>
+                    
                 </div>
             </div>
 
-            <div class="card p-5 flex flex-col md:flex-row xl:flex-col gap-6 h-full col-span-1 md:col-span-2 xl:col-span-5">
+            <div class="card p-5 flex flex-col justify-between h-full lg:col-span-4 xl:col-span-5">
                 
-                <div class="flex-1 flex flex-col w-full min-h-[260px]">
-                    <h2 class="text-xl font-bold border-b border-[#E8ECF2] pb-2 mb-4">Detailed Portfolio Composition</h2>
-                    <div class="relative w-full flex-grow min-h-[220px]">
+                <div class="w-full">
+                    <h2 class="text-xl font-bold border-b border-[#E8ECF2] pb-2 mb-4 shrink-0">Detailed Portfolio Composition</h2>
+                    
+                    <div id="compositionExplanation" class="text-[13px] text-[#595959] mb-4 font-['DM_Sans'] leading-relaxed bg-[#fdfdfd] p-4 rounded-xl border border-[var(--border-soft)] shadow-sm transition-colors">
+                        </div>
+
+                    <div style="position: relative; height: 180px; width: 100%;">
                         <canvas id="compositionChart"></canvas>
                     </div>
                 </div>
+
+                <div class="w-full my-4 shrink-0">
+                    <h3 class="text-sm font-bold text-[#0d1728] mb-2 font-['Poppins']">Leverage & Utilization Mechanics</h3>
+                    <div class="text-[12.5px] text-[#595959] font-['DM_Sans'] leading-relaxed bg-[#f8fafc] p-3.5 rounded-xl border border-[#e2e8f0] shadow-sm space-y-2">
+                        <p><strong class="text-[#0d1728]">Leverage Factor (<span id="eduMultiplier">0.00x</span>):</strong> You currently control <strong class="text-[var(--color-accent)]" id="eduMultiplierDollar">$0.00</strong> in the market for every $1.00 of your own equity. Higher factors amplify both dividend yields and market losses.</p>
+                        <p><strong class="text-[#0d1728]">Withdrawal (<span id="eduUtilW">0.00%</span>) vs. Reinvest (<span id="eduUtilR">0.00%</span>):</strong> Withdrawing raw cash strips pure equity from the account, consuming your limit faster. Using margin to buy more stock adds new collateral value, mathematically cushioning the transaction.</p>
+                    </div>
+                </div>
                 
-                <div class="flex-1 flex flex-col w-full min-h-[260px]">
-                    <h2 class="text-xl font-bold border-b border-[#E8ECF2] pb-2 mb-4">Annual Carry Analysis</h2>
-                    <div class="relative w-full flex-grow min-h-[160px]">
+                <div class="w-full">
+                    <h2 class="text-xl font-bold border-b border-[#E8ECF2] pb-2 mb-4 shrink-0">Annual Carry Analysis</h2>
+                    
+                    <div id="carryExplanation" class="text-[13px] text-[#595959] mb-4 font-['DM_Sans'] leading-relaxed bg-[#fdfdfd] p-4 rounded-xl border border-[var(--border-soft)] shadow-sm transition-colors">
+                        </div>
+                    
+                    <div style="position: relative; height: 160px; width: 100%;">
                         <canvas id="carryChart"></canvas>
                     </div>
-                    <div id="carryExplanation" class="text-[13px] text-[#595959] mt-5 font-['DM_Sans'] leading-relaxed bg-[#fdfdfd] p-4 rounded-xl border border-[var(--border-soft)] shadow-sm">
-                        </div>
                 </div>
             </div>
 
@@ -421,7 +536,7 @@
         <div class="card p-5 mt-6">
             <h2 class="text-xl font-bold border-b border-[#E8ECF2] pb-2 mb-4">10-Year Growth Projection</h2>
             <p class="text-xs text-[#595959] mb-4 font-['DM_Sans'] leading-relaxed">Assumes simulated DTA leverage is maintained, Net Carry is reinvested, and Monthly Contributions are added. The <strong>Total Portfolio Value</strong> is the sum of your <strong>Total Equity</strong> and <strong>Margin Debt</strong> at any given time.</p>
-            <div class="relative w-full h-[400px]">
+            <div style="position: relative; height: 350px; width: 100%;">
                 <canvas id="projectionChart"></canvas>
             </div>
         </div>
@@ -473,10 +588,57 @@
                     <p><strong>Historical Drawdown Buffer:</strong> Trace the maximum technical peak-to-trough drops of your core funds historically (e.g., ~20% drops for indices, 30%+ for sector options). Structure your loan balance so your threshold sits 5 to 10 points lower than structural worst-case history.</p>
                 </div>
                 
-                <p class="text-xs bg-gray-50 border border-gray-200 p-2 rounded italic">Setting self-imposed behavioral ceilings on borrowing volume remains the single most reliable buffer to shield your cash flow strategy against unpredictable policy shifts.</p>
+                <p class="text-[13px] bg-gray-50 border border-gray-200 p-3 rounded italic font-medium text-[#0d1728]">
+                    Establishing strict behavioral ceilings on borrowing volume remains the most reliable buffer. For example, a rigorously modeled engine might target a deep 74.02% portfolio drop threshold, ensuring the system remains self-sustaining through extreme macro events without forced deposits.
+                </p>
             </div>
             <div class="mt-6 flex justify-end">
                 <button onclick="closeModal('safetyModal')" class="btn-primary text-sm px-6 py-2 bg-[#ef4444] hover:bg-[#dc2626]">Acknowledge Rules</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="liquidationModal" class="fixed inset-0 bg-[#0d1728]/80 z-[60] flex items-center justify-center hidden backdrop-blur-md transition-opacity opacity-0 duration-200">
+        <div class="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 m-4 transform scale-95 transition-transform duration-200 border border-[#fca5a5]">
+            <div class="flex justify-between items-center border-b border-[#E8ECF2] pb-3 mb-4">
+                <div class="flex items-center gap-2">
+                    <svg class="w-6 h-6 text-[#ef4444]" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                    <h3 class="text-xl font-bold font-['Poppins'] text-[#ef4444]">Post-Liquidation Reality</h3>
+                </div>
+                <button onclick="closeModal('liquidationModal')" class="text-[#595959] hover:text-[#0d1728] transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            
+            <div class="space-y-4">
+                <p class="text-[13px] text-[#595959] font-['DM_Sans'] leading-relaxed">If you cannot deposit cash before the grace period ends, your broker will force-sell your assets at the bottom of the market to cover your debt requirement.</p>
+                
+                <div class="bg-[#f8fafc] border border-[#e2e8f0] rounded-lg p-4 space-y-3">
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm font-['DM_Sans'] text-[#595959]">Current Distressed Value:</span>
+                        <span class="font-['Roboto_Mono'] font-bold text-[#0d1728]" id="liqCurrentAssets">$0</span>
+                    </div>
+                    <div class="flex justify-between items-center border-b border-[#e2e8f0] pb-3">
+                        <span class="text-sm font-bold font-['DM_Sans'] text-[#ef4444]">Forced Asset Sale:</span>
+                        <span class="font-['Roboto_Mono'] font-bold text-[#ef4444]" id="liqForcedSale">-$0</span>
+                    </div>
+                    <div class="flex justify-between items-center pt-1">
+                        <span class="text-sm font-['DM_Sans'] text-[#0d1728] font-bold">Remaining Portfolio Size:</span>
+                        <span class="font-['Roboto_Mono'] font-bold text-[#0d1728] text-lg" id="liqRemainingAssets">$0</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm font-['DM_Sans'] text-[#595959]">Remaining Margin Debt:</span>
+                        <span class="font-['Roboto_Mono'] font-bold text-[#595959]" id="liqRemainingDebt">$0</span>
+                    </div>
+                </div>
+
+                <p class="text-[12px] text-[#991b1b] font-['DM_Sans'] italic leading-relaxed bg-[#fef2f2] p-3 rounded border border-[#fecaca]">
+                    <strong>Permanent Capital Destruction:</strong> Because these assets are sold at a deep loss to pay off debt, you permanently lose their future dividend yield and they will not participate in the subsequent market recovery.
+                </p>
+            </div>
+            
+            <div class="mt-6 flex justify-end">
+                <button onclick="closeModal('liquidationModal')" class="btn-primary text-sm px-6 py-2 bg-[#0d1728] hover:bg-[#1e293b]">Close Analysis</button>
             </div>
         </div>
     </div>
@@ -488,13 +650,11 @@
         Chart.defaults.color = '#595959';
         Chart.defaults.font.family = "'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
         Chart.defaults.maintainAspectRatio = false; 
-        
-        const gridOptions = { color: '#E8ECF2', drawBorder: false };
 
         let dangerZonePlaying = false;
         const audioEl = document.getElementById('dangerZoneAudio');
 
-        function openModal(id) {
+        window.openModal = function(id) {
             const target = document.getElementById(id);
             target.classList.remove('hidden');
             setTimeout(() => {
@@ -503,7 +663,8 @@
                 target.firstElementChild.classList.add('scale-100');
             }, 10);
         }
-        function closeModal(id) {
+        
+        window.closeModal = function(id) {
             const target = document.getElementById(id);
             target.classList.add('opacity-0');
             target.firstElementChild.classList.remove('scale-100');
@@ -513,11 +674,19 @@
             }, 200);
         }
 
+        window.flashElement = function(id) {
+            const el = document.getElementById(id);
+            if(el) {
+                el.classList.remove('flash-input');
+                void el.offsetWidth; 
+                el.classList.add('flash-input');
+            }
+        }
+
         const centerTextPlugin = {
             id: 'centerText',
             beforeDraw(chart) {
                 if (chart.config.type !== 'doughnut') return;
-                
                 const { ctx, chartArea } = chart;
                 if (!chartArea) return; 
                 
@@ -544,11 +713,11 @@
                 ctx.fillText(portValue, centerX, centerY - 4);
 
                 ctx.font = "500 11px 'DM Sans', sans-serif";
-                ctx.fillStyle = isMarginCall ? '#ff7f50' : '#00b5ae'; 
+                ctx.fillStyle = isMarginCall ? '#ef4444' : '#00b5ae'; 
                 ctx.fillText('Usable Equity', centerX, centerY + 14);
 
                 ctx.font = "700 14px 'Roboto Mono', monospace";
-                ctx.fillStyle = isMarginCall ? '#ff7f50' : '#00b5ae';
+                ctx.fillStyle = isMarginCall ? '#ef4444' : '#00b5ae';
                 ctx.fillText(usableEquity, centerX, centerY + 30);
 
                 ctx.restore();
@@ -568,8 +737,10 @@
                 }]
             },
             options: { 
+                responsive: true,
+                maintainAspectRatio: false,
                 plugins: { 
-                    legend: { position: 'right', labels: { boxWidth: 12, font: { size: 11 } } },
+                    legend: { position: 'right', labels: { boxWidth: 12, font: { size: 11, family: "'DM Sans', sans-serif" } } },
                     tooltip: { 
                         backgroundColor: 'rgba(13, 23, 40, 0.9)',
                         titleFont: { family: "'DM Sans', sans-serif" },
@@ -597,6 +768,8 @@
                 datasets: [{ data: [0, 0, 0], backgroundColor: ['#00b5ae', '#ff7f50', '#2e809c'] }] 
             },
             options: { 
+                responsive: true,
+                maintainAspectRatio: false,
                 plugins: { 
                     legend: { display: false },
                     tooltip: {
@@ -611,8 +784,9 @@
                 scales: { 
                     y: { 
                         beginAtZero: true, 
-                        grid: gridOptions,
+                        grid: { color: '#E8ECF2', drawBorder: false },
                         ticks: {
+                            font: { family: "'DM Sans', sans-serif" },
                             callback: function(value) { 
                                 if (value >= 1000000 || value <= -1000000) {
                                     return '$' + (value / 1000000).toFixed(1) + 'M';
@@ -623,7 +797,10 @@
                             }
                         }
                     },
-                    x: { grid: { display: false } }
+                    x: { 
+                        grid: { display: false },
+                        ticks: { font: { family: "'DM Sans', sans-serif" } }
+                    }
                 } 
             }
         });
@@ -667,12 +844,14 @@
                 ]
             },
             options: {
+                responsive: true,
+                maintainAspectRatio: false,
                 interaction: {
                     mode: 'index',
                     intersect: false,
                 },
                 plugins: {
-                    legend: { position: 'top', labels: { boxWidth: 15, font: { size: 11 } } },
+                    legend: { position: 'top', labels: { boxWidth: 15, font: { size: 11, family: "'DM Sans', sans-serif" } } },
                     tooltip: { 
                         backgroundColor: 'rgba(13, 23, 40, 0.9)',
                         titleFont: { family: "'DM Sans', sans-serif" },
@@ -685,10 +864,14 @@
                     }
                 },
                 scales: {
-                    x: { grid: { display: false }, ticks: { maxTicksLimit: 12, maxRotation: 0 } },
+                    x: { 
+                        grid: { display: false }, 
+                        ticks: { maxTicksLimit: 12, maxRotation: 0, font: { family: "'DM Sans', sans-serif" } } 
+                    },
                     y: { 
-                        grid: gridOptions, 
+                        grid: { color: '#E8ECF2', drawBorder: false }, 
                         ticks: { 
+                            font: { family: "'DM Sans', sans-serif" },
                             callback: function(value) { 
                                 if (value >= 1000000 || value <= -1000000) {
                                     return '$' + (value / 1000000).toFixed(1) + 'M';
@@ -757,7 +940,7 @@
             slider.value = safeValue;
         }
 
-        function syncBaseSec() {
+        window.syncBaseSec = function() {
             const value = parseFloat(document.getElementById('secValue').value);
             if (!simulationMode) {
                 setSimulationValue('simSecValue', 'simSecValueSlider', Number.isFinite(value) ? value : 0);
@@ -766,7 +949,7 @@
             calculate();
         }
 
-        function syncBaseBorrow() {
+        window.syncBaseBorrow = function() {
             const value = parseFloat(document.getElementById('borrowed').value);
             if (!simulationMode) {
                 setSimulationValue('simBorrowed', 'simBorrowedSlider', Number.isFinite(value) ? value : 0);
@@ -775,12 +958,12 @@
             calculate();
         }
 
-        function syncBaseGeneric() {
+        window.syncBaseGeneric = function() {
             saveBaseData();
             calculate();
         }
 
-        function syncSimSec(source) {
+        window.syncSimSec = function(source) {
             const slider = document.getElementById('simSecValueSlider');
             const num = document.getElementById('simSecValue');
             if (source === 'slider') num.value = slider.value;
@@ -792,7 +975,7 @@
             calculate();
         }
 
-        function syncSimBorrow(source) {
+        window.syncSimBorrow = function(source) {
             const slider = document.getElementById('simBorrowedSlider');
             const num = document.getElementById('simBorrowed');
             if (source === 'slider') num.value = slider.value;
@@ -804,12 +987,14 @@
             calculate();
         }
         
-        function applyScenario(scenario) {
+        window.applyScenario = function(scenario) {
             const baseSec = parseFloat(document.getElementById('secValue').value) || 0;
             const baseBorr = parseFloat(document.getElementById('borrowed').value) || 0;
             const currentMarginRate = parseFloat(document.getElementById('marginRate').value) || 0;
             const currentYieldRate = parseFloat(document.getElementById('yieldRate').value) || 0;
             
+            let isRateYieldScenario = false;
+
             if (scenario === 'crash') {
                 setSimulationValue('simSecValue', 'simSecValueSlider', baseSec * 0.8);
             } else if (scenario === 'rally') {
@@ -820,19 +1005,36 @@
                 setSimulationValue('simBorrowed', 'simBorrowedSlider', baseBorr * 0.5);
             } else if (scenario === 'rate_hike') {
                 document.getElementById('marginRate').value = (currentMarginRate + 1.5).toFixed(2);
+                flashElement('marginRate');
+                isRateYieldScenario = true;
             } else if (scenario === 'rate_cut') {
                 document.getElementById('marginRate').value = Math.max(0, currentMarginRate - 1.5).toFixed(2);
+                flashElement('marginRate');
+                isRateYieldScenario = true;
             } else if (scenario === 'yield_spike') {
                 document.getElementById('yieldRate').value = (currentYieldRate + 2.0).toFixed(2);
+                flashElement('yieldRate');
+                isRateYieldScenario = true;
             } else if (scenario === 'yield_drop') {
                 document.getElementById('yieldRate').value = Math.max(0, currentYieldRate - 2.0).toFixed(2);
+                flashElement('yieldRate');
+                isRateYieldScenario = true;
+            } else if (scenario === 'covid') {
+                setSimulationValue('simSecValue', 'simSecValueSlider', baseSec * 0.66);
+            } else if (scenario === 'gfc') {
+                setSimulationValue('simSecValue', 'simSecValueSlider', baseSec * 0.50);
             }
 
-            simulationMode = true;
+            if (isRateYieldScenario) {
+                flashElement('carryExplanation');
+            } else {
+                simulationMode = true;
+            }
+            
             calculate();
         }
 
-        function resetBaseData() {
+        window.resetBaseData = function() {
             document.getElementById('secValue').value = 100000;
             document.getElementById('monthlyContrib').value = 0;
             document.getElementById('cash').value = 0;
@@ -845,7 +1047,7 @@
             resetSimulation();
         }
 
-        function resetSimulation() {
+        window.resetSimulation = function() {
             const baseSec = document.getElementById('secValue').value;
             const baseBorr = document.getElementById('borrowed').value;
             
@@ -923,37 +1125,139 @@
             document.getElementById('outUtilWithdraw').innerText = fmtP(utilWithdraw * 100);
             document.getElementById('outUtilReinvest').innerText = fmtP(utilReinvest * 100);
             
+            const cushionCard = document.getElementById('cushionCard');
+            const innerGaugeCutout = document.getElementById('innerGaugeCutout');
+            const zoneIndicatorText = document.getElementById('zoneIndicatorText');
+            const healthIndicator = document.getElementById('healthIndicator');
             const outMaxDropLarge = document.getElementById('outMaxDropLarge');
             const outMaxDropDesc = document.getElementById('outMaxDropDesc');
-            const healthIndicator = document.getElementById('healthIndicator');
+            const gaugeActionText = document.getElementById('gaugeActionText');
+            const marginCallAlertBlock = document.getElementById('marginCallAlertBlock');
 
-            if (simExcess < 0) {
-                outMaxDropLarge.innerText = 'MARGIN CALL';
-                outMaxDropLarge.className = 'text-4xl font-bold font-["Roboto_Mono"] leading-none critical-val mt-5 text-center flash-margin-call';
-                outMaxDropDesc.innerHTML = 'Your account is currently in a <strong>margin call</strong>. Deposit cash or sell securities immediately.';
-                healthIndicator.style.transform = `translateX(-50%) rotate(-90deg)`;
-            } else if (simSecValue <= 0) {
-                outMaxDropLarge.innerText = 'N/A';
-                outMaxDropLarge.className = 'text-4xl font-bold font-["Roboto_Mono"] leading-none text-[#595959] mt-5 text-center';
-                outMaxDropDesc.innerHTML = 'You have no securities to drop in value.';
-                healthIndicator.style.transform = `translateX(-50%) rotate(-90deg)`;
-            } else if (maxDropPct >= 1) {
-                outMaxDropLarge.innerText = '100.0%';
-                outMaxDropLarge.className = 'text-4xl font-bold font-["Roboto_Mono"] leading-none good-val mt-5 text-center';
-                outMaxDropDesc.innerHTML = 'Your investments could drop <strong class="text-[var(--text-primary)]">100.00%</strong> to zero without facing a margin call.';
-                healthIndicator.style.transform = `translateX(-50%) rotate(90deg)`;
+            if (cushionCard) cushionCard.classList.remove('border-[#fca5a5]', 'shadow-[0_0_15px_rgba(239,68,68,0.2)]');
+            if (innerGaugeCutout) innerGaugeCutout.style.backgroundColor = '#fdfdfd';
+
+            if (document.getElementById('timelineDotCall')) document.getElementById('timelineDotCall').className = "timeline-dot";
+            if (document.getElementById('timelineDotGrace')) document.getElementById('timelineDotGrace').className = "timeline-dot";
+            if (document.getElementById('timelineDotLiq')) document.getElementById('timelineDotLiq').className = "timeline-dot";
+
+            let activeColor = '#00b5ae'; 
+
+            if (simSecValue <= 0) {
+                if (zoneIndicatorText) {
+                    zoneIndicatorText.innerText = 'N/A';
+                    zoneIndicatorText.className = "text-sm font-bold tracking-widest uppercase mb-3 font-['Poppins'] text-[#595959] text-center z-10";
+                }
+                if (outMaxDropLarge) {
+                    outMaxDropLarge.innerText = 'N/A';
+                    outMaxDropLarge.style.color = '#595959';
+                }
+                if (gaugeActionText) gaugeActionText.innerHTML = 'You have no securities to drop in value.';
+                if (outMaxDropDesc) outMaxDropDesc.innerHTML = '';
+                if (healthIndicator) healthIndicator.style.transform = `translateX(-50%) rotate(-90deg)`;
+                if (marginCallAlertBlock) marginCallAlertBlock.classList.add('hidden');
+            } else if (simExcess < 0) {
+                let isLiquidation = (simReqEquity > 0 && (simExcess / simReqEquity) <= -0.05);
+                activeColor = isLiquidation ? 'var(--color-critical)' : 'var(--color-danger)'; 
+                
+                if (zoneIndicatorText) {
+                    zoneIndicatorText.innerText = isLiquidation ? 'LIQUIDATION TRIGGERED' : 'MARGIN CALL ISSUED';
+                    let textColorClass = isLiquidation ? 'text-[var(--color-critical)]' : 'text-[var(--color-danger)]';
+                    zoneIndicatorText.className = `text-sm font-bold tracking-widest uppercase mb-3 font-['Poppins'] ${textColorClass} text-center z-10 flash-margin-call`;
+                }
+                
+                if (cushionCard) cushionCard.classList.add('border-[#fca5a5]', 'shadow-[0_0_15px_rgba(239,68,68,0.2)]');
+                if (innerGaugeCutout) innerGaugeCutout.style.backgroundColor = '#fef2f2'; 
+                
+                if (outMaxDropLarge) {
+                    outMaxDropLarge.innerText = 'CALL';
+                    outMaxDropLarge.style.color = activeColor;
+                }
+                
+                if (gaugeActionText) {
+                    gaugeActionText.innerHTML = isLiquidation 
+                        ? 'Grace period bypassed. Your broker is actively liquidating assets to meet margin requirements.'
+                        : 'A formal demand for capital has been issued. Deposit cash or sell securities before the grace period expires.';
+                }
+                
+                if (outMaxDropDesc) outMaxDropDesc.innerHTML = '';
+                
+                let deficitPct = Math.abs(simExcess / simReqEquity); 
+                let ratio = Math.max(0, (0.10 - deficitPct) / 0.10); 
+                let rotateDeg = -90 + (ratio * 45); 
+                if (healthIndicator) healthIndicator.style.transform = `translateX(-50%) rotate(${rotateDeg}deg)`;
+                
+                if (marginCallAlertBlock) marginCallAlertBlock.classList.remove('hidden');
+                
+                if (document.getElementById('timelineDotCall')) document.getElementById('timelineDotCall').className = "timeline-dot bg-[var(--color-danger)]";
+                if (document.getElementById('timelineDotGrace')) document.getElementById('timelineDotGrace').className = isLiquidation ? "timeline-dot bg-[var(--color-critical)]" : "timeline-dot bg-[var(--color-danger)] shadow-[0_0_0_1px_var(--color-danger)]";
+                if (document.getElementById('timelineDotLiq')) document.getElementById('timelineDotLiq').className = isLiquidation ? "timeline-dot bg-[var(--color-critical)] shadow-[0_0_0_1px_var(--color-critical)]" : "timeline-dot bg-[#e2e8f0]";
+                
+                const cashShortfall = Math.abs(simExcess);
+                const saleRequired = maintRatio > 0 ? (cashShortfall / maintRatio) : 0;
+                
+                if (document.getElementById('cureCashRequired')) document.getElementById('cureCashRequired').innerText = fmtCNoDecimals.format(cashShortfall);
+                if (document.getElementById('cureSaleRequired')) document.getElementById('cureSaleRequired').innerText = fmtCNoDecimals.format(saleRequired);
+                
+                const postLiqAssets = Math.max(0, simSecValue - saleRequired);
+                const postLiqDebt = Math.max(0, simBorrowed - saleRequired);
+                if (document.getElementById('liqCurrentAssets')) document.getElementById('liqCurrentAssets').innerText = fmtCNoDecimals.format(simSecValue);
+                if (document.getElementById('liqForcedSale')) document.getElementById('liqForcedSale').innerText = "-" + fmtCNoDecimals.format(saleRequired);
+                if (document.getElementById('liqRemainingAssets')) document.getElementById('liqRemainingAssets').innerText = fmtCNoDecimals.format(postLiqAssets);
+                if (document.getElementById('liqRemainingDebt')) document.getElementById('liqRemainingDebt').innerText = fmtCNoDecimals.format(postLiqDebt);
+
             } else {
+                if (marginCallAlertBlock) marginCallAlertBlock.classList.add('hidden');
+                
                 const pctText = fmtP(maxDropPct * 100);
                 const valText = fmtCNoDecimals.format(maxDropValue);
-                outMaxDropLarge.innerText = pctText;
-                outMaxDropLarge.className = 'text-4xl font-bold font-["Roboto_Mono"] leading-none mt-5 text-center ' + (maxDropPct >= 0.45 ? 'good-val' : maxDropPct >= 0.30 ? 'warn-val' : 'bad-val');
+                if (outMaxDropLarge) outMaxDropLarge.innerText = pctText;
+
+                if (maxDropPct >= 0.30) {
+                    activeColor = 'var(--color-success)'; 
+                    if (zoneIndicatorText) {
+                        zoneIndicatorText.innerText = 'OPTIMAL ZONE';
+                        zoneIndicatorText.className = "text-sm font-bold tracking-widest uppercase mb-3 font-['Poppins'] text-[var(--color-success)] text-center z-10";
+                    }
+                    if (gaugeActionText) gaugeActionText.innerHTML = 'Cushion is broad enough to withstand normal market volatility. All broker privileges are active.';
+                } else if (maxDropPct >= 0.15) {
+                    activeColor = 'var(--color-warning)'; 
+                    if (zoneIndicatorText) {
+                        zoneIndicatorText.innerText = 'RESTRICTED ZONE';
+                        zoneIndicatorText.className = "text-sm font-bold tracking-widest uppercase mb-3 font-['Poppins'] text-[var(--color-warning)] text-center z-10";
+                    }
+                    if (gaugeActionText) gaugeActionText.innerHTML = 'Margin expansion halted. No further cash withdrawals or margin purchases allowed.';
+                } else if (maxDropPct >= 0.05) {
+                    activeColor = 'var(--color-danger)'; 
+                    if (zoneIndicatorText) {
+                        zoneIndicatorText.innerText = 'WARNING ZONE';
+                        zoneIndicatorText.className = "text-sm font-bold tracking-widest uppercase mb-3 font-['Poppins'] text-[var(--color-danger)] text-center z-10";
+                    }
+                    if (gaugeActionText) gaugeActionText.innerHTML = 'Margin cushion is critically low. A formal margin call is imminent if the market drops further.';
+                } else {
+                    activeColor = 'var(--color-critical)'; 
+                    if (zoneIndicatorText) {
+                        zoneIndicatorText.innerText = 'DANGER ZONE';
+                        zoneIndicatorText.className = "text-sm font-bold tracking-widest uppercase mb-3 font-['Poppins'] text-[var(--color-critical)] text-center z-10";
+                    }
+                    if (gaugeActionText) gaugeActionText.innerHTML = 'A formal demand for capital is imminent. Deposit cash or deleverage immediately.';
+                }
                 
-                outMaxDropDesc.innerHTML = `The value of your current investments would have to drop <strong class="text-[var(--text-primary)]">${pctText}</strong> (<strong class="text-[var(--text-primary)]">${valText}</strong>) to face a margin call.`;
+                if (outMaxDropLarge) outMaxDropLarge.style.color = activeColor;
                 
+                if (outMaxDropDesc) {
+                    if (maxDropPct >= 1) {
+                        outMaxDropDesc.innerHTML = 'Your investments could drop <strong class="text-[var(--text-primary)]">100.00%</strong> to zero without facing a margin call.';
+                    } else {
+                        outMaxDropDesc.innerHTML = `Your portfolio would have to drop <strong class="text-[var(--text-primary)]">${pctText}</strong> (<strong class="text-[var(--text-primary)]">${valText}</strong>) to face a margin call.`;
+                    }
+                }
+
                 let indicatorPos = Math.min(Math.max(maxDropPct * 100, 0), 100);
                 if (isNaN(indicatorPos)) indicatorPos = 0;
-                const rotateDeg = (indicatorPos * 1.8) - 90;
-                healthIndicator.style.transform = `translateX(-50%) rotate(${rotateDeg}deg)`;
+                let rotateDeg = (indicatorPos * 1.8) - 90; 
+                
+                if (healthIndicator) healthIndicator.style.transform = `translateX(-50%) rotate(${rotateDeg}deg)`;
             }
 
             document.getElementById('outExcess').className = 'metric-value ' + (simExcess >= 0 ? 'good-val' : 'bad-val');
@@ -962,6 +1266,24 @@
             const marginP = fmtP(marginRate * 100);
             const spreadP = fmtP((yieldRate - marginRate) * 100);
             
+            let compExplanationText = "";
+            if (simSecValue <= 0) {
+                compExplanationText = `<strong>Understanding Your Leverage:</strong> You currently have no assets modeled in your portfolio. Adjust the sliders or inputs to visualize your capital structure.`;
+            } else if (simExcess >= 0) {
+                compExplanationText = `<strong>Understanding Your Leverage:</strong> Your total market position of <strong class="text-[#0d1728]">${fmtCNoDecimals.format(simSecValue + cash)}</strong> is funded by your <strong class="text-[#0d1728]">${fmtCNoDecimals.format(simEquity)}</strong> in equity and <strong class="text-[#ff7f50]">${fmtCNoDecimals.format(simBorrowed)}</strong> in margin debt. <br><br>
+                Your broker mandates that <strong class="text-[#2e809c]">${fmtCNoDecimals.format(simReqEquity)}</strong> of your equity remains locked as collateral (Maintenance Margin). The remaining <strong class="text-[#00b5ae]">${fmtCNoDecimals.format(simExcess)}</strong> is your <em>Usable Equity</em>. This acts as your safety cushion—if market drops wipe this out, you will face a margin call.`;
+            } else {
+                compExplanationText = `<strong>Understanding Your Leverage:</strong> Your total market position of <strong class="text-[#0d1728]">${fmtCNoDecimals.format(simSecValue + cash)}</strong> is funded by your <strong class="text-[#0d1728]">${fmtCNoDecimals.format(simEquity)}</strong> in equity and <strong class="text-[#ff7f50]">${fmtCNoDecimals.format(simBorrowed)}</strong> in margin debt. <br><br>
+                Your broker mandates that <strong class="text-[#2e809c]">${fmtCNoDecimals.format(simReqEquity)}</strong> of your equity remains locked as collateral. Because your equity has dropped below this threshold, your Usable Equity is completely depleted (<strong class="text-[var(--color-critical)]">${fmtCNoDecimals.format(simExcess)}</strong>), triggering an active margin call.`;
+            }
+            if (document.getElementById('compositionExplanation')) document.getElementById('compositionExplanation').innerHTML = compExplanationText;
+
+            // DYNAMIC LEVERAGE MECHANICS BLOCK
+            if (document.getElementById('eduMultiplier')) document.getElementById('eduMultiplier').innerText = multiplier > 0 ? multiplier.toFixed(2) + 'x' : '0.00x';
+            if (document.getElementById('eduMultiplierDollar')) document.getElementById('eduMultiplierDollar').innerText = multiplier > 0 ? '$' + multiplier.toFixed(2) : '$0.00';
+            if (document.getElementById('eduUtilW')) document.getElementById('eduUtilW').innerText = fmtP(utilWithdraw * 100);
+            if (document.getElementById('eduUtilR')) document.getElementById('eduUtilR').innerText = fmtP(utilReinvest * 100);
+
             let carryExplanationText = "";
             if (netCarry >= 0) {
                 carryExplanationText = `<strong>What is Net Carry?</strong> In layman's terms, Net Carry is the pure profit you keep after your investment income pays off your borrowing costs. <br><br>
@@ -970,25 +1292,24 @@
                 carryExplanationText = `<strong>What is Net Carry?</strong> In layman's terms, Net Carry is the net cash flow after your investment income pays off your borrowing costs. <br><br>
                 Currently, your debt costs <strong class="text-[#0d1728]">${marginP}</strong> while your assets only yield <strong class="text-[#0d1728]">${yieldP}</strong>, creating a negative spread of <strong class="text-[var(--color-critical)]">${spreadP}</strong>. This means your strategy is losing <strong class="text-[var(--color-critical)]">${fmtCNoDecimals.format(netCarry)}</strong> per year. You will need to inject fresh capital to cover the difference and maintain your margin health.`;
             }
-            document.getElementById('carryExplanation').innerHTML = carryExplanationText;
+            if (document.getElementById('carryExplanation')) document.getElementById('carryExplanation').innerHTML = carryExplanationText;
 
-            const dangerZoneText = document.getElementById('dangerZoneText');
             let isDanger = false;
-            
             if (simSecValue > 0 && isSimulating) {
-                if (simExcess <= 0 || maxDropPct < 0.30) {
+                if (simExcess < 0 || maxDropPct < 0.05) {
                     isDanger = true;
                 }
             }
 
             if (isDanger) {
-                dangerZoneText.classList.remove('hidden');
                 if (!dangerZonePlaying) {
-                    audioEl.play().catch(e => console.warn("Autoplay prevented by browser.", e));
+                    const playPromise = audioEl.play();
+                    if (playPromise !== undefined) {
+                        playPromise.catch(e => console.warn("Autoplay prevented.", e));
+                    }
                     dangerZonePlaying = true;
                 }
             } else {
-                dangerZoneText.classList.add('hidden');
                 if (dangerZonePlaying) {
                     audioEl.pause();
                     audioEl.currentTime = 0; 
@@ -997,60 +1318,67 @@
             }
 
             const visualExcess = Math.max(0, simExcess);
-            compChart.data.datasets[0].data = [simBorrowed, baseRequired, highMmrRequired, visualExcess];
-            
-            const highMmrPct = Math.max(0, maintRatio - 0.25);
-            compChart.data.labels[2] = `M1 High-MMR Req. (${fmtP(highMmrPct * 100)})`;
-            
-            if (!compChart.options.plugins) compChart.options.plugins = {};
-            compChart.options.plugins.centerText = {
-                portValue: fmtCNoDecimals.format(simSecValue + cash),
-                usableEquity: fmtCNoDecimals.format(simExcess), 
-                isMarginCall: simExcess < 0,
-                portfolioLabel: isSimulating ? 'Simulated Portfolio' : 'Base Portfolio'
-            };
-            compChart.update();
-
-            carryChart.data.datasets[0].data = [annualIncome, annualMarginCost, netCarry];
-            carryChart.update();
-
-            const projLabels = [];
-            const projAssets = [];
-            const projEquity = [];
-            const projDebt = [];
-
-            let targetDta = dta; 
-            if (targetDta >= 1 || targetDta < 0 || isNaN(targetDta)) targetDta = 0; 
-
-            let curEq = simEquity;
-
-            for (let i = 0; i <= 120; i++) {
-                projLabels.push('Month ' + i);
+            if (compChart && compChart.data && compChart.data.datasets[0]) {
+                compChart.data.datasets[0].data = [simBorrowed, baseRequired, highMmrRequired, visualExcess];
+                const highMmrPct = Math.max(0, maintRatio - 0.25);
+                compChart.data.labels[2] = `M1 High-MMR Req. (${fmtP(highMmrPct * 100)})`;
                 
-                let cAssets = curEq > 0 ? curEq / (1 - targetDta) : 0;
-                let cDebt = cAssets - curEq;
-                
-                projAssets.push(cAssets);
-                projEquity.push(curEq);
-                projDebt.push(cDebt);
-
-                let mYield = cAssets * (yieldRate / 12);
-                let mCost = cDebt * (marginRate / 12);
-                let mNet = mYield - mCost;
-                
-                curEq += mNet + monthlyContrib; 
-                if (curEq < 0) curEq = 0;
+                if (!compChart.options.plugins) compChart.options.plugins = {};
+                compChart.options.plugins.centerText = {
+                    portValue: fmtCNoDecimals.format(simSecValue + cash),
+                    usableEquity: fmtCNoDecimals.format(simExcess), 
+                    isMarginCall: isDanger,
+                    portfolioLabel: isSimulating ? 'Simulated Portfolio' : 'Base Portfolio'
+                };
+                compChart.update();
             }
 
-            projChart.data.labels = projLabels;
-            projChart.data.datasets[0].data = projAssets; 
-            projChart.data.datasets[1].data = projEquity; 
-            projChart.data.datasets[2].data = projDebt;   
-            projChart.update();
+            if (carryChart && carryChart.data && carryChart.data.datasets[0]) {
+                carryChart.data.datasets[0].data = [annualIncome, annualMarginCost, netCarry];
+                carryChart.update();
+            }
+
+            if (projChart && projChart.data) {
+                const projLabels = [];
+                const projAssets = [];
+                const projEquity = [];
+                const projDebt = [];
+
+                let targetDta = dta; 
+                if (targetDta >= 1 || targetDta < 0 || isNaN(targetDta)) targetDta = 0; 
+
+                let curEq = simEquity;
+
+                for (let i = 0; i <= 120; i++) {
+                    projLabels.push('Month ' + i);
+                    
+                    let cAssets = curEq > 0 ? curEq / (1 - targetDta) : 0;
+                    let cDebt = cAssets - curEq;
+                    
+                    projAssets.push(cAssets);
+                    projEquity.push(curEq);
+                    projDebt.push(cDebt);
+
+                    let mYield = cAssets * (yieldRate / 12);
+                    let mCost = cDebt * (marginRate / 12);
+                    let mNet = mYield - mCost;
+                    
+                    curEq += mNet + monthlyContrib; 
+                    if (curEq < 0) curEq = 0;
+                }
+
+                projChart.data.labels = projLabels;
+                projChart.data.datasets[0].data = projAssets; 
+                projChart.data.datasets[1].data = projEquity; 
+                projChart.data.datasets[2].data = projDebt;   
+                projChart.update();
+            }
         }
 
-        loadBaseData();
-        calculate();
+        window.onload = function() {
+            loadBaseData();
+            calculate();
+        };
     </script>
 </body>
 </html>
