@@ -1,7 +1,7 @@
 {
   "name": "Jose's Toolbox",
   "short_name": "Toolbox",
-  "start_url": "./",
+  "start_url": "./toolbox",
   "display": "standalone",
   "background_color": "#f4f6f9",
   "theme_color": "#1e293b",
