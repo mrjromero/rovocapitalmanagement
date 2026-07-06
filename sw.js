@@ -5,6 +5,7 @@ const ASSETS_TO_CACHE = [
     './icon-192.png',
     './icon-512.png'
     // You can add your tool URLs here later (e.g., './smart-transfer-workstation')
+    './toolbox'
 ];
 
 self.addEventListener('install', (event) => {
