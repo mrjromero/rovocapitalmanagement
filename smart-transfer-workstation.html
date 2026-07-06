@@ -301,6 +301,78 @@
             text-align: right;
         }
 
+        /* Detailed Portfolio Composition Chart Components */
+        .comp-container {
+            margin-top: 1.5rem;
+            margin-bottom: 1rem;
+            background-color: #fafafa;
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-dominant);
+        }
+
+        .comp-title {
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            margin-bottom: 0.75rem;
+            text-align: center;
+        }
+
+        .comp-bar {
+            display: flex;
+            height: 12px;
+            border-radius: 6px;
+            overflow: hidden;
+            background: var(--border-soft);
+            margin-bottom: 0.85rem;
+        }
+
+        .comp-segment {
+            transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .comp-legend {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            flex-wrap: nowrap;
+        }
+
+        .legend-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            gap: 0.2rem;
+            text-align: center;
+            flex: 1;
+        }
+
+        .legend-dot-label {
+            display: flex;
+            align-items: center;
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+        }
+
+        .legend-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 4px;
+        }
+
+        .legend-val {
+            font-family: 'Roboto Mono', monospace;
+            font-size: 0.8rem;
+            color: var(--text-main);
+        }
+
         /* Banner Displays */
         .derived-factor-banner {
             background-color: #edf1fb;
@@ -651,7 +723,7 @@
                 <div class="input-group">
                     <label for="cal-req-equity">Required Equity</label>
                     <div class="input-wrapper">
-                        <input type="text" id="cal-req-equity" value="$25,000">
+                        <input type="text" id="cal-req-equity" value="$30,000">
                     </div>
                 </div>
 
@@ -659,6 +731,34 @@
                     <label id="credit-limit-label" for="cal-credit-limit">Withdraw up to</label>
                     <div class="input-wrapper">
                         <input type="text" id="cal-credit-limit" value="$50,000">
+                    </div>
+                </div>
+
+                <div class="comp-container">
+                    <div class="comp-title">Portfolio Composition</div>
+                    <div class="comp-bar">
+                        <div id="comp-bar-borrowed" class="comp-segment" style="background-color: var(--accent-danger); width: 20%;"></div>
+                        <div id="comp-bar-base" class="comp-segment" style="background-color: var(--accent-blue); width: 25%;"></div>
+                        <div id="comp-bar-high" class="comp-segment" style="background-color: var(--accent-warning); width: 0%;"></div>
+                        <div id="comp-bar-excess" class="comp-segment" style="background-color: var(--accent-green); width: 55%;"></div>
+                    </div>
+                    <div class="comp-legend">
+                        <div class="legend-item">
+                            <span class="legend-dot-label"><span class="legend-dot" style="background-color: var(--accent-danger);"></span>Borrowed</span>
+                            <span class="legend-val" id="comp-val-borrowed">--</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-dot-label"><span class="legend-dot" style="background-color: var(--accent-blue);"></span>Base Req</span>
+                            <span class="legend-val" id="comp-val-base">--</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-dot-label"><span class="legend-dot" style="background-color: var(--accent-warning);"></span>High MMR</span>
+                            <span class="legend-val" id="comp-val-high">--</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-dot-label"><span class="legend-dot" style="background-color: var(--accent-green);"></span>Excess</span>
+                            <span class="legend-val" id="comp-val-excess">--</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -846,6 +946,16 @@
     const factorReadout = document.getElementById('factor-readout');
     const contextIndicator = document.getElementById('context-indicator');
     
+    // Portfolio Composition Variables
+    const compBarBorrowed = document.getElementById('comp-bar-borrowed');
+    const compBarBase = document.getElementById('comp-bar-base');
+    const compBarHigh = document.getElementById('comp-bar-high');
+    const compBarExcess = document.getElementById('comp-bar-excess');
+    const compValBorrowed = document.getElementById('comp-val-borrowed');
+    const compValBase = document.getElementById('comp-val-base');
+    const compValHigh = document.getElementById('comp-val-high');
+    const compValExcess = document.getElementById('comp-val-excess');
+
     const btnWithdraw = document.getElementById('mode-withdraw');
     const btnReinvest = document.getElementById('mode-reinvest');
     const btnResetDefaults = document.getElementById('reset-defaults-btn');
@@ -891,6 +1001,13 @@
         withdrawal: 50000.00,
         reinvestment: 65000.00
     };
+
+    // Helper: Compact Currency Formatter for the Legend
+    function formatCompactCurrency(val) {
+        if (val >= 1000000) return '$' + (val / 1000000).toFixed(2) + 'M';
+        if (val >= 1000) return '$' + (val / 1000).toFixed(1) + 'k';
+        return '$' + Math.round(val);
+    }
 
     // UI Input Auto-Mask Formatter Engine
     function formatInputField(input) {
@@ -975,6 +1092,41 @@
 
         if (!isNaN(creditLimit) && calCreditLimit.value !== '') {
             snapshotValues[activeMode] = creditLimit;
+        }
+
+        if (value > 0) {
+            // Render Portfolio Composition Chart
+            let baseReqVal = value * 0.25;
+            let highReqVal = 0;
+            
+            if (reqEquity > baseReqVal) {
+                highReqVal = reqEquity - baseReqVal;
+            } else {
+                baseReqVal = reqEquity; // Fallback if user types an MMR under 25%
+            }
+            
+            let excessVal = value - borrowed - reqEquity;
+            if (excessVal < 0) excessVal = 0;
+
+            // Handle normalization if account is in a severe margin call
+            let visualTotal = Math.max(value, borrowed + reqEquity);
+            
+            let pctBorrowed = (borrowed / visualTotal) * 100;
+            let pctBase = (baseReqVal / visualTotal) * 100;
+            let pctHigh = (highReqVal / visualTotal) * 100;
+            let pctExcess = (excessVal / visualTotal) * 100;
+
+            if (compBarBorrowed) {
+                compBarBorrowed.style.width = pctBorrowed + '%';
+                compBarBase.style.width = pctBase + '%';
+                compBarHigh.style.width = pctHigh + '%';
+                compBarExcess.style.width = pctExcess + '%';
+
+                compValBorrowed.textContent = formatCompactCurrency(borrowed);
+                compValBase.textContent = formatCompactCurrency(baseReqVal);
+                compValHigh.textContent = formatCompactCurrency(highReqVal);
+                compValExcess.textContent = formatCompactCurrency(excessVal);
+            }
         }
 
         if (value > 0 && !isNaN(creditLimit)) {
@@ -1394,7 +1546,7 @@
         
         calValue.value = "$100,000";
         calBorrowed.value = "$20,000";
-        calReqEquity.value = "$25,000";
+        calReqEquity.value = "$30,000";
         calCreditLimit.value = "$50,000";
         
         rangeFloorInput.value = "30";
