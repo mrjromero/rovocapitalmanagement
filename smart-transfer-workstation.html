@@ -317,8 +317,12 @@
             text-transform: uppercase;
             letter-spacing: 0.05em;
             color: var(--text-muted);
-            margin-bottom: 0.75rem;
-            text-align: center;
+            margin-bottom: 0.85rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-soft);
+            padding-bottom: 0.5rem;
         }
 
         .comp-bar {
@@ -408,7 +412,7 @@
             color: var(--accent-alert);
         }
 
-        /* Action Buttons Styles Restored */
+        /* Action Buttons */
         .reset-btn {
             background-color: transparent;
             border: 1px solid var(--border-dominant);
@@ -453,7 +457,7 @@
             background-color: rgba(27, 74, 123, 0.03);
         }
 
-        /* Premium Volatility Cushion Display Component Styles Restored */
+        /* Premium Volatility Cushion Display Component */
         .health-display-container {
             text-align: center;
             margin: 1.5rem 0 0.5rem 0;
@@ -735,7 +739,13 @@
                 </div>
 
                 <div class="comp-container">
-                    <div class="comp-title">Portfolio Composition</div>
+                    <div class="comp-title">
+                        <span style="display: flex; align-items: center; gap: 0.5rem;">
+                            <span>Portfolio Composition</span>
+                            <span id="comp-status-badge" class="status-badge status-live" style="font-size: 0.55rem; padding: 0.15rem 0.4rem;">Live Baseline</span>
+                        </span>
+                        <span style="font-family: 'Roboto Mono', monospace; font-size: 0.75rem; color: var(--text-muted);" id="comp-total-assets">Assets: $100,000</span>
+                    </div>
                     <div class="comp-bar">
                         <div id="comp-bar-borrowed" class="comp-segment" style="background-color: var(--accent-danger); width: 20%;"></div>
                         <div id="comp-bar-base" class="comp-segment" style="background-color: var(--accent-blue); width: 25%;"></div>
@@ -930,7 +940,9 @@
             </div>
         </div>
 
-    </div> <div class="legal-disclosure">
+    </div> 
+    
+    <div class="legal-disclosure">
         <p><strong>Purely Educational Sandbox Disclaimer (Potential for Errors):</strong> This software application is provided completely free of charge strictly as an experimental, mathematical modeling sandbox for personal informational, planning, and educational exploration. <strong>This tool has not been verified by certified financial compliance software and could contain logical, formatting, analytical, data-masking, or calculation errors.</strong> It does not link dynamically to any live stock market feeds, financial institutions, or the M1 Finance backend API network. All metrics, cushions, price anchors, and cash rules displayed are nothing more than automated calculations derived entirely from the data values you manually provide in Step 1.</p>
         <p><strong>No Financial Advice or Guarantee:</strong> The mathematical algorithms executed by this framework do not constitute specialized financial, investment, legal, or tax advisory services. Operating a collateralized leverage line or automated transfer matrix introduces extreme risk components—including sudden margin interest hikes, asset valuation contractions, and unexpected, absolute account liquidation parameters enforced by clearing brokers. Past positive carry performance matrices or historical asset distribution streams do not guarantee structural safety levels under future market contractions. You remain entirely and uniquely liable for auditing your own calculations, confirming your live maintenance equity rules directly inside your official portal, and managing all automated transfer rules safely.</p>
     </div>
@@ -955,6 +967,8 @@
     const compValBase = document.getElementById('comp-val-base');
     const compValHigh = document.getElementById('comp-val-high');
     const compValExcess = document.getElementById('comp-val-excess');
+    const compStatusBadge = document.getElementById('comp-status-badge');
+    const compTotalAssets = document.getElementById('comp-total-assets');
 
     const btnWithdraw = document.getElementById('mode-withdraw');
     const btnReinvest = document.getElementById('mode-reinvest');
@@ -1094,41 +1108,6 @@
             snapshotValues[activeMode] = creditLimit;
         }
 
-        if (value > 0) {
-            // Render Portfolio Composition Chart
-            let baseReqVal = value * 0.25;
-            let highReqVal = 0;
-            
-            if (reqEquity > baseReqVal) {
-                highReqVal = reqEquity - baseReqVal;
-            } else {
-                baseReqVal = reqEquity; // Fallback if user types an MMR under 25%
-            }
-            
-            let excessVal = value - borrowed - reqEquity;
-            if (excessVal < 0) excessVal = 0;
-
-            // Handle normalization if account is in a severe margin call
-            let visualTotal = Math.max(value, borrowed + reqEquity);
-            
-            let pctBorrowed = (borrowed / visualTotal) * 100;
-            let pctBase = (baseReqVal / visualTotal) * 100;
-            let pctHigh = (highReqVal / visualTotal) * 100;
-            let pctExcess = (excessVal / visualTotal) * 100;
-
-            if (compBarBorrowed) {
-                compBarBorrowed.style.width = pctBorrowed + '%';
-                compBarBase.style.width = pctBase + '%';
-                compBarHigh.style.width = pctHigh + '%';
-                compBarExcess.style.width = pctExcess + '%';
-
-                compValBorrowed.textContent = formatCompactCurrency(borrowed);
-                compValBase.textContent = formatCompactCurrency(baseReqVal);
-                compValHigh.textContent = formatCompactCurrency(highReqVal);
-                compValExcess.textContent = formatCompactCurrency(excessVal);
-            }
-        }
-
         if (value > 0 && !isNaN(creditLimit)) {
             calibrationFactor = creditLimit / value;
             
@@ -1236,6 +1215,56 @@
                     simulatedDebt = value * dta;
                     simulatedAssets = value;
                 }
+            }
+        }
+
+        // PORTFOLIO COMPOSITION VISUALIZER UPDATE
+        let activeAssets = isSimulated ? simulatedAssets : value;
+        let activeDebt = isSimulated ? simulatedDebt : borrowed;
+        let activeReqEquity = activeAssets * mmr;
+
+        let activeBaseReqVal = activeAssets * 0.25;
+        let activeHighReqVal = 0;
+        
+        if (activeReqEquity > activeBaseReqVal) {
+            activeHighReqVal = activeReqEquity - activeBaseReqVal;
+        } else {
+            activeBaseReqVal = activeReqEquity; // Fallback if user types an MMR under 25%
+        }
+        
+        let activeExcessVal = activeAssets - activeDebt - activeReqEquity;
+        if (activeExcessVal < 0) activeExcessVal = 0;
+
+        // Handle normalization if account is in a severe margin call
+        let visualTotal = Math.max(activeAssets, activeDebt + activeReqEquity);
+        
+        let pctBorrowed = (activeDebt / visualTotal) * 100;
+        let pctBase = (activeBaseReqVal / visualTotal) * 100;
+        let pctHigh = (activeHighReqVal / visualTotal) * 100;
+        let pctExcess = (activeExcessVal / visualTotal) * 100;
+
+        if (compBarBorrowed) {
+            compBarBorrowed.style.width = pctBorrowed + '%';
+            compBarBase.style.width = pctBase + '%';
+            compBarHigh.style.width = pctHigh + '%';
+            compBarExcess.style.width = pctExcess + '%';
+
+            compValBorrowed.textContent = formatCompactCurrency(activeDebt);
+            compValBase.textContent = formatCompactCurrency(activeBaseReqVal);
+            compValHigh.textContent = formatCompactCurrency(activeHighReqVal);
+            compValExcess.textContent = formatCompactCurrency(activeExcessVal);
+        }
+
+        if (compStatusBadge && compTotalAssets) {
+            const formattedAssets = '$' + activeAssets.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 2});
+            compTotalAssets.innerHTML = `Assets: <strong style="color: var(--text-main); font-size: 0.85rem;">${formattedAssets}</strong>`;
+
+            if (isSimulated) {
+                compStatusBadge.className = "status-badge status-simulated";
+                compStatusBadge.textContent = "Simulation";
+            } else {
+                compStatusBadge.className = "status-badge status-live";
+                compStatusBadge.textContent = "Live Baseline";
             }
         }
 
@@ -1584,4 +1613,3 @@
 
 </body>
 </html>
-
