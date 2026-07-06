@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jose's Toolbox</title>
+    <style>
+        :root {
+            --bg-color: #f4f6f9;
+            --sidebar-bg: #ffffff;
+            --card-bg: #1e293b;
+            --card-text-primary: #f8fafc;
+            --card-text-secondary: #94a3b8;
+            --accent-color: #0d9488;
+            --accent-hover: #0f766e;
+            --border-color: #e2e8f0;
+            --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: var(--font-family);
+            background-color: var(--bg-color);
+            color: #333;
+        }
+
+        /* Top Navigation Bar */
+        header {
+            background-color: var(--card-bg);
+            color: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .header-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--accent-color);
+        }
+
+        /* Main Layout */
+        .container {
+            display: flex;
+            max-width: 1400px;
+            margin: 30px auto;
+            padding: 0 20px;
+            gap: 30px;
+        }
+
+        /* Sidebar - Filters */
+        .sidebar {
+            width: 250px;
+            flex-shrink: 0;
+        }
+
+        .search-container {
+            margin-bottom: 25px;
+        }
+
+        .search-container input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background-color: white;
+            color: #333;
+            font-size: 1rem;
+            box-sizing: border-box;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .search-container input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .filter-section h3 {
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .filter-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .filter-list li {
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+        }
+
+        .filter-list input[type="checkbox"] {
+            margin-right: 10px;
+            width: 18px;
+            height: 18px;
+            accent-color: var(--accent-color);
+            cursor: pointer;
+        }
+
+        .filter-list label {
+            cursor: pointer;
+            font-size: 0.95rem;
+            color: #475569;
+        }
+
+        /* Main Content - Grid */
+        .main-content {
+            flex-grow: 1;
+        }
+
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 25px;
+        }
+
+        /* Tool Cards */
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+            text-decoration: none;
+            display: flex;
+            flex-direction: column;
+            cursor: pointer;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px rgba(0,0,0,0.2);
+        }
+
+        .card-image {
+            width: 100%;
+            height: 160px;
+            background-size: cover;
+            background-position: center;
+            border-bottom: 3px solid var(--accent-color);
+        }
+
+        .card-content {
+            padding: 20px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card-title {
+            color: var(--card-text-primary);
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin: 0 0 10px 0;
+        }
+
+        .card-description {
+            color: var(--card-text-secondary);
+            font-size: 0.9rem;
+            line-height: 1.5;
+            margin: 0;
+            flex-grow: 1;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            .sidebar {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-title">Jose's Toolbox</div>
+        </header>
+
+    <div class="container">
+        <aside class="sidebar">
+            <div class="search-container">
+                <input type="text" id="searchInput" placeholder="Search tools...">
+            </div>
+            
+            <div class="filter-section">
+                <h3>Filter by Category</h3>
+                <ul class="filter-list" id="categoryFilters">
+                    </ul>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <div class="tools-grid" id="toolsGrid">
+                </div>
+        </main>
+    </div>
+
+    <script>
+        // 1. Define the Tools Data
+        // SVGs are encoded as Data URIs for the thumbnails to keep the file standalone
+        const toolsData = [
+            {
+                id: 1,
+                title: "Smart Transfers Workstation",
+                category: "Automation",
+                description: "Automate dynamic rebalancing and margin utilization rules to optimize your capital structure.",
+                url: "smart-transfer-workstation.html",
+                // Sleek gear/circuit network SVG
+                thumbnail: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='200' viewBox='0 0 400 200'%3E%3Cdefs%3E%3ClinearGradient id='grad1' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%230f172a;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%230d9488;stop-opacity:1' /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='400' height='200' fill='url(%23grad1)'/%3E%3Ccircle cx='200' cy='100' r='40' fill='none' stroke='%2338bdf8' stroke-width='4' stroke-dasharray='10 5'/%3E%3Ccircle cx='200' cy='100' r='20' fill='%2338bdf8'/%3E%3Cpath d='M200 60 L200 20 M200 140 L200 180 M160 100 L120 100 M240 100 L280 100' stroke='%2338bdf8' stroke-width='4'/%3E%3Ccircle cx='120' cy='100' r='10' fill='%2338bdf8'/%3E%3Ccircle cx='280' cy='100' r='10' fill='%2338bdf8'/%3E%3C/svg%3E"
+            },
+            {
+                id: 2,
+                title: "Portfolio Visualizer",
+                category: "Education",
+                description: "Model growth, compounding curves, and stress-test your positive carry strategies.",
+                url: "portfolio-visualizer.html",
+                // Sleek upward trending chart SVG
+                thumbnail: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='200' viewBox='0 0 400 200'%3E%3Cdefs%3E%3ClinearGradient id='grad2' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%231e293b;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%230369a1;stop-opacity:1' /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='400' height='200' fill='url(%23grad2)'/%3E%3Cpath d='M50 160 L120 120 L180 140 L260 70 L350 40' fill='none' stroke='%2338bdf8' stroke-width='6' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='120' cy='120' r='6' fill='%23fff'/%3E%3Ccircle cx='180' cy='140' r='6' fill='%23fff'/%3E%3Ccircle cx='260' cy='70' r='6' fill='%23fff'/%3E%3Ccircle cx='350' cy='40' r='8' fill='%2338bdf8' stroke='%23fff' stroke-width='3'/%3E%3C/svg%3E"
+            }
+        ];
+
+        // 2. Extract unique categories for the sidebar
+        const categories = [...new Set(toolsData.map(tool => tool.category))].sort();
+
+        // 3. DOM Elements
+        const gridContainer = document.getElementById('toolsGrid');
+        const filterContainer = document.getElementById('categoryFilters');
+        const searchInput = document.getElementById('searchInput');
+
+        // 4. Initialize Application
+        function init() {
+            renderFilters();
+            renderTools();
+            setupEventListeners();
+        }
+
+        // 5. Render Filter Checkboxes
+        function renderFilters() {
+            categories.forEach(category => {
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    <input type="checkbox" id="cat-${category}" value="${category}" class="category-checkbox">
+                    <label for="cat-${category}">${category}</label>
+                `;
+                filterContainer.appendChild(li);
+            });
+        }
+
+        // 6. Render Tool Cards based on current filters and search
+        function renderTools() {
+            // Get active search query
+            const searchQuery = searchInput.value.toLowerCase().trim();
+
+            // Get active category checkboxes
+            const checkedBoxes = document.querySelectorAll('.category-checkbox:checked');
+            const activeCategories = Array.from(checkedBoxes).map(cb => cb.value);
+
+            // Filter the data
+            const filteredTools = toolsData.filter(tool => {
+                const matchesSearch = tool.title.toLowerCase().includes(searchQuery) || 
+                                      tool.description.toLowerCase().includes(searchQuery);
+                
+                // If no categories are selected, show all categories. Otherwise, match selected.
+                const matchesCategory = activeCategories.length === 0 || activeCategories.includes(tool.category);
+
+                return matchesSearch && matchesCategory;
+            });
+
+            // Clear current grid
+            gridContainer.innerHTML = '';
+
+            // Inject filtered cards
+            if(filteredTools.length === 0) {
+                gridContainer.innerHTML = `<p style="color: #64748b; font-style: italic;">No tools found matching your criteria.</p>`;
+                return;
+            }
+
+            filteredTools.forEach(tool => {
+                const card = document.createElement('a');
+                card.href = tool.url;
+                card.className = 'card';
+                card.innerHTML = `
+                    <div class="card-image" style="background-image: url('${tool.thumbnail}')"></div>
+                    <div class="card-content">
+                        <h2 class="card-title">${tool.title}</h2>
+                        <p class="card-description">${tool.description}</p>
+                    </div>
+                `;
+                gridContainer.appendChild(card);
+            });
+        }
+
+        // 7. Setup Event Listeners
+        function setupEventListeners() {
+            // Search Input
+            searchInput.addEventListener('input', renderTools);
+
+            // Checkboxes
+            const checkboxes = document.querySelectorAll('.category-checkbox');
+            checkboxes.forEach(cb => {
+                cb.addEventListener('change', renderTools);
+            });
+        }
+
+        // Run the app
+        init();
+    </script>
+</body>
+</html>
