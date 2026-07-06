@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Smart Transfer Rule Workstation</title>
     <style>
-        /* Typography Imports From Target Stylesheet  */
+        /* Typography Imports From Target Stylesheet */
         @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&family=Poppins:wght@400;500;600;700&family=Roboto+Mono:wght@400;500;600;700&display=swap');
 
         /* Embedded Variable Engine Context */
@@ -59,9 +59,33 @@
 
         /* App Main Top Branding Header */
         .app-header {
-            text-align: center;
+            text-align: left;
             margin-bottom: 0.5rem;
             padding: 0 0.5rem;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            text-decoration: none;
+            color: var(--accent-blue);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 1.25rem;
+            transition: color 0.2s ease, opacity 0.2s ease;
+            opacity: 0.85;
+        }
+
+        .back-link:hover {
+            color: var(--accent-green);
+            opacity: 1;
+        }
+
+        .back-link svg {
+            width: 16px;
+            height: 16px;
         }
 
         .app-header h1 {
@@ -680,6 +704,10 @@
 
 <div class="wrapper">
     <div class="app-header">
+        <a href="toolbox.html" class="back-link">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+            Back to Toolbox
+        </a>
         <h1>Smart Transfer Workstation</h1>
         <p>Smart Transfer Rule Settings and Risk Framework &amp; Simulator</p>
     </div>
