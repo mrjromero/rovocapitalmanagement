@@ -4,6 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Jose's Toolbox</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#1e293b">
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Toolbox">
+    <link rel="apple-touch-icon" href="icon-192.png">
+
     <style>
         :root {
             --bg-color: #f4f6f9;
@@ -176,6 +185,54 @@
             flex-grow: 1;
         }
 
+        /* PWA Install Banner Styles */
+        .pwa-banner {
+            display: none; /* Hidden by default */
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: var(--card-bg);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            z-index: 1000;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+            border: 1px solid var(--accent-color);
+        }
+        .pwa-banner.show {
+            display: block;
+            animation: slideUp 0.3s ease-out;
+        }
+        .pwa-btn {
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 10px;
+            width: 100%;
+        }
+        .pwa-close {
+            position: absolute;
+            top: 5px;
+            right: 10px;
+            background: none;
+            border: none;
+            color: var(--card-text-secondary);
+            font-size: 1.2rem;
+            cursor: pointer;
+        }
+        @keyframes slideUp {
+            from { bottom: -100px; opacity: 0; }
+            to { bottom: 20px; opacity: 1; }
+        }
+
         /* Responsive Design */
         @media (max-width: 768px) {
             .container {
@@ -189,9 +246,25 @@
 </head>
 <body>
 
+    <div id="androidInstallBanner" class="pwa-banner">
+        <button class="pwa-close" onclick="document.getElementById('androidInstallBanner').classList.remove('show')">×</button>
+        <div style="font-weight: bold; margin-bottom: 5px;">Install Jose's Toolbox</div>
+        <div style="font-size: 0.9rem; color: #94a3b8;">Add this app to your home screen for quick access.</div>
+        <button id="androidInstallBtn" class="pwa-btn">Install App</button>
+    </div>
+
+    <div id="iosInstallBanner" class="pwa-banner">
+        <button class="pwa-close" onclick="document.getElementById('iosInstallBanner').classList.remove('show')">×</button>
+        <div style="font-weight: bold; margin-bottom: 5px;">Install on iOS</div>
+        <div style="font-size: 0.9rem; color: #94a3b8;">
+            Tap the <b>Share</b> icon <svg width="15" height="15" viewBox="0 0 50 50" style="vertical-align: middle; fill: white;"><path d="M25,2 L12,16 L19,16 L19,34 L31,34 L31,16 L38,16 L25,2 Z M10,24 L10,48 L40,48 L40,24 L34,24 L34,42 L16,42 L16,24 L10,24 Z"/></svg> 
+            below and select <b>"Add to Home Screen"</b>.
+        </div>
+    </div>
+
     <header>
         <div class="header-title">Jose's Toolbox</div>
-        </header>
+    </header>
 
     <div class="container">
         <aside class="sidebar">
@@ -202,24 +275,24 @@
             <div class="filter-section">
                 <h3>Filter by Category</h3>
                 <ul class="filter-list" id="categoryFilters">
-                    </ul>
+                </ul>
             </div>
         </aside>
 
         <main class="main-content">
             <div class="tools-grid" id="toolsGrid">
-                </div>
+            </div>
         </main>
     </div>
 
     <script>
-        // 1. Define the Tools Data
+        // 1. Define the Tools Data (Typo corrected: 'Initial')
         const toolsData = [
             {
                 id: 1,
                 title: "Smart Transfers Workstation",
                 category: "Automation",
-                description: "Discover Inital Margin Smart Transfer rule boundaries to optimize your capital structure.",
+                description: "Discover Initial Margin Smart Transfer rule boundaries to optimize your capital structure.",
                 url: "smart-transfer-workstation",
                 thumbnail: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='200' viewBox='0 0 400 200'%3E%3Cdefs%3E%3ClinearGradient id='grad1' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%230f172a;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%230d9488;stop-opacity:1' /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='400' height='200' fill='url(%23grad1)'/%3E%3Ccircle cx='200' cy='100' r='40' fill='none' stroke='%2338bdf8' stroke-width='4' stroke-dasharray='10 5'/%3E%3Ccircle cx='200' cy='100' r='20' fill='%2338bdf8'/%3E%3Cpath d='M200 60 L200 20 M200 140 L200 180 M160 100 L120 100 M240 100 L280 100' stroke='%2338bdf8' stroke-width='4'/%3E%3Ccircle cx='120' cy='100' r='10' fill='%2338bdf8'/%3E%3Ccircle cx='280' cy='100' r='10' fill='%2338bdf8'/%3E%3C/svg%3E"
             },
@@ -309,6 +382,59 @@
 
         // Run the app
         init();
+
+        // --- PWA LOGIC ---
+        
+        // 1. Register Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('Service Worker registered'))
+                    .catch(err => console.log('Service Worker failure', err));
+            });
+        }
+
+        // 2. Android Logic: Catch the prompt and show custom button
+        let deferredPrompt;
+        const androidBanner = document.getElementById('androidInstallBanner');
+        const androidBtn = document.getElementById('androidInstallBtn');
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            // Prevent Chrome 67+ from automatically showing the prompt
+            e.preventDefault();
+            // Stash the event so it can be triggered later
+            deferredPrompt = e;
+            // Update UI to show the install banner
+            androidBanner.classList.add('show');
+        });
+
+        androidBtn.addEventListener('click', async () => {
+            androidBanner.classList.remove('show');
+            if (deferredPrompt) {
+                // Show the standard Android install prompt
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                console.log(`User response: ${outcome}`);
+                deferredPrompt = null;
+            }
+        });
+
+        // 3. iOS Logic: Detect Safari and show instructions
+        const isIos = () => {
+            const userAgent = window.navigator.userAgent.toLowerCase();
+            return /iphone|ipad|ipod/.test(userAgent);
+        };
+        // Detect if the app is already launched from the home screen
+        const isInStandaloneMode = () => ('standalone' in window.navigator) && (window.navigator.standalone);
+
+        if (isIos() && !isInStandaloneMode()) {
+            const iosBanner = document.getElementById('iosInstallBanner');
+            // Show banner after a slight delay so it doesn't jarringly load instantly
+            setTimeout(() => {
+                iosBanner.classList.add('show');
+            }, 1500);
+        }
+
     </script>
 </body>
 </html>
