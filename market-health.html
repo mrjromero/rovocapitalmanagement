@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daily Market Health Assessment Matrix</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --panel-bg: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --green: #10b981;
+            --yellow: #f59e0b;
+            --red: #ef4444;
+            --border: #334155;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h1 { margin-bottom: 5px; color: #fff; }
+        p { color: var(--text-muted); margin-top: 0; }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+
+        @media(min-width: 768px) {
+            .grid { grid-template-columns: 1fr 2fr; }
+        }
+
+        .card {
+            background: var(--panel-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 10px;
+            background: #0f172a;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: #fff;
+            box-sizing: border-box;
+            font-size: 1rem;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background 0.2s;
+        }
+
+        button:hover { background: #1d4ed8; }
+
+        .indicator-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px;
+            border-bottom: 1px solid var(--border);
+        }
+        .indicator-row:last-child { border-bottom: none; }
+
+        .badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+        }
+
+        .bg-green { background: rgba(16, 185, 129, 0.2); color: var(--green); border: 1px solid var(--green); }
+        .bg-yellow { background: rgba(245, 158, 11, 0.2); color: var(--yellow); border: 1px solid var(--yellow); }
+        .bg-red { background: rgba(239, 68, 68, 0.2); color: var(--red); border: 1px solid var(--red); }
+
+        .overall-box {
+            text-align: center;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Market Health Tracker</h1>
+        <p>End of Day Macro Indicator Assessment</p>
+    </header>
+
+    <div class="grid">
+        <div class="card">
+            <h3>EOD Data Input</h3>
+            <form id="marketForm">
+                <div class="form-group">
+                    <label for="spTrend">S&P 500 Trend</label>
+                    <select id="spTrend">
+                        <option value="above">Above 50-day MA (Bullish)</option>
+                        <option value="below">Below 50-day MA (Bearish)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="vixValue">VIX Level</label>
+                    <input type="number" id="vixValue" step="0.01" value="15.57">
+                </div>
+                <div class="form-group">
+                    <label for="fearGreed">Fear & Greed Index (0-100)</label>
+                    <input type="number" id="fearGreed" value="32">
+                </div>
+                <div class="form-group">
+                    <label for="treasury10y">10Y Treasury Action</label>
+                    <select id="treasury10y">
+                        <option value="stable">Stable / Decelerating Range</option>
+                        <option value="expanding">Aggressive Expansion (Yield Spike)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="oecdCli">OECD G20 CLI Level</label>
+                    <input type="number" id="oecdCli" step="0.01" value="100.67">
+                </div>
+                <button type="button" onclick="calculateMarketHealth()">Analyze Market</button>
+            </form>
+        </div>
+
+        <div class="card">
+            <h3>Assessment Matrix</h3>
+            <div id="matrixDisplay">
+                </div>
+            
+            <div id="overallResult" class="overall-box" style="display:none;"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function calculateMarketHealth() {
+        // 1. Gather Inputs
+        const spTrend = document.getElementById('spTrend').value;
+        const vix = parseFloat(document.getElementById('vixValue').value);
+        const fg = parseFloat(document.getElementById('fearGreed').value);
+        const t10y = document.getElementById('treasury10y').value;
+        const oecd = parseFloat(document.getElementById('oecdCli').value);
+
+        let scores = { green: 0, yellow: 0, red: 0 };
+        let outputHtml = '';
+
+        // Helper function to build display rows
+        function createRow(title, valueStr, rating) {
+            scores[rating]++;
+            const badgeClass = `bg-${rating}`;
+            return `
+                <div class="indicator-row">
+                    <div>
+                        <strong>${title}</strong><br>
+                        <small style="color: var(--text-muted)">Value: ${valueStr}</small>
+                    </div>
+                    <span class="badge ${badgeClass}">${rating}</span>
+                </div>
+            `;
+        }
+
+        // 2. Compute Ratings
+        // S&P 500
+        outputHtml += createRow('S&P 500 Trend', spTrend === 'above' ? 'Above 50 MA' : 'Below 50 MA', spTrend === 'above' ? 'green' : 'red');
+
+        // VIX
+        let vixRating = 'green';
+        if (vix >= 20 && vix < 30) vixRating = 'yellow';
+        else if (vix >= 30) vixRating = 'red';
+        outputHtml += createRow('Volatility Index (VIX)', vix, vixRating);
+
+        // Fear & Greed
+        let fgRating = 'green';
+        if (fg <= 45) fgRating = 'red'; // Fear / Extreme Fear
+        else if (fg > 45 && fg <= 55) fgRating = 'yellow'; // Neutral
+        outputHtml += createRow('Fear & Greed Index', fg, fgRating);
+
+        // 10Y Treasury
+        outputHtml += createRow('10Y Treasury Yield', t10y === 'stable' ? 'Contained' : 'Expanding Spikes', t10y === 'stable' ? 'green' : 'yellow');
+
+        // OECD G20 CLI
+        let oecdRating = 'red';
+        if (oecd >= 100) oecdRating = 'green';
+        else if (oecd >= 98.5 && oecd < 100) oecdRating = 'yellow';
+        outputHtml += createRow('OECD G20 CLI Level', oecd, oecdRating);
+
+        // Render Matrix
+        document.getElementById('matrixDisplay').innerHTML = outputHtml;
+
+        // 3. Overall Verdict Logic
+        const overallDiv = document.getElementById('overallResult');
+        overallDiv.style.display = 'block';
+
+        if (scores.red >= 2) {
+            overallDiv.className = 'overall-box bg-red';
+            overallDiv.innerHTML = `OVERALL VERDICT: RED (Risk-Off / Caution Required)`;
+        } else if (scores.green >= 4) {
+            overallDiv.className = 'overall-box bg-green';
+            overallDiv.innerHTML = `OVERALL VERDICT: GREEN (Healthy Structural Bull)`;
+        } else {
+            overallDiv.className = 'overall-box bg-yellow';
+            overallDiv.innerHTML = `OVERALL VERDICT: YELLOW (Cautious Bull / Divergence)`;
+        }
+    }
+
+    // Auto-run default values on mount
+    window.onload = calculateMarketHealth;
+</script>
+
+</body>
+</html>
