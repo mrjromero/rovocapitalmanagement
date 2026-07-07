@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Capital Flip Analyzer</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #F8FAFC;
+            --card-bg: #FFFFFF;
+            --primary-text: #1E293B;
+            --secondary-text: #64748B;
+            --brand-teal: #00BFA5;
+            --brand-teal-hover: #00A892;
+            --border-color: #E2E8F0;
+            --input-border: #D1D5DB;
+            --badge-optimal-bg: #EAB308;
+            --badge-optimal-text: #1E293B;
+            --font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            font-family: var(--font-family);
+            background-color: var(--bg-color);
+            color: var(--primary-text);
+            margin: 0;
+            padding: 2rem;
+            line-height: 1.5;
+        }
+
+        .header { margin-bottom: 2rem; }
+        .header a { color: var(--brand-teal); text-decoration: none; font-size: 0.875rem; font-weight: 600; }
+        .header h1 { margin: 0.5rem 0; font-size: 2rem; font-weight: 700; letter-spacing: -0.025em; }
+        .header p { color: var(--secondary-text); margin-top: 0; font-size: 1rem; }
+
+        .container { display: flex; gap: 2rem; max-width: 1280px; margin: 0 auto; }
+        .col { flex: 1; min-width: 0; }
+        .col-left { max-width: 400px; flex: 0 0 400px; }
+
+        @media (max-width: 900px) {
+            .container { flex-direction: column; }
+            .col-left { max-width: 100%; flex: auto; }
+            .metric-grid { grid-template-columns: 1fr !important; }
+            .metric-card { grid-column: 1 / -1 !important; }
+            .metric-card.full-width { flex-direction: column; text-align: center; gap: 1rem; }
+            .metric-card.full-width div { text-align: center !important; }
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--border-color);
+        }
+        
+        .card-tinted { background-color: #F1F5F9; border: 1px solid #E2E8F0; }
+
+        .card h2 { margin-top: 0; font-size: 1.25rem; font-weight: 700; }
+        .card h3 { margin-top: 0; font-size: 1.125rem; font-weight: 600; margin-bottom: 1rem; }
+        .card p.subtitle { color: var(--secondary-text); font-size: 0.875rem; margin-bottom: 1.5rem; margin-top: 0.25rem; }
+
+        .form-group { margin-bottom: 1.25rem; }
+        .form-group label { display: block; font-weight: 600; font-size: 0.875rem; margin-bottom: 0.5rem; color: var(--primary-text); }
+        .form-group input[type="text"], .form-group input[type="number"] {
+            width: 100%; padding: 0.75rem; border: 1px solid var(--input-border);
+            border-radius: 6px; font-size: 0.875rem; box-sizing: border-box;
+            font-family: var(--font-family); outline: none; transition: border-color 0.2s;
+        }
+        .form-group input:focus { border-color: var(--brand-teal); box-shadow: 0 0 0 2px rgba(0, 191, 165, 0.2); }
+        
+        .toggle-group {
+            display: flex; background: #F1F5F9; padding: 4px;
+            border-radius: 8px; margin-bottom: 1rem; border: 1px solid var(--border-color);
+        }
+        .toggle-btn {
+            flex: 1; text-align: center; padding: 0.5rem; cursor: pointer; 
+            border-radius: 6px; font-size: 0.8125rem; font-weight: 600;
+            color: var(--secondary-text); transition: all 0.2s ease;
+        }
+        .toggle-btn.active { background: var(--card-bg); box-shadow: var(--shadow-sm); color: var(--primary-text); }
+
+        .checkbox-group {
+            background: #F8FAFC; border: 1px solid var(--border-color); border-radius: 8px;
+            padding: 1.25rem; cursor: pointer; margin-bottom: 1.5rem; transition: all 0.2s ease;
+        }
+        .checkbox-group:hover { border-color: var(--brand-teal); }
+        .checkbox-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
+        .checkbox-header h4 { margin: 0; font-size: 0.875rem; font-weight: 700; }
+        .checkbox-header input[type="checkbox"] { width: 1.25rem; height: 1.25rem; cursor: pointer; accent-color: var(--brand-teal); }
+        .checkbox-group p { margin: 0; font-size: 0.75rem; color: var(--secondary-text); line-height: 1.4; }
+
+        .btn-calc {
+            width: 100%; background: var(--brand-teal); color: white; border: none; 
+            padding: 1rem; border-radius: 8px; font-size: 1rem; font-weight: 700; 
+            cursor: pointer; transition: background 0.2s; font-family: var(--font-family); 
+            margin-top: 1rem; box-shadow: var(--shadow-sm);
+        }
+        .btn-calc:hover { background: var(--brand-teal-hover); }
+
+        .results-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+        .results-header h2 { margin: 0; font-size: 1.5rem; font-weight: 700; }
+
+        .reinvest-indicator {
+            font-size: 0.8125rem; font-weight: 700; padding: 0.35rem 0.85rem;
+            border-radius: 999px; transition: all 0.2s ease;
+        }
+        .reinvest-indicator.on { background-color: #DCFCE7; color: #166534; }
+        .reinvest-indicator.off { background-color: #F1F5F9; color: var(--secondary-text); }
+        
+        .result-box {
+            background: #FFFFFF; border: 1px solid var(--border-color); box-shadow: var(--shadow-md);
+            border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem;
+        }
+        .bottleneck-tag { float: right; color: var(--brand-teal); font-size: 0.75rem; font-weight: 700; background: #ffedd5; color: #c2410c; padding: 0.25rem 0.5rem; border-radius: 4px; }
+
+        .line-item { display: flex; justify-content: space-between; margin-bottom: 0.75rem; font-size: 0.875rem; align-items: center;}
+        .line-item.sub { font-weight: 700; color: var(--primary-text); text-transform: uppercase; letter-spacing: 0.05em; font-size: 0.75rem; margin-bottom: 0.5rem; }
+        .divider { height: 1px; background: var(--border-color); margin: 1.5rem 0; position: relative; }
+        .deploy-badge {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: white; border: 1px solid var(--border-color); padding: 0.25rem 1rem;
+            border-radius: 999px; font-size: 0.75rem; color: var(--secondary-text); font-weight: 600;
+        }
+
+        .metric-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
+        .metric-card {
+            background: #FFFFFF; border: 1px solid var(--border-color); border-radius: 8px;
+            padding: 1.25rem; text-align: center; box-shadow: var(--shadow-sm);
+            grid-column: span 2; 
+        }
+        .metric-card.half-width { grid-column: span 3; } 
+        .metric-card.full-width { grid-column: 1 / -1; text-align: left; display: flex; justify-content: space-between; align-items: center; }
+        
+        .metric-title { font-weight: 600; font-size: 0.8125rem; color: var(--secondary-text); margin: 0 0 0.5rem 0; min-height: 2.5rem; }
+        .metric-value { font-size: 1.5rem; font-weight: 700; color: var(--primary-text); line-height: 1.2; margin-bottom: 0.25rem; }
+        .metric-context { font-size: 0.75rem; color: var(--secondary-text); display: block; margin-bottom: 0.75rem; min-height: 2.25rem; }
+        
+        .status-badge { 
+            display: inline-block; padding: 0.25rem 0.75rem; border-radius: 4px; 
+            font-size: 0.75rem; font-weight: 700;
+        }
+        .status-healthy { background: var(--brand-teal); color: #FFFFFF; }
+        .status-warning { background: var(--badge-optimal-bg); color: var(--badge-optimal-text); }
+        .status-alert { background: #EF4444; color: #FFFFFF; }
+
+        .desc-text { font-size: 0.75rem; color: var(--secondary-text); margin-top: 1rem; line-height: 1.4; }
+
+        .toggle-link {
+            display: inline-flex; align-items: center; gap: 0.5rem; color: var(--brand-teal);
+            font-weight: 600; font-size: 0.875rem; cursor: pointer; margin: 1rem 0; user-select: none;
+        }
+        .toggle-link:hover { text-decoration: underline; }
+        .toggle-link svg { width: 16px; height: 16px; transition: transform 0.2s; }
+        .toggle-link.open svg { transform: rotate(180deg); }
+        
+        .reference-tables { display: none; background: #FFFFFF; border: 1px solid var(--border-color); border-radius: 12px; padding: 1.5rem; margin-top: 1rem; box-shadow: var(--shadow-md); overflow-x: auto; }
+        .reference-tables.show { display: block; }
+        .reference-tables h2 { margin-top: 0; font-size: 1.25rem; }
+        .reference-tables h3 { font-size: 1rem; color: var(--primary-text); margin-top: 2rem; margin-bottom: 0.25rem; }
+        .reference-tables p { font-size: 0.875rem; color: var(--secondary-text); margin-top: 0; margin-bottom: 1rem; }
+        
+        table { width: 100%; border-collapse: collapse; font-size: 0.875rem; min-width: 600px; }
+        th { text-align: left; padding: 0.75rem; border-bottom: 2px solid var(--border-color); color: var(--secondary-text); font-weight: 600; }
+        td { padding: 0.75rem; border-bottom: 1px solid var(--border-color); vertical-align: top; }
+        tr:last-child td { border-bottom: none; }
+        td strong { color: var(--primary-text); }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <a href="toolbox">Back to Toolbox</a>
+    <h1>Capital Flip Analyzer</h1>
+    <p>Find out how much margin capital you can deploy within your guardrails.</p>
+</div>
+
+<div class="container">
+    <div class="col col-left">
+        <div class="card">
+            <h2>Step 1: Brokerage Info</h2>
+            <p class="subtitle">Enter current values from your brokerage account.</p>
+            
+            <div class="form-group">
+                <label>Total Account Value</label>
+                <input type="text" id="accValue" value="$100,000" onblur="formatField(this, 'currency')">
+            </div>
+            
+            <div class="form-group">
+                <label id="lblYield">Yield</label>
+                <input type="text" id="yield" value="10%" onblur="formatUnitField(this)">
+            </div>
+            
+            <div class="form-group">
+                <label>Total Margin Loan Balance</label>
+                <input type="text" id="loanBal" value="$25,000" onblur="formatField(this, 'currency')">
+            </div>
+            
+            <div class="form-group">
+                <label id="lblInterest">Margin Interest Rate</label>
+                <input type="text" id="interest" value="5.65%" onblur="formatUnitField(this)">
+            </div>
+
+            <div style="background: #F8FAFC; padding: 1.25rem; border-radius: 8px; border: 1px solid var(--border-color); margin-top: 1.5rem;">
+                <label style="display: block; font-weight: 600; font-size: 0.875rem; margin-bottom: 0.75rem;">Metric Type</label>
+                <div class="toggle-group">
+                    <div class="toggle-btn active" id="btnMetricReq" onclick="setMetricType('req')">Maintenance Requirement</div>
+                    <div class="toggle-btn" id="btnMetricMargin" onclick="setMetricType('margin')">Total Margin</div>
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label id="lblMaintReq">Maintenance Requirement</label>
+                    <input type="text" id="maintReq" value="$50,000" onblur="formatMaintField(this)">
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Step 2: Settings</h2>
+            <p class="subtitle">Define your target metrics and settings for your portfolio</p>
+            
+            <h4 style="margin-bottom: 1rem; font-size: 0.875rem; font-weight: 700;">Guardrails</h4>
+            <div class="form-group">
+                <label>Max DTA</label>
+                <input type="text" id="maxDTA" value="30%" onblur="formatField(this, 'percent')">
+            </div>
+            <div class="form-group">
+                <label>Minimum DSCR</label>
+                <input type="number" id="minDSCR" value="3.00" step="0.01" onblur="saveToCookies()">
+            </div>
+            <div class="form-group" style="margin-bottom: 1.5rem;">
+                <label>Max Margin Utilization</label>
+                <input type="text" id="maxMU" value="50%" onblur="formatField(this, 'percent')">
+            </div>
+
+            <div style="border: 1px solid var(--border-color); border-radius: 8px; margin-bottom: 1.5rem; background: #FFFFFF; overflow: hidden;">
+                <div onclick="toggleSettingsCard()" style="padding: 1rem 1.25rem; background: #F8FAFC; display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none;">
+                    <h4 style="margin: 0; font-size: 0.875rem; font-weight: 700; color: var(--primary-text);">Settings</h4>
+                    <svg id="settingsCardIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px; transition: transform 0.2s;"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                </div>
+                
+                <div id="settingsCardContent" style="display: none; padding: 1.25rem; border-top: 1px solid var(--border-color);">
+                    <div class="checkbox-group" onclick="document.getElementById('reinvest').click()" style="margin-bottom: 1.5rem;">
+                        <div class="checkbox-header">
+                            <h4>Reinvest Funds</h4>
+                            <input type="checkbox" id="reinvest" checked onclick="event.stopPropagation(); updateReinvestLabel();">
+                        </div>
+                        <p id="reinvestSubtext">Margin-drawn funds are reinvested to compound inside the system.</p>
+                    </div>
+
+                    <div style="background: #F8FAFC; padding: 1.25rem; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 0;">
+                        <h4 style="margin: 0 0 0.25rem 0; font-size: 0.875rem;">Global Units Setting</h4>
+                        <p style="font-size: 0.75rem; color: var(--secondary-text); margin-top: 0; margin-bottom: 1rem;">Applies to Interest and Yield</p>
+                        <div class="toggle-group" style="margin-bottom: 1rem;">
+                            <div class="toggle-btn active" id="btnUnitPct" onclick="setGlobalUnits('pct')">Percent (%)</div>
+                            <div class="toggle-btn" id="btnUnitDol" onclick="setGlobalUnits('dol')">Dollars ($)</div>
+                        </div>
+                        <p id="lblUnitHelper" style="font-size: 0.75rem; color: var(--secondary-text); margin: 0;">
+                            When <span style="font-weight:600; color:var(--primary-text);">Percent (%)</span> is selected:<br>
+                            Inputs for Interest and Yield will be Margin Interest Rate (%) and Yield (%).
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <h4 style="margin-bottom: 0.75rem; font-size: 0.875rem; font-weight: 700;">Optional: Contribution</h4>
+            <div class="form-group" style="margin-bottom: 0;">
+                <label>Contribution / New Capital</label>
+                <input type="text" id="contribution" value="$0" onblur="formatField(this, 'currency')">
+                <p style="font-size: 0.75rem; color: var(--secondary-text); margin-top: 0.5rem; margin-bottom: 0;">Monthly contribution or new capital</p>
+            </div>
+
+            <button class="btn-calc" onclick="calculate()">Calculate Optimal Results</button>
+        </div>
+    </div>
+
+    <div class="col">
+        <div class="results-header">
+            <h2>Your Capital Flip Results</h2>
+            <span class="reinvest-indicator on" id="reinvestLabel">● Margin reinvestment: on</span>
+        </div>
+
+        <div class="result-box">
+            <h3 style="margin-top: 0; margin-bottom: 0.25rem; font-size: 1.125rem;">Calculated Capital Flip <span class="bottleneck-tag" id="outBottleneck">Bottleneck: Max DTA</span></h3>
+            <p style="font-size: 0.875rem; color: var(--secondary-text); margin-top: 0; margin-bottom: 1.5rem;">Suggested capital allocation based on your balance and guardrails.</p>
+
+            <div class="line-item sub"><span>SOURCES</span><span>TOTAL</span></div>
+            <div class="line-item" style="margin-bottom: -10px;">
+                <span style="font-size: 0.8125rem; color: var(--secondary-text);">Capital entering this cycle</span>
+                <span style="font-size: 1.5rem; font-weight: 700; color: var(--primary-text);" id="outTotalSources">$10,332</span>
+            </div>
+            <div class="divider"></div>
+            <div class="line-item"><span>Max Draw <span style="font-size: 0.65rem; padding: 2px 6px; background:#F1F5F9; color: var(--secondary-text); border-radius: 4px; margin-left: 4px;">Calculated</span></span><span id="outMaxDraw" style="color: var(--secondary-text);">$10,332</span></div>
+            <div class="line-item"><span>Contribution <span style="font-size: 0.65rem; padding: 2px 6px; background:#F1F5F9; color: var(--secondary-text); border-radius: 4px; margin-left: 4px;">Your Input</span></span><span id="outContribution" style="color: var(--secondary-text);">$0</span></div>
+
+            <div class="divider"><div class="deploy-badge">↓ Deploy</div></div>
+
+            <div class="line-item sub"><span>USES</span><span>TOTAL</span></div>
+            <div class="line-item" style="margin-bottom: -10px;">
+                <span style="font-size: 0.8125rem; color: var(--secondary-text);">Where the capital is deployed</span>
+                <span style="font-size: 1.5rem; font-weight: 700; color: var(--primary-text);" id="outTotalUses">$10,332</span>
+            </div>
+            <div class="divider"></div>
+            <div class="line-item"><span>Buy Assets</span><span id="outBuyAssets" style="color: var(--secondary-text);">$10,332</span></div>
+            <div class="line-item"><span>Pay Down Debt</span><span id="outPayDownDebt" style="color: var(--secondary-text);">$0</span></div>
+        </div>
+
+        <div class="card">
+            <h3>Current Margin Analysis</h3>
+            <div class="metric-grid">
+                <div class="metric-card full-width" style="background: var(--bg-color); border: 1px solid var(--border-color);">
+                    <div>
+                        <p class="metric-title" style="color: var(--primary-text); font-size: 1rem;">Calculated Max DTA</p>
+                        <p style="margin: 0; font-size: 0.75rem; color: var(--secondary-text);">This is your portfolio's calculated Max DTA based on its current structure and margin utilization</p>
+                    </div>
+                    <div style="text-align: right;">
+                        <span style="font-size: 1.75rem; font-weight: 700;" id="outCalcMaxDTA">35%</span>
+                        <span style="font-size: 0.875rem; color: var(--secondary-text); display: block;">current</span>
+                    </div>
+                </div>
+
+                <div class="metric-card half-width">
+                    <p class="metric-title">DTA (Debt To Asset Ratio)</p>
+                    <div class="metric-value" id="currDTA">24%</div>
+                    <span class="metric-context">current</span>
+                    <span class="status-badge status-healthy" id="currDTAStatus">Healthy</span>
+                </div>
+                
+                <div class="metric-card half-width">
+                    <p class="metric-title">DSCR (Debt Service Coverage Ratio)</p>
+                    <div class="metric-value" id="currDSCR">17.73</div>
+                    <span class="metric-context">current</span>
+                    <span class="status-badge status-healthy" id="currDSCRStatus">Healthy</span>
+                </div>
+
+                <div class="metric-card">
+                    <p class="metric-title">Margin Utilization</p>
+                    <div class="metric-value" id="currMU">35%</div>
+                    <span class="metric-context">current</span>
+                    <span class="status-badge status-healthy" id="currMUStatus">Low Utilization</span>
+                    <p class="desc-text" id="currMUDesc">Ample liquidity and borrowing capacity. Ideal for flexibility and compounding safety.</p>
+                </div>
+
+                <div class="metric-card">
+                    <p class="metric-title">Implied Maintenance Ratio</p>
+                    <div class="metric-value" id="currMaint">30%</div>
+                    <span class="metric-context">current</span>
+                    <span class="status-badge status-healthy" id="currMaintStatus">Optimal Efficiency</span>
+                    <p class="desc-text" id="currMaintDesc">Securities are highly margin-efficient — ideal foundation for leverage and capital growth.</p>
+                </div>
+
+                <div class="metric-card">
+                    <p class="metric-title">Maximum Value Drop</p>
+                    <div class="metric-value" id="currDrop">65%</div>
+                    <span class="metric-context">current</span>
+                    <span class="status-badge status-healthy" id="currDropStatus">Strong</span>
+                    <p class="desc-text" id="currDropDesc">Your portfolio can decline significantly before reaching the broker's maintenance limit.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="card card-tinted">
+            <h3>Future Balance Sheet</h3>
+            <div class="metric-grid" style="margin-bottom: 0;">
+                <div class="metric-card">
+                    <p class="metric-title">Asset Value</p>
+                    <div class="metric-value" id="futAsset">$100,000</div>
+                    <span class="metric-context">adjusted<br>vs current <span id="futAssetRef">$100,000</span></span>
+                </div>
+
+                <div class="metric-card">
+                    <p class="metric-title">Debt Value</p>
+                    <div class="metric-value" id="futDebt">$56,034</div>
+                    <span class="metric-context">adjusted<br>vs current <span id="futDebtRef">$25,000</span></span>
+                </div>
+
+                <div class="metric-card">
+                    <p class="metric-title">Maximum Value Drop</p>
+                    <div class="metric-value" id="futDrop">57%</div>
+                    <span class="metric-context">adjusted<br>vs current <span id="futDropRef">65%</span></span>
+                    <span class="status-badge status-healthy" id="futDropStatus">Strong</span>
+                    <p class="desc-text" id="futDropDesc">Your portfolio can decline significantly before reaching the broker's maintenance limit.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>Impact on Guardrails</h3>
+            <div class="metric-grid" style="margin-bottom: 0;">
+                <div class="metric-card">
+                    <p class="metric-title">DTA (Debt To Asset Ratio)</p>
+                    <div class="metric-value" id="futDTA">30%</div>
+                    <span class="metric-context">after actions<br>vs current <span id="futDTARef">24%</span> DTA</span>
+                    <span class="status-badge status-healthy" id="futDTAStatus">Healthy</span>
+                </div>
+
+                <div class="metric-card">
+                    <p class="metric-title">DSCR (Debt Service Coverage Ratio)</p>
+                    <div class="metric-value" id="futDSCR">14.46</div>
+                    <span class="metric-context">after actions<br>vs current <span id="futDSCRRef">17.73</span> DSCR</span>
+                    <span class="status-badge status-healthy" id="futDSCRStatus">Healthy</span>
+                </div>
+
+                <div class="metric-card">
+                    <p class="metric-title">Margin Utilization</p>
+                    <div class="metric-value" id="futMU">43%</div>
+                    <span class="metric-context">after actions<br>vs current <span id="futMURef">35%</span> utilization</span>
+                    <span class="status-badge status-warning" id="futMUStatus">Optimal Utilization</span>
+                    <p class="desc-text" style="margin-bottom: 0;">Capital is actively working but still within a low risk cushion. Monitor regularly.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div style="text-align: center; margin-bottom: 2rem;">
+            <div class="toggle-link" id="toggleTablesBtn" onclick="toggleTables()">
+                <span id="toggleTablesText">Show guardrails reference tables</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </div>
+            
+            <div class="reference-tables" id="referenceTables">
+                <h2>Guardrail Reference Tables</h2>
+                
+                <h3>Margin Utilization</h3>
+                <p>Portion of the maximum margin amount that is currently in use.</p>
+                <table>
+                    <tr><th>Lower</th><th>Upper</th><th>Status</th><th>Interpretation</th></tr>
+                    <tr><td>&ge; 0%</td><td>&lt; 40%</td><td style="color: var(--brand-teal); font-weight: 700;">Low Utilization</td><td><strong>Conservative:</strong> Ample liquidity and borrowing capacity. Ideal for flexibility and compounding safety.</td></tr>
+                    <tr><td>&ge; 40%</td><td>&lt; 60%</td><td style="color: var(--badge-optimal-bg); font-weight: 700;">Optimal Utilization</td><td><strong>Balanced:</strong> Capital is actively working but still within a low risk cushion. Monitor regularly.</td></tr>
+                    <tr><td>&ge; 60%</td><td>&lt; 80%</td><td style="color: #F59E0B; font-weight: 700;">Warning</td><td><strong>High Leverage:</strong> Growth slowing — consider reducing exposure or adding equity.</td></tr>
+                    <tr><td>&ge; 80%</td><td>&lt; 100%</td><td style="color: #EF4444; font-weight: 700;">Critical</td><td><strong>Over Leveraged:</strong> Elevated risk of margin call or forced liquidation — immediate action recommended.</td></tr>
+                </table>
+
+                <h3>Implied Maintenance Ratio</h3>
+                <p>Calculated composite maintenance requirement ratio based on current portfolio holdings.</p>
+                <table>
+                    <tr><th>Lower</th><th>Upper</th><th>Status</th><th>Interpretation</th></tr>
+                    <tr><td>&ge; 0%</td><td>&lt; 35%</td><td style="color: var(--brand-teal); font-weight: 700;">Optimal Efficiency</td><td><strong>Excellent portfolio design:</strong> Securities are highly margin-efficient — ideal foundation for leverage and capital growth.</td></tr>
+                    <tr><td>&ge; 35%</td><td>&lt; 50%</td><td style="color: var(--brand-teal); font-weight: 700;">Good</td><td><strong>Well-structured portfolio:</strong> Maintenance levels are still efficient, but review new additions for higher efficiency alternatives.</td></tr>
+                    <tr><td>&ge; 50%</td><td>&lt; 65%</td><td style="color: #F59E0B; font-weight: 700;">Moderate Efficiency</td><td><strong>Some inefficiencies present:</strong> Certain holdings may carry higher maintenance; review and rebalance toward lower-maintenance ETFs or funds.</td></tr>
+                    <tr><td>&ge; 65%</td><td>&lt; 80%</td><td style="color: #EF4444; font-weight: 700;">Low Efficiency</td><td><strong>Portfolio drag:</strong> Too many high-maintenance securities — consider replacing with margin-friendly ETFs to regain leverage flexibility.</td></tr>
+                    <tr><td>&ge; 80%</td><td>&lt; 100%</td><td style="color: #EF4444; font-weight: 700;">Inefficient Portfolio</td><td><strong>Extremely inefficient structure:</strong> Portfolio not suitable for leverage. Replace high-maintenance holdings (e.g., individual stocks, CEFs, or REITs) with more margin-efficient securities.</td></tr>
+                </table>
+
+                <h3>Market Drop</h3>
+                <p>Maximum loss in portfolio market value before a margin call.</p>
+                <table>
+                    <tr><th>Lower</th><th>Upper</th><th>Status</th><th>Interpretation</th></tr>
+                    <tr><td>&gt; 40%</td><td>&le; 100%</td><td style="color: var(--brand-teal); font-weight: 700;">Strong</td><td><strong>Strong cushion:</strong> Your portfolio can decline significantly before reaching the broker's maintenance limit.</td></tr>
+                    <tr><td>&gt; 20%</td><td>&le; 40%</td><td style="color: #F59E0B; font-weight: 700;">Moderate</td><td><strong>Moderate cushion:</strong> Your portfolio has some room to decline before reaching the broker's maintenance limit.</td></tr>
+                    <tr><td>&ge; 0%</td><td>&le; 20%</td><td style="color: #EF4444; font-weight: 700;">Tight</td><td><strong>Limited cushion:</strong> Your portfolio is close to the broker's maintenance limit — consider reducing margin.</td></tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let metricType = 'req'; 
+    let globalUnits = 'pct'; 
+
+    // --- Cookie Management Functions ---
+    function setCookie(name, value, days = 30) {
+        const d = new Date();
+        d.setTime(d.getTime() + (days * 24 * 60 * 60 * 1000));
+        let expires = "expires=" + d.toUTCString();
+        document.cookie = name + "=" + value + ";" + expires + ";path=/";
+    }
+
+    function getCookie(name) {
+        let cname = name + "=";
+        let decodedCookie = decodeURIComponent(document.cookie);
+        let ca = decodedCookie.split(';');
+        for(let i = 0; i < ca.length; i++) {
+            let c = ca[i];
+            while (c.charAt(0) == ' ') c = c.substring(1);
+            if (c.indexOf(cname) == 0) return c.substring(cname.length, c.length);
+        }
+        return "";
+    }
+
+    function saveToCookies() {
+        const inputs = ['accValue', 'yield', 'loanBal', 'interest', 'maintReq', 'maxDTA', 'minDSCR', 'maxMU', 'contribution'];
+        inputs.forEach(id => {
+            setCookie('cf_' + id, document.getElementById(id).value);
+        });
+        setCookie('cf_reinvest', document.getElementById('reinvest').checked);
+        setCookie('cf_metricType', metricType);
+        setCookie('cf_globalUnits', globalUnits);
+    }
+
+    function loadFromCookies() {
+        const inputs = ['accValue', 'yield', 'loanBal', 'interest', 'maintReq', 'maxDTA', 'minDSCR', 'maxMU', 'contribution'];
+        inputs.forEach(id => {
+            const val = getCookie('cf_' + id);
+            if (val) document.getElementById(id).value = val;
+        });
+
+        const reinvest = getCookie('cf_reinvest');
+        if (reinvest !== "") {
+            document.getElementById('reinvest').checked = (reinvest === 'true');
+            updateReinvestLabel();
+        }
+
+        const savedMetricType = getCookie('cf_metricType');
+        if (savedMetricType) {
+            metricType = null; // Reset temporarily to force the UI update
+            setMetricType(savedMetricType, true);
+        }
+
+        const savedGlobalUnits = getCookie('cf_globalUnits');
+        if (savedGlobalUnits) {
+            globalUnits = null; // Reset temporarily to force the UI update
+            setGlobalUnits(savedGlobalUnits, true);
+        }
+    }
+    // ------------------------------------
+
+    function parseNum(val) { return parseFloat(val.toString().replace(/[$,%]/g, '')) || 0; }
+    
+    function fmtC(val) { 
+        return val < 0 
+            ? '-$' + Math.abs(val).toLocaleString('en-US', {maximumFractionDigits: 0}) 
+            : '$' + val.toLocaleString('en-US', {maximumFractionDigits: 0}); 
+    }
+    
+    function fmtP(val) { return Math.round(val * 100) + '%'; }
+    
+    function formatField(el, type) {
+        let val = parseNum(el.value);
+        el.value = type === 'currency' ? fmtC(val) : val + '%';
+        saveToCookies();
+    }
+
+    function formatUnitField(el) {
+        let val = parseNum(el.value);
+        el.value = globalUnits === 'pct' ? val + '%' : fmtC(val);
+        saveToCookies();
+    }
+
+    function formatMaintField(el) {
+        let val = parseNum(el.value);
+        el.value = fmtC(val); 
+        saveToCookies();
+    }
+
+    function toggleSettingsCard() {
+        const content = document.getElementById('settingsCardContent');
+        const icon = document.getElementById('settingsCardIcon');
+        
+        if (content.style.display === 'none' || content.style.display === '') {
+            content.style.display = 'block';
+            icon.style.transform = 'rotate(180deg)';
+        } else {
+            content.style.display = 'none';
+            icon.style.transform = 'rotate(0deg)';
+        }
+    }
+
+    function toggleTables() {
+        const btn = document.getElementById('toggleTablesBtn');
+        const text = document.getElementById('toggleTablesText');
+        const tables = document.getElementById('referenceTables');
+        
+        btn.classList.toggle('open');
+        tables.classList.toggle('show');
+        
+        if (tables.classList.contains('show')) {
+            text.innerText = 'Hide guardrails reference tables';
+        } else {
+            text.innerText = 'Show guardrails reference tables';
+        }
+    }
+
+    function setMetricType(type, preventCalc = false) {
+        if (metricType === type && !preventCalc) return; 
+        
+        let label = document.getElementById('lblMaintReq');
+        let input = document.getElementById('maintReq');
+
+        if (type === 'req') {
+            label.innerText = 'Maintenance Requirement';
+        } else {
+            label.innerText = 'Total Margin';
+        }
+
+        if (!preventCalc) {
+            let A = parseNum(document.getElementById('accValue').value) || 0;
+            let val = parseNum(input.value);
+            let newDol = A > 0 ? A - val : 0;
+            input.value = fmtC(newDol); 
+        }
+
+        metricType = type;
+        document.getElementById('btnMetricReq').classList.toggle('active', type === 'req');
+        document.getElementById('btnMetricMargin').classList.toggle('active', type === 'margin');
+        saveToCookies();
+    }
+
+    function setGlobalUnits(unit, preventCalc = false) {
+        if (globalUnits === unit && !preventCalc) return; 
+        
+        let inpYield = document.getElementById('yield');
+        let inpInt = document.getElementById('interest');
+
+        if (unit === 'pct') {
+            document.getElementById('lblYield').innerText = 'Yield';
+            document.getElementById('lblInterest').innerText = 'Margin Interest Rate';
+            document.getElementById('lblUnitHelper').innerHTML = 'When <span style="font-weight:600; color:var(--primary-text);">Percent (%)</span> is selected:<br>Inputs for Interest and Yield will be Margin Interest Rate (%) and Yield (%).';
+        } else {
+            document.getElementById('lblYield').innerText = 'Dividends';
+            document.getElementById('lblInterest').innerText = 'Margin Accrued Interest';
+            document.getElementById('lblUnitHelper').innerHTML = 'When <span style="font-weight:600; color:var(--primary-text);">Dollars ($)</span> is selected:<br>Inputs for Interest and Yield will be Margin Accrued Interest ($) and Dividends ($).';
+        }
+
+        if (!preventCalc) {
+            let A = parseNum(document.getElementById('accValue').value) || 0;
+            let L = parseNum(document.getElementById('loanBal').value) || 0;
+            let yVal = parseNum(inpYield.value);
+            let iVal = parseNum(inpInt.value); 
+
+            if (unit === 'pct') {
+                let yPct = A > 0 ? (yVal / A) * 100 : 0;
+                let iPct = L > 0 ? (iVal / L) * 100 : 0;
+                inpYield.value = yPct.toLocaleString('en-US', {maximumFractionDigits: 2}) + '%';
+                inpInt.value = iPct.toLocaleString('en-US', {maximumFractionDigits: 2}) + '%';
+            } else {
+                let yDol = (yVal / 100) * A;
+                let iDol = (iVal / 100) * L;
+                inpYield.value = fmtC(yDol);
+                inpInt.value = fmtC(iDol);
+            }
+        }
+        
+        globalUnits = unit;
+        document.getElementById('btnUnitPct').classList.toggle('active', unit === 'pct');
+        document.getElementById('btnUnitDol').classList.toggle('active', unit === 'dol');
+        saveToCookies();
+    }
+
+    function updateReinvestLabel() {
+        const isReinvest = document.getElementById('reinvest').checked;
+        const subtext = document.getElementById('reinvestSubtext');
+        const headerLabel = document.getElementById('reinvestLabel');
+
+        if(isReinvest) {
+            subtext.innerText = 'Margin-drawn funds are reinvested to compound inside the system.';
+            headerLabel.innerText = '● Margin reinvestment: on';
+            headerLabel.className = 'reinvest-indicator on';
+        } else {
+            subtext.innerText = 'Margin-drawn funds are withdrawn as cash and leave the system.';
+            headerLabel.innerText = '● Margin reinvestment: off';
+            headerLabel.className = 'reinvest-indicator off';
+        }
+        saveToCookies();
+    }
+
+    function setStatus(el, val, type) {
+        let label = '', cls = 'status-healthy', desc = '';
+        
+        if (type === 'mu') {
+            if (val < 0.40) { label = 'Low Utilization'; cls = 'status-healthy'; desc = 'Ample liquidity and borrowing capacity. Ideal for flexibility and compounding safety.'; }
+            else if (val < 0.60) { label = 'Optimal Utilization'; cls = 'status-warning'; desc = 'Capital is actively working but still within a low risk cushion. Monitor regularly.'; }
+            else if (val < 0.80) { label = 'Warning'; cls = 'status-warning'; desc = 'Growth slowing — consider reducing exposure or adding equity.'; }
+            else { label = 'Critical'; cls = 'status-alert'; desc = 'Elevated risk of margin call or forced liquidation — immediate action recommended.'; }
+        } else if (type === 'maint') {
+            if (val < 0.35) { label = 'Optimal Efficiency'; cls = 'status-healthy'; desc = 'Securities are highly margin-efficient — ideal foundation for leverage and capital growth.'; }
+            else if (val < 0.50) { label = 'Good'; cls = 'status-healthy'; desc = 'Well-structured portfolio: Maintenance levels are still efficient, but review new additions for higher efficiency alternatives.'; }
+            else if (val < 0.65) { label = 'Moderate Efficiency'; cls = 'status-warning'; desc = 'Certain holdings may carry higher maintenance; review and rebalance toward lower-maintenance ETFs or funds.'; }
+            else if (val < 0.80) { label = 'Low Efficiency'; cls = 'status-alert'; desc = 'Portfolio drag: Too many high-maintenance securities — consider replacing with margin-friendly ETFs to regain leverage flexibility.'; }
+            else { label = 'Inefficient Portfolio'; cls = 'status-alert'; desc = 'Extremely inefficient structure: Portfolio not suitable for leverage. Replace high-maintenance holdings (e.g., individual stocks, CEFs, or REITs) with more margin-efficient securities.'; }
+        } else if (type === 'drop') {
+            if (val > 0.40) { label = 'Strong'; cls = 'status-healthy'; desc = 'Your portfolio can decline significantly before reaching the broker\'s maintenance limit.'; }
+            else if (val > 0.20) { label = 'Moderate'; cls = 'status-warning'; desc = 'Your portfolio has some room to decline before reaching the broker\'s maintenance limit.'; }
+            else { label = 'Tight'; cls = 'status-alert'; desc = 'Limited cushion: Your portfolio is close to the broker\'s maintenance limit — consider reducing margin.'; }
+        }
+
+        let badge = document.getElementById(el + 'Status');
+        if(badge) {
+            badge.innerText = label;
+            badge.className = 'status-badge ' + cls;
+        }
+        let descEl = document.getElementById(el + 'Desc');
+        if(descEl) descEl.innerText = desc;
+    }
+
+    function calculate() {
+        let A = parseNum(document.getElementById('accValue').value);
+        let L = parseNum(document.getElementById('loanBal').value);
+        let reinvest = document.getElementById('reinvest').checked;
+        let C = parseNum(document.getElementById('contribution').value);
+        let g_DTA = parseNum(document.getElementById('maxDTA').value) / 100;
+        let g_DSCR = parseFloat(document.getElementById('minDSCR').value);
+        let g_MU = parseNum(document.getElementById('maxMU').value) / 100;
+
+        let Y_raw = parseNum(document.getElementById('yield').value);
+        let I_raw = parseNum(document.getElementById('interest').value);
+        let Y = globalUnits === 'pct' ? (Y_raw / 100) : (A > 0 ? Y_raw / A : 0);
+        let I = globalUnits === 'pct' ? (I_raw / 100) : (L > 0 ? I_raw / L : 0);
+
+        let m_raw = parseNum(document.getElementById('maintReq').value);
+        
+        let m = 0;
+        if (metricType === 'req') {
+            m = A > 0 ? (m_raw / A) : 0; 
+        } else {
+            m = A > 0 ? ((A - m_raw) / A) : 0; 
+        }
+
+        if (m < 0) m = 0;
+        if (m > 1) m = 1;
+
+        let A_base = A + C;
+        let curr_DTA = L / A;
+        let curr_DSCR = (L > 0 && I > 0) ? (A * Y) / (L * I) : Infinity;
+        let curr_MC = A * (1 - m); 
+        let curr_MU = curr_MC > 0 ? L / curr_MC : 1;
+        let curr_Drop = 1 - curr_MU;
+        let calcMaxDTA = g_MU * (1 - m);
+
+        let draw_DTA, draw_DSCR, draw_MU;
+        if (reinvest) {
+            draw_DTA = (g_DTA * A_base - L) / (1 - g_DTA);
+            let dscrDenom = (g_DSCR * I) - Y;
+            draw_DSCR = dscrDenom > 0 ? ((A_base * Y) - (g_DSCR * I * L)) / dscrDenom : Infinity;
+            draw_MU = (g_MU * A_base * (1 - m) - L) / (1 - g_MU * (1 - m));
+        } else {
+            draw_DTA = g_DTA * A_base - L;
+            draw_DSCR = ((A_base * Y) - (g_DSCR * L * I)) / (g_DSCR * I);
+            draw_MU = g_MU * A_base * (1 - m) - L;
+        }
+
+        let constraints = [{ name: "Max DTA", val: draw_DTA }, { name: "Min DSCR", val: draw_DSCR }, { name: "Max Margin Util", val: draw_MU }];
+        let validConstraints = constraints.filter(c => c.val !== Infinity && !isNaN(c.val));
+        let maxDrawRaw = Math.min(...validConstraints.map(c => c.val));
+        let bottleneck = validConstraints.find(c => c.val === maxDrawRaw)?.name || "None";
+        
+        let maxDraw = 0;
+        let payDownDebt = 0;
+        let buyAssets = 0;
+        let A_future = A;
+        let L_future = L;
+
+        if (maxDrawRaw < 0) {
+            maxDraw = 0;
+            payDownDebt = C; 
+            buyAssets = 0;
+            A_future = A; 
+            L_future = L - C;
+        } else {
+            maxDraw = Math.round(maxDrawRaw);
+            payDownDebt = 0;
+            buyAssets = reinvest ? (maxDraw + C) : C;
+            A_future = reinvest ? (A + maxDraw + C) : (A + C);
+            L_future = L + maxDraw;
+        }
+
+        let totalSources = maxDraw + C;
+        let totalUses = buyAssets + payDownDebt; 
+
+        let fut_DTA = L_future / A_future;
+        let fut_DSCR = (L_future > 0 && I > 0) ? (A_future * Y) / (L_future * I) : Infinity;
+        let fut_MC = A_future * (1 - m);
+        let fut_MU = fut_MC > 0 ? L_future / fut_MC : 1;
+        let fut_Drop = 1 - fut_MU;
+
+        // Dom Updates
+        document.getElementById('outBottleneck').innerText = 'Bottleneck: ' + bottleneck;
+        document.getElementById('outTotalSources').innerText = fmtC(totalSources);
+        document.getElementById('outMaxDraw').innerText = fmtC(maxDraw);
+        document.getElementById('outContribution').innerText = fmtC(C);
+        document.getElementById('outTotalUses').innerText = fmtC(totalUses);
+        document.getElementById('outBuyAssets').innerText = fmtC(buyAssets);
+        document.getElementById('outPayDownDebt').innerText = fmtC(payDownDebt);
+        document.getElementById('outCalcMaxDTA').innerText = fmtP(calcMaxDTA);
+        
+        document.getElementById('currDTA').innerText = fmtP(curr_DTA);
+        document.getElementById('currDTAStatus').className = 'status-badge ' + (curr_DTA <= g_DTA ? 'status-healthy' : 'status-warning');
+        document.getElementById('currDTAStatus').innerText = curr_DTA <= g_DTA ? 'Healthy' : 'Needs Attention';
+
+        document.getElementById('currDSCR').innerText = curr_DSCR === Infinity ? '∞' : curr_DSCR.toFixed(2);
+        document.getElementById('currDSCRStatus').className = 'status-badge ' + (curr_DSCR >= g_DSCR ? 'status-healthy' : 'status-warning');
+        document.getElementById('currDSCRStatus').innerText = curr_DSCR >= g_DSCR ? 'Healthy' : 'Needs Attention';
+
+        document.getElementById('currMU').innerText = fmtP(curr_MU);
+        setStatus('currMU', curr_MU, 'mu');
+        document.getElementById('currMaint').innerText = fmtP(m);
+        setStatus('currMaint', m, 'maint');
+        document.getElementById('currDrop').innerText = fmtP(curr_Drop);
+        setStatus('currDrop', curr_Drop, 'drop');
+
+        document.getElementById('futAsset').innerText = fmtC(A_future);
+        document.getElementById('futAssetRef').innerText = fmtC(A);
+        document.getElementById('futDebt').innerText = fmtC(L_future);
+        document.getElementById('futDebtRef').innerText = fmtC(L);
+        document.getElementById('futDrop').innerText = fmtP(fut_Drop);
+        document.getElementById('futDropRef').innerText = fmtP(curr_Drop);
+        setStatus('futDrop', fut_Drop, 'drop');
+
+        document.getElementById('futDTARef').innerText = fmtP(curr_DTA);
+        document.getElementById('futDTA').innerText = fmtP(fut_DTA);
+        document.getElementById('futDTAStatus').className = 'status-badge ' + (fut_DTA <= g_DTA ? 'status-healthy' : 'status-warning');
+        document.getElementById('futDTAStatus').innerText = fut_DTA <= g_DTA ? 'Healthy' : 'Needs Attention';
+
+        document.getElementById('futDSCRRef').innerText = curr_DSCR === Infinity ? '∞' : curr_DSCR.toFixed(2);
+        document.getElementById('futDSCR').innerText = fut_DSCR === Infinity ? '∞' : fut_DSCR.toFixed(2);
+        document.getElementById('futDSCRStatus').className = 'status-badge ' + (fut_DSCR >= g_DSCR ? 'status-healthy' : 'status-warning');
+        document.getElementById('futDSCRStatus').innerText = fut_DSCR >= g_DSCR ? 'Healthy' : 'Needs Attention';
+
+        document.getElementById('futMURef').innerText = fmtP(curr_MU);
+        document.getElementById('futMU').innerText = fmtP(fut_MU);
+        setStatus('futMU', fut_MU, 'mu');
+
+        saveToCookies(); // Final save
+    }
+
+    window.onload = () => { 
+        loadFromCookies(); 
+        calculate(); 
+    };
+</script>
+
+</body>
+</html>
