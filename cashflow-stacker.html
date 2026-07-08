@@ -145,6 +145,76 @@
             background-color: var(--bg-color);
         }
 
+        /* Tooltip Styles */
+        .tooltip-wrapper {
+            display: inline-flex;
+            align-items: center;
+            position: relative;
+        }
+        .info-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background-color: var(--text-muted);
+            color: white;
+            font-size: 11px;
+            font-weight: bold;
+            cursor: help;
+            margin-left: 8px;
+        }
+        .tooltip-content {
+            visibility: hidden;
+            width: 320px;
+            background-color: #ffffff;
+            color: var(--text-main);
+            text-align: left;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px;
+            position: absolute;
+            z-index: 1000;
+            top: 100%;
+            left: 0;
+            margin-top: 10px;
+            opacity: 0;
+            transition: opacity 0.2s, visibility 0.2s;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            font-size: 0.8rem;
+            line-height: 1.5;
+            font-weight: normal;
+            max-height: 400px;
+            overflow-y: auto;
+            pointer-events: auto;
+        }
+        .tooltip-wrapper:hover .tooltip-content,
+        .tooltip-wrapper:focus-within .tooltip-content {
+            visibility: visible;
+            opacity: 1;
+        }
+        .tooltip-content h4 {
+            margin: 0 0 8px 0;
+            color: var(--primary);
+            font-size: 0.85rem;
+        }
+        .tooltip-content p {
+            margin: 0 0 12px 0;
+        }
+        .tooltip-content ul {
+            margin: 0 0 16px 0;
+            padding-left: 20px;
+        }
+        .tooltip-content li {
+            margin-bottom: 6px;
+        }
+        .tooltip-content hr {
+            border: 0;
+            border-top: 1px solid var(--border-color);
+            margin: 16px 0;
+        }
+
         /* Result Cards Styles */
         .metric-card {
             background-color: var(--card-bg);
@@ -238,8 +308,48 @@
         </div>
 
         <div class="form-group">
-            <label>When to Increase Stack Size</label>
-            <div class="radio-group">
+            <div class="tooltip-wrapper">
+                <label style="margin-bottom: 0;">When to Increase Stack Size</label>
+                <div class="info-icon" tabindex="0">?</div>
+                
+                <!-- TOOLTIP EXACT EXPLANATION -->
+                <div class="tooltip-content">
+                    <p>The "When to Increase Stack Size" settings act as the throttle for the Cash Flow Stacking strategy. They dictate exactly when and how aggressively you scale up your investments as your cash flow grows. Whenever one of the three triggers below is hit, the system takes the base cost of your <em>previous</em> stack and multiplies it by your Stack Increase Multiplier.</p>
+                    
+                    <h4>1. Payoff Threshold (Performance-Based Scaling)</h4>
+                    <ul>
+                        <li><strong>The Logic:</strong> "Increase the stack size if the LOC is paid off within a certain number of months."</li>
+                        <li><strong>How it works:</strong> This is a dynamic, velocity-based trigger. The system tracks a stopwatch every time you buy a stack. It counts exactly how many months it takes for your combined income (personal + stack income) to drive the Line of Credit (LOC) debt back to zero. If you clear the debt in <em>less than or equal to</em> your defined threshold, the system determines your cash flow is strong enough to handle a larger asset, and applies the multiplier to the next purchase.</li>
+                        <li><strong>Best For:</strong> Optimizing for maximum safe growth. It automatically speeds up your scaling as your compounding income accelerates, but acts as a safety brake if your payoff times slow down.</li>
+                    </ul>
+
+                    <h4>2. Every Certain Number of Stacks Created (Volume-Based Scaling)</h4>
+                    <ul>
+                        <li><strong>The Logic:</strong> "Increase the stack size every X stacks created."</li>
+                        <li><strong>How it works:</strong> This creates a step-ladder approach based purely on the number of investment cycles you complete, regardless of how long they take. If you set the threshold to <strong>4</strong>, your 1st, 2nd, and 3rd stacks will all be deployed at the initial base size. The moment you purchase your 4th stack, the multiplier kicks in.</li>
+                        <li><strong>Best For:</strong> Investors who want a predictable, phased approach. It forces you to complete a specific number of "reps" at a lower risk level before graduating to larger asset purchases.</li>
+                    </ul>
+
+                    <h4>3. Every Certain Number of Months (Time-Based Scaling)</h4>
+                    <ul>
+                        <li><strong>The Logic:</strong> "Create a new larger stack every X months."</li>
+                        <li><strong>How it works:</strong> This logic is tied strictly to the simulation's calendar. It completely ignores how many stacks you've bought or how fast you are paying them off. If you set the threshold to <strong>12</strong>, the base size of any stack you purchase will automatically increase on the anniversary of the simulation.</li>
+                        <li><strong>Best For:</strong> Mimicking traditional annual portfolio growth, or matching stack sizes to anticipated future life events.</li>
+                    </ul>
+
+                    <hr>
+
+                    <h4>The "Use Credit Balance for Larger Stacks" Mechanic</h4>
+                    <p>This checkbox is an advanced capital efficiency tool designed to ensure you never have "lazy money" sitting idle. Because cash flow compounds rapidly in this strategy, there are often months where your income completely pays off the LOC debt <em>and</em> leaves you with a positive cash surplus before you actually deploy the next stack.</p>
+                    <ul>
+                        <li><strong>If Unchecked (Strict Sizing):</strong> The system will only purchase a stack at the exact base size calculated by the multiplier. If the formula says your next stack should be <strong>$20,000</strong>, and you happen to have a <strong>$5,000</strong> positive cash balance in the account, the system borrows the <strong>$20,000</strong>, leaving your <strong>$5,000</strong> cash sitting uninvested.</li>
+                        <li><strong>If Checked (Sweep & Deploy):</strong> The system sweeps any positive cash balance and adds it on top of the calculated stack size. Using the same scenario above, the system takes the <strong>$20,000</strong> calculated size, adds your <strong>$5,000</strong> cash surplus, and deploys a custom <strong>$25,000</strong> stack.</li>
+                    </ul>
+                    <p style="margin-bottom: 0;">By checking this box, you effectively purchase a larger, higher-yielding asset without actually taking on any deeper LOC debt, maximizing the mathematical compounding effect of the strategy.</p>
+                </div>
+            </div>
+            
+            <div class="radio-group" style="margin-top: 12px;">
                 <label class="radio-label">
                     <input type="radio" name="increaseTrigger" value="payoff" checked onchange="updateThresholdUI()">
                     When LOC is paid off within a certain number of months
@@ -285,7 +395,6 @@
 
     <!-- RIGHT PANEL: RESULTS CARDS -->
     <div class="results-panel" id="results-container">
-        <!-- Cards will be injected here by JS -->
         <div style="color: var(--text-muted); font-size: 0.875rem; padding: 20px;">
             Click "Run Simulation" to generate your metrics.
         </div>
@@ -310,13 +419,11 @@
         }
     }
 
-    // Standard Amortized Loan PMT Formula
     function calculatePMT(ratePerPeriod, numberOfPeriods, presentValue) {
         if (ratePerPeriod === 0) return presentValue / numberOfPeriods;
         return (presentValue * ratePerPeriod) / (1 - Math.pow(1 + ratePerPeriod, -numberOfPeriods));
     }
 
-    // Currency Formatter
     const formatCurrency = (val) => new Intl.NumberFormat('en-US', { 
         style: 'currency', 
         currency: 'USD', 
@@ -324,7 +431,6 @@
     }).format(val);
 
     function runSimulation(downloadCSV = false) {
-        // Gather Inputs
         const initialLOC = parseFloat(document.getElementById('initialLOC').value) || 0;
         const locInterestRate = parseFloat(document.getElementById('locInterestRate').value) || 0;
         const investmentRate = parseFloat(document.getElementById('investmentRate').value) || 0;
@@ -337,7 +443,6 @@
         const useCreditBalance = document.getElementById('useCreditBalance').checked;
         const totalYears = parseInt(document.getElementById('totalYears').value) || 10;
 
-        // Initialize State Variables
         let maxMonths = totalYears * 12;
         let locBalance = 0; 
         let currentStackBaseSize = initialLOC; 
@@ -346,23 +451,18 @@
         let monthsSinceLastStack = 0;
         let csvData = [];
         let maxActiveStacks = 0; 
-        
-        // Metrics Trackers
         let totalLOCInterestPaid = 0;
 
-        // Run Month-by-Month Loop
         for (let month = 1; month <= maxMonths; month++) {
             let stackIncomeThisMonth = 0;
             let activeStacksThisMonth = {};
 
-            // Calculate LOC Interest if in debt (balance is negative)
             if (locBalance < 0) {
                 let interestCharge = Math.abs(locBalance) * (locInterestRate / 100 / 12);
                 totalLOCInterestPaid += interestCharge;
                 locBalance -= interestCharge; 
             }
 
-            // Calculate Cash Flow from active stacks
             stacks.forEach((stack, index) => {
                 if (month >= stack.startMonth && month <= stack.endMonth) {
                     stackIncomeThisMonth += stack.pmt;
@@ -371,17 +471,12 @@
             });
 
             let totalIncome = personalCashFlow + stackIncomeThisMonth;
-            
-            // Apply Income to LOC
             locBalance += totalIncome;
             monthsSinceLastStack++;
 
-            // Evaluate Buying a New Stack
             if (month >= firstStackMonth && locBalance >= 0) {
-                
                 let actualStackSize = currentStackBaseSize;
 
-                // Handle the distinct increase logics based on exact definitions
                 if (increaseTrigger === 'payoff') {
                     if (stackCount > 0 && monthsSinceLastStack <= thresholdValue) {
                         currentStackBaseSize *= stackMultiplier;
@@ -399,7 +494,6 @@
                     actualStackSize = initialLOC * Math.pow(stackMultiplier, multiplierTiersPassed);
                 }
 
-                // Handle 'Use Credit Balance'
                 if (useCreditBalance && locBalance > 0) {
                     actualStackSize += locBalance;
                     locBalance = -(actualStackSize - locBalance); 
@@ -424,7 +518,6 @@
                 activeStacksThisMonth[`Stack ${stackCount}`] = pmt;
             }
 
-            // Record Row Data for CSV
             if (downloadCSV) {
                 let row = {
                     'Month': month,
@@ -438,10 +531,6 @@
                 csvData.push(row);
             }
         }
-
-        // ==========================================
-        // CALCULATE FINAL CARD METRICS
-        // ==========================================
         
         let totalDeployed = 0;
         let totalEarnings = 0;
@@ -454,12 +543,10 @@
             let stackLifetimeEarnings = stack.pmt * investmentLength;
             totalEarnings += stackLifetimeEarnings;
 
-            // Snapshot logic: Active at the end of the simulation period
             if (stack.endMonth >= maxMonths) {
                 activeStacksStillPayingCount++;
                 monthlyIncomeFromActiveStacks += stack.pmt;
                 
-                // Income that will arrive AFTER the simulation ends
                 let remainingMonths = stack.endMonth - maxMonths;
                 if (remainingMonths > 0) {
                     remainingFutureIncome += (remainingMonths * stack.pmt);
@@ -470,7 +557,6 @@
         let netInvestmentProfit = totalEarnings - totalDeployed;
         let personalCashContributed = personalCashFlow * maxMonths;
 
-        // Render Dashboard Cards
         renderDashboard({
             netInvestmentProfit,
             totalEarnings,
@@ -484,7 +570,6 @@
             remainingFutureIncome
         });
 
-        // Generate CSV if requested
         if (downloadCSV && csvData.length > 0) {
             generateCSV(csvData, maxActiveStacks);
         }
@@ -494,49 +579,42 @@
         const container = document.getElementById('results-container');
         
         container.innerHTML = `
-            <!-- Net Investment Profit -->
             <div class="metric-card">
                 <div class="card-title">Net Investment Profit</div>
                 <div class="card-value">${formatCurrency(metrics.netInvestmentProfit)}</div>
                 <div class="card-subtext">${formatCurrency(metrics.totalEarnings)} earnings &ndash; ${formatCurrency(metrics.totalDeployed)} deployed</div>
             </div>
 
-            <!-- Investment Earnings -->
             <div class="metric-card">
                 <div class="card-title">Investment Earnings</div>
                 <div class="card-value">${formatCurrency(metrics.totalEarnings)}</div>
                 <div class="card-subtext">Total payments received (principal + profit)</div>
             </div>
 
-            <!-- Personal Cash Contributed -->
             <div class="metric-card">
                 <div class="card-title">Personal Cash Contributed</div>
                 <div class="card-value">${formatCurrency(metrics.personalCashContributed)}</div>
                 <div class="card-subtext">Cash flow, bonuses & recurring income</div>
             </div>
 
-            <!-- LOC Interest Paid -->
             <div class="metric-card">
                 <div class="card-title">LOC Interest Paid</div>
                 <div class="card-value">${formatCurrency(metrics.totalLOCInterestPaid)}</div>
                 <div class="card-subtext">Cost of borrowing</div>
             </div>
 
-            <!-- Cash Withdrawn -->
             <div class="metric-card">
                 <div class="card-title">Cash Withdrawn</div>
                 <div class="card-value">$0</div>
                 <div class="card-subtext">Not configured</div>
             </div>
 
-            <!-- Total Stacks -->
             <div class="metric-card">
                 <div class="card-title">Total Stacks</div>
                 <div class="card-value">${metrics.totalStacks}</div>
                 <div class="card-subtext">Investment cycles</div>
             </div>
 
-            <!-- Snapshot Card -->
             <div class="metric-card snapshot-card">
                 <div class="card-title">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
