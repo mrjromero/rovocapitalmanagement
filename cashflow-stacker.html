@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cash Flow Stack Simulator</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --bg-color: #f3f4f6;
+            --panel-bg: #ffffff;
+            --text-main: #1f2937;
+            --text-muted: #6b7280;
+            --border-color: #e5e7eb;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+        .container {
+            background-color: var(--panel-bg);
+            border-radius: 8px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            padding: 30px;
+            max-width: 500px;
+            width: 100%;
+        }
+        h2 {
+            margin-top: 0;
+            font-size: 1.25rem;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 16px;
+        }
+        label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+        input[type="number"], input[type="text"] {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+        input[type="number"]:focus, input[type="text"]:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+        .hint {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+        .radio-group {
+            margin-bottom: 12px;
+        }
+        .radio-label {
+            display: flex;
+            align-items: center;
+            font-size: 0.875rem;
+            font-weight: 400;
+            margin-bottom: 6px;
+            cursor: pointer;
+        }
+        .radio-label input {
+            margin-right: 8px;
+        }
+        .checkbox-panel {
+            background-color: #f9fafb;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 12px;
+            margin-top: 16px;
+            margin-bottom: 16px;
+        }
+        .checkbox-label {
+            display: flex;
+            align-items: flex-start;
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .checkbox-label input {
+            margin-right: 10px;
+            margin-top: 3px;
+        }
+        .checkbox-hint {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-weight: 400;
+            margin-top: 4px;
+            display: block;
+        }
+        .section-divider {
+            height: 1px;
+            background-color: var(--border-color);
+            margin: 24px 0;
+        }
+        .section-header {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 600;
+            width: 100%;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .btn:hover {
+            background-color: #1d4ed8;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="form-group">
+        <label>Initial Line of Credit ($)</label>
+        <input type="number" id="initialLOC" value="10000">
+    </div>
+
+    <div class="form-group">
+        <label>LOC Interest Rate (%)</label>
+        <input type="number" step="0.1" id="locInterestRate" value="5.5">
+    </div>
+
+    <div class="form-group">
+        <label>Investment Rate of Return (%)</label>
+        <input type="number" step="0.1" id="investmentRate" value="10">
+    </div>
+
+    <div class="form-group">
+        <label>Investment Length (months)</label>
+        <input type="number" id="investmentLength" value="36">
+        <div class="hint">Amortization period for each investment (default: 36)</div>
+    </div>
+
+    <div class="form-group">
+        <label>First Stack Month</label>
+        <input type="number" id="firstStackMonth" value="1">
+    </div>
+
+    <div class="form-group">
+        <label>Stack Increase Multiplier</label>
+        <input type="number" step="0.1" id="stackMultiplier" value="1.5">
+        <div class="hint">Each new stack = previous stack × this multiplier</div>
+    </div>
+
+    <div class="form-group">
+        <label>Personal Cash Flow ($/month)</label>
+        <input type="number" id="personalCashFlow" value="2000">
+    </div>
+
+    <div class="form-group">
+        <label>When to Increase Stack Size</label>
+        <div class="radio-group">
+            <label class="radio-label">
+                <input type="radio" name="increaseTrigger" value="payoff" checked onchange="updateThresholdUI()">
+                When LOC is paid off within a certain number of months
+            </label>
+            <label class="radio-label">
+                <input type="radio" name="increaseTrigger" value="stacks" onchange="updateThresholdUI()">
+                Every certain number of stacks created
+            </label>
+            <label class="radio-label">
+                <input type="radio" name="increaseTrigger" value="months" onchange="updateThresholdUI()">
+                Every certain number of months
+            </label>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label id="thresholdLabel">Payoff Threshold (months)</label>
+        <input type="number" step="0.1" id="thresholdValue" value="3.2">
+        <div class="hint" id="thresholdHint">Increase stack size if LOC is paid off in this many months or less</div>
+    </div>
+
+    <div class="checkbox-panel">
+        <label class="checkbox-label">
+            <input type="checkbox" id="useCreditBalance">
+            <div>
+                Use Credit Balance for Larger Stacks
+                <span class="checkbox-hint">When creating a new stack, if there's a credit balance on the LOC, use it to deploy a larger investment. For example: If the next stack is $20,000 and there's a $5,000 credit, deploy $25,000 instead of just $20,000. If unchecked, only the calculated stack size is deployed, leaving the credit balance intact.</span>
+            </div>
+        </label>
+    </div>
+
+    <div class="form-group">
+        <label>Total Years to Project</label>
+        <input type="number" id="totalYears" value="10">
+        <div class="hint">Project calculations for up to 50 years</div>
+    </div>
+
+    <div class="section-divider"></div>
+
+    <div class="section-header">
+        Cash Withdrawal Settings
+    </div>
+
+    <div class="form-group">
+        <label>Target Monthly Withdrawal ($)</label>
+        <input type="number" id="targetWithdrawal" placeholder="e.g., 5000" value="5000">
+        <div class="hint">How much you want to withdraw per month</div>
+    </div>
+
+    <div class="form-group">
+        <label>Withdrawal as % of Cash Flow</label>
+        <input type="number" id="withdrawalPct" placeholder="e.g., 10" value="10">
+        <div class="hint">System calculates when cash flow can support your target at this %</div>
+    </div>
+
+    <div style="margin-top: 30px;">
+        <button class="btn" onclick="runSimulation()">Run Simulation & Download CSV</button>
+    </div>
+</div>
+
+<script>
+    // Update labels based on the selected radio button
+    function updateThresholdUI() {
+        const trigger = document.querySelector('input[name="increaseTrigger"]:checked').value;
+        const label = document.getElementById('thresholdLabel');
+        const hint = document.getElementById('thresholdHint');
+
+        if (trigger === 'payoff') {
+            label.innerText = 'Payoff Threshold (months)';
+            hint.innerText = 'Increase stack size if LOC is paid off in this many months or less';
+        } else if (trigger === 'stacks') {
+            label.innerText = 'Stack Threshold Count';
+            hint.innerText = 'Increase stack size every X stacks created';
+        } else if (trigger === 'months') {
+            label.innerText = 'Month Threshold';
+            hint.innerText = 'Increase stack size every X months';
+        }
+    }
+
+    // Standard Amortized Loan PMT Formula
+    function calculatePMT(ratePerPeriod, numberOfPeriods, presentValue) {
+        if (ratePerPeriod === 0) return presentValue / numberOfPeriods;
+        return (presentValue * ratePerPeriod) / (1 - Math.pow(1 + ratePerPeriod, -numberOfPeriods));
+    }
+
+    function runSimulation() {
+        // 1. Gather Inputs
+        const initialLOC = parseFloat(document.getElementById('initialLOC').value) || 0;
+        const locInterestRate = parseFloat(document.getElementById('locInterestRate').value) || 0;
+        const investmentRate = parseFloat(document.getElementById('investmentRate').value) || 0;
+        const investmentLength = parseInt(document.getElementById('investmentLength').value) || 36;
+        const firstStackMonth = parseInt(document.getElementById('firstStackMonth').value) || 1;
+        const stackMultiplier = parseFloat(document.getElementById('stackMultiplier').value) || 1;
+        const personalCashFlow = parseFloat(document.getElementById('personalCashFlow').value) || 0;
+        const increaseTrigger = document.querySelector('input[name="increaseTrigger"]:checked').value;
+        const thresholdValue = parseFloat(document.getElementById('thresholdValue').value) || 0;
+        const useCreditBalance = document.getElementById('useCreditBalance').checked;
+        const totalYears = parseInt(document.getElementById('totalYears').value) || 10;
+        const targetWithdrawal = parseFloat(document.getElementById('targetWithdrawal').value) || 0;
+        const withdrawalPct = parseFloat(document.getElementById('withdrawalPct').value) || 0;
+
+        // 2. Initialize State
+        let maxMonths = totalYears * 12;
+        let locBalance = 0; // Starts at 0
+        let currentStackBaseSize = initialLOC; // The size of the very first stack
+        let stacks = [];
+        let stackCount = 0;
+        let monthsSinceLastStack = 0;
+        let csvData = [];
+        let maxActiveStacks = 0; // Used to format the CSV columns properly
+
+        // 3. Run Month-by-Month Loop
+        for (let month = 1; month <= maxMonths; month++) {
+            let stackIncomeThisMonth = 0;
+            let activeStacksThisMonth = {};
+
+            // Calculate LOC Interest if in debt
+            if (locBalance < 0) {
+                let interestCharge = Math.abs(locBalance) * (locInterestRate / 100 / 12);
+                locBalance -= interestCharge; // Decreases balance (more debt)
+            }
+
+            // Calculate Cash Flow from active stacks
+            stacks.forEach((stack, index) => {
+                if (month >= stack.startMonth && month <= stack.endMonth) {
+                    stackIncomeThisMonth += stack.pmt;
+                    activeStacksThisMonth[`Stack ${index + 1}`] = stack.pmt;
+                }
+            });
+
+            // Calculate Total Income
+            let totalIncome = personalCashFlow + stackIncomeThisMonth;
+
+            // Handle Withdrawals
+            let withdrawalAmount = 0;
+            if (targetWithdrawal > 0 && withdrawalPct > 0) {
+                let allowedWithdrawal = stackIncomeThisMonth * (withdrawalPct / 100);
+                if (allowedWithdrawal >= targetWithdrawal) {
+                    withdrawalAmount = targetWithdrawal;
+                }
+            }
+            
+            let netIncomeToLOC = totalIncome - withdrawalAmount;
+            
+            // Apply Income to LOC
+            locBalance += netIncomeToLOC;
+            monthsSinceLastStack++;
+
+            // Evaluate Buying a New Stack
+            // Rule: We buy a stack if we've reached the first stack month, AND the LOC is fully paid off (>= 0)
+            if (month >= firstStackMonth && locBalance >= 0) {
+                
+                let shouldIncrease = false;
+                
+                // Only evaluate increase multipliers AFTER the first stack is bought
+                if (stackCount > 0) {
+                    if (increaseTrigger === 'payoff' && monthsSinceLastStack <= thresholdValue) {
+                        shouldIncrease = true;
+                    } else if (increaseTrigger === 'stacks' && (stackCount % thresholdValue === 0)) {
+                        shouldIncrease = true;
+                    } else if (increaseTrigger === 'months' && (month % thresholdValue === 0)) {
+                        shouldIncrease = true;
+                    }
+                }
+
+                if (shouldIncrease) {
+                    currentStackBaseSize *= stackMultiplier;
+                }
+
+                let actualStackSize = currentStackBaseSize;
+
+                // Handle 'Use Credit Balance'
+                if (useCreditBalance && locBalance > 0) {
+                    actualStackSize += locBalance;
+                    locBalance = -currentStackBaseSize; // The excess positive balance absorbs some of the actual stack size
+                } else {
+                    locBalance -= actualStackSize; // Balance drops by exact stack size
+                }
+
+                stackCount++;
+                maxActiveStacks = Math.max(maxActiveStacks, stackCount);
+                
+                let pmt = calculatePMT(investmentRate / 100 / 12, investmentLength, actualStackSize);
+
+                stacks.push({
+                    id: stackCount,
+                    size: actualStackSize,
+                    startMonth: month, 
+                    endMonth: month + investmentLength - 1,
+                    pmt: pmt
+                });
+
+                monthsSinceLastStack = 0;
+                
+                // The stack we just bought will generate income STARTING this month based on standard velocity banking calculators
+                // Let's add it to this month's tracking for CSV display (though technically income hits LOC next loop)
+                activeStacksThisMonth[`Stack ${stackCount}`] = pmt;
+            }
+
+            // 4. Record Row Data
+            let row = {
+                'Month': month,
+                'LOC Balance': locBalance.toFixed(2),
+                'Personal Input': personalCashFlow.toFixed(2),
+                'Total Income': totalIncome.toFixed(2),
+                'Withdrawal': withdrawalAmount.toFixed(2)
+            };
+
+            // Populate stack columns
+            for (let s = 1; s <= stackCount; s++) {
+                row[`Stack ${s}`] = activeStacksThisMonth[`Stack ${s}`] ? activeStacksThisMonth[`Stack ${s}`].toFixed(2) : '';
+            }
+            
+            csvData.push(row);
+        }
+
+        generateCSV(csvData, maxActiveStacks);
+    }
+
+    function generateCSV(data, maxStacks) {
+        // 1. Build Headers
+        let headers = ['Month', 'LOC Balance', 'Personal Input', 'Total Income', 'Withdrawal'];
+        for (let i = 1; i <= maxStacks; i++) {
+            headers.push(`Stack ${i}`);
+        }
+
+        // 2. Build Rows
+        let csvRows = [];
+        csvRows.push(headers.join(',')); // Add header row
+
+        data.forEach(row => {
+            let values = headers.map(header => {
+                let val = row[header] !== undefined ? row[header] : '';
+                return `"${val}"`; // encapsulate in quotes to avoid comma issues
+            });
+            csvRows.push(values.join(','));
+        });
+
+        // 3. Create Download
+        let csvString = csvRows.join('\n');
+        let blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+        let url = URL.createObjectURL(blob);
+        
+        // Create dynamic link to trigger download
+        let link = document.createElement("a");
+        link.setAttribute("href", url);
+        
+        let dateStr = new Date().toISOString().replace(/[:.]/g, '-');
+        link.setAttribute("download", `cashflow_simulation_${dateStr}.csv`);
+        
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+</script>
+
+</body>
+</html>
