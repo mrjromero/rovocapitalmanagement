@@ -4,12 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cash Flow Stack Simulator Dashboard</title>
-    <!-- Include Chart.js for Projections -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
             --primary: #2563eb;
             --primary-hover: #1d4ed8;
+            --danger: #ef4444;
+            --warning: #f59e0b;
             --bg-color: #f3f4f6;
             --panel-bg: #ffffff;
             --text-main: #111827;
@@ -20,239 +21,80 @@
             --profit-green: #10b981;
             --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
             --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
             --border-radius: 12px;
         }
 
         * { box-sizing: border-box; }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            margin: 0;
-            padding: 20px 15px;
-            display: flex;
-            justify-content: center;
-            line-height: 1.5;
-        }
-
-        .dashboard-container {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 24px;
-            max-width: 1280px;
-            width: 100%;
-        }
-
-        @media (min-width: 992px) {
-            body { padding: 40px 20px; }
-            .dashboard-container {
-                grid-template-columns: 360px 1fr;
-                gap: 32px;
-            }
-        }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: var(--bg-color); color: var(--text-main); margin: 0; padding: 20px 15px; display: flex; justify-content: center; line-height: 1.5; }
+        .dashboard-container { display: grid; grid-template-columns: 1fr; gap: 24px; max-width: 1400px; width: 100%; }
+        @media (min-width: 992px) { body { padding: 40px 20px; } .dashboard-container { grid-template-columns: 360px 1fr; gap: 32px; } }
         
-        /* --- Left Panel Styles --- */
-        .form-panel {
-            background-color: var(--panel-bg);
-            border-radius: var(--border-radius);
-            box-shadow: var(--shadow-md);
-            padding: 24px;
-            height: fit-content;
-        }
-        
+        .form-panel { background-color: var(--panel-bg); border-radius: var(--border-radius); box-shadow: var(--shadow-md); padding: 24px; height: fit-content; }
         h2 { margin-top: 0; font-size: 1.5rem; color: var(--text-main); margin-bottom: 24px; }
         h3 { margin-top: 0; font-size: 1.125rem; color: var(--text-main); }
+        .section-header { font-size: 1rem; font-weight: 700; color: var(--text-main); margin: 24px 0 16px 0; padding-bottom: 8px; border-bottom: 1px solid var(--border-color); }
         
         .form-group { margin-bottom: 20px; }
-        label {
-            display: block; font-size: 0.875rem; font-weight: 600;
-            margin-bottom: 8px; color: #374151;
-        }
-        
-        input[type="number"] {
-            width: 100%; padding: 12px 16px;
-            border: 1px solid var(--border-color);
-            border-radius: 8px; font-size: 1rem;
-            transition: all 0.2s ease;
-            background-color: #fcfcfc;
-        }
-        input[type="number"]:focus {
-            outline: none; border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
-            background-color: #ffffff;
-        }
-        
+        label { display: block; font-size: 0.875rem; font-weight: 600; margin-bottom: 8px; color: #374151; }
+        input[type="number"] { width: 100%; padding: 12px 16px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 1rem; transition: all 0.2s ease; background-color: #fcfcfc; }
+        input[type="number"]:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15); background-color: #ffffff; }
         .hint { font-size: 0.75rem; color: var(--text-muted); margin-top: 6px; }
         
         .radio-group { margin-top: 12px; display: flex; flex-direction: column; gap: 10px; }
-        .radio-label {
-            display: flex; align-items: flex-start;
-            font-size: 0.875rem; cursor: pointer;
-            padding: 8px; border-radius: 6px;
-            transition: background-color 0.2s;
-        }
+        .radio-label { display: flex; align-items: flex-start; font-size: 0.875rem; cursor: pointer; padding: 8px; border-radius: 6px; transition: background-color 0.2s; }
         .radio-label:hover { background-color: #f3f4f6; }
         .radio-label input { margin-right: 10px; margin-top: 3px; transform: scale(1.1); }
         
-        .checkbox-panel {
-            background-color: var(--snapshot-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 8px; padding: 16px; margin: 24px 0;
-        }
-        .checkbox-label {
-            display: flex; align-items: flex-start;
-            font-size: 0.875rem; font-weight: 600; cursor: pointer;
-        }
+        .checkbox-panel { background-color: var(--snapshot-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 16px; margin: 24px 0; }
+        .checkbox-label { display: flex; align-items: flex-start; font-size: 0.875rem; font-weight: 600; cursor: pointer; }
         .checkbox-label input { margin-right: 12px; margin-top: 4px; transform: scale(1.2); }
-        .checkbox-hint {
-            font-size: 0.75rem; color: var(--text-muted); font-weight: 400;
-            margin-top: 6px; display: block; line-height: 1.4;
-        }
+        .checkbox-hint { font-size: 0.75rem; color: var(--text-muted); font-weight: 400; margin-top: 6px; display: block; line-height: 1.4; }
         
-        /* Buttons */
         .btn-group { display: flex; flex-direction: column; gap: 12px; margin-top: 32px; }
-        .btn {
-            background-color: var(--primary); color: white; border: none;
-            padding: 14px 20px; border-radius: 8px; font-size: 1rem; font-weight: 600;
-            width: 100%; cursor: pointer; transition: all 0.2s ease;
-            box-shadow: var(--shadow-sm);
-        }
-        .btn:hover { background-color: var(--primary-hover); transform: translateY(-1px); box-shadow: var(--shadow-md); }
-        .btn:active { transform: translateY(0); }
-        .btn-secondary {
-            background-color: white; color: #374151; border: 1px solid #d1d5db;
-        }
+        .btn { background-color: var(--primary); color: white; border: none; padding: 14px 20px; border-radius: 8px; font-size: 1rem; font-weight: 600; width: 100%; cursor: pointer; transition: all 0.2s ease; box-shadow: var(--shadow-sm); }
+        .btn:hover { background-color: var(--primary-hover); transform: translateY(-1px); }
+        .btn-secondary { background-color: white; color: #374151; border: 1px solid #d1d5db; }
         .btn-secondary:hover { background-color: #f9fafb; border-color: #9ca3af; }
 
-        /* --- Tooltip Styles (Mobile Optimized) --- */
-        .tooltip-wrapper { display: inline-flex; align-items: center; position: relative; }
-        .info-icon {
-            display: inline-flex; align-items: center; justify-content: center;
-            width: 18px; height: 18px; border-radius: 50%;
-            background-color: #9ca3af; color: white;
-            font-size: 12px; font-weight: bold; cursor: help; margin-left: 8px;
-            transition: background-color 0.2s; outline: none;
-        }
-        .info-icon:hover, .info-icon:focus { background-color: var(--primary); }
-        
-        .tooltip-content {
-            visibility: hidden; background-color: #ffffff;
-            color: var(--text-main); text-align: left; border: 1px solid var(--border-color);
-            border-radius: 12px; padding: 20px; position: absolute; z-index: 1000;
-            top: 100%; margin-top: 12px; opacity: 0;
-            transition: all 0.2s ease; box-shadow: var(--shadow-lg);
-            font-size: 0.85rem; max-height: 60vh; overflow-y: auto; pointer-events: auto;
-            font-weight: normal; line-height: 1.5;
-            width: 320px; max-width: 85vw; left: 50%; transform: translateX(-50%);
-        }
-        .tooltip-wrapper:hover .tooltip-content, 
-        .tooltip-wrapper:focus-within .tooltip-content { 
-            visibility: visible; opacity: 1; 
-        }
-        
-        @media (min-width: 768px) {
-            .tooltip-content { width: 400px; max-width: none; left: 0; transform: none; }
-        }
-
-        .tooltip-content h4 { margin: 0 0 8px 0; color: var(--primary); font-size: 0.9rem; }
-        .tooltip-content p, .tooltip-content ul { margin: 0 0 12px 0; }
-        .tooltip-content li { margin-bottom: 6px; }
-
-        /* --- Right Panel & Metrics --- */
         .results-panel { display: flex; flex-direction: column; gap: 24px; }
+        .empty-state { color: var(--text-muted); padding: 40px 20px; background: white; border-radius: var(--border-radius); border: 2px dashed var(--border-color); text-align: center; }
         
-        .empty-state {
-            color: var(--text-muted); font-size: 1rem; padding: 40px 20px; 
-            background: white; border-radius: var(--border-radius); 
-            border: 2px dashed var(--border-color); text-align: center;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-        }
+        .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; }
+        .metric-card { background-color: var(--card-bg); border: 1px solid var(--border-color); border-radius: var(--border-radius); padding: 20px; box-shadow: var(--shadow-sm); display: flex; flex-direction: column; justify-content: center; }
+        .snapshot-card { background-color: var(--snapshot-bg); padding: 24px; border-width: 2px; border-color: var(--primary); }
+        .risk-card { background-color: #fff1f2; border: 1px solid #fecdd3; }
         
-        .metrics-grid {
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 16px;
-        }
-        @media (min-width: 640px) {
-            .metrics-grid { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
-        }
-        
-        .metric-card {
-            background-color: var(--card-bg); border: 1px solid var(--border-color);
-            border-radius: var(--border-radius); padding: 20px; box-shadow: var(--shadow-sm);
-            display: flex; flex-direction: column; justify-content: center;
-        }
-        .snapshot-card { background-color: var(--snapshot-bg); padding: 24px; border-width: 2px; }
-        
-        .card-title {
-            font-size: 0.8125rem; font-weight: 600; margin-bottom: 12px;
-            color: #4b5563; display: flex; align-items: center; gap: 6px;
-        }
-        .card-value {
-            font-size: 1.5rem; font-weight: 700; color: var(--text-main);
-            font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-            margin-bottom: 4px; letter-spacing: -0.5px;
-        }
-        @media (min-width: 768px) { .card-value { font-size: 1.75rem; } }
-        
+        .card-title { font-size: 0.8125rem; font-weight: 600; margin-bottom: 12px; color: #4b5563; display: flex; align-items: center; gap: 6px; }
+        .card-value { font-size: 1.5rem; font-weight: 700; color: var(--text-main); font-family: ui-monospace, monospace; margin-bottom: 4px; letter-spacing: -0.5px; }
         .card-subtext { font-size: 0.75rem; color: var(--text-muted); line-height: 1.3; }
         
-        .snapshot-metric { margin-top: 20px; }
-        .snapshot-metric-title { font-size: 0.875rem; color: #4b5563; margin-bottom: 4px; font-weight: 500; }
-        .snapshot-metric-value { font-size: 1.25rem; font-weight: 700; color: var(--primary); }
-
-        /* --- Chart Container --- */
-        .chart-container {
-            background-color: var(--panel-bg); border-radius: var(--border-radius);
-            box-shadow: var(--shadow-sm); border: 1px solid var(--border-color); padding: 20px;
-        }
-        .chart-wrapper {
-            position: relative; height: 300px; width: 100%; margin-top: 16px;
-        }
+        .chart-container { background-color: var(--panel-bg); border-radius: var(--border-radius); box-shadow: var(--shadow-sm); border: 1px solid var(--border-color); padding: 20px; }
+        .chart-wrapper { position: relative; height: 300px; width: 100%; margin-top: 16px; }
         @media (min-width: 768px) { .chart-wrapper { height: 400px; } }
 
-        /* --- Tabs and Tables --- */
-        .tabs-container {
-            background-color: var(--panel-bg); border-radius: var(--border-radius);
-            box-shadow: var(--shadow-sm); border: 1px solid var(--border-color); padding: 20px;
-        }
+        .tabs-container { background-color: var(--panel-bg); border-radius: var(--border-radius); box-shadow: var(--shadow-sm); border: 1px solid var(--border-color); padding: 20px; }
         .tabs-header { display: flex; flex-direction: column; gap: 16px; margin-bottom: 24px; }
-        @media (min-width: 640px) {
-            .tabs-header { flex-direction: row; align-items: center; justify-content: space-between; }
-        }
-
-        .tabs {
-            display: inline-flex; background-color: #f1f5f9; border-radius: 8px; padding: 4px;
-        }
-        .tab-btn {
-            background: transparent; border: none; padding: 10px 20px;
-            font-size: 0.875rem; font-weight: 600; color: #64748b;
-            border-radius: 6px; cursor: pointer; transition: all 0.2s ease;
-        }
-        .tab-btn:hover { color: var(--text-main); }
-        .tab-btn.active {
-            background-color: white; color: var(--primary);
-            box-shadow: var(--shadow-sm);
-        }
+        @media (min-width: 640px) { .tabs-header { flex-direction: row; align-items: center; justify-content: space-between; } }
+        .tabs { display: inline-flex; background-color: #f1f5f9; border-radius: 8px; padding: 4px; }
+        .tab-btn { background: transparent; border: none; padding: 10px 20px; font-size: 0.875rem; font-weight: 600; color: #64748b; border-radius: 6px; cursor: pointer; transition: all 0.2s ease; }
+        .tab-btn.active { background-color: white; color: var(--primary); box-shadow: var(--shadow-sm); }
         
-        .table-container { display: none; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        .table-container { display: none; overflow-x: auto; }
         .table-container.active { display: block; animation: fadeIn 0.3s ease; }
-        
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-
         .table-header-title { font-size: 1.25rem; font-weight: 700; margin-bottom: 4px; }
         .table-header-sub { font-size: 0.875rem; color: var(--text-muted); margin-bottom: 24px; }
         
-        table { width: 100%; border-collapse: collapse; font-size: 0.875rem; min-width: 700px; }
-        th, td { text-align: right; padding: 14px 16px; border-bottom: 1px solid var(--border-color); }
+        table { width: 100%; border-collapse: collapse; font-size: 0.875rem; min-width: 900px; }
+        th, td { text-align: right; padding: 12px 14px; border-bottom: 1px solid var(--border-color); }
         th:first-child, td:first-child { text-align: left; }
         th { color: #4b5563; font-weight: 600; white-space: nowrap; background-color: #f8fafc; }
-        td { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; }
-        
+        td { font-family: ui-monospace, monospace; }
         tbody tr:hover { background-color: #f8fafc; }
-        
         .profit-green { color: var(--profit-green); font-weight: 600; }
         .net-blue { color: var(--primary); font-weight: 600; }
+        .risk-red { color: var(--danger); font-weight: 600; }
+        .risk-warn { color: var(--warning); font-weight: 600; }
     </style>
 </head>
 <body>
@@ -277,7 +119,6 @@
         <div class="form-group">
             <label>Investment Length (months)</label>
             <input type="number" id="investmentLength" value="36">
-            <div class="hint">Amortization period for each investment</div>
         </div>
         <div class="form-group">
             <label>First Stack Month</label>
@@ -286,41 +127,26 @@
         <div class="form-group">
             <label>Stack Increase Multiplier</label>
             <input type="number" step="0.1" id="stackMultiplier" value="1.5">
-            <div class="hint">Each new stack = previous stack × this multiplier</div>
         </div>
         <div class="form-group">
             <label>Personal Cash Flow ($/month)</label>
             <input type="number" id="personalCashFlow" value="2000">
         </div>
 
+        <div class="section-header">Margin & Risk Settings</div>
         <div class="form-group">
-            <div class="tooltip-wrapper">
-                <label style="margin-bottom: 0;">When to Increase Stack Size</label>
-                <button class="info-icon" aria-label="More info" tabindex="0">?</button>
-                <div class="tooltip-content">
-                    <p>The "When to Increase Stack Size" settings act as the throttle for the Cash Flow Stacking strategy. They dictate exactly when and how aggressively you scale up your investments as your cash flow grows.</p>
-                    <h4>1. Payoff Threshold (Performance-Based)</h4>
-                    <ul>
-                        <li>Tracks how many months it takes for your combined income to drive the LOC debt back to zero. If you clear the debt in <em>less than or equal to</em> your defined threshold, it applies the multiplier to the next purchase.</li>
-                    </ul>
-                    <h4>2. Every Certain Number of Stacks (Volume-Based)</h4>
-                    <ul>
-                        <li>A step-ladder approach based purely on the number of investment cycles you complete, regardless of how long they take.</li>
-                    </ul>
-                    <h4>3. Every Certain Number of Months (Time-Based)</h4>
-                    <ul>
-                        <li>Tied strictly to the simulation's calendar. It ignores how many stacks you've bought or how fast you are paying them off.</li>
-                    </ul>
-                    <hr style="border-top: 1px solid var(--border-color); margin: 16px 0;">
-                    <h4>The "Use Credit Balance for Larger Stacks" Mechanic</h4>
-                    <p>Ensures you never have "lazy money" sitting idle. If you have a positive cash surplus when buying a stack:</p>
-                    <ul>
-                        <li><strong>If Unchecked:</strong> Deploys the exact calculated size, leaving cash uninvested.</li>
-                        <li><strong>If Checked:</strong> Sweeps your positive cash balance and adds it to the stack size, effectively purchasing a larger asset without taking on deeper debt.</li>
-                    </ul>
-                </div>
-            </div>
-            
+            <label>Base Portfolio Value ($)</label>
+            <input type="number" id="basePortfolioValue" value="50000">
+            <div class="hint">Starting asset value used to calculate Debt-to-Asset (DTA). Stacks purchased are automatically added to this.</div>
+        </div>
+        <div class="form-group">
+            <label>Maintenance Margin Requirement (%)</label>
+            <input type="number" step="0.1" id="maintenanceMargin" value="25">
+            <div class="hint">Broker's equity requirement. Used to calculate how far the portfolio can drop before a margin call.</div>
+        </div>
+
+        <div class="section-header">Scaling Logic</div>
+        <div class="form-group">
             <div class="radio-group">
                 <label class="radio-label">
                     <input type="radio" name="increaseTrigger" value="payoff" checked onchange="updateThresholdUI()">
@@ -366,11 +192,6 @@
     <!-- RIGHT PANEL: DASHBOARD RESULTS -->
     <div class="results-panel" id="results-container">
         <div class="empty-state">
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 16px; color: #9ca3af;">
-                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
-                <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
-                <line x1="12" y1="22.08" x2="12" y2="12"></line>
-            </svg>
             <div>Enter your parameters and click <strong>Run Simulation</strong> to generate your metrics, interactive charts, and ledgers.</div>
         </div>
     </div>
@@ -380,7 +201,6 @@
     let globalSimulationData = null;
     let projectionChart = null;
 
-    // UI Updater for Radio Buttons
     function updateThresholdUI() {
         const trigger = document.querySelector('input[name="increaseTrigger"]:checked').value;
         const label = document.getElementById('thresholdLabel');
@@ -389,19 +209,17 @@
         else if (trigger === 'months') label.innerText = 'Month Threshold';
     }
 
-    // Standard Amortization PMT Formula
     function calculatePMT(ratePerPeriod, numberOfPeriods, presentValue) {
         if (ratePerPeriod === 0) return presentValue / numberOfPeriods;
         return (presentValue * ratePerPeriod) / (1 - Math.pow(1 + ratePerPeriod, -numberOfPeriods));
     }
 
-    // Formatters
     const formatCurrency = (val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(val);
     const formatNumber = (val) => new Intl.NumberFormat('en-US', { maximumFractionDigits: 1 }).format(val);
+    const formatPercent = (val) => new Intl.NumberFormat('en-US', { style: 'percent', minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(val);
 
-    // Main Simulation Engine
     function runSimulation() {
-        // Gather Inputs
+        // Core Inputs
         const initialLOC = parseFloat(document.getElementById('initialLOC').value) || 0;
         const locInterestRate = parseFloat(document.getElementById('locInterestRate').value) || 0;
         const investmentRate = parseFloat(document.getElementById('investmentRate').value) || 0;
@@ -413,6 +231,10 @@
         const thresholdValue = parseFloat(document.getElementById('thresholdValue').value) || 1; 
         const useCreditBalance = document.getElementById('useCreditBalance').checked;
         const totalYears = parseInt(document.getElementById('totalYears').value) || 10;
+        
+        // Risk Inputs
+        const basePortfolioValue = parseFloat(document.getElementById('basePortfolioValue').value) || 0;
+        const maintMarginReq = (parseFloat(document.getElementById('maintenanceMargin').value) || 0) / 100;
 
         let maxMonths = totalYears * 12;
         let locBalance = 0; 
@@ -425,33 +247,65 @@
         let chartData = { labels: [], locBalance: [], cashFlow: [], investmentIncome: [] };
         let csvData = [];
         let maxActiveStacks = 0;
+        
+        // Risk Trackers
+        let maxDTA = 0;
+        let minDSCR = Infinity;
+        let tightestMarginDrop = 1; // 100% drop
 
-        // Run Month-by-Month Loop
         for (let month = 1; month <= maxMonths; month++) {
             let stackIncomeThisMonth = 0;
             let activeStacksThisMonth = {};
+            let activeStacksPrincipal = 0;
 
-            // Calculate LOC Interest (Charged if balance is negative)
-            if (locBalance < 0) {
-                let interestCharge = Math.abs(locBalance) * (locInterestRate / 100 / 12);
-                totalLOCInterestPaid += interestCharge;
-                locBalance -= interestCharge; 
-            }
-
-            // Cash Flow from Active Stacks
             stacks.forEach((stack, index) => {
                 if (month >= stack.startMonth && month <= stack.endMonth) {
                     stackIncomeThisMonth += stack.pmt;
                     activeStacksThisMonth[`Stack ${index + 1}`] = stack.pmt;
+                    activeStacksPrincipal += stack.size;
                 }
             });
 
-            // Apply Total Income to LOC
+            let interestCharge = 0;
+            if (locBalance < 0) {
+                interestCharge = Math.abs(locBalance) * (locInterestRate / 100 / 12);
+                totalLOCInterestPaid += interestCharge;
+                locBalance -= interestCharge; 
+            }
+
             let totalIncome = personalCashFlow + stackIncomeThisMonth;
+            
+            // --- Calculate Risk Metrics (Pre-Income Application) ---
+            let currentDebt = locBalance < 0 ? Math.abs(locBalance) : 0;
+            let currentAssetValue = basePortfolioValue + activeStacksPrincipal;
+            
+            let dta = currentAssetValue > 0 ? (currentDebt / currentAssetValue) : 0;
+            let dscr = interestCharge > 0 ? (totalIncome / interestCharge) : Infinity;
+            
+            // Formula: Asset Value at Margin Call = Debt / (1 - Maint Margin)
+            // Drop Before Call = 1 - (Asset Value at Call / Current Asset Value)
+            let marginDrop = 1; // Default to 100% drop safe
+            if (currentDebt > 0 && currentAssetValue > 0 && maintMarginReq < 1) {
+                let assetValueAtCall = currentDebt / (1 - maintMarginReq);
+                marginDrop = 1 - (assetValueAtCall / currentAssetValue);
+            }
+
+            // Track Extremes
+            if (dta > maxDTA) maxDTA = dta;
+            if (dscr < minDSCR && dscr > 0) minDSCR = dscr;
+            if (marginDrop < tightestMarginDrop) tightestMarginDrop = marginDrop;
+
+            // Apply Income
             locBalance += totalIncome;
             monthsSinceLastStack++;
 
-            // Evaluate Purchasing a New Stack
+            // Record Chart Data
+            chartData.labels.push(`M${month}`);
+            chartData.locBalance.push(locBalance < 0 ? Math.abs(locBalance) : 0);
+            chartData.investmentIncome.push(stackIncomeThisMonth);
+            chartData.cashFlow.push(totalIncome);
+
+            // Purchase Logic
             if (month >= firstStackMonth && locBalance >= 0) {
                 let actualStackSize = currentStackBaseSize;
                 let payoffTime = stackCount === 0 ? 0 : monthsSinceLastStack;
@@ -494,22 +348,8 @@
                 activeStacksThisMonth[`Stack ${stackCount}`] = pmt;
             }
 
-            // Record Chart Data (AFTER purchase logic so spikes align with exact month)
-            chartData.labels.push(`M${month}`);
-            chartData.locBalance.push(locBalance < 0 ? Math.abs(locBalance) : 0);
-            chartData.investmentIncome.push(stackIncomeThisMonth);
-            chartData.cashFlow.push(totalIncome);
-
-            // Record CSV Data
-            let row = {
-                'Month': month,
-                'LOC Balance': locBalance.toFixed(2),
-                'Personal Input': personalCashFlow.toFixed(2),
-                'Total Income': totalIncome.toFixed(2)
-            };
-            for (let s = 1; s <= stackCount; s++) {
-                row[`Stack ${s}`] = activeStacksThisMonth[`Stack ${s}`] ? activeStacksThisMonth[`Stack ${s}`].toFixed(2) : '';
-            }
+            let row = { 'Month': month, 'LOC Balance': locBalance.toFixed(2), 'Personal Input': personalCashFlow.toFixed(2), 'Total Income': totalIncome.toFixed(2) };
+            for (let s = 1; s <= stackCount; s++) { row[`Stack ${s}`] = activeStacksThisMonth[`Stack ${s}`] ? activeStacksThisMonth[`Stack ${s}`].toFixed(2) : ''; }
             csvData.push(row);
         }
         
@@ -517,27 +357,45 @@
             stacks[stacks.length - 1].payoffMonths = monthsSinceLastStack;
         }
 
-        // --- Calculate Year-by-Year Table Data ---
+        // --- Calculate Year-by-Year Table Data with Risk Metrics ---
         let yearlyData = [];
         for (let year = 1; year <= totalYears; year++) {
             let targetMonth = year * 12;
             let startMonth = (year - 1) * 12 + 1;
             
-            // Get Maximum LOC balance during this specific year for the smoothed macro chart
             let maxLocForYear = 0;
+            let avgDscrSum = 0;
+            let dscrMonthsCount = 0;
+            
             for (let m = startMonth; m <= targetMonth; m++) {
-                if (chartData.locBalance[m - 1] > maxLocForYear) {
-                    maxLocForYear = chartData.locBalance[m - 1];
+                let debt = chartData.locBalance[m - 1];
+                if (debt > maxLocForYear) maxLocForYear = debt;
+                
+                // Calculate DSCR for the average
+                let intCharge = debt * (locInterestRate / 100 / 12);
+                if (intCharge > 0) {
+                    avgDscrSum += (chartData.cashFlow[m-1] / intCharge);
+                    dscrMonthsCount++;
                 }
             }
             
-            let activeStacksInTargetMonth = stacks.filter(s => s.startMonth <= targetMonth && s.endMonth >= targetMonth);
+            let endOfYearLocBalance = chartData.locBalance[targetMonth - 1] || 0;
             
-            let investmentIncome = activeStacksInTargetMonth
-                .filter(s => s.startMonth < targetMonth)
-                .reduce((sum, s) => sum + s.pmt, 0);
-                
+            let activeStacksInTargetMonth = stacks.filter(s => s.startMonth <= targetMonth && s.endMonth >= targetMonth);
+            let activePrincipal = activeStacksInTargetMonth.reduce((sum, s) => sum + s.size, 0);
+            
+            let endOfYearAssets = basePortfolioValue + activePrincipal;
+            let endOfYearDTA = endOfYearAssets > 0 ? (endOfYearLocBalance / endOfYearAssets) : 0;
+            
+            let marginDrop = 1;
+            if (endOfYearLocBalance > 0 && endOfYearAssets > 0 && maintMarginReq < 1) {
+                let assetValueAtCall = endOfYearLocBalance / (1 - maintMarginReq);
+                marginDrop = 1 - (assetValueAtCall / endOfYearAssets);
+            }
+
+            let investmentIncome = activeStacksInTargetMonth.filter(s => s.startMonth < targetMonth).reduce((sum, s) => sum + s.pmt, 0);
             let totalMonthly = personalCashFlow + investmentIncome;
+            let avgDscr = dscrMonthsCount > 0 ? (avgDscrSum / dscrMonthsCount) : Infinity;
 
             yearlyData.push({
                 year: year,
@@ -545,14 +403,15 @@
                 investmentIncome: investmentIncome,
                 personalCashFlow: personalCashFlow,
                 totalMonthly: totalMonthly,
-                maxLocBalance: maxLocForYear
+                maxLocBalance: maxLocForYear,
+                endDTA: endOfYearDTA,
+                avgDSCR: avgDscr,
+                marginDrop: marginDrop
             });
         }
 
-        // --- Calculate Metrics ---
         let totalDeployed = stacks.reduce((sum, s) => sum + s.size, 0);
         let totalEarnings = stacks.reduce((sum, s) => sum + (s.pmt * investmentLength), 0);
-        
         let lastMonthActiveStacks = stacks.filter(s => s.endMonth >= maxMonths);
         let monthlyIncomeFromActiveStacks = lastMonthActiveStacks.reduce((sum, s) => sum + s.pmt, 0);
         let remainingFutureIncome = lastMonthActiveStacks.reduce((sum, s) => sum + (s.pmt * (s.endMonth - maxMonths)), 0);
@@ -568,22 +427,42 @@
             totalYears,
             activeStacksStillPaying: lastMonthActiveStacks.length,
             monthlyIncomeFromActiveStacks,
-            remainingFutureIncome
+            remainingFutureIncome,
+            maxDTA,
+            minDSCR,
+            tightestMarginDrop
         });
-        
-        // Auto-scroll to results on mobile devices
-        if (window.innerWidth < 992) {
-            setTimeout(() => {
-                document.getElementById('results-container').scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }, 100);
-        }
     }
 
     function renderDashboard(metrics) {
         const container = document.getElementById('results-container');
         
+        let dscrDisplay = metrics.minDSCR === Infinity ? 'Infinite' : formatNumber(metrics.minDSCR) + 'x';
+        
         let html = `
             <div class="metrics-grid">
+                <div class="metric-card snapshot-card">
+                    <div class="card-title">End of Year ${metrics.totalYears} Snapshot</div>
+                    <div style="font-size: 1.25rem; font-weight: bold;">${formatCurrency(metrics.monthlyIncomeFromActiveStacks)} / mo</div>
+                    <div class="card-subtext">${metrics.activeStacksStillPaying} Active Stacks | ${formatCurrency(metrics.remainingFutureIncome)} Remaining Future</div>
+                </div>
+                <div class="metric-card risk-card">
+                    <div class="card-title" style="color: var(--danger);">Maximum Risk Exposure</div>
+                    <div style="display: flex; justify-content: space-between; margin-top: 8px;">
+                        <div>
+                            <div class="card-subtext" style="color: #9f1239;">Max DTA</div>
+                            <div style="font-weight: 700; color: var(--danger); font-size: 1.1rem;">${formatPercent(metrics.maxDTA)}</div>
+                        </div>
+                        <div>
+                            <div class="card-subtext" style="color: #9f1239;">Min DSCR</div>
+                            <div style="font-weight: 700; color: var(--danger); font-size: 1.1rem;">${dscrDisplay}</div>
+                        </div>
+                    </div>
+                    <div style="margin-top: 8px; border-top: 1px solid #fecdd3; padding-top: 8px;">
+                        <div class="card-subtext" style="color: #9f1239;">Tightest Drop Before Margin Call</div>
+                        <div style="font-weight: 700; color: var(--danger); font-size: 1.1rem;">${formatPercent(metrics.tightestMarginDrop)}</div>
+                    </div>
+                </div>
                 <div class="metric-card">
                     <div class="card-title">Net Investment Profit</div>
                     <div class="card-value">${formatCurrency(metrics.netProfit)}</div>
@@ -592,142 +471,68 @@
                 <div class="metric-card">
                     <div class="card-title">Investment Earnings</div>
                     <div class="card-value">${formatCurrency(metrics.totalEarnings)}</div>
-                    <div class="card-subtext">Total payments received</div>
-                </div>
-                <div class="metric-card">
-                    <div class="card-title">Personal Cash Contributed</div>
-                    <div class="card-value">${formatCurrency(metrics.personalCash)}</div>
-                    <div class="card-subtext">Cash flow & recurring income</div>
                 </div>
                 <div class="metric-card">
                     <div class="card-title">LOC Interest Paid</div>
                     <div class="card-value">${formatCurrency(metrics.locInterest)}</div>
-                    <div class="card-subtext">Cost of borrowing</div>
-                </div>
-                <div class="metric-card">
-                    <div class="card-title">Cash Withdrawn</div>
-                    <div class="card-value">$0</div>
-                    <div class="card-subtext">Not configured</div>
                 </div>
                 <div class="metric-card">
                     <div class="card-title">Total Stacks</div>
                     <div class="card-value">${metrics.totalStacks}</div>
-                    <div class="card-subtext">Investment cycles</div>
-                </div>
-            </div>
-
-            <div class="metric-card snapshot-card">
-                <div class="card-title">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                    End of Year ${metrics.totalYears} Snapshot
-                </div>
-                <div class="snapshot-metric">
-                    <div class="snapshot-metric-title">Active Stacks Still Paying</div>
-                    <div class="snapshot-metric-value">${metrics.activeStacksStillPaying}</div>
-                </div>
-                <div class="snapshot-metric">
-                    <div class="snapshot-metric-title">Monthly Income from Stacks</div>
-                    <div class="snapshot-metric-value" style="font-size: 1.75rem;">${formatCurrency(metrics.monthlyIncomeFromActiveStacks)}</div>
-                </div>
-                <div class="snapshot-metric">
-                    <div class="snapshot-metric-title">Remaining Future Income</div>
-                    <div class="snapshot-metric-value">${formatCurrency(metrics.remainingFutureIncome)}</div>
                 </div>
             </div>
 
             <div class="chart-container">
                 <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
-                    <h3 style="margin: 0; display: flex; align-items: center;">
-                        Cash Flow & LOC Balance
-                        <div class="tooltip-wrapper" style="margin-left: 8px; font-weight: normal;">
-                            <button class="info-icon" aria-label="More info" tabindex="0">?</button>
-                            <div class="tooltip-content">
-                                <p>This chart illustrates the <strong>velocity of money</strong>—showing exactly how your debt, personal input, and passive income interact over time.</p>
-                                
-                                <h4>Interactive Feature</h4>
-                                <ul>
-                                    <li><strong>Stack-by-Stack Tab:</strong> Shows the granular, month-by-month "sawtooth" velocity mechanics.</li>
-                                    <li><strong>Year-by-Year Tab:</strong> Plots your <strong>Maximum Debt Exposure</strong> (highest LOC balance reached) for that year to provide a smooth, clean macro trendline.</li>
-                                </ul>
-
-                                <h4>The Three Lines</h4>
-                                <ul>
-                                    <li><strong>LOC Balance (Blue):</strong> Total debt owed. It is inverted (shown as a positive number) to compare visually against income.</li>
-                                    <li><strong>Total Cash Flow (Green):</strong> Sum of your fixed Personal Cash Flow plus growing Investment Income.</li>
-                                    <li><strong>Investment Income (Purple):</strong> Purely passive income generated by active stacks.</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </h3>
+                    <h3 style="margin: 0;">Cash Flow & LOC Balance</h3>
                 </div>
-                <div class="chart-wrapper">
-                    <canvas id="projectionChart"></canvas>
-                </div>
+                <div class="chart-wrapper"><canvas id="projectionChart"></canvas></div>
             </div>
 
             <div class="tabs-container">
                 <div class="tabs-header">
                     <div class="tabs">
-                        <button class="tab-btn active" onclick="switchTab('year', event)">Year-by-Year</button>
-                        <button class="tab-btn" onclick="switchTab('stack', event)">Stack-by-Stack</button>
-                    </div>
-                    <div class="tooltip-wrapper" style="font-weight: normal;">
-                        <span style="font-size: 0.875rem; color: var(--text-muted); font-weight: 600;">Table Guide</span>
-                        <button class="info-icon" aria-label="More info" tabindex="0">?</button>
-                        <div class="tooltip-content">
-                            <h4>1. Year-by-Year Summary (Macro)</h4>
-                            <p>Takes a snapshot of your exact financial standing at the <em>end</em> of each year (Month 12, Month 24, etc.).</p>
-                            <ul>
-                                <li><strong>Active Stacks:</strong> Investments actively paying you during that snapshot month.</li>
-                                <li><strong>Investment Income /mo:</strong> The purely passive cash flow being generated during that specific month.</li>
-                                <li><strong>Total Monthly /mo:</strong> Investment Income + Personal Cash Flow. Your combined financial firepower used to obliterate debt.</li>
-                            </ul>
-                            <hr style="border-top: 1px solid var(--border-color); margin: 16px 0;">
-                            <h4>2. Stack-by-Stack Summary (Micro)</h4>
-                            <p>An investment ledger allowing you to audit the math for every single asset.</p>
-                            <ul>
-                                <li><strong>Principal:</strong> The size of the asset, calculated using your multiplier and any swept credit balances.</li>
-                                <li><strong>Months to Payoff:</strong> Tracks the stopwatch from purchase until total income drove the LOC balance back to $0. Shows debt velocity.</li>
-                                <li><strong>Profit:</strong> Total Earnings minus the initial Principal.</li>
-                            </ul>
-                        </div>
+                        <button class="tab-btn active" onclick="switchTab('year', event)">Year-by-Year Risk & Returns</button>
+                        <button class="tab-btn" onclick="switchTab('stack', event)">Stack-by-Stack Ledger</button>
                     </div>
                 </div>
 
                 <div id="year-tab" class="table-container active">
                     <div class="table-header-title">Year-by-Year Summary</div>
-                    <div class="table-header-sub">All amounts shown are monthly values taken at the end of the year</div>
                     <table>
                         <thead>
                             <tr>
                                 <th>Year</th>
                                 <th>Active<br>Stacks</th>
-                                <th>Cash<br>Withdrawn</th>
-                                <th>Investment<br>Income /mo</th>
-                                <th>Personal<br>Cash Flow</th>
                                 <th>Total<br>Monthly /mo</th>
-                                <th>Net System<br>Income /mo</th>
+                                <th>Avg DSCR</th>
+                                <th>End of Year<br>DTA Utilization</th>
+                                <th>Portfolio Drop Before<br>Margin Call</th>
                             </tr>
                         </thead>
                         <tbody>
-                            ${globalSimulationData.yearlyData.map(y => `
+                            ${globalSimulationData.yearlyData.map(y => {
+                                let dscrClass = y.avgDSCR < 1.5 ? 'risk-red' : (y.avgDSCR < 2.5 ? 'risk-warn' : 'profit-green');
+                                let dscrVal = y.avgDSCR === Infinity ? 'Infinite' : formatNumber(y.avgDSCR) + 'x';
+                                let dtaClass = y.endDTA > 0.4 ? 'risk-red' : '';
+                                let dropClass = y.marginDrop < 0.25 ? 'risk-red' : (y.marginDrop < 0.4 ? 'risk-warn' : 'profit-green');
+                                
+                                return `
                                 <tr>
                                     <td>${y.year}</td>
                                     <td>${y.activeStacks}</td>
-                                    <td>$0</td>
-                                    <td>${formatCurrency(y.investmentIncome)}</td>
-                                    <td>${formatCurrency(y.personalCashFlow)}</td>
-                                    <td>${formatCurrency(y.totalMonthly)}</td>
                                     <td class="net-blue">${formatCurrency(y.totalMonthly)}</td>
+                                    <td class="${dscrClass}">${dscrVal}</td>
+                                    <td class="${dtaClass}">${formatPercent(y.endDTA)}</td>
+                                    <td class="${dropClass}">${formatPercent(y.marginDrop)}</td>
                                 </tr>
-                            `).join('')}
+                            `}).join('')}
                         </tbody>
                     </table>
                 </div>
 
                 <div id="stack-tab" class="table-container">
                     <div class="table-header-title">Stack-by-Stack Summary</div>
-                    <div class="table-header-sub">Detailed ledger of every investment cycle</div>
                     <table>
                         <thead>
                             <tr>
@@ -764,8 +569,6 @@
         `;
         
         container.innerHTML = html;
-        
-        // Render chart in "Year" view initially because "Year-by-Year" tab is default active
         renderChart('year'); 
     }
 
@@ -777,13 +580,13 @@
 
         if (viewMode === 'year') {
             labels = globalSimulationData.yearlyData.map(y => 'Year ' + y.year);
-            locData = globalSimulationData.yearlyData.map(y => y.maxLocBalance); // Smooth macro trend
+            locData = globalSimulationData.yearlyData.map(y => y.maxLocBalance); 
             cashData = globalSimulationData.yearlyData.map(y => y.totalMonthly);
             incomeData = globalSimulationData.yearlyData.map(y => y.investmentIncome);
             pointRadius = window.innerWidth < 768 ? 3 : 4;
         } else {
             labels = globalSimulationData.chartData.labels;
-            locData = globalSimulationData.chartData.locBalance; // Granular sawtooth
+            locData = globalSimulationData.chartData.locBalance; 
             cashData = globalSimulationData.chartData.cashFlow;
             incomeData = globalSimulationData.chartData.investmentIncome;
             pointRadius = window.innerWidth < 768 ? 0 : 2;
@@ -794,51 +597,15 @@
             data: {
                 labels: labels,
                 datasets: [
-                    {
-                        label: viewMode === 'year' ? 'Max LOC Balance (Inverted)' : 'LOC Balance (Inverted)',
-                        data: locData,
-                        borderColor: '#2563eb',
-                        backgroundColor: '#2563eb',
-                        borderWidth: 2,
-                        pointRadius: pointRadius,
-                        tension: 0.1
-                    },
-                    {
-                        label: 'Total Cash Flow',
-                        data: cashData,
-                        borderColor: '#10b981',
-                        backgroundColor: '#10b981',
-                        borderWidth: 2,
-                        pointRadius: pointRadius > 0 ? pointRadius - 1 : 0,
-                        tension: 0.3
-                    },
-                    {
-                        label: 'Investment Income',
-                        data: incomeData,
-                        borderColor: '#8b5cf6',
-                        backgroundColor: '#8b5cf6',
-                        borderWidth: 2,
-                        pointRadius: pointRadius > 0 ? pointRadius - 1 : 0,
-                        tension: 0.3
-                    }
+                    { label: viewMode === 'year' ? 'Max LOC Balance (Inverted)' : 'LOC Balance (Inverted)', data: locData, borderColor: '#2563eb', backgroundColor: '#2563eb', borderWidth: 2, pointRadius: pointRadius, tension: 0.1 },
+                    { label: 'Total Cash Flow', data: cashData, borderColor: '#10b981', backgroundColor: '#10b981', borderWidth: 2, pointRadius: pointRadius > 0 ? pointRadius - 1 : 0, tension: 0.3 },
+                    { label: 'Investment Income', data: incomeData, borderColor: '#8b5cf6', backgroundColor: '#8b5cf6', borderWidth: 2, pointRadius: pointRadius > 0 ? pointRadius - 1 : 0, tension: 0.3 }
                 ]
             },
             options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                interaction: { mode: 'index', intersect: false },
-                plugins: {
-                    legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 6, padding: 20 } }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: { callback: function(value) { return '$' + value.toLocaleString(); } }
-                    },
-                    x: {
-                        ticks: { maxTicksLimit: window.innerWidth < 768 ? 6 : 12 }
-                    }
-                }
+                responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
+                plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 6, padding: 20 } } },
+                scales: { y: { beginAtZero: true, ticks: { callback: function(value) { return '$' + value.toLocaleString(); } } }, x: { ticks: { maxTicksLimit: window.innerWidth < 768 ? 6 : 12 } } }
             }
         });
     }
@@ -846,56 +613,26 @@
     function switchTab(tabId, event) {
         document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
         document.querySelectorAll('.table-container').forEach(tc => tc.classList.remove('active'));
-        
         event.target.classList.add('active');
         document.getElementById(tabId + '-tab').classList.add('active');
-
-        // Re-render chart to match the selected tab view
-        if (globalSimulationData) {
-            renderChart(tabId);
-        }
+        if (globalSimulationData) renderChart(tabId);
     }
 
     function downloadCSV() {
-        if (!globalSimulationData || !globalSimulationData.csvData) { 
-            alert("Please run the simulation first to generate data."); 
-            return; 
-        }
-
+        if (!globalSimulationData) return;
         let data = globalSimulationData.csvData;
-        let maxStacks = globalSimulationData.maxActiveStacks;
-
         let headers = ['Month', 'LOC Balance', 'Personal Input', 'Total Income'];
-        for (let i = 1; i <= maxStacks; i++) {
-            headers.push(`Stack ${i}`);
-        }
-
-        let csvRows = [];
-        csvRows.push(headers.join(','));
-
+        for (let i = 1; i <= globalSimulationData.maxActiveStacks; i++) headers.push(`Stack ${i}`);
+        let csvRows = [headers.join(',')];
         data.forEach(row => {
-            let values = headers.map(header => {
-                let val = row[header] !== undefined ? row[header] : '';
-                return `"${val}"`; 
-            });
-            csvRows.push(values.join(','));
+            csvRows.push(headers.map(h => `"${row[h] !== undefined ? row[h] : ''}"`).join(','));
         });
-
-        let csvString = csvRows.join('\n');
-        let blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
-        let url = URL.createObjectURL(blob);
-        
+        let blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
         let link = document.createElement("a");
-        link.setAttribute("href", url);
-        
-        let dateStr = new Date().toISOString().replace(/[:.]/g, '-');
-        link.setAttribute("download", `cashflow_simulation_${dateStr}.csv`);
-        
-        document.body.appendChild(link);
+        link.href = URL.createObjectURL(blob);
+        link.download = `cashflow_simulation_${new Date().toISOString().replace(/[:.]/g, '-')}.csv`;
         link.click();
-        document.body.removeChild(link);
     }
 </script>
-
 </body>
 </html>
