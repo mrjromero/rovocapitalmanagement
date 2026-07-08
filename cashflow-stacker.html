@@ -216,10 +216,10 @@
             hint.innerText = 'Increase stack size if LOC is paid off in this many months or less';
         } else if (trigger === 'stacks') {
             label.innerText = 'Stack Threshold Count';
-            hint.innerText = 'Increase stack size every X stacks created';
+            hint.innerText = 'Increase stack size every X stacks (e.g. 4 means increase on stacks 4, 8, 12...)';
         } else if (trigger === 'months') {
             label.innerText = 'Month Threshold';
-            hint.innerText = 'Increase stack size every X months';
+            hint.innerText = 'Create a new larger stack every X months (e.g. 12 means annually)';
         }
     }
 
@@ -239,19 +239,19 @@
         const stackMultiplier = parseFloat(document.getElementById('stackMultiplier').value) || 1;
         const personalCashFlow = parseFloat(document.getElementById('personalCashFlow').value) || 0;
         const increaseTrigger = document.querySelector('input[name="increaseTrigger"]:checked').value;
-        const thresholdValue = parseFloat(document.getElementById('thresholdValue').value) || 0;
+        const thresholdValue = parseFloat(document.getElementById('thresholdValue').value) || 1; // Prevent div by 0
         const useCreditBalance = document.getElementById('useCreditBalance').checked;
         const totalYears = parseInt(document.getElementById('totalYears').value) || 10;
 
         // 2. Initialize State
         let maxMonths = totalYears * 12;
-        let locBalance = 0; // Starts at 0
-        let currentStackBaseSize = initialLOC; // The size of the very first stack
+        let locBalance = 0; 
+        let currentStackBaseSize = initialLOC; 
         let stacks = [];
         let stackCount = 0;
         let monthsSinceLastStack = 0;
         let csvData = [];
-        let maxActiveStacks = 0; // Used to format the CSV columns properly
+        let maxActiveStacks = 0; 
 
         // 3. Run Month-by-Month Loop
         for (let month = 1; month <= maxMonths; month++) {
@@ -261,7 +261,7 @@
             // Calculate LOC Interest if in debt
             if (locBalance < 0) {
                 let interestCharge = Math.abs(locBalance) * (locInterestRate / 100 / 12);
-                locBalance -= interestCharge; // Decreases balance (more debt)
+                locBalance -= interestCharge; 
             }
 
             // Calculate Cash Flow from active stacks
@@ -272,7 +272,6 @@
                 }
             });
 
-            // Calculate Total Income
             let totalIncome = personalCashFlow + stackIncomeThisMonth;
             
             // Apply Income to LOC
@@ -280,34 +279,37 @@
             monthsSinceLastStack++;
 
             // Evaluate Buying a New Stack
-            // Rule: We buy a stack if we've reached the first stack month, AND the LOC is fully paid off (>= 0)
             if (month >= firstStackMonth && locBalance >= 0) {
                 
-                let shouldIncrease = false;
-                
-                // Only evaluate increase multipliers AFTER the first stack is bought
-                if (stackCount > 0) {
-                    if (increaseTrigger === 'payoff' && monthsSinceLastStack <= thresholdValue) {
-                        shouldIncrease = true;
-                    } else if (increaseTrigger === 'stacks' && (stackCount % thresholdValue === 0)) {
-                        shouldIncrease = true;
-                    } else if (increaseTrigger === 'months' && (month % thresholdValue === 0)) {
-                        shouldIncrease = true;
-                    }
-                }
-
-                if (shouldIncrease) {
-                    currentStackBaseSize *= stackMultiplier;
-                }
-
                 let actualStackSize = currentStackBaseSize;
+
+                // Handle the distinct increase logics based on exact definitions
+                if (increaseTrigger === 'payoff') {
+                    if (stackCount > 0 && monthsSinceLastStack <= thresholdValue) {
+                        currentStackBaseSize *= stackMultiplier;
+                    }
+                    actualStackSize = currentStackBaseSize;
+                } 
+                else if (increaseTrigger === 'stacks') {
+                    // e.g., 4 means increase ON stacks 4, 8, 12
+                    // If stackCount is 3, the next stack is 4. (3+1) % 4 === 0.
+                    if (stackCount > 0 && (stackCount + 1) % thresholdValue === 0) {
+                        currentStackBaseSize *= stackMultiplier;
+                    }
+                    actualStackSize = currentStackBaseSize;
+                } 
+                else if (increaseTrigger === 'months') {
+                    // Calculate size entirely based on calendar intervals passed (e.g. annually)
+                    let multiplierTiersPassed = Math.floor((month - 1) / thresholdValue);
+                    actualStackSize = initialLOC * Math.pow(stackMultiplier, multiplierTiersPassed);
+                }
 
                 // Handle 'Use Credit Balance'
                 if (useCreditBalance && locBalance > 0) {
                     actualStackSize += locBalance;
-                    locBalance = -currentStackBaseSize; // The excess positive balance absorbs some of the actual stack size
+                    locBalance = -(actualStackSize - locBalance); // Exact math to leave balance at -actualStackBase
                 } else {
-                    locBalance -= actualStackSize; // Balance drops by exact stack size
+                    locBalance -= actualStackSize; 
                 }
 
                 stackCount++;
@@ -324,9 +326,6 @@
                 });
 
                 monthsSinceLastStack = 0;
-                
-                // The stack we just bought will generate income STARTING this month based on standard velocity banking calculators
-                // Let's add it to this month's tracking for CSV display (though technically income hits LOC next loop)
                 activeStacksThisMonth[`Stack ${stackCount}`] = pmt;
             }
 
@@ -338,7 +337,6 @@
                 'Total Income': totalIncome.toFixed(2)
             };
 
-            // Populate stack columns
             for (let s = 1; s <= stackCount; s++) {
                 row[`Stack ${s}`] = activeStacksThisMonth[`Stack ${s}`] ? activeStacksThisMonth[`Stack ${s}`].toFixed(2) : '';
             }
@@ -350,30 +348,26 @@
     }
 
     function generateCSV(data, maxStacks) {
-        // 1. Build Headers
         let headers = ['Month', 'LOC Balance', 'Personal Input', 'Total Income'];
         for (let i = 1; i <= maxStacks; i++) {
             headers.push(`Stack ${i}`);
         }
 
-        // 2. Build Rows
         let csvRows = [];
-        csvRows.push(headers.join(',')); // Add header row
+        csvRows.push(headers.join(',')); 
 
         data.forEach(row => {
             let values = headers.map(header => {
                 let val = row[header] !== undefined ? row[header] : '';
-                return `"${val}"`; // encapsulate in quotes to avoid comma issues
+                return `"${val}"`; 
             });
             csvRows.push(values.join(','));
         });
 
-        // 3. Create Download
         let csvString = csvRows.join('\n');
         let blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
         let url = URL.createObjectURL(blob);
         
-        // Create dynamic link to trigger download
         let link = document.createElement("a");
         link.setAttribute("href", url);
         
