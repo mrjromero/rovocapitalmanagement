@@ -23,6 +23,7 @@
             --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
             --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
             --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
             --border-radius: 12px;
         }
 
@@ -126,6 +127,13 @@
         .btn-secondary { background-color: white; color: #374151; border: 1px solid #d1d5db; }
         .btn-secondary:hover { background-color: #f9fafb; border-color: #9ca3af; }
 
+        .btn-sm {
+            background-color: white; color: var(--primary); border: 1px solid var(--primary);
+            padding: 6px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: 600;
+            cursor: pointer; transition: all 0.2s ease; white-space: nowrap;
+        }
+        .btn-sm:hover { background-color: var(--primary); color: white; }
+
         /* --- Tooltip Styles --- */
         .tooltip-wrapper { display: inline-flex; align-items: center; position: relative; }
         .info-icon {
@@ -158,6 +166,40 @@
         .tooltip-content p, .tooltip-content ul { margin: 0 0 12px 0; }
         .tooltip-content li { margin-bottom: 6px; }
 
+        /* --- Modal Styles --- */
+        .modal-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(17, 24, 39, 0.7); z-index: 2000;
+            align-items: center; justify-content: center; backdrop-filter: blur(4px);
+            opacity: 0; transition: opacity 0.3s ease;
+        }
+        .modal-overlay.active { display: flex; opacity: 1; }
+        
+        .modal-container {
+            background-color: var(--panel-bg); border-radius: var(--border-radius);
+            width: 90%; max-width: 650px; max-height: 85vh; display: flex; flex-direction: column;
+            box-shadow: var(--shadow-xl); transform: translateY(20px); transition: transform 0.3s ease;
+            overflow: hidden;
+        }
+        .modal-overlay.active .modal-container { transform: translateY(0); }
+        
+        .modal-header {
+            padding: 20px 24px; border-bottom: 1px solid var(--border-color);
+            display: flex; justify-content: space-between; align-items: center;
+            background-color: var(--snapshot-bg);
+        }
+        .modal-title { margin: 0; font-size: 1.25rem; color: var(--text-main); }
+        .modal-subtitle { font-size: 0.875rem; color: var(--text-muted); margin-top: 4px; }
+        
+        .modal-close {
+            background: none; border: none; font-size: 1.5rem; line-height: 1;
+            color: var(--text-muted); cursor: pointer; padding: 4px; border-radius: 4px;
+            transition: all 0.2s;
+        }
+        .modal-close:hover { color: var(--text-main); background-color: #e5e7eb; }
+        
+        .modal-body { padding: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+
         /* --- Right Panel & Metrics --- */
         .results-panel { display: flex; flex-direction: column; gap: 24px; }
         
@@ -168,12 +210,8 @@
             display: flex; flex-direction: column; align-items: center; justify-content: center;
         }
         
-        .metrics-grid {
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 16px;
-        }
-        @media (min-width: 640px) {
-            .metrics-grid { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
-        }
+        .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 16px; }
+        @media (min-width: 640px) { .metrics-grid { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); } }
         
         .metric-card {
             background-color: var(--card-bg); border: 1px solid var(--border-color);
@@ -204,9 +242,7 @@
             background-color: var(--panel-bg); border-radius: var(--border-radius);
             box-shadow: var(--shadow-sm); border: 1px solid var(--border-color); padding: 20px;
         }
-        .chart-wrapper {
-            position: relative; height: 300px; width: 100%; margin-top: 16px;
-        }
+        .chart-wrapper { position: relative; height: 300px; width: 100%; margin-top: 16px; }
         @media (min-width: 768px) { .chart-wrapper { height: 400px; } }
 
         /* --- Tabs and Tables --- */
@@ -219,32 +255,28 @@
             .tabs-header { flex-direction: row; align-items: center; justify-content: space-between; }
         }
 
-        .tabs {
-            display: inline-flex; background-color: #f1f5f9; border-radius: 8px; padding: 4px; flex-wrap: wrap; gap: 4px;
-        }
+        .tabs { display: inline-flex; background-color: #f1f5f9; border-radius: 8px; padding: 4px; flex-wrap: wrap; gap: 4px; }
         .tab-btn {
             background: transparent; border: none; padding: 10px 16px;
             font-size: 0.875rem; font-weight: 600; color: #64748b;
             border-radius: 6px; cursor: pointer; transition: all 0.2s ease;
         }
         .tab-btn:hover { color: var(--text-main); }
-        .tab-btn.active {
-            background-color: white; color: var(--primary);
-            box-shadow: var(--shadow-sm);
-        }
+        .tab-btn.active { background-color: white; color: var(--primary); box-shadow: var(--shadow-sm); }
         
         .table-container { display: none; overflow-x: auto; -webkit-overflow-scrolling: touch; }
         .table-container.active { display: block; animation: fadeIn 0.3s ease; }
-        
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
-        .table-header-title { font-size: 1.25rem; font-weight: 700; margin-bottom: 4px; }
-        .table-header-sub { font-size: 0.875rem; color: var(--text-muted); margin-bottom: 24px; }
+        .table-header-title { font-size: 1.25rem; font-weight: 700; margin-bottom: 4px; padding: 0 4px; }
+        .table-header-sub { font-size: 0.875rem; color: var(--text-muted); margin-bottom: 24px; padding: 0 4px; }
         
         table { width: 100%; border-collapse: collapse; font-size: 0.875rem; min-width: 700px; }
+        .modal-body table { min-width: 500px; } /* Slightly narrower minimum for the modal */
+        
         th, td { text-align: right; padding: 14px 16px; border-bottom: 1px solid var(--border-color); }
         th:first-child, td:first-child { text-align: left; }
-        th { color: #4b5563; font-weight: 600; white-space: nowrap; background-color: #f8fafc; }
+        th { color: #4b5563; font-weight: 600; white-space: nowrap; background-color: #f8fafc; position: sticky; top: 0; z-index: 10; }
         td { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; }
         
         tbody tr:hover { background-color: #f8fafc; }
@@ -253,6 +285,7 @@
         .net-blue { color: var(--primary); font-weight: 600; }
         .dta-red { color: var(--dta-red); font-weight: 600; }
         .dscr-amber { color: var(--dscr-amber); font-weight: 600; }
+        .text-center { text-align: center !important; }
     </style>
 </head>
 <body>
@@ -376,6 +409,35 @@
     </div>
 </div>
 
+<!-- MODAL FOR AMORTIZATION SCHEDULE -->
+<div class="modal-overlay" id="amortizationModal" onclick="handleModalClick(event)">
+    <div class="modal-container">
+        <div class="modal-header">
+            <div>
+                <h3 class="modal-title" id="modalTitle">Stack Schedule</h3>
+                <div class="modal-subtitle" id="modalSubtitle">Principal: $0 | Rate: 0% | Term: 0 months</div>
+            </div>
+            <button class="modal-close" onclick="closeModal()" aria-label="Close modal">&times;</button>
+        </div>
+        <div class="modal-body">
+            <table>
+                <thead>
+                    <tr>
+                        <th class="text-center">Pmt #</th>
+                        <th class="text-center">Sim Month</th>
+                        <th>Principal</th>
+                        <th>Interest</th>
+                        <th>Balance</th>
+                    </tr>
+                </thead>
+                <tbody id="modalTableBody">
+                    <!-- Rows injected by JS -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
 <script>
     let globalSimulationData = null;
     let projectionChart = null;
@@ -406,6 +468,7 @@
 
     // Formatters
     const formatCurrency = (val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(val);
+    const formatCurrencyPrecise = (val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(val);
     const formatNumber = (val) => new Intl.NumberFormat('en-US', { maximumFractionDigits: 1 }).format(val);
 
     // Main Simulation Engine
@@ -522,7 +585,7 @@
             // Calculate Monthly DTA (Debt-to-Asset Ratio)
             let currentRPB = 0;
             stacks.forEach((stack) => {
-                let k = (month - stack.startMonth) + 1; // Number of payments effectively made
+                let k = (month - stack.startMonth) + 1; // Payments effectively made
                 if (k > 0 && k <= investmentLength) {
                     currentRPB += calcRPB(stack.size, investmentRate, investmentLength, k);
                 }
@@ -575,8 +638,6 @@
             
             // Risk Math: Average Trajectories
             let avgDTA = sumDTAForYear / 12;
-            
-            // DSCR: Total Income / Total Interest (Gracefully handles $0 interest months without breaking math)
             let avgDSCR = sumInterestForYear > 0 ? (sumIncomeForYear / sumInterestForYear) : null; 
 
             // Snapshot Month Logic (End of year)
@@ -608,7 +669,10 @@
         let monthlyIncomeFromActiveStacks = lastMonthActiveStacks.reduce((sum, s) => sum + s.pmt, 0);
         let remainingFutureIncome = lastMonthActiveStacks.reduce((sum, s) => sum + (s.pmt * (s.endMonth - maxMonths)), 0);
 
-        globalSimulationData = { stacks, chartData, yearlyData, maxMonths, csvData, maxActiveStacks };
+        // Store configuration used for the run (needed for modal schedules)
+        let config = { investmentRate, investmentLength };
+
+        globalSimulationData = { stacks, chartData, yearlyData, maxMonths, csvData, maxActiveStacks, config };
 
         renderDashboard({
             netProfit: totalEarnings - totalDeployed,
@@ -722,7 +786,7 @@
                             <h4>1. Year-by-Year Summary (Macro)</h4>
                             <p>Takes a snapshot of your exact financial standing at the <em>end</em> of each year.</p>
                             <h4>2. Stack-by-Stack Summary (Micro)</h4>
-                            <p>An investment ledger allowing you to audit the exact math, duration, and profit for every single asset purchased.</p>
+                            <p>An investment ledger allowing you to audit the exact math, duration, and profit for every single asset purchased. Click <strong>View Schedule</strong> on any stack to see its full amortization and yield schedule.</p>
                             <hr style="border-top: 1px solid var(--border-color); margin: 16px 0;">
                             <h4>3. Risk Metrics (Leverage & Coverage)</h4>
                             <p>Tracks the health of your leverage via the "average trajectory" of the volatile velocity loop.</p>
@@ -780,6 +844,7 @@
                                 <th>Months to<br>Payoff</th>
                                 <th>Total<br>Earnings</th>
                                 <th>Profit</th>
+                                <th class="text-center">Action</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -796,6 +861,11 @@
                                     <td>${payoffDisplay}</td>
                                     <td>${formatCurrency(totalEarned)}</td>
                                     <td class="profit-green">+${formatCurrency(profit)}</td>
+                                    <td class="text-center">
+                                        <button class="btn-sm" onclick="openScheduleModal(${s.id})" aria-label="View amortization schedule">
+                                            🔍 View
+                                        </button>
+                                    </td>
                                 </tr>
                                 `
                             }).join('')}
@@ -894,7 +964,7 @@
             };
 
         } else {
-            // STANDARD FINANCIAL PROJECTIONS (YEAR OR STACK)
+            // STANDARD FINANCIAL PROJECTIONS
             let locData, cashData, incomeData, pointRadius;
 
             if (viewMode === 'year') {
@@ -919,7 +989,8 @@
                     backgroundColor: '#2563eb',
                     borderWidth: 2,
                     pointRadius: pointRadius,
-                    tension: 0.1
+                    tension: 0.1,
+                    yAxisID: 'y'
                 },
                 {
                     label: 'Total Cash Flow',
@@ -928,7 +999,8 @@
                     backgroundColor: '#10b981',
                     borderWidth: 2,
                     pointRadius: pointRadius > 0 ? pointRadius - 1 : 0,
-                    tension: 0.3
+                    tension: 0.3,
+                    yAxisID: 'y'
                 },
                 {
                     label: 'Investment Income',
@@ -937,12 +1009,14 @@
                     backgroundColor: '#8b5cf6',
                     borderWidth: 2,
                     pointRadius: pointRadius > 0 ? pointRadius - 1 : 0,
-                    tension: 0.3
+                    tension: 0.3,
+                    yAxisID: 'y'
                 }
             ];
 
             optionsScales = {
                 y: {
+                    type: 'linear', position: 'left',
                     beginAtZero: true,
                     ticks: { callback: val => '$' + val.toLocaleString() }
                 },
@@ -950,8 +1024,10 @@
             };
         }
 
-        // Update title text (keeping tooltip HTML intact)
-        titleElement.childNodes[0].nodeValue = titleText + " ";
+        // Update Title (preserve tooltip element)
+        let tooltipElement = titleElement.querySelector('.tooltip-wrapper');
+        titleElement.innerHTML = titleText;
+        if(tooltipElement) titleElement.appendChild(tooltipElement);
 
         projectionChart = new Chart(ctx, {
             type: 'line',
@@ -980,6 +1056,73 @@
         }
     }
 
+    // --- Modal Logic for Amortization Schedules ---
+    function openScheduleModal(stackId) {
+        if (!globalSimulationData) return;
+        
+        const stack = globalSimulationData.stacks.find(s => s.id === stackId);
+        const rateAnnual = globalSimulationData.config.investmentRate;
+        const months = globalSimulationData.config.investmentLength;
+        const r = rateAnnual / 100 / 12;
+        
+        let balance = stack.size;
+        
+        document.getElementById('modalTitle').innerText = `Amortization Schedule: Stack ${stack.id}`;
+        document.getElementById('modalSubtitle').innerText = `Principal: ${formatCurrency(stack.size)} | Yield: ${rateAnnual}% | Term: ${months} months`;
+        
+        let tbodyHTML = '';
+        
+        for (let i = 1; i <= months; i++) {
+            let interest = balance * r;
+            let principal = stack.pmt - interest;
+            
+            // Handle fractional penny rounding on the final payment
+            if (i === months || balance - principal < 0.01) {
+                principal = balance;
+                interest = stack.pmt - principal;
+            }
+            
+            balance -= principal;
+            if (balance < 0) balance = 0;
+
+            tbodyHTML += `
+                <tr>
+                    <td class="text-center">${i}</td>
+                    <td class="text-center">M${stack.startMonth + i - 1}</td>
+                    <td>${formatCurrencyPrecise(principal)}</td>
+                    <td>${formatCurrencyPrecise(interest)}</td>
+                    <td>${formatCurrencyPrecise(balance)}</td>
+                </tr>
+            `;
+            
+            if (balance <= 0) break;
+        }
+        
+        document.getElementById('modalTableBody').innerHTML = tbodyHTML;
+        document.getElementById('amortizationModal').classList.add('active');
+        document.body.style.overflow = 'hidden'; // Prevent background scrolling
+    }
+
+    function closeModal() {
+        document.getElementById('amortizationModal').classList.remove('active');
+        document.body.style.overflow = ''; // Restore background scrolling
+    }
+
+    function handleModalClick(event) {
+        // Close modal if clicking directly on the dark overlay background
+        if (event.target.classList.contains('modal-overlay')) {
+            closeModal();
+        }
+    }
+
+    // Escape key to close modal
+    document.addEventListener('keydown', function(event) {
+        if (event.key === "Escape" && document.getElementById('amortizationModal').classList.contains('active')) {
+            closeModal();
+        }
+    });
+
+    // --- CSV Downloader ---
     function downloadCSV() {
         if (!globalSimulationData || !globalSimulationData.csvData) { 
             alert("Please run the simulation first to generate data."); 
