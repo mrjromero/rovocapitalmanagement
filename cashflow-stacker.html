@@ -145,12 +145,7 @@
             transition: all 0.2s ease; box-shadow: var(--shadow-lg);
             font-size: 0.85rem; max-height: 60vh; overflow-y: auto; pointer-events: auto;
             font-weight: normal; line-height: 1.5;
-            
-            /* Mobile positioning */
-            width: 320px;
-            max-width: 85vw;
-            left: 50%;
-            transform: translateX(-50%);
+            width: 320px; max-width: 85vw; left: 50%; transform: translateX(-50%);
         }
         .tooltip-wrapper:hover .tooltip-content, 
         .tooltip-wrapper:focus-within .tooltip-content { 
@@ -158,12 +153,7 @@
         }
         
         @media (min-width: 768px) {
-            .tooltip-content {
-                width: 400px;
-                max-width: none;
-                left: 0;
-                transform: none;
-            }
+            .tooltip-content { width: 400px; max-width: none; left: 0; transform: none; }
         }
 
         .tooltip-content h4 { margin: 0 0 8px 0; color: var(--primary); font-size: 0.9rem; }
@@ -181,9 +171,7 @@
         }
         
         .metrics-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-            gap: 16px;
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 16px;
         }
         @media (min-width: 640px) {
             .metrics-grid { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
@@ -228,16 +216,13 @@
             background-color: var(--panel-bg); border-radius: var(--border-radius);
             box-shadow: var(--shadow-sm); border: 1px solid var(--border-color); padding: 20px;
         }
-        .tabs-header {
-            display: flex; flex-direction: column; gap: 16px; margin-bottom: 24px;
-        }
+        .tabs-header { display: flex; flex-direction: column; gap: 16px; margin-bottom: 24px; }
         @media (min-width: 640px) {
             .tabs-header { flex-direction: row; align-items: center; justify-content: space-between; }
         }
 
         .tabs {
-            display: inline-flex; background-color: #f1f5f9; border-radius: 8px;
-            padding: 4px;
+            display: inline-flex; background-color: #f1f5f9; border-radius: 8px; padding: 4px;
         }
         .tab-btn {
             background: transparent; border: none; padding: 10px 20px;
@@ -536,6 +521,10 @@
         let yearlyData = [];
         for (let year = 1; year <= totalYears; year++) {
             let targetMonth = year * 12;
+            
+            // Extract the LOC balance exactly at the end of this year
+            let endOfYearLocBalance = chartData.locBalance[targetMonth - 1] || 0;
+            
             let activeStacksInTargetMonth = stacks.filter(s => s.startMonth <= targetMonth && s.endMonth >= targetMonth);
             
             let investmentIncome = activeStacksInTargetMonth
@@ -549,7 +538,8 @@
                 activeStacks: activeStacksInTargetMonth.length,
                 investmentIncome: investmentIncome,
                 personalCashFlow: personalCashFlow,
-                totalMonthly: totalMonthly
+                totalMonthly: totalMonthly,
+                locBalance: endOfYearLocBalance
             });
         }
 
@@ -647,6 +637,7 @@
                             <button class="info-icon" aria-label="More info" tabindex="0">?</button>
                             <div class="tooltip-content">
                                 <p>This chart illustrates the <strong>velocity of money</strong>—showing exactly how your debt, personal input, and passive income interact over time.</p>
+                                <p><strong>Interactive Feature:</strong> The chart dynamically updates to show either a granular monthly "sawtooth" view or a macro yearly view depending on which data tab you have selected below.</p>
                                 <h4>The Three Lines</h4>
                                 <ul>
                                     <li><strong>LOC Balance (Blue):</strong> Total debt owed. It is inverted (shown as a positive number) to compare visually against income.</li>
@@ -766,45 +757,61 @@
         `;
         
         container.innerHTML = html;
-        renderChart(); 
+        
+        // Render chart in "Year" view initially because "Year-by-Year" tab is default active
+        renderChart('year'); 
     }
 
-    function renderChart() {
+    function renderChart(viewMode) {
         const ctx = document.getElementById('projectionChart').getContext('2d');
         if (projectionChart) projectionChart.destroy();
 
-        const data = globalSimulationData.chartData;
+        let labels, locData, cashData, incomeData, pointRadius;
+
+        if (viewMode === 'year') {
+            labels = globalSimulationData.yearlyData.map(y => 'Year ' + y.year);
+            locData = globalSimulationData.yearlyData.map(y => y.locBalance);
+            cashData = globalSimulationData.yearlyData.map(y => y.totalMonthly);
+            incomeData = globalSimulationData.yearlyData.map(y => y.investmentIncome);
+            pointRadius = 4; // Always show dots on the macro 10-point view
+        } else {
+            labels = globalSimulationData.chartData.labels;
+            locData = globalSimulationData.chartData.locBalance;
+            cashData = globalSimulationData.chartData.cashFlow;
+            incomeData = globalSimulationData.chartData.investmentIncome;
+            pointRadius = window.innerWidth < 768 ? 0 : 2; // Hide dots on mobile for smooth 120-point sawtooth
+        }
 
         projectionChart = new Chart(ctx, {
             type: 'line',
             data: {
-                labels: data.labels,
+                labels: labels,
                 datasets: [
                     {
-                        label: 'LOC Balance',
-                        data: data.locBalance,
+                        label: 'LOC Balance (Inverted)',
+                        data: locData,
                         borderColor: '#2563eb',
                         backgroundColor: '#2563eb',
                         borderWidth: 2,
-                        pointRadius: window.innerWidth < 768 ? 0 : 2,
+                        pointRadius: pointRadius,
                         tension: 0.1
                     },
                     {
                         label: 'Total Cash Flow',
-                        data: data.cashFlow,
+                        data: cashData,
                         borderColor: '#10b981',
                         backgroundColor: '#10b981',
                         borderWidth: 2,
-                        pointRadius: 0,
+                        pointRadius: pointRadius > 0 ? pointRadius - 1 : 0,
                         tension: 0.3
                     },
                     {
                         label: 'Investment Income',
-                        data: data.investmentIncome,
+                        data: incomeData,
                         borderColor: '#8b5cf6',
                         backgroundColor: '#8b5cf6',
                         borderWidth: 2,
-                        pointRadius: 0,
+                        pointRadius: pointRadius > 0 ? pointRadius - 1 : 0,
                         tension: 0.3
                     }
                 ]
@@ -830,11 +837,17 @@
     }
 
     function switchTab(tabId, event) {
+        // Handle UI button states
         document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
         document.querySelectorAll('.table-container').forEach(tc => tc.classList.remove('active'));
         
         event.target.classList.add('active');
         document.getElementById(tabId + '-tab').classList.add('active');
+
+        // Re-render chart to match the selected tab view
+        if (globalSimulationData) {
+            renderChart(tabId);
+        }
     }
 
     function downloadCSV() {
