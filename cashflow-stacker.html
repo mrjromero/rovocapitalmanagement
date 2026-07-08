@@ -102,19 +102,6 @@
             margin-top: 4px;
             display: block;
         }
-        .section-divider {
-            height: 1px;
-            background-color: var(--border-color);
-            margin: 24px 0;
-        }
-        .section-header {
-            font-size: 1rem;
-            font-weight: 600;
-            margin-bottom: 16px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
         .btn {
             background-color: var(--primary);
             color: white;
@@ -212,24 +199,6 @@
         <div class="hint">Project calculations for up to 50 years</div>
     </div>
 
-    <div class="section-divider"></div>
-
-    <div class="section-header">
-        Cash Withdrawal Settings
-    </div>
-
-    <div class="form-group">
-        <label>Target Monthly Withdrawal ($)</label>
-        <input type="number" id="targetWithdrawal" placeholder="e.g., 5000" value="5000">
-        <div class="hint">How much you want to withdraw per month</div>
-    </div>
-
-    <div class="form-group">
-        <label>Withdrawal as % of Cash Flow</label>
-        <input type="number" id="withdrawalPct" placeholder="e.g., 10" value="10">
-        <div class="hint">System calculates when cash flow can support your target at this %</div>
-    </div>
-
     <div style="margin-top: 30px;">
         <button class="btn" onclick="runSimulation()">Run Simulation & Download CSV</button>
     </div>
@@ -273,8 +242,6 @@
         const thresholdValue = parseFloat(document.getElementById('thresholdValue').value) || 0;
         const useCreditBalance = document.getElementById('useCreditBalance').checked;
         const totalYears = parseInt(document.getElementById('totalYears').value) || 10;
-        const targetWithdrawal = parseFloat(document.getElementById('targetWithdrawal').value) || 0;
-        const withdrawalPct = parseFloat(document.getElementById('withdrawalPct').value) || 0;
 
         // 2. Initialize State
         let maxMonths = totalYears * 12;
@@ -307,20 +274,9 @@
 
             // Calculate Total Income
             let totalIncome = personalCashFlow + stackIncomeThisMonth;
-
-            // Handle Withdrawals
-            let withdrawalAmount = 0;
-            if (targetWithdrawal > 0 && withdrawalPct > 0) {
-                let allowedWithdrawal = stackIncomeThisMonth * (withdrawalPct / 100);
-                if (allowedWithdrawal >= targetWithdrawal) {
-                    withdrawalAmount = targetWithdrawal;
-                }
-            }
-            
-            let netIncomeToLOC = totalIncome - withdrawalAmount;
             
             // Apply Income to LOC
-            locBalance += netIncomeToLOC;
+            locBalance += totalIncome;
             monthsSinceLastStack++;
 
             // Evaluate Buying a New Stack
@@ -379,8 +335,7 @@
                 'Month': month,
                 'LOC Balance': locBalance.toFixed(2),
                 'Personal Input': personalCashFlow.toFixed(2),
-                'Total Income': totalIncome.toFixed(2),
-                'Withdrawal': withdrawalAmount.toFixed(2)
+                'Total Income': totalIncome.toFixed(2)
             };
 
             // Populate stack columns
@@ -396,7 +351,7 @@
 
     function generateCSV(data, maxStacks) {
         // 1. Build Headers
-        let headers = ['Month', 'LOC Balance', 'Personal Input', 'Total Income', 'Withdrawal'];
+        let headers = ['Month', 'LOC Balance', 'Personal Input', 'Total Income'];
         for (let i = 1; i <= maxStacks; i++) {
             headers.push(`Stack ${i}`);
         }
