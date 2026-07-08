@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cash Flow Stack Simulator Dashboard</title>
-    <!-- Include Chart.js -->
+    <!-- Include Chart.js for Projections -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
@@ -16,9 +16,7 @@
             --border-color: #e5e7eb;
             --card-bg: #ffffff;
             --snapshot-bg: #f9fafb;
-            --chart-loc: #2563eb;
-            --chart-cash: #10b981;
-            --chart-income: #8b5cf6;
+            --profit-green: #10b981;
         }
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -41,6 +39,8 @@
                 grid-template-columns: 350px 1fr;
             }
         }
+        
+        /* Left Panel Styles */
         .form-panel {
             background-color: var(--panel-bg);
             border-radius: 8px;
@@ -48,23 +48,11 @@
             padding: 30px;
             height: fit-content;
         }
-        .results-panel {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-        .metrics-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 16px;
-        }
         h2, h3 {
             margin-top: 0;
             color: var(--text-main);
         }
-        .form-group {
-            margin-bottom: 16px;
-        }
+        .form-group { margin-bottom: 16px; }
         label {
             display: block;
             font-size: 0.875rem;
@@ -91,13 +79,12 @@
         }
         .radio-group { margin-bottom: 12px; }
         .radio-label {
-            display: flex;
-            align-items: center;
-            font-size: 0.875rem;
-            margin-bottom: 6px;
-            cursor: pointer;
+            display: flex; align-items: center;
+            font-size: 0.875rem; margin-bottom: 6px; cursor: pointer;
         }
         .radio-label input { margin-right: 8px; }
+        
+        /* Checkbox & Buttons */
         .checkbox-panel {
             background-color: var(--snapshot-bg);
             border: 1px solid var(--border-color);
@@ -106,148 +93,24 @@
             margin: 16px 0;
         }
         .checkbox-label {
-            display: flex;
-            align-items: flex-start;
-            font-size: 0.875rem;
-            font-weight: 600;
-            cursor: pointer;
+            display: flex; align-items: flex-start;
+            font-size: 0.875rem; font-weight: 600; cursor: pointer;
         }
-        .checkbox-label input {
-            margin-right: 10px;
-            margin-top: 3px;
+        .checkbox-label input { margin-right: 10px; margin-top: 3px; }
+        .checkbox-hint {
+            font-size: 0.75rem; color: var(--text-muted); font-weight: 400;
+            margin-top: 4px; display: block;
         }
         .btn {
-            background-color: var(--primary);
-            color: white;
-            border: none;
-            padding: 12px 20px;
-            border-radius: 6px;
-            font-size: 1rem;
-            font-weight: 600;
-            width: 100%;
-            cursor: pointer;
-            transition: 0.2s;
-            margin-bottom: 10px;
+            background-color: var(--primary); color: white; border: none;
+            padding: 12px 20px; border-radius: 6px; font-size: 1rem; font-weight: 600;
+            width: 100%; cursor: pointer; transition: 0.2s; margin-bottom: 10px;
         }
         .btn:hover { background-color: #1d4ed8; }
-        .btn-secondary {
-            background-color: white;
-            color: var(--text-main);
-            border: 1px solid var(--border-color);
-        }
+        .btn-secondary { background-color: white; color: var(--text-main); border: 1px solid var(--border-color); }
         .btn-secondary:hover { background-color: var(--bg-color); }
 
-        /* Card Styles */
-        .metric-card {
-            background-color: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 20px;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-        }
-        .snapshot-card { background-color: var(--snapshot-bg); }
-        .card-title {
-            font-size: 0.875rem;
-            font-weight: 600;
-            margin-bottom: 8px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .card-value {
-            font-size: 1.5rem;
-            font-weight: 700;
-            font-family: ui-monospace, monospace;
-            margin-bottom: 4px;
-        }
-        .card-subtext {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-        }
-        
-        /* Chart Container */
-        .chart-container {
-            background-color: var(--panel-bg);
-            border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            padding: 20px;
-            margin-top: 10px;
-        }
-
-        /* Tabs and Tables */
-        .tabs-container {
-            margin-top: 20px;
-        }
-        .tabs {
-            display: flex;
-            background-color: #e5e7eb;
-            border-radius: 6px;
-            padding: 4px;
-            margin-bottom: 20px;
-            width: fit-content;
-        }
-        .tab-btn {
-            background: transparent;
-            border: none;
-            padding: 8px 24px;
-            font-size: 0.875rem;
-            font-weight: 600;
-            color: var(--text-muted);
-            border-radius: 4px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .tab-btn.active {
-            background-color: white;
-            color: var(--text-main);
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        }
-        .table-container {
-            background-color: var(--panel-bg);
-            border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            padding: 20px;
-            overflow-x: auto;
-            display: none;
-        }
-        .table-container.active {
-            display: block;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.875rem;
-        }
-        th, td {
-            text-align: right;
-            padding: 12px 16px;
-            border-bottom: 1px solid var(--border-color);
-        }
-        th:first-child, td:first-child { text-align: left; }
-        th {
-            color: var(--text-muted);
-            font-weight: 600;
-            white-space: nowrap;
-        }
-        td {
-            font-family: ui-monospace, monospace;
-            color: var(--text-main);
-        }
-        .profit-green { color: #10b981; font-weight: 600; }
-        .net-blue { color: var(--primary); font-weight: 600; }
-        
-        .table-header-title {
-            font-size: 1.25rem;
-            font-weight: 700;
-            margin-bottom: 4px;
-        }
-        .table-header-sub {
-            font-size: 0.875rem;
-            color: var(--text-muted);
-            margin-bottom: 20px;
-        }
-
-        /* Tooltip */
+        /* Tooltip Styles */
         .tooltip-wrapper { display: inline-flex; align-items: center; position: relative; }
         .info-icon {
             display: inline-flex; align-items: center; justify-content: center;
@@ -260,19 +123,82 @@
             color: var(--text-main); text-align: left; border: 1px solid var(--border-color);
             border-radius: 8px; padding: 16px; position: absolute; z-index: 1000;
             top: 100%; left: 0; margin-top: 10px; opacity: 0;
-            transition: 0.2s; box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            transition: opacity 0.2s; box-shadow: 0 10px 25px rgba(0,0,0,0.1);
             font-size: 0.8rem; max-height: 400px; overflow-y: auto; pointer-events: auto;
         }
         .tooltip-wrapper:hover .tooltip-content { visibility: visible; opacity: 1; }
         .tooltip-content h4 { margin: 0 0 8px 0; color: var(--primary); font-size: 0.85rem; }
         .tooltip-content p, .tooltip-content ul { margin: 0 0 12px 0; }
         .tooltip-content li { margin-bottom: 6px; }
+
+        /* Right Panel Styles */
+        .results-panel { display: flex; flex-direction: column; gap: 20px; }
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+        }
+        .metric-card {
+            background-color: var(--card-bg); border: 1px solid var(--border-color);
+            border-radius: 8px; padding: 20px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+        .snapshot-card { background-color: var(--snapshot-bg); padding: 24px; }
+        .card-title {
+            font-size: 0.875rem; font-weight: 600; margin-bottom: 8px;
+            display: flex; align-items: center; gap: 6px;
+        }
+        .card-value {
+            font-size: 1.5rem; font-weight: 700;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            margin-bottom: 4px;
+        }
+        .card-subtext { font-size: 0.75rem; color: var(--text-muted); }
+        
+        .snapshot-metric { margin-top: 16px; }
+        .snapshot-metric-title { font-size: 0.875rem; color: var(--text-muted); margin-bottom: 4px; }
+        .snapshot-metric-value { font-size: 1.25rem; font-weight: 700; color: var(--text-main); }
+
+        /* Chart Container */
+        .chart-container {
+            background-color: var(--panel-bg); border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1); padding: 20px;
+        }
+
+        /* Tabs and Tables */
+        .tabs-container { margin-top: 10px; }
+        .tabs {
+            display: flex; background-color: #e5e7eb; border-radius: 6px;
+            padding: 4px; margin-bottom: 20px; width: fit-content;
+        }
+        .tab-btn {
+            background: transparent; border: none; padding: 8px 24px;
+            font-size: 0.875rem; font-weight: 600; color: var(--text-muted);
+            border-radius: 4px; cursor: pointer; transition: 0.2s;
+        }
+        .tab-btn.active { background-color: white; color: var(--text-main); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        
+        .table-container {
+            background-color: var(--panel-bg); border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1); padding: 20px;
+            overflow-x: auto; display: none;
+        }
+        .table-container.active { display: block; }
+        .table-header-title { font-size: 1.25rem; font-weight: 700; margin-bottom: 4px; }
+        .table-header-sub { font-size: 0.875rem; color: var(--text-muted); margin-bottom: 20px; }
+        
+        table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+        th, td { text-align: right; padding: 12px 16px; border-bottom: 1px solid var(--border-color); }
+        th:first-child, td:first-child { text-align: left; }
+        th { color: var(--text-muted); font-weight: 600; white-space: nowrap; }
+        td { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+        .profit-green { color: var(--profit-green); font-weight: 600; }
+        .net-blue { color: var(--primary); font-weight: 600; }
     </style>
 </head>
 <body>
 
 <div class="dashboard-container">
-    <!-- LEFT PANEL -->
+    <!-- LEFT PANEL: INPUT FORM -->
     <div class="form-panel">
         <h2>Simulation Settings</h2>
         
@@ -291,6 +217,7 @@
         <div class="form-group">
             <label>Investment Length (months)</label>
             <input type="number" id="investmentLength" value="36">
+            <div class="hint">Amortization period for each investment</div>
         </div>
         <div class="form-group">
             <label>First Stack Month</label>
@@ -299,6 +226,7 @@
         <div class="form-group">
             <label>Stack Increase Multiplier</label>
             <input type="number" step="0.1" id="stackMultiplier" value="1.5">
+            <div class="hint">Each new stack = previous stack × this multiplier</div>
         </div>
         <div class="form-group">
             <label>Personal Cash Flow ($/month)</label>
@@ -310,13 +238,29 @@
                 <label style="margin-bottom: 0;">When to Increase Stack Size</label>
                 <div class="info-icon">?</div>
                 <div class="tooltip-content">
-                    <p>The "When to Increase Stack Size" settings act as the throttle for the Cash Flow Stacking strategy...</p>
-                    <h4>1. Payoff Threshold</h4>
-                    <p>Increases stack size if LOC is paid off within a certain number of months.</p>
-                    <h4>2. Every Certain Number of Stacks</h4>
-                    <p>Increases stack size every X stacks created.</p>
-                    <h4>3. Every Certain Number of Months</h4>
-                    <p>Creates a larger stack every X months.</p>
+                    <p>The "When to Increase Stack Size" settings act as the throttle for the Cash Flow Stacking strategy. They dictate exactly when and how aggressively you scale up your investments as your cash flow grows. Whenever one of the three triggers below is hit, the system takes the base cost of your <em>previous</em> stack and multiplies it by your Stack Increase Multiplier.</p>
+                    <h4>1. Payoff Threshold (Performance-Based Scaling)</h4>
+                    <ul>
+                        <li><strong>The Logic:</strong> "Increase the stack size if the LOC is paid off within a certain number of months."</li>
+                        <li><strong>How it works:</strong> Tracks how many months it takes for your combined income to drive the LOC debt back to zero. If you clear the debt in <em>less than or equal to</em> your defined threshold, it applies the multiplier to the next purchase.</li>
+                    </ul>
+                    <h4>2. Every Certain Number of Stacks Created (Volume-Based Scaling)</h4>
+                    <ul>
+                        <li><strong>The Logic:</strong> "Increase the stack size every X stacks created."</li>
+                        <li><strong>How it works:</strong> A step-ladder approach based purely on the number of investment cycles you complete, regardless of how long they take.</li>
+                    </ul>
+                    <h4>3. Every Certain Number of Months (Time-Based Scaling)</h4>
+                    <ul>
+                        <li><strong>The Logic:</strong> "Create a new larger stack every X months."</li>
+                        <li><strong>How it works:</strong> Tied strictly to the simulation's calendar. It ignores how many stacks you've bought or how fast you are paying them off.</li>
+                    </ul>
+                    <hr>
+                    <h4>The "Use Credit Balance for Larger Stacks" Mechanic</h4>
+                    <p>Ensures you never have "lazy money" sitting idle. If you have a positive cash surplus when buying a stack:</p>
+                    <ul>
+                        <li><strong>If Unchecked:</strong> Deploys the exact calculated size, leaving cash uninvested.</li>
+                        <li><strong>If Checked:</strong> Sweeps your positive cash balance and adds it to the stack size, effectively purchasing a larger asset without taking on deeper debt.</li>
+                    </ul>
                 </div>
             </div>
             
@@ -346,6 +290,7 @@
                 <input type="checkbox" id="useCreditBalance">
                 <div>
                     Use Credit Balance for Larger Stacks
+                    <span class="checkbox-hint">When creating a new stack, if there's a credit balance on the LOC, use it to deploy a larger investment.</span>
                 </div>
             </label>
         </div>
@@ -361,10 +306,10 @@
         </div>
     </div>
 
-    <!-- RIGHT PANEL -->
+    <!-- RIGHT PANEL: DASHBOARD RESULTS -->
     <div class="results-panel" id="results-container">
-        <div style="color: var(--text-muted); font-size: 0.875rem; padding: 20px;">
-            Click "Run Simulation" to generate your metrics, chart, and tables.
+        <div style="color: var(--text-muted); font-size: 0.875rem; padding: 20px; background: white; border-radius: 8px; border: 1px solid var(--border-color);">
+            Click <strong>"Run Simulation"</strong> on the left to generate your dashboard metrics, projections, and tables.
         </div>
     </div>
 </div>
@@ -373,6 +318,7 @@
     let globalSimulationData = null;
     let projectionChart = null;
 
+    // UI Updater for Radio Buttons
     function updateThresholdUI() {
         const trigger = document.querySelector('input[name="increaseTrigger"]:checked').value;
         const label = document.getElementById('thresholdLabel');
@@ -381,15 +327,19 @@
         else if (trigger === 'months') label.innerText = 'Month Threshold';
     }
 
+    // Standard Amortization PMT Formula
     function calculatePMT(ratePerPeriod, numberOfPeriods, presentValue) {
         if (ratePerPeriod === 0) return presentValue / numberOfPeriods;
         return (presentValue * ratePerPeriod) / (1 - Math.pow(1 + ratePerPeriod, -numberOfPeriods));
     }
 
+    // Formatters
     const formatCurrency = (val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(val);
     const formatNumber = (val) => new Intl.NumberFormat('en-US', { maximumFractionDigits: 1 }).format(val);
 
+    // Main Simulation Engine
     function runSimulation() {
+        // Gather Inputs
         const initialLOC = parseFloat(document.getElementById('initialLOC').value) || 0;
         const locInterestRate = parseFloat(document.getElementById('locInterestRate').value) || 0;
         const investmentRate = parseFloat(document.getElementById('investmentRate').value) || 0;
@@ -402,6 +352,7 @@
         const useCreditBalance = document.getElementById('useCreditBalance').checked;
         const totalYears = parseInt(document.getElementById('totalYears').value) || 10;
 
+        // Initialize State
         let maxMonths = totalYears * 12;
         let locBalance = 0; 
         let currentStackBaseSize = initialLOC; 
@@ -411,36 +362,46 @@
         let totalLOCInterestPaid = 0;
         
         let chartData = { labels: [], locBalance: [], cashFlow: [], investmentIncome: [] };
+        let csvData = [];
+        let maxActiveStacks = 0;
 
+        // Run Month-by-Month Loop
         for (let month = 1; month <= maxMonths; month++) {
             let stackIncomeThisMonth = 0;
+            let activeStacksThisMonth = {};
 
+            // Calculate LOC Interest (Charged if balance is negative/in debt)
             if (locBalance < 0) {
                 let interestCharge = Math.abs(locBalance) * (locInterestRate / 100 / 12);
                 totalLOCInterestPaid += interestCharge;
                 locBalance -= interestCharge; 
             }
 
-            stacks.forEach((stack) => {
+            // Calculate Cash Flow from Active Stacks
+            stacks.forEach((stack, index) => {
                 if (month >= stack.startMonth && month <= stack.endMonth) {
                     stackIncomeThisMonth += stack.pmt;
+                    activeStacksThisMonth[`Stack ${index + 1}`] = stack.pmt;
                 }
             });
 
+            // Apply Total Income to LOC
             let totalIncome = personalCashFlow + stackIncomeThisMonth;
             locBalance += totalIncome;
             monthsSinceLastStack++;
 
-            // Record Chart Data (Invert LOC so debt goes up on chart like the image)
+            // Record Chart Data (Invert LOC so debt displays positively on chart)
             chartData.labels.push(`M${month}`);
             chartData.locBalance.push(locBalance < 0 ? Math.abs(locBalance) : 0);
             chartData.investmentIncome.push(stackIncomeThisMonth);
             chartData.cashFlow.push(totalIncome);
 
+            // Evaluate Purchasing a New Stack
             if (month >= firstStackMonth && locBalance >= 0) {
                 let actualStackSize = currentStackBaseSize;
                 let payoffTime = stackCount === 0 ? 0 : monthsSinceLastStack;
 
+                // Handle Increase Triggers
                 if (increaseTrigger === 'payoff' && stackCount > 0 && monthsSinceLastStack <= thresholdValue) {
                     currentStackBaseSize *= stackMultiplier;
                 } else if (increaseTrigger === 'stacks' && stackCount > 0 && (stackCount + 1) % thresholdValue === 0) {
@@ -451,6 +412,7 @@
                 }
                 actualStackSize = currentStackBaseSize;
 
+                // Handle Credit Balance Sweep
                 if (useCreditBalance && locBalance > 0) {
                     actualStackSize += locBalance;
                     locBalance = -(actualStackSize - locBalance); 
@@ -459,8 +421,10 @@
                 }
 
                 stackCount++;
+                maxActiveStacks = Math.max(maxActiveStacks, stackCount);
                 let pmt = calculatePMT(investmentRate / 100 / 12, investmentLength, actualStackSize);
 
+                // Update the previous stack's actual payoff time
                 if (stackCount > 1) {
                     stacks[stacks.length - 1].payoffMonths = payoffTime;
                 }
@@ -471,24 +435,38 @@
                     startMonth: month, 
                     endMonth: month + investmentLength - 1,
                     pmt: pmt,
-                    payoffMonths: 0 // Default until next stack pays it off
+                    payoffMonths: 0 // Will remain 0 if it never pays off by end of sim
                 });
 
                 monthsSinceLastStack = 0;
+                activeStacksThisMonth[`Stack ${stackCount}`] = pmt;
             }
+
+            // Record Row Data for CSV
+            let row = {
+                'Month': month,
+                'LOC Balance': locBalance.toFixed(2),
+                'Personal Input': personalCashFlow.toFixed(2),
+                'Total Income': totalIncome.toFixed(2)
+            };
+            for (let s = 1; s <= stackCount; s++) {
+                row[`Stack ${s}`] = activeStacksThisMonth[`Stack ${s}`] ? activeStacksThisMonth[`Stack ${s}`].toFixed(2) : '';
+            }
+            csvData.push(row);
         }
         
+        // Finalize payoff time for the very last stack if it cleared before sim ended
         if (locBalance >= 0 && stacks.length > 0) {
             stacks[stacks.length - 1].payoffMonths = monthsSinceLastStack;
         }
 
-        // --- Calculate Year-by-Year Data ---
+        // --- Calculate Year-by-Year Table Data ---
         let yearlyData = [];
         for (let year = 1; year <= totalYears; year++) {
             let targetMonth = year * 12;
             let activeStacksInTargetMonth = stacks.filter(s => s.startMonth <= targetMonth && s.endMonth >= targetMonth);
             
-            // Following the image logic: only sum PMT for stacks bought *before* the snapshot month
+            // Only sum PMT for stacks bought *before* the target snapshot month
             let investmentIncome = activeStacksInTargetMonth
                 .filter(s => s.startMonth < targetMonth)
                 .reduce((sum, s) => sum + s.pmt, 0);
@@ -504,7 +482,7 @@
             });
         }
 
-        // Calculate Overall Metrics
+        // --- Calculate Top-Level Metrics ---
         let totalDeployed = stacks.reduce((sum, s) => sum + s.size, 0);
         let totalEarnings = stacks.reduce((sum, s) => sum + (s.pmt * investmentLength), 0);
         
@@ -512,8 +490,10 @@
         let monthlyIncomeFromActiveStacks = lastMonthActiveStacks.reduce((sum, s) => sum + s.pmt, 0);
         let remainingFutureIncome = lastMonthActiveStacks.reduce((sum, s) => sum + (s.pmt * (s.endMonth - maxMonths)), 0);
 
-        globalSimulationData = { stacks, chartData, yearlyData, maxMonths };
+        // Store data globally for the CSV downloader and tab switches
+        globalSimulationData = { stacks, chartData, yearlyData, maxMonths, csvData, maxActiveStacks };
 
+        // Send to DOM rendering
         renderDashboard({
             netProfit: totalEarnings - totalDeployed,
             totalEarnings, totalDeployed,
@@ -530,37 +510,69 @@
     function renderDashboard(metrics) {
         const container = document.getElementById('results-container');
         
+        // Build the 6-card grid + 1 Snapshot card
         let html = `
             <div class="metrics-grid">
                 <div class="metric-card">
                     <div class="card-title">Net Investment Profit</div>
                     <div class="card-value">${formatCurrency(metrics.netProfit)}</div>
-                    <div class="card-subtext">${formatCurrency(metrics.totalEarnings)} earnings - ${formatCurrency(metrics.totalDeployed)} deployed</div>
+                    <div class="card-subtext">${formatCurrency(metrics.totalEarnings)} earnings &ndash; ${formatCurrency(metrics.totalDeployed)} deployed</div>
                 </div>
                 <div class="metric-card">
                     <div class="card-title">Investment Earnings</div>
                     <div class="card-value">${formatCurrency(metrics.totalEarnings)}</div>
+                    <div class="card-subtext">Total payments received</div>
+                </div>
+                <div class="metric-card">
+                    <div class="card-title">Personal Cash Contributed</div>
+                    <div class="card-value">${formatCurrency(metrics.personalCash)}</div>
+                    <div class="card-subtext">Cash flow & recurring income</div>
                 </div>
                 <div class="metric-card">
                     <div class="card-title">LOC Interest Paid</div>
                     <div class="card-value">${formatCurrency(metrics.locInterest)}</div>
+                    <div class="card-subtext">Cost of borrowing</div>
                 </div>
-                <div class="metric-card snapshot-card">
-                    <div class="card-title">End of Year ${metrics.totalYears} Snapshot</div>
-                    <div style="font-size: 1.25rem; font-weight: bold;">${formatCurrency(metrics.monthlyIncomeFromActiveStacks)} / mo</div>
-                    <div class="card-subtext">${metrics.activeStacksStillPaying} Active Stacks | ${formatCurrency(metrics.remainingFutureIncome)} Remaining Future</div>
+                <div class="metric-card">
+                    <div class="card-title">Cash Withdrawn</div>
+                    <div class="card-value">$0</div>
+                    <div class="card-subtext">Not configured</div>
+                </div>
+                <div class="metric-card">
+                    <div class="card-title">Total Stacks</div>
+                    <div class="card-value">${metrics.totalStacks}</div>
+                    <div class="card-subtext">Investment cycles</div>
+                </div>
+            </div>
+
+            <div class="metric-card snapshot-card">
+                <div class="card-title">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                    End of Year ${metrics.totalYears} Snapshot
+                </div>
+                <div class="snapshot-metric">
+                    <div class="snapshot-metric-title">Active Stacks Still Paying</div>
+                    <div class="snapshot-metric-value">${metrics.activeStacksStillPaying}</div>
+                </div>
+                <div class="snapshot-metric">
+                    <div class="snapshot-metric-title">Monthly Income from Stacks</div>
+                    <div class="snapshot-metric-value">${formatCurrency(metrics.monthlyIncomeFromActiveStacks)}</div>
+                </div>
+                <div class="snapshot-metric">
+                    <div class="snapshot-metric-title">Remaining Future Income</div>
+                    <div class="snapshot-metric-value">${formatCurrency(metrics.remainingFutureIncome)}</div>
                 </div>
             </div>
 
             <div class="chart-container">
                 <h3>Cash Flow & LOC Balance Projection</h3>
-                <canvas id="projectionChart" height="100"></canvas>
+                <canvas id="projectionChart" height="110"></canvas>
             </div>
 
             <div class="tabs-container">
                 <div class="tabs">
-                    <button class="tab-btn active" onclick="switchTab('year')">Year-by-Year</button>
-                    <button class="tab-btn" onclick="switchTab('stack')">Stack-by-Stack</button>
+                    <button class="tab-btn active" onclick="switchTab('year', event)">Year-by-Year</button>
+                    <button class="tab-btn" onclick="switchTab('stack', event)">Stack-by-Stack</button>
                 </div>
 
                 <div id="year-tab" class="table-container active">
@@ -632,12 +644,12 @@
         `;
         
         container.innerHTML = html;
-        renderChart();
+        renderChart(); // Draw Chart.js visualization
     }
 
     function renderChart() {
         const ctx = document.getElementById('projectionChart').getContext('2d');
-        if (projectionChart) projectionChart.destroy();
+        if (projectionChart) projectionChart.destroy(); // Clear old chart instance
 
         const data = globalSimulationData.chartData;
 
@@ -694,7 +706,7 @@
         });
     }
 
-    function switchTab(tabId) {
+    function switchTab(tabId, event) {
         document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
         document.querySelectorAll('.table-container').forEach(tc => tc.classList.remove('active'));
         
@@ -703,9 +715,46 @@
     }
 
     function downloadCSV() {
-        if (!globalSimulationData) { alert("Please run the simulation first."); return; }
-        // CSV Generation logic can be re-added here easily based on the previous versions.
-        alert("CSV download feature is active. (Code omitted for brevity, but uses same logic as previous versions).");
+        if (!globalSimulationData || !globalSimulationData.csvData) { 
+            alert("Please run the simulation first to generate data."); 
+            return; 
+        }
+
+        let data = globalSimulationData.csvData;
+        let maxStacks = globalSimulationData.maxActiveStacks;
+
+        // Build Headers
+        let headers = ['Month', 'LOC Balance', 'Personal Input', 'Total Income'];
+        for (let i = 1; i <= maxStacks; i++) {
+            headers.push(`Stack ${i}`);
+        }
+
+        // Build Rows
+        let csvRows = [];
+        csvRows.push(headers.join(','));
+
+        data.forEach(row => {
+            let values = headers.map(header => {
+                let val = row[header] !== undefined ? row[header] : '';
+                return `"${val}"`; 
+            });
+            csvRows.push(values.join(','));
+        });
+
+        // Trigger Download
+        let csvString = csvRows.join('\n');
+        let blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+        let url = URL.createObjectURL(blob);
+        
+        let link = document.createElement("a");
+        link.setAttribute("href", url);
+        
+        let dateStr = new Date().toISOString().replace(/[:.]/g, '-');
+        link.setAttribute("download", `cashflow_simulation_${dateStr}.csv`);
+        
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     }
 </script>
 
