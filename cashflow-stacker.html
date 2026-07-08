@@ -9,189 +9,263 @@
     <style>
         :root {
             --primary: #2563eb;
+            --primary-hover: #1d4ed8;
             --bg-color: #f3f4f6;
             --panel-bg: #ffffff;
             --text-main: #111827;
             --text-muted: #6b7280;
             --border-color: #e5e7eb;
             --card-bg: #ffffff;
-            --snapshot-bg: #f9fafb;
+            --snapshot-bg: #f8fafc;
             --profit-green: #10b981;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --border-radius: 12px;
         }
+
+        * { box-sizing: border-box; }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             background-color: var(--bg-color);
             color: var(--text-main);
             margin: 0;
-            padding: 40px 20px;
+            padding: 20px 15px;
             display: flex;
             justify-content: center;
+            line-height: 1.5;
         }
+
         .dashboard-container {
             display: grid;
             grid-template-columns: 1fr;
-            gap: 30px;
-            max-width: 1200px;
+            gap: 24px;
+            max-width: 1280px;
             width: 100%;
         }
+
         @media (min-width: 992px) {
+            body { padding: 40px 20px; }
             .dashboard-container {
-                grid-template-columns: 350px 1fr;
+                grid-template-columns: 360px 1fr;
+                gap: 32px;
             }
         }
         
-        /* Left Panel Styles */
+        /* --- Left Panel Styles --- */
         .form-panel {
             background-color: var(--panel-bg);
-            border-radius: 8px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-            padding: 30px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-md);
+            padding: 24px;
             height: fit-content;
         }
-        h2, h3 {
-            margin-top: 0;
-            color: var(--text-main);
-        }
-        .form-group { margin-bottom: 16px; }
+        
+        h2 { margin-top: 0; font-size: 1.5rem; color: var(--text-main); margin-bottom: 24px; }
+        h3 { margin-top: 0; font-size: 1.125rem; color: var(--text-main); }
+        
+        .form-group { margin-bottom: 20px; }
         label {
-            display: block;
-            font-size: 0.875rem;
-            font-weight: 600;
-            margin-bottom: 6px;
+            display: block; font-size: 0.875rem; font-weight: 600;
+            margin-bottom: 8px; color: #374151;
         }
+        
         input[type="number"] {
-            width: 100%;
-            padding: 8px 12px;
+            width: 100%; padding: 12px 16px;
             border: 1px solid var(--border-color);
-            border-radius: 4px;
-            font-size: 1rem;
-            box-sizing: border-box;
+            border-radius: 8px; font-size: 1rem;
+            transition: all 0.2s ease;
+            background-color: #fcfcfc;
         }
         input[type="number"]:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+            outline: none; border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+            background-color: #ffffff;
         }
-        .hint {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            margin-top: 4px;
-        }
-        .radio-group { margin-bottom: 12px; }
-        .radio-label {
-            display: flex; align-items: center;
-            font-size: 0.875rem; margin-bottom: 6px; cursor: pointer;
-        }
-        .radio-label input { margin-right: 8px; }
         
-        /* Checkbox & Buttons */
+        .hint { font-size: 0.75rem; color: var(--text-muted); margin-top: 6px; }
+        
+        .radio-group { margin-top: 12px; display: flex; flex-direction: column; gap: 10px; }
+        .radio-label {
+            display: flex; align-items: flex-start;
+            font-size: 0.875rem; cursor: pointer;
+            padding: 8px; border-radius: 6px;
+            transition: background-color 0.2s;
+        }
+        .radio-label:hover { background-color: #f3f4f6; }
+        .radio-label input { margin-right: 10px; margin-top: 3px; transform: scale(1.1); }
+        
         .checkbox-panel {
             background-color: var(--snapshot-bg);
             border: 1px solid var(--border-color);
-            border-radius: 6px;
-            padding: 12px;
-            margin: 16px 0;
+            border-radius: 8px; padding: 16px; margin: 24px 0;
         }
         .checkbox-label {
             display: flex; align-items: flex-start;
             font-size: 0.875rem; font-weight: 600; cursor: pointer;
         }
-        .checkbox-label input { margin-right: 10px; margin-top: 3px; }
+        .checkbox-label input { margin-right: 12px; margin-top: 4px; transform: scale(1.2); }
         .checkbox-hint {
             font-size: 0.75rem; color: var(--text-muted); font-weight: 400;
-            margin-top: 4px; display: block;
+            margin-top: 6px; display: block; line-height: 1.4;
         }
+        
+        /* Buttons */
+        .btn-group { display: flex; flex-direction: column; gap: 12px; margin-top: 32px; }
         .btn {
             background-color: var(--primary); color: white; border: none;
-            padding: 12px 20px; border-radius: 6px; font-size: 1rem; font-weight: 600;
-            width: 100%; cursor: pointer; transition: 0.2s; margin-bottom: 10px;
+            padding: 14px 20px; border-radius: 8px; font-size: 1rem; font-weight: 600;
+            width: 100%; cursor: pointer; transition: all 0.2s ease;
+            box-shadow: var(--shadow-sm);
         }
-        .btn:hover { background-color: #1d4ed8; }
-        .btn-secondary { background-color: white; color: var(--text-main); border: 1px solid var(--border-color); }
-        .btn-secondary:hover { background-color: var(--bg-color); }
+        .btn:hover { background-color: var(--primary-hover); transform: translateY(-1px); box-shadow: var(--shadow-md); }
+        .btn:active { transform: translateY(0); }
+        .btn-secondary {
+            background-color: white; color: #374151; border: 1px solid #d1d5db;
+        }
+        .btn-secondary:hover { background-color: #f9fafb; border-color: #9ca3af; }
 
-        /* Tooltip Styles */
+        /* --- Tooltip Styles (Mobile Optimized) --- */
         .tooltip-wrapper { display: inline-flex; align-items: center; position: relative; }
         .info-icon {
             display: inline-flex; align-items: center; justify-content: center;
-            width: 16px; height: 16px; border-radius: 50%;
-            background-color: var(--text-muted); color: white;
-            font-size: 11px; font-weight: bold; cursor: help; margin-left: 8px;
+            width: 18px; height: 18px; border-radius: 50%;
+            background-color: #9ca3af; color: white;
+            font-size: 12px; font-weight: bold; cursor: help; margin-left: 8px;
+            transition: background-color 0.2s; outline: none;
         }
+        .info-icon:hover, .info-icon:focus { background-color: var(--primary); }
+        
         .tooltip-content {
-            visibility: hidden; width: 380px; background-color: #ffffff;
+            visibility: hidden; background-color: #ffffff;
             color: var(--text-main); text-align: left; border: 1px solid var(--border-color);
-            border-radius: 8px; padding: 16px; position: absolute; z-index: 1000;
-            top: 100%; left: 0; margin-top: 10px; opacity: 0;
-            transition: opacity 0.2s; box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-            font-size: 0.8rem; max-height: 500px; overflow-y: auto; pointer-events: auto;
+            border-radius: 12px; padding: 20px; position: absolute; z-index: 1000;
+            top: 100%; margin-top: 12px; opacity: 0;
+            transition: all 0.2s ease; box-shadow: var(--shadow-lg);
+            font-size: 0.85rem; max-height: 60vh; overflow-y: auto; pointer-events: auto;
             font-weight: normal; line-height: 1.5;
+            
+            /* Mobile positioning */
+            width: 320px;
+            max-width: 85vw;
+            left: 50%;
+            transform: translateX(-50%);
         }
-        .tooltip-wrapper:hover .tooltip-content { visibility: visible; opacity: 1; }
-        .tooltip-content h4 { margin: 0 0 8px 0; color: var(--primary); font-size: 0.85rem; }
+        .tooltip-wrapper:hover .tooltip-content, 
+        .tooltip-wrapper:focus-within .tooltip-content { 
+            visibility: visible; opacity: 1; 
+        }
+        
+        @media (min-width: 768px) {
+            .tooltip-content {
+                width: 400px;
+                max-width: none;
+                left: 0;
+                transform: none;
+            }
+        }
+
+        .tooltip-content h4 { margin: 0 0 8px 0; color: var(--primary); font-size: 0.9rem; }
         .tooltip-content p, .tooltip-content ul { margin: 0 0 12px 0; }
         .tooltip-content li { margin-bottom: 6px; }
 
-        /* Right Panel Styles */
-        .results-panel { display: flex; flex-direction: column; gap: 20px; }
+        /* --- Right Panel & Metrics --- */
+        .results-panel { display: flex; flex-direction: column; gap: 24px; }
+        
+        .empty-state {
+            color: var(--text-muted); font-size: 1rem; padding: 40px 20px; 
+            background: white; border-radius: var(--border-radius); 
+            border: 2px dashed var(--border-color); text-align: center;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
+        
         .metrics-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
             gap: 16px;
         }
+        @media (min-width: 640px) {
+            .metrics-grid { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+        }
+        
         .metric-card {
             background-color: var(--card-bg); border: 1px solid var(--border-color);
-            border-radius: 8px; padding: 20px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            border-radius: var(--border-radius); padding: 20px; box-shadow: var(--shadow-sm);
+            display: flex; flex-direction: column; justify-content: center;
         }
-        .snapshot-card { background-color: var(--snapshot-bg); padding: 24px; }
+        .snapshot-card { background-color: var(--snapshot-bg); padding: 24px; border-width: 2px; }
+        
         .card-title {
-            font-size: 0.875rem; font-weight: 600; margin-bottom: 8px;
-            display: flex; align-items: center; gap: 6px;
+            font-size: 0.8125rem; font-weight: 600; margin-bottom: 12px;
+            color: #4b5563; display: flex; align-items: center; gap: 6px;
         }
         .card-value {
-            font-size: 1.5rem; font-weight: 700;
-            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-            margin-bottom: 4px;
+            font-size: 1.5rem; font-weight: 700; color: var(--text-main);
+            font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+            margin-bottom: 4px; letter-spacing: -0.5px;
         }
-        .card-subtext { font-size: 0.75rem; color: var(--text-muted); }
+        @media (min-width: 768px) { .card-value { font-size: 1.75rem; } }
         
-        .snapshot-metric { margin-top: 16px; }
-        .snapshot-metric-title { font-size: 0.875rem; color: var(--text-muted); margin-bottom: 4px; }
-        .snapshot-metric-value { font-size: 1.25rem; font-weight: 700; color: var(--text-main); }
+        .card-subtext { font-size: 0.75rem; color: var(--text-muted); line-height: 1.3; }
+        
+        .snapshot-metric { margin-top: 20px; }
+        .snapshot-metric-title { font-size: 0.875rem; color: #4b5563; margin-bottom: 4px; font-weight: 500; }
+        .snapshot-metric-value { font-size: 1.25rem; font-weight: 700; color: var(--primary); }
 
-        /* Chart Container */
+        /* --- Chart Container --- */
         .chart-container {
-            background-color: var(--panel-bg); border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1); padding: 20px;
+            background-color: var(--panel-bg); border-radius: var(--border-radius);
+            box-shadow: var(--shadow-sm); border: 1px solid var(--border-color); padding: 20px;
+        }
+        .chart-wrapper {
+            position: relative; height: 300px; width: 100%; margin-top: 16px;
+        }
+        @media (min-width: 768px) { .chart-wrapper { height: 400px; } }
+
+        /* --- Tabs and Tables --- */
+        .tabs-container {
+            background-color: var(--panel-bg); border-radius: var(--border-radius);
+            box-shadow: var(--shadow-sm); border: 1px solid var(--border-color); padding: 20px;
+        }
+        .tabs-header {
+            display: flex; flex-direction: column; gap: 16px; margin-bottom: 24px;
+        }
+        @media (min-width: 640px) {
+            .tabs-header { flex-direction: row; align-items: center; justify-content: space-between; }
         }
 
-        /* Tabs and Tables */
-        .tabs-container { margin-top: 10px; }
         .tabs {
-            display: flex; background-color: #e5e7eb; border-radius: 6px;
-            padding: 4px; width: fit-content; margin-bottom: 0;
+            display: inline-flex; background-color: #f1f5f9; border-radius: 8px;
+            padding: 4px;
         }
         .tab-btn {
-            background: transparent; border: none; padding: 8px 24px;
-            font-size: 0.875rem; font-weight: 600; color: var(--text-muted);
-            border-radius: 4px; cursor: pointer; transition: 0.2s;
+            background: transparent; border: none; padding: 10px 20px;
+            font-size: 0.875rem; font-weight: 600; color: #64748b;
+            border-radius: 6px; cursor: pointer; transition: all 0.2s ease;
         }
-        .tab-btn.active { background-color: white; color: var(--text-main); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .tab-btn:hover { color: var(--text-main); }
+        .tab-btn.active {
+            background-color: white; color: var(--primary);
+            box-shadow: var(--shadow-sm);
+        }
         
-        .table-container {
-            background-color: var(--panel-bg); border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1); padding: 20px;
-            overflow-x: auto; display: none;
-        }
-        .table-container.active { display: block; }
+        .table-container { display: none; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        .table-container.active { display: block; animation: fadeIn 0.3s ease; }
+        
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
         .table-header-title { font-size: 1.25rem; font-weight: 700; margin-bottom: 4px; }
-        .table-header-sub { font-size: 0.875rem; color: var(--text-muted); margin-bottom: 20px; }
+        .table-header-sub { font-size: 0.875rem; color: var(--text-muted); margin-bottom: 24px; }
         
-        table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
-        th, td { text-align: right; padding: 12px 16px; border-bottom: 1px solid var(--border-color); }
+        table { width: 100%; border-collapse: collapse; font-size: 0.875rem; min-width: 700px; }
+        th, td { text-align: right; padding: 14px 16px; border-bottom: 1px solid var(--border-color); }
         th:first-child, td:first-child { text-align: left; }
-        th { color: var(--text-muted); font-weight: 600; white-space: nowrap; }
-        td { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+        th { color: #4b5563; font-weight: 600; white-space: nowrap; background-color: #f8fafc; }
+        td { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; }
+        
+        tbody tr:hover { background-color: #f8fafc; }
+        
         .profit-green { color: var(--profit-green); font-weight: 600; }
         .net-blue { color: var(--primary); font-weight: 600; }
     </style>
@@ -237,25 +311,22 @@
         <div class="form-group">
             <div class="tooltip-wrapper">
                 <label style="margin-bottom: 0;">When to Increase Stack Size</label>
-                <div class="info-icon">?</div>
+                <button class="info-icon" aria-label="More info" tabindex="0">?</button>
                 <div class="tooltip-content">
-                    <p>The "When to Increase Stack Size" settings act as the throttle for the Cash Flow Stacking strategy. They dictate exactly when and how aggressively you scale up your investments as your cash flow grows. Whenever one of the three triggers below is hit, the system takes the base cost of your <em>previous</em> stack and multiplies it by your Stack Increase Multiplier.</p>
-                    <h4>1. Payoff Threshold (Performance-Based Scaling)</h4>
+                    <p>The "When to Increase Stack Size" settings act as the throttle for the Cash Flow Stacking strategy. They dictate exactly when and how aggressively you scale up your investments as your cash flow grows.</p>
+                    <h4>1. Payoff Threshold (Performance-Based)</h4>
                     <ul>
-                        <li><strong>The Logic:</strong> "Increase the stack size if the LOC is paid off within a certain number of months."</li>
-                        <li><strong>How it works:</strong> Tracks how many months it takes for your combined income to drive the LOC debt back to zero. If you clear the debt in <em>less than or equal to</em> your defined threshold, it applies the multiplier to the next purchase.</li>
+                        <li>Tracks how many months it takes for your combined income to drive the LOC debt back to zero. If you clear the debt in <em>less than or equal to</em> your defined threshold, it applies the multiplier to the next purchase.</li>
                     </ul>
-                    <h4>2. Every Certain Number of Stacks Created (Volume-Based Scaling)</h4>
+                    <h4>2. Every Certain Number of Stacks (Volume-Based)</h4>
                     <ul>
-                        <li><strong>The Logic:</strong> "Increase the stack size every X stacks created."</li>
-                        <li><strong>How it works:</strong> A step-ladder approach based purely on the number of investment cycles you complete, regardless of how long they take.</li>
+                        <li>A step-ladder approach based purely on the number of investment cycles you complete, regardless of how long they take.</li>
                     </ul>
-                    <h4>3. Every Certain Number of Months (Time-Based Scaling)</h4>
+                    <h4>3. Every Certain Number of Months (Time-Based)</h4>
                     <ul>
-                        <li><strong>The Logic:</strong> "Create a new larger stack every X months."</li>
-                        <li><strong>How it works:</strong> Tied strictly to the simulation's calendar. It ignores how many stacks you've bought or how fast you are paying them off.</li>
+                        <li>Tied strictly to the simulation's calendar. It ignores how many stacks you've bought or how fast you are paying them off.</li>
                     </ul>
-                    <hr style="border-top: 1px solid var(--border-color); margin: 12px 0;">
+                    <hr style="border-top: 1px solid var(--border-color); margin: 16px 0;">
                     <h4>The "Use Credit Balance for Larger Stacks" Mechanic</h4>
                     <p>Ensures you never have "lazy money" sitting idle. If you have a positive cash surplus when buying a stack:</p>
                     <ul>
@@ -265,18 +336,18 @@
                 </div>
             </div>
             
-            <div class="radio-group" style="margin-top: 12px;">
+            <div class="radio-group">
                 <label class="radio-label">
                     <input type="radio" name="increaseTrigger" value="payoff" checked onchange="updateThresholdUI()">
-                    When LOC is paid off within a certain number of months
+                    <span>When LOC is paid off within a certain number of months</span>
                 </label>
                 <label class="radio-label">
                     <input type="radio" name="increaseTrigger" value="stacks" onchange="updateThresholdUI()">
-                    Every certain number of stacks created
+                    <span>Every certain number of stacks created</span>
                 </label>
                 <label class="radio-label">
                     <input type="radio" name="increaseTrigger" value="months" onchange="updateThresholdUI()">
-                    Every certain number of months
+                    <span>Every certain number of months</span>
                 </label>
             </div>
         </div>
@@ -291,7 +362,7 @@
                 <input type="checkbox" id="useCreditBalance">
                 <div>
                     Use Credit Balance for Larger Stacks
-                    <span class="checkbox-hint">When creating a new stack, if there's a credit balance on the LOC, use it to deploy a larger investment.</span>
+                    <span class="checkbox-hint">If there's a credit balance on the LOC, sweep it to deploy a larger investment.</span>
                 </div>
             </label>
         </div>
@@ -301,7 +372,7 @@
             <input type="number" id="totalYears" value="10">
         </div>
 
-        <div style="margin-top: 30px;">
+        <div class="btn-group">
             <button class="btn" onclick="runSimulation()">Run Simulation</button>
             <button class="btn btn-secondary" onclick="downloadCSV()">Download CSV Data</button>
         </div>
@@ -309,8 +380,13 @@
 
     <!-- RIGHT PANEL: DASHBOARD RESULTS -->
     <div class="results-panel" id="results-container">
-        <div style="color: var(--text-muted); font-size: 0.875rem; padding: 20px; background: white; border-radius: 8px; border: 1px solid var(--border-color);">
-            Click <strong>"Run Simulation"</strong> on the left to generate your dashboard metrics, projections, and tables.
+        <div class="empty-state">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 16px; color: #9ca3af;">
+                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                <line x1="12" y1="22.08" x2="12" y2="12"></line>
+            </svg>
+            <div>Enter your parameters and click <strong>Run Simulation</strong> to generate your metrics, interactive charts, and ledgers.</div>
         </div>
     </div>
 </div>
@@ -353,7 +429,6 @@
         const useCreditBalance = document.getElementById('useCreditBalance').checked;
         const totalYears = parseInt(document.getElementById('totalYears').value) || 10;
 
-        // Initialize State
         let maxMonths = totalYears * 12;
         let locBalance = 0; 
         let currentStackBaseSize = initialLOC; 
@@ -371,14 +446,14 @@
             let stackIncomeThisMonth = 0;
             let activeStacksThisMonth = {};
 
-            // Calculate LOC Interest (Charged if balance is negative/in debt)
+            // Calculate LOC Interest (Charged if balance is negative)
             if (locBalance < 0) {
                 let interestCharge = Math.abs(locBalance) * (locInterestRate / 100 / 12);
                 totalLOCInterestPaid += interestCharge;
                 locBalance -= interestCharge; 
             }
 
-            // Calculate Cash Flow from Active Stacks
+            // Cash Flow from Active Stacks
             stacks.forEach((stack, index) => {
                 if (month >= stack.startMonth && month <= stack.endMonth) {
                     stackIncomeThisMonth += stack.pmt;
@@ -391,7 +466,7 @@
             locBalance += totalIncome;
             monthsSinceLastStack++;
 
-            // Record Chart Data (Invert LOC so debt displays positively on chart)
+            // Record Chart Data
             chartData.labels.push(`M${month}`);
             chartData.locBalance.push(locBalance < 0 ? Math.abs(locBalance) : 0);
             chartData.investmentIncome.push(stackIncomeThisMonth);
@@ -402,7 +477,6 @@
                 let actualStackSize = currentStackBaseSize;
                 let payoffTime = stackCount === 0 ? 0 : monthsSinceLastStack;
 
-                // Handle Increase Triggers
                 if (increaseTrigger === 'payoff' && stackCount > 0 && monthsSinceLastStack <= thresholdValue) {
                     currentStackBaseSize *= stackMultiplier;
                 } else if (increaseTrigger === 'stacks' && stackCount > 0 && (stackCount + 1) % thresholdValue === 0) {
@@ -413,7 +487,6 @@
                 }
                 actualStackSize = currentStackBaseSize;
 
-                // Handle Credit Balance Sweep
                 if (useCreditBalance && locBalance > 0) {
                     actualStackSize += locBalance;
                     locBalance = -(actualStackSize - locBalance); 
@@ -425,7 +498,6 @@
                 maxActiveStacks = Math.max(maxActiveStacks, stackCount);
                 let pmt = calculatePMT(investmentRate / 100 / 12, investmentLength, actualStackSize);
 
-                // Update the previous stack's actual payoff time
                 if (stackCount > 1) {
                     stacks[stacks.length - 1].payoffMonths = payoffTime;
                 }
@@ -436,14 +508,14 @@
                     startMonth: month, 
                     endMonth: month + investmentLength - 1,
                     pmt: pmt,
-                    payoffMonths: 0 // Will remain 0 if it never pays off by end of sim
+                    payoffMonths: 0 
                 });
 
                 monthsSinceLastStack = 0;
                 activeStacksThisMonth[`Stack ${stackCount}`] = pmt;
             }
 
-            // Record Row Data for CSV
+            // Record CSV Data
             let row = {
                 'Month': month,
                 'LOC Balance': locBalance.toFixed(2),
@@ -456,7 +528,6 @@
             csvData.push(row);
         }
         
-        // Finalize payoff time for the very last stack if it cleared before sim ended
         if (locBalance >= 0 && stacks.length > 0) {
             stacks[stacks.length - 1].payoffMonths = monthsSinceLastStack;
         }
@@ -467,7 +538,6 @@
             let targetMonth = year * 12;
             let activeStacksInTargetMonth = stacks.filter(s => s.startMonth <= targetMonth && s.endMonth >= targetMonth);
             
-            // Only sum PMT for stacks bought *before* the target snapshot month
             let investmentIncome = activeStacksInTargetMonth
                 .filter(s => s.startMonth < targetMonth)
                 .reduce((sum, s) => sum + s.pmt, 0);
@@ -483,7 +553,7 @@
             });
         }
 
-        // --- Calculate Top-Level Metrics ---
+        // --- Calculate Metrics ---
         let totalDeployed = stacks.reduce((sum, s) => sum + s.size, 0);
         let totalEarnings = stacks.reduce((sum, s) => sum + (s.pmt * investmentLength), 0);
         
@@ -491,10 +561,8 @@
         let monthlyIncomeFromActiveStacks = lastMonthActiveStacks.reduce((sum, s) => sum + s.pmt, 0);
         let remainingFutureIncome = lastMonthActiveStacks.reduce((sum, s) => sum + (s.pmt * (s.endMonth - maxMonths)), 0);
 
-        // Store data globally for the CSV downloader and tab switches
         globalSimulationData = { stacks, chartData, yearlyData, maxMonths, csvData, maxActiveStacks };
 
-        // Send to DOM rendering
         renderDashboard({
             netProfit: totalEarnings - totalDeployed,
             totalEarnings, totalDeployed,
@@ -506,12 +574,18 @@
             monthlyIncomeFromActiveStacks,
             remainingFutureIncome
         });
+        
+        // Auto-scroll to results on mobile devices
+        if (window.innerWidth < 992) {
+            setTimeout(() => {
+                document.getElementById('results-container').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 100);
+        }
     }
 
     function renderDashboard(metrics) {
         const container = document.getElementById('results-container');
         
-        // Build the 6-card grid + 1 Snapshot card + Chart + Tables
         let html = `
             <div class="metrics-grid">
                 <div class="metric-card">
@@ -548,7 +622,7 @@
 
             <div class="metric-card snapshot-card">
                 <div class="card-title">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
                     End of Year ${metrics.totalYears} Snapshot
                 </div>
                 <div class="snapshot-metric">
@@ -557,7 +631,7 @@
                 </div>
                 <div class="snapshot-metric">
                     <div class="snapshot-metric-title">Monthly Income from Stacks</div>
-                    <div class="snapshot-metric-value">${formatCurrency(metrics.monthlyIncomeFromActiveStacks)}</div>
+                    <div class="snapshot-metric-value" style="font-size: 1.75rem;">${formatCurrency(metrics.monthlyIncomeFromActiveStacks)}</div>
                 </div>
                 <div class="snapshot-metric">
                     <div class="snapshot-metric-title">Remaining Future Income</div>
@@ -566,74 +640,57 @@
             </div>
 
             <div class="chart-container">
-                <h3 style="display: flex; align-items: center; margin-bottom: 16px;">
-                    Cash Flow & LOC Balance Projection
-                    <div class="tooltip-wrapper" style="margin-left: 8px; font-weight: normal;">
-                        <div class="info-icon">?</div>
-                        <div class="tooltip-content" style="width: 350px;">
-                            <p>The <strong>Cash Flow & LOC Balance Projection</strong> chart is the visual heartbeat of the cash flow stacking strategy. It illustrates the "velocity of money"—showing exactly how your debt, personal input, and passive income interact over time to snowball your wealth.</p>
-                            
-                            <h4>The Three Lines</h4>
-                            <ul>
-                                <li><strong>LOC Balance (The Blue Line):</strong> Represents the total debt owed on your Line of Credit. It is inverted (shown as a positive number) to easily compare the size of your debt against your income.</li>
-                                <li><strong>Total Cash Flow (The Green Line):</strong> Your total monthly financial firepower. It is the sum of your fixed Personal Cash Flow plus your growing Investment Income.</li>
-                                <li><strong>Investment Income (The Purple Line):</strong> Represents the purely passive income generated by your active stacks.</li>
-                            </ul>
-
-                            <h4>Key Visual Patterns to Understand</h4>
-                            <ul>
-                                <li><strong>The "Sawtooth" Effect (Borrowing & Paying Down):</strong> The LOC Balance forms a jagged sawtooth. Spikes represent pulling from the LOC to buy an asset. The sharp downward slopes represent all of your Total Cash Flow being aggressively dumped into the LOC to pay off the principal.</li>
-                                <li><strong>The Accelerating Velocity (Steeper Slopes):</strong> Downward slopes get steeper over time because your Total Cash Flow is higher, allowing you to pay off larger balances in the same amount of time.</li>
-                                <li><strong>The Compounding Multiplier (Taller Spikes):</strong> The blue spikes get taller as the system scales up your investments in tandem with your growing ability to pay them off.</li>
-                                <li><strong>The Income Snowball (The Upward Curve):</strong> The green and purple lines form an exponential curve upward, proving that the vast majority of the debt is eventually being paid off by the assets themselves.</li>
-                            </ul>
-
-                            <hr style="border-top: 1px solid var(--border-color); margin: 12px 0;">
-                            <h4>Strategic Takeaway</h4>
-                            <p style="margin-bottom: 0;">The goal is not to stay out of debt, but to manage its <em>velocity</em>. By keeping your money in constant motion, you safely acquire hundreds of thousands of dollars in assets while rarely exposing yourself to long-term interest accrual.</p>
+                <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+                    <h3 style="margin: 0; display: flex; align-items: center;">
+                        Cash Flow & LOC Balance
+                        <div class="tooltip-wrapper" style="margin-left: 8px; font-weight: normal;">
+                            <button class="info-icon" aria-label="More info" tabindex="0">?</button>
+                            <div class="tooltip-content">
+                                <p>This chart illustrates the <strong>velocity of money</strong>—showing exactly how your debt, personal input, and passive income interact over time.</p>
+                                <h4>The Three Lines</h4>
+                                <ul>
+                                    <li><strong>LOC Balance (Blue):</strong> Total debt owed. It is inverted (shown as a positive number) to compare visually against income.</li>
+                                    <li><strong>Total Cash Flow (Green):</strong> Sum of your fixed Personal Cash Flow plus growing Investment Income.</li>
+                                    <li><strong>Investment Income (Purple):</strong> The purely passive income generated by active stacks.</li>
+                                </ul>
+                                <h4>Key Patterns</h4>
+                                <ul>
+                                    <li><strong>"Sawtooth" Effect:</strong> Spikes represent pulling from the LOC to buy an asset. Sharp downward slopes represent cash flow aggressively paying off the principal.</li>
+                                    <li><strong>Accelerating Velocity:</strong> Downward slopes get steeper over time because Total Cash Flow is higher, paying off larger balances faster.</li>
+                                </ul>
+                            </div>
                         </div>
-                    </div>
-                </h3>
-                <canvas id="projectionChart" height="110"></canvas>
+                    </h3>
+                </div>
+                <div class="chart-wrapper">
+                    <canvas id="projectionChart"></canvas>
+                </div>
             </div>
 
             <div class="tabs-container">
-                <div style="display: flex; align-items: center; margin-bottom: 20px;">
+                <div class="tabs-header">
                     <div class="tabs">
                         <button class="tab-btn active" onclick="switchTab('year', event)">Year-by-Year</button>
                         <button class="tab-btn" onclick="switchTab('stack', event)">Stack-by-Stack</button>
                     </div>
-
-                    <!-- NEW TOOLTIP FOR TABLES -->
-                    <div class="tooltip-wrapper" style="margin-left: 12px;">
-                        <div class="info-icon">?</div>
-                        <div class="tooltip-content" style="width: 420px; max-height: 550px;">
-                            <p>The two tables at the bottom of your dashboard provide two distinct lenses for analyzing your cash flow stacking strategy: a "macro" timeline view and a "micro" ledger view.</p>
-                            
-                            <h4>1. Year-by-Year Summary (The Macro View)</h4>
-                            <p>This table acts as a series of financial snapshots. It does <strong>not</strong> show you cumulative totals for the whole year; instead, it takes a picture of your exact financial standing at the <em>end</em> of each year (Month 12, Month 24, Month 36, etc.). It shows you your monthly financial power at that specific moment in time.</p>
+                    <div class="tooltip-wrapper" style="font-weight: normal;">
+                        <span style="font-size: 0.875rem; color: var(--text-muted); font-weight: 600;">Table Guide</span>
+                        <button class="info-icon" aria-label="More info" tabindex="0">?</button>
+                        <div class="tooltip-content">
+                            <h4>1. Year-by-Year Summary (Macro)</h4>
+                            <p>Takes a snapshot of your exact financial standing at the <em>end</em> of each year (Month 12, Month 24, etc.).</p>
                             <ul>
-                                <li><strong>Year:</strong> The calendar year of the projection (typically 1 through 10).</li>
-                                <li><strong>Active Stacks:</strong> The total number of individual investments that are actively paying you during that snapshot month. It accounts for new stacks that have been added and older stacks that may have expired (e.g., reached the end of their 36-month lifespan).</li>
-                                <li><strong>Cash Withdrawn:</strong> The amount of money you are pulling out of the compounding loop to live on. <em>(Note: Because we removed the withdrawal configuration in this iteration, this will display $0).</em></li>
-                                <li><strong>Investment Income /mo:</strong> The purely passive cash flow being generated by your Active Stacks during that specific month. This proves how the strategy gradually replaces your need to work for money.</li>
-                                <li><strong>Personal Cash Flow:</strong> Your fixed, out-of-pocket contribution to the system (e.g., your $2,000 monthly input).</li>
-                                <li><strong>Total Monthly /mo:</strong> The sum of your <em>Investment Income</em> and your <em>Personal Cash Flow</em>. This represents your total "velocity"—the combined financial firepower you are using to obliterate the LOC debt at that stage in the simulation.</li>
-                                <li><strong>Net System Income /mo:</strong> Your Total Monthly income minus any Cash Withdrawn. This is the final amount of cash that actually hits the Line of Credit to pay down the balance that month.</li>
+                                <li><strong>Active Stacks:</strong> Investments actively paying you during that snapshot month.</li>
+                                <li><strong>Investment Income /mo:</strong> The purely passive cash flow being generated during that specific month.</li>
+                                <li><strong>Total Monthly /mo:</strong> Investment Income + Personal Cash Flow. Your combined financial firepower used to obliterate debt.</li>
                             </ul>
-
                             <hr style="border-top: 1px solid var(--border-color); margin: 16px 0;">
-
-                            <h4>2. Stack-by-Stack Summary (The Micro View)</h4>
-                            <p>This table is your investment ledger. It provides a receipt for every single asset the system purchases over the life of the simulation, allowing you to audit the math and see exactly how the compounding multipliers are applied.</p>
+                            <h4>2. Stack-by-Stack Summary (Micro)</h4>
+                            <p>An investment ledger allowing you to audit the math for every single asset.</p>
                             <ul>
-                                <li><strong>Stack #:</strong> The chronological order of the investment.</li>
-                                <li><strong>Start Month:</strong> The exact month the system recognized that your LOC debt was paid off (and any other threshold rules were met) and triggered the purchase of this new asset.</li>
-                                <li><strong>Principal:</strong> The size (cost) of the asset. You will notice this number steps up dynamically. It is calculated by taking your base stack size, applying your <strong>Stack Increase Multiplier</strong> (when the rules allow it), and adding any positive cash balance swept from the LOC (if you checked the "Use Credit Balance" box).</li>
-                                <li><strong>Monthly Payment:</strong> The exact monthly yield this specific stack generates, calculated using a standard amortization formula based on your configured Investment Rate of Return and Investment Length.</li>
-                                <li><strong>Months to Payoff:</strong> This is your <strong>velocity metric</strong>. It tracks the stopwatch from the moment this stack was bought until your total income drove the LOC balance back down to $0. You will generally see this number drop as your income snowballs, proving that you are paying off larger debts faster. <em>(Note: A "-" means the simulation ended before this specific stack's debt was fully paid off).</em></li>
-                                <li><strong>Total Earnings:</strong> The gross revenue this specific stack will generate over its entire defined lifespan (e.g., its Monthly Payment multiplied by 36 months).</li>
-                                <li><strong>Profit:</strong> The <em>Total Earnings</em> minus the initial <em>Principal</em>. This shows the pure net value created by executing this single investment cycle.</li>
+                                <li><strong>Principal:</strong> The size of the asset, calculated using your multiplier and any swept credit balances.</li>
+                                <li><strong>Months to Payoff:</strong> Tracks the stopwatch from purchase until total income drove the LOC balance back to $0. Shows debt velocity.</li>
+                                <li><strong>Profit:</strong> Total Earnings minus the initial Principal.</li>
                             </ul>
                         </div>
                     </div>
@@ -641,7 +698,7 @@
 
                 <div id="year-tab" class="table-container active">
                     <div class="table-header-title">Year-by-Year Summary</div>
-                    <div class="table-header-sub">All amounts shown are monthly values</div>
+                    <div class="table-header-sub">All amounts shown are monthly values taken at the end of the year</div>
                     <table>
                         <thead>
                             <tr>
@@ -672,6 +729,7 @@
 
                 <div id="stack-tab" class="table-container">
                     <div class="table-header-title">Stack-by-Stack Summary</div>
+                    <div class="table-header-sub">Detailed ledger of every investment cycle</div>
                     <table>
                         <thead>
                             <tr>
@@ -697,7 +755,7 @@
                                     <td>${formatCurrency(s.pmt)}</td>
                                     <td>${payoffDisplay}</td>
                                     <td>${formatCurrency(totalEarned)}</td>
-                                    <td class="profit-green">${formatCurrency(profit)}</td>
+                                    <td class="profit-green">+${formatCurrency(profit)}</td>
                                 </tr>
                                 `
                             }).join('')}
@@ -728,7 +786,7 @@
                         borderColor: '#2563eb',
                         backgroundColor: '#2563eb',
                         borderWidth: 2,
-                        pointRadius: 2,
+                        pointRadius: window.innerWidth < 768 ? 0 : 2,
                         tension: 0.1
                     },
                     {
@@ -753,9 +811,10 @@
             },
             options: {
                 responsive: true,
+                maintainAspectRatio: false,
                 interaction: { mode: 'index', intersect: false },
                 plugins: {
-                    legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 6 } }
+                    legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 6, padding: 20 } }
                 },
                 scales: {
                     y: {
@@ -763,7 +822,7 @@
                         ticks: { callback: function(value) { return '$' + value.toLocaleString(); } }
                     },
                     x: {
-                        ticks: { maxTicksLimit: 12 }
+                        ticks: { maxTicksLimit: window.innerWidth < 768 ? 6 : 12 }
                     }
                 }
             }
@@ -787,13 +846,11 @@
         let data = globalSimulationData.csvData;
         let maxStacks = globalSimulationData.maxActiveStacks;
 
-        // Build Headers
         let headers = ['Month', 'LOC Balance', 'Personal Input', 'Total Income'];
         for (let i = 1; i <= maxStacks; i++) {
             headers.push(`Stack ${i}`);
         }
 
-        // Build Rows
         let csvRows = [];
         csvRows.push(headers.join(','));
 
@@ -805,7 +862,6 @@
             csvRows.push(values.join(','));
         });
 
-        // Trigger Download
         let csvString = csvRows.join('\n');
         let blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
         let url = URL.createObjectURL(blob);
