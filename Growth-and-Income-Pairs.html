@@ -75,12 +75,31 @@
                             <input type="number" id="p2LoanPrinc" value="50000" class="w-full bg-slate-950 border border-emerald-500/30 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-emerald-500">
                             <span class="text-[10px] text-slate-400 mt-1 block">Extra debt added directly inside Pair 2 to multiply position.</span>
                         </div>
-                        <div class="bg-slate-900/60 p-2.5 rounded-xl border border-slate-700/60">
-                            <div class="flex justify-between text-xs">
-                                <span class="text-slate-400">Total Invested Capital:</span>
-                                <span id="p2TotalAssetDisplay" class="font-bold text-white">--</span>
+                        
+                        <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-700/60 space-y-3">
+                            <div class="flex justify-between items-center border-b border-slate-700/50 pb-2">
+                                <div class="flex items-center gap-1.5">
+                                    <span class="text-xs font-semibold text-slate-400">Asset Value Mode</span>
+                                    <div class="relative group cursor-pointer">
+                                        <span class="text-slate-500 hover:text-emerald-400">ⓘ</span>
+                                        <div class="absolute z-50 hidden group-hover:block w-64 p-3 bg-slate-800 border border-slate-600 text-[10px] text-slate-200 rounded-lg shadow-xl top-6 left-0 leading-relaxed">
+                                            <strong>AUTO:</strong> Assumes a new account. Asset value perfectly equates to Seed Capital + Additional Margin Loan.<br><br>
+                                            <strong>MANUAL:</strong> Best for existing portfolios, Real Estate, or Businesses. Allows you to input a total asset value independent of the seed and loan amounts (e.g., if you are injecting this seed into a margin portfolio that already has a $200k established capital base).
+                                        </div>
+                                    </div>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" id="p2AssetModeToggle" class="sr-only peer">
+                                    <div class="w-8 h-4 bg-emerald-500/30 border border-emerald-500 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-emerald-400 after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-indigo-500/30 peer-checked:border-indigo-500 peer-checked:after:bg-indigo-400"></div>
+                                    <span class="ml-2 text-[10px] font-bold text-emerald-400 uppercase w-10" id="modeLabelText">Auto</span>
+                                </label>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Total Asset Value ($)</label>
+                                <input type="number" id="p2AssetVal" value="100000" readonly class="w-full bg-slate-950/50 border border-transparent rounded-xl px-3 py-2 text-emerald-400 font-bold focus:outline-none transition-colors duration-300">
                             </div>
                         </div>
+
                         <div>
                             <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Gross Yield of Funds (%)</label>
                             <input type="number" id="p2AssetYield" value="20" step="0.01" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-emerald-500">
@@ -100,21 +119,22 @@
                     <div class="absolute top-0 right-0 p-8 opacity-5 text-8xl font-black select-none text-white">SYSTEM</div>
                     <h3 class="text-xs font-bold uppercase tracking-widest text-emerald-400 mb-2">💎 THE GLOBAL MACRO RESILIENCE MACHINE</h3>
                     
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 pt-2">
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-2">
                         <div class="border-r border-slate-800 last:border-0 pr-4">
-                            <span class="text-xs text-slate-400 block uppercase">Net Performance</span>
-                            <span id="gNetPerf" class="text-3xl font-black text-white mt-1 block">--</span>
-                            <span class="text-[10px] text-slate-500 block mt-1">Combined pure growth & cash flow</span>
+                            <span class="text-[11px] text-slate-400 block uppercase">Net Perf.</span>
+                            <span id="gNetPerf" class="text-2xl font-black text-white mt-1 block">--</span>
                         </div>
                         <div class="border-r border-slate-800 last:border-0 pr-4">
-                            <span class="text-xs text-slate-400 block uppercase">Global DSCR</span>
-                            <span id="gDscr" class="text-3xl font-black text-emerald-400 mt-1 block">--</span>
-                            <span class="text-[10px] text-slate-500 block mt-1">System safety multiplier threshold</span>
+                            <span class="text-[11px] text-slate-400 block uppercase">Global DSCR</span>
+                            <span id="gDscr" class="text-2xl font-black text-emerald-400 mt-1 block">--</span>
+                        </div>
+                        <div class="border-r border-slate-800 last:border-0 pr-4">
+                            <span class="text-[11px] text-slate-400 block uppercase">Global DTA (LTV)</span>
+                            <span id="gLtv" class="text-2xl font-black text-amber-400 mt-1 block">--</span>
                         </div>
                         <div>
-                            <span class="text-xs text-slate-400 block uppercase">Global Cushion (DTA)</span>
-                            <span id="gDta" class="text-3xl font-black text-white mt-1 block">--</span>
-                            <span class="text-[10px] text-slate-500 block mt-1">Maximum drop allowed before deficit</span>
+                            <span class="text-[11px] text-slate-400 block uppercase">Margin Cushion</span>
+                            <span id="gCushion" class="text-2xl font-black text-white mt-1 block">--</span>
                         </div>
                     </div>
                 </div>
@@ -131,7 +151,8 @@
                             <div class="flex justify-between border-b border-slate-800 pb-1.5"><span class="text-slate-400">Debt Service:</span> <span id="p1Ds" class="text-white">--</span></div>
                             <div class="flex justify-between border-b border-slate-800 pb-1.5"><span class="text-slate-400">Arbitrage:</span> <span id="p1Arb" class="text-white">--</span></div>
                             <div class="flex justify-between border-b border-slate-800 pb-1.5"><span class="text-slate-400">DSCR:</span> <span id="p1Dscr" class="font-bold">--</span></div>
-                            <div class="flex justify-between"><span class="text-slate-400">DTA Cushion:</span> <span id="p1Dta" class="text-white">--</span></div>
+                            <div class="flex justify-between border-b border-slate-800 pb-1.5"><span class="text-slate-400">Debt-to-Asset (LTV):</span> <span id="p1Ltv" class="text-amber-400">--</span></div>
+                            <div class="flex justify-between"><span class="text-slate-400">Margin Cushion:</span> <span id="p1Cushion" class="text-white">--</span></div>
                         </div>
                     </div>
 
@@ -145,7 +166,8 @@
                             <div class="flex justify-between border-b border-slate-800 pb-1.5"><span class="text-slate-400">Debt Service:</span> <span id="p2Ds" class="text-white">--</span></div>
                             <div class="flex justify-between border-b border-slate-800 pb-1.5"><span class="text-slate-400">Arbitrage:</span> <span id="p2Arb" class="text-white">--</span></div>
                             <div class="flex justify-between border-b border-slate-800 pb-1.5"><span class="text-slate-400">DSCR:</span> <span id="p2Dscr" class="font-bold">--</span></div>
-                            <div class="flex justify-between"><span class="text-slate-400">DTA Cushion:</span> <span id="p2Dta" class="text-white">--</span></div>
+                            <div class="flex justify-between border-b border-slate-800 pb-1.5"><span class="text-slate-400">Debt-to-Asset (LTV):</span> <span id="p2Ltv" class="text-amber-400">--</span></div>
+                            <div class="flex justify-between"><span class="text-slate-400">Margin Cushion:</span> <span id="p2Cushion" class="text-white">--</span></div>
                         </div>
                     </div>
 
@@ -170,72 +192,96 @@
             return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(num);
         }
 
+        const p2Toggle = document.getElementById('p2AssetModeToggle');
+        const p2AssetInput = document.getElementById('p2AssetVal');
+        const p2ModeLabel = document.getElementById('modeLabelText');
+
+        p2Toggle.addEventListener('change', (e) => {
+            if (e.target.checked) {
+                p2ModeLabel.innerText = "Manual";
+                p2ModeLabel.className = "ml-2 text-[10px] font-bold text-indigo-400 uppercase w-10";
+                p2AssetInput.readOnly = false;
+                p2AssetInput.classList.remove('bg-slate-950/50', 'border-transparent', 'text-emerald-400');
+                p2AssetInput.classList.add('bg-slate-950', 'border-indigo-500', 'text-white');
+            } else {
+                p2ModeLabel.innerText = "Auto";
+                p2ModeLabel.className = "ml-2 text-[10px] font-bold text-emerald-400 uppercase w-10";
+                p2AssetInput.readOnly = true;
+                p2AssetInput.classList.remove('bg-slate-950', 'border-indigo-500', 'text-white');
+                p2AssetInput.classList.add('bg-slate-950/50', 'border-transparent', 'text-emerald-400');
+            }
+            runEngine();
+        });
+
         function runEngine() {
-            // Inputs Extract
             const p1AssetVal = parseFloat(document.getElementById('p1AssetVal').value) || 0;
             const p1AssetYield = parseFloat(document.getElementById('p1AssetYield').value) || 0;
             const p1LoanPrinc = parseFloat(document.getElementById('p1LoanPrinc').value) || 0;
             const p1LoanRate = parseFloat(document.getElementById('p1LoanRate').value) || 0;
 
-            // Connect Pair 1 Harvest Amount instantly to seed capital label of Pair 2
             document.getElementById('p2SeedDisplay').innerText = formatVal(p1LoanPrinc);
 
             const p2LoanPrinc = parseFloat(document.getElementById('p2LoanPrinc').value) || 0;
             const p2AssetYield = parseFloat(document.getElementById('p2AssetYield').value) || 0;
             const p2LoanRate = parseFloat(document.getElementById('p2LoanRate').value) || 0;
 
-            // Computed values
-            const p2TotalAssetVal = p1LoanPrinc + p2LoanPrinc;
-            document.getElementById('p2TotalAssetDisplay').innerText = formatVal(p2TotalAssetVal);
+            let p2TotalAssetVal = 0;
+            if (p2Toggle.checked) {
+                p2TotalAssetVal = parseFloat(p2AssetInput.value) || 0;
+            } else {
+                p2TotalAssetVal = p1LoanPrinc + p2LoanPrinc;
+                p2AssetInput.value = p2TotalAssetVal; 
+            }
 
-            // Foundational Financial Vectors (Layer 0 Net Operating Income & Debt Stack)
             const p1Noi = p1AssetVal * (p1AssetYield / 100);
             const p1Ds = p1LoanPrinc * (p1LoanRate / 100);
             
             const p2Noi = p2TotalAssetVal * (p2AssetYield / 100);
             const p2Ds = p2LoanPrinc * (p2LoanRate / 100);
 
-            // Pair 1 4-Metrics Compute
             const p1Arb = p1AssetYield - p1LoanRate;
             const p1Net = p1Noi - p1Ds;
             const p1Dscr = p1Ds > 0 ? (p1Noi / p1Ds) : (p1Noi > 0 ? Infinity : 0);
+            const p1Ltv = p1AssetVal > 0 ? (p1LoanPrinc / p1AssetVal) * 100 : 0;
 
-            // Pair 2 4-Metrics Compute
             const p2Arb = p2AssetYield - p2LoanRate;
             const p2Net = p2Noi - p2Ds;
             const p2Dscr = p2Ds > 0 ? (p2Noi / p2Ds) : (p2Noi > 0 ? Infinity : 0);
+            const p2Ltv = p2TotalAssetVal > 0 ? (p2LoanPrinc / p2TotalAssetVal) * 100 : 0;
 
-            // Macro-Global System Compute 
             const globalNoi = p1Noi + p2Noi;
             const globalDs = p1Ds + p2Ds;
             const globalNet = globalNoi - globalDs;
             const globalDscr = globalDs > 0 ? (globalNoi / globalDs) : (globalNoi > 0 ? Infinity : 0);
-            const globalDta = globalNet;
+            const globalCushion = globalNet;
+            
+            const globalTotalAssets = p1AssetVal + p2TotalAssetVal;
+            const globalTotalDebt = p1LoanPrinc + p2LoanPrinc;
+            const globalLtv = globalTotalAssets > 0 ? (globalTotalDebt / globalTotalAssets) * 100 : 0;
 
-            // Map UI Values
             document.getElementById('p1Noi').innerText = formatVal(p1Noi);
             document.getElementById('p1Ds').innerText = formatVal(p1Ds);
             document.getElementById('p1Arb').innerText = formatVal(p1Arb, true);
             document.getElementById('p1Dscr').innerText = p1Dscr === Infinity ? '∞' : p1Dscr.toFixed(2);
-            document.getElementById('p1Dta').innerText = formatVal(p1Net);
+            document.getElementById('p1Ltv').innerText = formatVal(p1Ltv, true);
+            document.getElementById('p1Cushion').innerText = formatVal(p1Net);
 
             document.getElementById('p2Noi').innerText = formatVal(p2Noi);
             document.getElementById('p2Ds').innerText = formatVal(p2Ds);
             document.getElementById('p2Arb').innerText = formatVal(p2Arb, true);
             document.getElementById('p2Dscr').innerText = p2Dscr === Infinity ? '∞' : p2Dscr.toFixed(2);
-            document.getElementById('p2Dta').innerText = formatVal(p2Net);
+            document.getElementById('p2Ltv').innerText = formatVal(p2Ltv, true);
+            document.getElementById('p2Cushion').innerText = formatVal(p2Net);
 
-            // Global Dashboard Card Population
             document.getElementById('gNetPerf').innerText = formatVal(globalNet);
             document.getElementById('gDscr').innerText = globalDscr === Infinity ? '∞' : globalDscr.toFixed(2);
-            document.getElementById('gDta').innerText = formatVal(globalDta);
+            document.getElementById('gLtv').innerText = formatVal(globalLtv, true);
+            document.getElementById('gCushion').innerText = formatVal(globalCushion);
 
-            // Stylize mini-status labels
             styleSubpairStatus('p1Status', p1Arb, p1Dscr);
             styleSubpairStatus('p2Status', p2Arb, p2Dscr);
 
-            // Dynamic Narrative Engine
-            buildNarrative(p1AssetYield, p1LoanRate, p2AssetYield, p2LoanRate, globalNet, globalDscr, globalDta);
+            buildNarrative(p1AssetYield, p1LoanRate, p2AssetYield, p2LoanRate, globalNet, globalDscr, globalLtv, globalCushion);
         }
 
         function styleSubpairStatus(elementId, arb, dscr) {
@@ -252,7 +298,7 @@
             }
         }
 
-        function buildNarrative(p1Yield, p1Rate, p2Yield, p2Rate, globalNet, globalDscr, globalDta) {
+        function buildNarrative(p1Yield, p1Rate, p2Yield, p2Rate, globalNet, globalDscr, globalLtv, globalCushion) {
             const container = document.getElementById('systemNarrative');
             
             let story = `
@@ -266,17 +312,15 @@
                     When these structures are welded together, your macro-system yields a net global payout of <span class="text-white font-bold">${formatVal(globalNet)} per year</span>.
                 </p>
                 <p>
-                    ⚡ <strong>The Resiliency Factor:</strong> Your Global DSCR sits comfortably at <span class="text-white font-bold">${globalDscr === Infinity ? '∞' : globalDscr.toFixed(2)}</span>. This implies your unified asset systems pump out <span class="text-emerald-400 font-semibold">${globalDscr === Infinity ? '∞' : globalDscr.toFixed(2)}x</span> the total income required to feed all outstanding lenders. You have created an incredibly fortified system cushion—your Downside Tolerance Amount (DTA) allows a staggering macro-income loss of up to <span class="text-white font-bold">${formatVal(globalDta)}</span> across your portfolio before this system drops into a stressful monthly shortfall.
+                    ⚡ <strong>The Resiliency Factor:</strong> Your Global DSCR sits comfortably at <span class="text-white font-bold">${globalDscr === Infinity ? '∞' : globalDscr.toFixed(2)}</span>. This implies your unified asset systems pump out <span class="text-emerald-400 font-semibold">${globalDscr === Infinity ? '∞' : globalDscr.toFixed(2)}x</span> the total income required to feed all outstanding lenders. While standard balance sheets focus strictly on your Global Debt-to-Asset (DTA/LTV) ratio of <span class="text-amber-400 font-bold">${globalLtv.toFixed(2)}%</span>, true functional safety is verified in your cash flow. You have created an incredibly fortified system cushion—your <strong>Margin/Loan Cushion Amount</strong> allows a staggering macro-income loss of up to <span class="text-white font-bold">${formatVal(globalCushion)}</span> across your portfolio before this system drops into a stressful monthly shortfall.
                 </p>
             `;
             container.innerHTML = story;
         }
 
-        // Real-Time Interaction Binding
         const inputs = document.querySelectorAll('input');
         inputs.forEach(i => i.addEventListener('input', runEngine));
 
-        // Initial Evaluation Execution
         runEngine();
     </script>
 </body>
