@@ -9,6 +9,12 @@
         .system-card { transition: all 0.2s ease; }
         .system-card:hover { transform: translateY(-1px); }
         .animate-pulse-slow { animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        
+        /* Custom scrollbar for the modal */
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #475569; }
     </style>
 </head>
 <body class="bg-slate-900 text-slate-100 font-sans antialiased min-h-screen">
@@ -74,17 +80,28 @@
                                 <span id="p2SeedDisplay" class="text-xs font-mono text-amber-400 font-bold">$50,000</span>
                             </div>
                         </div>
+                        
+                        <!-- REBUILT: LEVERAGE FACTOR INPUT -->
                         <div>
-                            <label class="block text-xs font-semibold text-emerald-400 uppercase tracking-wider mb-1">Additional Margin/Stack Loan ($)</label>
-                            <input type="number" id="p2LoanPrinc" value="50000" class="w-full bg-slate-950 border border-emerald-500/30 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-emerald-500 transition-colors">
-                            
-                            <div id="p2MarginAlert" class="hidden mt-2 p-2 bg-rose-900/40 border border-rose-500/50 rounded-lg text-[10px] text-rose-300 leading-tight">
-                                ⚠️ <strong>Margin Capacity Exceeded:</strong> Your requested loan pushes your Pair 2 LTV above 50%. Standard brokerages (Reg T) generally restrict initial margin borrowing to a 1:1 match of your cash value.
+                            <div class="flex justify-between items-center mb-1">
+                                <label class="block text-xs font-semibold text-emerald-400 uppercase tracking-wider">Margin Leverage Factor</label>
+                                <span id="p2LoanDisplay" class="text-xs font-mono text-emerald-400 font-bold">Loan: $50,000</span>
+                            </div>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <span class="text-slate-500 font-bold">x</span>
+                                </div>
+                                <input type="number" id="p2Leverage" value="1.0" step="0.01" class="w-full bg-slate-950 border border-emerald-500/30 rounded-xl pl-8 pr-3 py-2 text-white focus:outline-none focus:border-emerald-500 transition-colors">
                             </div>
                             
-                            <span class="text-[10px] text-slate-400 mt-1 block">Extra debt added directly inside Pair 2 to multiply position.</span>
+                            <div id="p2MarginAlert" class="hidden mt-2 p-2 bg-rose-900/40 border border-rose-500/50 rounded-lg text-[10px] text-rose-300 leading-tight">
+                                ⚠️ <strong>Margin Capacity Exceeded:</strong> Your requested loan pushes your Pair 2 LTV above 50%. Standard brokerages (Reg T) generally restrict initial margin borrowing to a 1:1 match of your total capital base.
+                            </div>
+                            
+                            <span class="text-[10px] text-slate-400 mt-1 block">Multiplies your Seed Capital to determine the new margin loan size.</span>
                         </div>
                         
+                        <!-- REBUILT: ASSET VALUE SECTION -->
                         <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-700/60 space-y-3">
                             <div class="flex justify-between items-center border-b border-slate-700/50 pb-2">
                                 <div class="flex items-center gap-1.5">
@@ -92,8 +109,8 @@
                                     <div class="relative group cursor-pointer">
                                         <span class="text-slate-500 hover:text-emerald-400">ⓘ</span>
                                         <div class="absolute z-50 hidden group-hover:block w-64 p-3 bg-slate-800 border border-slate-600 text-[10px] text-slate-200 rounded-lg shadow-xl top-6 left-0 leading-relaxed">
-                                            <strong>AUTO:</strong> Assumes a new account. Asset value perfectly equates to Seed Capital + Additional Margin Loan.<br><br>
-                                            <strong>MANUAL:</strong> Best for existing portfolios. Allows you to input a total asset value independent of the seed and loan amounts.
+                                            <strong>AUTO:</strong> Assumes a new account. Total Asset Value perfectly equates to Seed Capital + Margin Loan.<br><br>
+                                            <strong>MANUAL:</strong> Best for existing portfolios. Enter your pre-existing base capital, and selectively stack the incoming capital on top of it.
                                         </div>
                                     </div>
                                 </div>
@@ -104,8 +121,23 @@
                                 </label>
                             </div>
                             <div>
-                                <label class="block text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Total Asset Value ($)</label>
+                                <label id="p2AssetValLabel" class="block text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Total Asset Value ($)</label>
                                 <input type="number" id="p2AssetVal" value="100000" readonly class="w-full bg-slate-950/50 border border-transparent rounded-xl px-3 py-2 text-emerald-400 font-bold focus:outline-none transition-colors duration-300">
+                            </div>
+
+                            <!-- NEW: Manual Mode Additional Options (Hidden in Auto) -->
+                            <div id="p2ManualAddOn" class="hidden space-y-2 pt-1">
+                                <label class="flex items-start gap-2 cursor-pointer bg-slate-950 p-2 rounded-lg border border-slate-800 hover:border-slate-600 transition-colors">
+                                    <input type="checkbox" id="p2IncludeNewCapital" checked class="mt-0.5 h-3 w-3 accent-indigo-500 bg-slate-900 border-slate-700 cursor-pointer">
+                                    <div class="flex-1">
+                                        <span class="text-[10px] text-slate-300 block leading-tight">Auto-add incoming capital (Seed + Loan)</span>
+                                        <span id="p2IncomingDisplay" class="text-[10px] font-bold text-amber-400 block mt-0.5">+$100,000</span>
+                                    </div>
+                                </label>
+                                <div class="flex justify-between items-center px-1 pt-1">
+                                    <span class="text-[10px] text-slate-400 uppercase font-bold">Effective Asset Value:</span>
+                                    <span id="p2EffectiveAssetDisplay" class="text-sm font-black text-emerald-400">--</span>
+                                </div>
                             </div>
                         </div>
 
@@ -156,7 +188,6 @@
                         <h3 class="text-xs font-bold uppercase tracking-widest text-indigo-400 flex items-center gap-2">
                             <span>🔄</span> The Infinite Wealth Loop (Velocity)
                         </h3>
-                        <!-- Math Breakdown Trigger -->
                         <button onclick="openModal()" class="text-[10px] uppercase tracking-wider font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-3 py-1.5 rounded-lg hover:bg-indigo-500/40 hover:text-white transition-colors cursor-pointer">
                             View Math Breakdown
                         </button>
@@ -225,7 +256,7 @@
                     </div>
                 </div>
 
-                <!-- NARRATIVE CONTAINER (Positioned explicitly under the Pair Breakdown cards) -->
+                <!-- NARRATIVE CONTAINER -->
                 <div class="bg-slate-950 p-6 rounded-2xl border border-slate-800 shadow-inner mt-6">
                     <h4 class="text-sm font-bold text-slate-300 mb-3 flex items-center gap-2">
                         <span>💡</span> System Dynamics Evaluation
@@ -271,15 +302,30 @@
         const p2MarginAlert = document.getElementById('p2MarginAlert');
 
         p2Toggle.addEventListener('change', (e) => {
+            const p2AssetValLabel = document.getElementById('p2AssetValLabel');
+            const p2ManualAddOn = document.getElementById('p2ManualAddOn');
+
             if (e.target.checked) {
                 p2ModeLabel.innerText = "Manual";
                 p2ModeLabel.className = "ml-2 text-[10px] font-bold text-indigo-400 uppercase w-10";
+                
+                p2AssetValLabel.innerText = "Existing Base Capital ($)";
+                p2ManualAddOn.classList.remove('hidden');
+
+                if (p2AssetInput.readOnly) {
+                    p2AssetInput.value = "0"; // Reset base capital to 0 when first entering manual mode
+                }
+
                 p2AssetInput.readOnly = false;
                 p2AssetInput.classList.remove('bg-slate-950/50', 'border-transparent', 'text-emerald-400');
                 p2AssetInput.classList.add('bg-slate-950', 'border-indigo-500', 'text-white');
             } else {
                 p2ModeLabel.innerText = "Auto";
                 p2ModeLabel.className = "ml-2 text-[10px] font-bold text-emerald-400 uppercase w-10";
+                
+                p2AssetValLabel.innerText = "Total Asset Value ($)";
+                p2ManualAddOn.classList.add('hidden');
+
                 p2AssetInput.readOnly = true;
                 p2AssetInput.classList.remove('bg-slate-950', 'border-indigo-500', 'text-white');
                 p2AssetInput.classList.add('bg-slate-950/50', 'border-transparent', 'text-emerald-400');
@@ -292,7 +338,6 @@
             const modal = document.getElementById('mathModal');
             const content = document.getElementById('mathModalContent');
             modal.classList.remove('hidden');
-            // Slight delay to allow display:block to apply before animating opacity
             setTimeout(() => {
                 modal.classList.remove('opacity-0');
                 modal.classList.add('opacity-100');
@@ -310,16 +355,15 @@
             content.classList.add('scale-95');
             setTimeout(() => {
                 modal.classList.add('hidden');
-            }, 300); // Matches duration-300
+            }, 300);
         }
 
-        // Close modal when clicking outside
         document.getElementById('mathModal').addEventListener('click', function(e) {
             if (e.target === this) closeModal();
         });
 
         function runEngine() {
-            // Inputs Extract
+            // Pair 1 Inputs Extract
             const p1AssetVal = parseFloat(document.getElementById('p1AssetVal').value) || 0;
             const p1AssetYield = parseFloat(document.getElementById('p1AssetYield').value) || 0;
             const p1LoanPrinc = parseFloat(document.getElementById('p1LoanPrinc').value) || 0;
@@ -327,15 +371,28 @@
 
             document.getElementById('p2SeedDisplay').innerText = formatVal(p1LoanPrinc);
 
-            const p2LoanPrinc = parseFloat(document.getElementById('p2LoanPrinc').value) || 0;
+            // Pair 2 Inputs Extract
+            const p2Leverage = parseFloat(document.getElementById('p2Leverage').value) || 0;
             const p2AssetYield = parseFloat(document.getElementById('p2AssetYield').value) || 0;
             const p2LoanRate = parseFloat(document.getElementById('p2LoanRate').value) || 0;
 
+            // Calculate Margin Loan
+            const p2LoanPrinc = p1LoanPrinc * p2Leverage;
+            document.getElementById('p2LoanDisplay').innerText = `Loan: ${formatVal(p2LoanPrinc)}`;
+
+            // Incoming Capital Logic
+            const incomingCapital = p1LoanPrinc + p2LoanPrinc;
+            document.getElementById('p2IncomingDisplay').innerText = `+${formatVal(incomingCapital)}`;
+
+            // Calculate Effective Asset Value
             let p2TotalAssetVal = 0;
             if (p2Toggle.checked) {
-                p2TotalAssetVal = parseFloat(p2AssetInput.value) || 0;
+                let baseCapital = parseFloat(p2AssetInput.value) || 0;
+                let includeIncoming = document.getElementById('p2IncludeNewCapital').checked;
+                p2TotalAssetVal = baseCapital + (includeIncoming ? incomingCapital : 0);
+                document.getElementById('p2EffectiveAssetDisplay').innerText = formatVal(p2TotalAssetVal);
             } else {
-                p2TotalAssetVal = p1LoanPrinc + p2LoanPrinc;
+                p2TotalAssetVal = incomingCapital;
                 p2AssetInput.value = p2TotalAssetVal; 
             }
 
@@ -374,7 +431,6 @@
             const globalLtv = globalTotalAssets > 0 ? (globalTotalDebt / globalTotalAssets) * 100 : 0;
 
             // --- VELOCITY AMORTIZATION LOGIC ---
-            // Cash available to attack Pair 1 Loan is the global income minus Pair 2's required debt payment
             const annualCashAvailable = globalNoi - p2Ds; 
             const monthlyCashAvailable = annualCashAvailable / 12;
             const annualRate = p1LoanRate / 100;
@@ -384,11 +440,9 @@
             let totalMonthsToPayoff = 0;
             let amortizationRows = '';
 
-            // Update UI Wealth Loop defaults
             document.getElementById('loopHarvest').innerText = formatVal(p1LoanPrinc);
 
             if (monthlyCashAvailable <= balance * monthlyRate || p1LoanPrinc === 0) {
-                // Deficit or No Loan Scenario
                 document.getElementById('loopGenerate').innerText = formatVal(globalNet);
                 document.getElementById('loopGenerate').className = "text-xl font-bold text-rose-400 block";
                 document.getElementById('loopSweep').innerText = p1LoanPrinc === 0 ? `N/A` : `Deficit`;
@@ -399,8 +453,7 @@
                 
                 amortizationRows = `<tr><td colspan="5" class="text-center text-rose-400 p-4">System deficit detected. Amortization impossible.</td></tr>`;
             } else {
-                // Loop to calculate velocity payoff
-                while (balance > 0.01 && month < 600) { // Limit to 50 years (600 months)
+                while (balance > 0.01 && month < 600) { 
                     month++;
                     let interestCost = balance * monthlyRate;
                     let principalPaid = monthlyCashAvailable - interestCost;
@@ -442,7 +495,7 @@
                 `;
             }
 
-            // Generate the HTML for the Modal
+            // Generate HTML for Modal
             const modalHtml = `
                 <div class="space-y-4 text-sm text-slate-300">
                     <h4 class="text-indigo-400 font-bold uppercase tracking-widest text-xs">1. The Core Variables</h4>
@@ -471,7 +524,7 @@
                         But the wealthy use <strong>Velocity</strong>. 
                     </p>
                     <p class="text-xs leading-relaxed text-slate-400">
-                        Because you sweep all free cash flow back against the loan, the principal shrinks. Next year, the interest charged on that smaller principal is lower, meaning <em>even more</em> of your cash flow goes directly to principal. This compounding effect drastically accelerates the payoff time. 
+                        Because you sweep all free cash flow back against the loan, the principal shrinks. Next month, the interest charged on that smaller principal is lower, meaning <em>even more</em> of your cash flow goes directly to principal. This compounding effect drastically accelerates the payoff time. 
                     </p>
 
                     <div class="bg-slate-950 rounded-xl border border-slate-800 overflow-hidden mt-4">
@@ -555,7 +608,12 @@
         }
 
         const inputs = document.querySelectorAll('input');
-        inputs.forEach(i => i.addEventListener('input', runEngine));
+        inputs.forEach(i => {
+            i.addEventListener('input', runEngine);
+            if (i.type === 'checkbox') {
+                i.addEventListener('change', runEngine); // Extra safety binding for checkboxes
+            }
+        });
 
         // Initial Evaluation
         runEngine();
