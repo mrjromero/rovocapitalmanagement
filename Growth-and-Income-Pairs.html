@@ -8,6 +8,7 @@
     <style>
         .system-card { transition: all 0.2s ease; }
         .system-card:hover { transform: translateY(-1px); }
+        .animate-pulse-slow { animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
     </style>
 </head>
 <body class="bg-slate-900 text-slate-100 font-sans antialiased min-h-screen">
@@ -24,8 +25,10 @@
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
             
+            <!-- LEFT COLUMN: INPUTS -->
             <div class="lg:col-span-4 space-y-6">
                 
+                <!-- PAIR 1 -->
                 <div class="bg-slate-800/80 p-5 rounded-2xl border border-indigo-500/30 shadow-lg">
                     <div class="flex items-center gap-2 mb-4">
                         <span class="p-2 bg-indigo-500/10 text-indigo-400 rounded-lg text-xl">🌱</span>
@@ -37,24 +40,25 @@
                     <div class="space-y-4">
                         <div>
                             <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Total Asset Value ($)</label>
-                            <input type="number" id="p1AssetVal" value="100000" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-indigo-500">
+                            <input type="number" id="p1AssetVal" value="100000" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-indigo-500 transition-colors">
                         </div>
                         <div>
                             <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Internal Appreciation Rate (%)</label>
-                            <input type="number" id="p1AssetYield" value="5" step="0.01" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-indigo-500">
+                            <input type="number" id="p1AssetYield" value="5" step="0.01" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-indigo-500 transition-colors">
                         </div>
                         <div class="pt-2 border-t border-slate-700/50">
                             <label class="block text-xs font-semibold text-amber-400 uppercase tracking-wider mb-1">Harvested Loan Principal ($)</label>
-                            <input type="number" id="p1LoanPrinc" value="50000" class="w-full bg-slate-950 border border-amber-500/30 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500">
+                            <input type="number" id="p1LoanPrinc" value="50000" class="w-full bg-slate-950 border border-amber-500/30 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500 transition-colors">
                             <span class="text-[10px] text-slate-400 mt-1 block">This liquidity is extracted to seed Pair 2.</span>
                         </div>
                         <div>
                             <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Loan Interest Rate (%)</label>
-                            <input type="number" id="p1LoanRate" value="5.35" step="0.01" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-indigo-500">
+                            <input type="number" id="p1LoanRate" value="5.35" step="0.01" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-indigo-500 transition-colors">
                         </div>
                     </div>
                 </div>
 
+                <!-- PAIR 2 -->
                 <div class="bg-slate-800/80 p-5 rounded-2xl border border-emerald-500/30 shadow-lg">
                     <div class="flex items-center gap-2 mb-4">
                         <span class="p-2 bg-emerald-500/10 text-emerald-400 rounded-lg text-xl">💰</span>
@@ -72,7 +76,7 @@
                         </div>
                         <div>
                             <label class="block text-xs font-semibold text-emerald-400 uppercase tracking-wider mb-1">Additional Margin/Stack Loan ($)</label>
-                            <input type="number" id="p2LoanPrinc" value="50000" class="w-full bg-slate-950 border border-emerald-500/30 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-emerald-500">
+                            <input type="number" id="p2LoanPrinc" value="50000" class="w-full bg-slate-950 border border-emerald-500/30 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-emerald-500 transition-colors">
                             
                             <div id="p2MarginAlert" class="hidden mt-2 p-2 bg-rose-900/40 border border-rose-500/50 rounded-lg text-[10px] text-rose-300 leading-tight">
                                 ⚠️ <strong>Margin Capacity Exceeded:</strong> Your requested loan pushes your Pair 2 LTV above 50%. Standard brokerages (Reg T) generally restrict initial margin borrowing to a 1:1 match of your cash value.
@@ -89,7 +93,7 @@
                                         <span class="text-slate-500 hover:text-emerald-400">ⓘ</span>
                                         <div class="absolute z-50 hidden group-hover:block w-64 p-3 bg-slate-800 border border-slate-600 text-[10px] text-slate-200 rounded-lg shadow-xl top-6 left-0 leading-relaxed">
                                             <strong>AUTO:</strong> Assumes a new account. Asset value perfectly equates to Seed Capital + Additional Margin Loan.<br><br>
-                                            <strong>MANUAL:</strong> Best for existing portfolios, Real Estate, or Businesses. Allows you to input a total asset value independent of the seed and loan amounts (e.g., if you are injecting this seed into a margin portfolio that already has a $200k established capital base).
+                                            <strong>MANUAL:</strong> Best for existing portfolios. Allows you to input a total asset value independent of the seed and loan amounts.
                                         </div>
                                     </div>
                                 </div>
@@ -107,19 +111,21 @@
 
                         <div>
                             <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Gross Yield of Funds (%)</label>
-                            <input type="number" id="p2AssetYield" value="20" step="0.01" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-emerald-500">
+                            <input type="number" id="p2AssetYield" value="20" step="0.01" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-emerald-500 transition-colors">
                         </div>
                         <div>
                             <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Margin Loan Interest Rate (%)</label>
-                            <input type="number" id="p2LoanRate" value="4.15" step="0.01" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-emerald-500">
+                            <input type="number" id="p2LoanRate" value="4.15" step="0.01" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-emerald-500 transition-colors">
                         </div>
                     </div>
                 </div>
 
             </div>
 
+            <!-- RIGHT COLUMN: DASHBOARDS -->
             <div class="lg:col-span-8 space-y-6">
                 
+                <!-- GLOBAL METRICS -->
                 <div class="bg-gradient-to-br from-slate-950 to-slate-900 p-6 rounded-3xl border-2 border-emerald-500/40 shadow-2xl relative overflow-hidden">
                     <div class="absolute top-0 right-0 p-8 opacity-5 text-8xl font-black select-none text-white">SYSTEM</div>
                     <h3 class="text-xs font-bold uppercase tracking-widest text-emerald-400 mb-2">💎 THE GLOBAL MACRO RESILIENCE MACHINE</h3>
@@ -144,8 +150,50 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- THE INFINITE WEALTH LOOP VISUALIZER -->
+                <div class="bg-slate-950 p-6 rounded-3xl border border-slate-800 shadow-xl relative">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-xs font-bold uppercase tracking-widest text-indigo-400 flex items-center gap-2">
+                            <span>🔄</span> The Infinite Wealth Loop (Velocity)
+                        </h3>
+                        <!-- Math Breakdown Trigger -->
+                        <button onclick="openModal()" class="text-[10px] uppercase tracking-wider font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-3 py-1.5 rounded-lg hover:bg-indigo-500/40 hover:text-white transition-colors cursor-pointer">
+                            View Math Breakdown
+                        </button>
+                    </div>
                     
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+                        <!-- Step 1: Capital Extraction -->
+                        <div class="bg-slate-900 border border-slate-700/50 p-4 rounded-xl text-center relative">
+                            <span class="text-[10px] text-slate-400 uppercase tracking-widest block mb-1">Step 1: Harvest</span>
+                            <span id="loopHarvest" class="text-xl font-bold text-amber-400 block">--</span>
+                            <span class="text-[10px] text-slate-500 block mt-1">Capital moves to Pair 2</span>
+                            <div class="hidden md:block absolute -right-3 top-1/2 transform -translate-y-1/2 text-slate-600 text-xl animate-pulse-slow">➔</div>
+                        </div>
+
+                        <!-- Step 2: Income Generation -->
+                        <div class="bg-slate-900 border border-emerald-500/20 p-4 rounded-xl text-center relative shadow-[0_0_15px_rgba(16,185,129,0.1)]">
+                            <span class="text-[10px] text-emerald-500 uppercase tracking-widest block mb-1">Step 2: Generate</span>
+                            <span id="loopGenerate" class="text-xl font-bold text-emerald-400 block">--</span>
+                            <span class="text-[10px] text-slate-500 block mt-1">New Net Cash Flow Created</span>
+                            <div class="hidden md:block absolute -right-3 top-1/2 transform -translate-y-1/2 text-slate-600 text-xl animate-pulse-slow">➔</div>
+                        </div>
+
+                        <!-- Step 3: Equity Expansion (Sweep) -->
+                        <div class="bg-slate-900 border border-indigo-500/40 p-4 rounded-xl text-center relative">
+                            <span class="text-[10px] text-indigo-400 uppercase tracking-widest block mb-1">Step 3: Sweep & Reset</span>
+                            <span id="loopSweep" class="text-xl font-bold text-white block">--</span>
+                            <span class="text-[10px] text-slate-500 block mt-1">Time to Payoff Pair 1 Debt</span>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4 text-center border-t border-slate-800 pt-3">
+                        <p id="loopNarrative" class="text-xs text-slate-400 leading-relaxed"></p>
+                    </div>
+                </div>
+
+                <!-- SUB-PAIR BREAKDOWN -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="bg-slate-800/40 p-5 rounded-2xl border border-indigo-500/20">
                         <h4 class="text-xs font-bold text-indigo-400 uppercase tracking-wider mb-4 flex justify-between">
                             <span>Pair 1 Performance Breakdown</span>
@@ -175,19 +223,38 @@
                             <div class="flex justify-between"><span class="text-slate-400">Margin Cushion:</span> <span id="p2Cushion" class="text-white">--</span></div>
                         </div>
                     </div>
-
                 </div>
 
-                <div class="bg-slate-950 p-6 rounded-2xl border border-slate-800 shadow-inner">
+                <!-- NARRATIVE CONTAINER (Positioned explicitly under the Pair Breakdown cards) -->
+                <div class="bg-slate-950 p-6 rounded-2xl border border-slate-800 shadow-inner mt-6">
                     <h4 class="text-sm font-bold text-slate-300 mb-3 flex items-center gap-2">
                         <span>💡</span> System Dynamics Evaluation
                     </h4>
                     <div id="systemNarrative" class="text-sm text-slate-400 space-y-3 leading-relaxed">
-                        </div>
+                        <!-- Dynamic Text Injected Here -->
+                    </div>
                 </div>
 
             </div>
+        </div>
+    </div>
 
+    <!-- MATH BREAKDOWN MODAL -->
+    <div id="mathModal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4 opacity-0 transition-opacity duration-300">
+        <div class="bg-slate-900 border border-slate-700 rounded-3xl shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col transform scale-95 transition-transform duration-300" id="mathModalContent">
+            
+            <div class="p-5 border-b border-slate-800 flex justify-between items-center bg-slate-900/50 rounded-t-3xl">
+                <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                    <span class="text-indigo-400">🧮</span> The Velocity Math Breakdown
+                </h3>
+                <button onclick="closeModal()" class="text-slate-500 hover:text-white text-2xl leading-none transition-colors">&times;</button>
+            </div>
+            
+            <div class="p-6 overflow-y-auto custom-scrollbar">
+                <div id="modalBodyContent" class="space-y-6">
+                    <!-- Populated by JavaScript -->
+                </div>
+            </div>
         </div>
     </div>
 
@@ -197,6 +264,7 @@
             return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(num);
         }
 
+        // Toggle Logic Integration
         const p2Toggle = document.getElementById('p2AssetModeToggle');
         const p2AssetInput = document.getElementById('p2AssetVal');
         const p2ModeLabel = document.getElementById('modeLabelText');
@@ -219,7 +287,39 @@
             runEngine();
         });
 
+        // Modal Functions
+        function openModal() {
+            const modal = document.getElementById('mathModal');
+            const content = document.getElementById('mathModalContent');
+            modal.classList.remove('hidden');
+            // Slight delay to allow display:block to apply before animating opacity
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                modal.classList.add('opacity-100');
+                content.classList.remove('scale-95');
+                content.classList.add('scale-100');
+            }, 10);
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('mathModal');
+            const content = document.getElementById('mathModalContent');
+            modal.classList.remove('opacity-100');
+            modal.classList.add('opacity-0');
+            content.classList.remove('scale-100');
+            content.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300); // Matches duration-300
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('mathModal').addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
+        });
+
         function runEngine() {
+            // Inputs Extract
             const p1AssetVal = parseFloat(document.getElementById('p1AssetVal').value) || 0;
             const p1AssetYield = parseFloat(document.getElementById('p1AssetYield').value) || 0;
             const p1LoanPrinc = parseFloat(document.getElementById('p1LoanPrinc').value) || 0;
@@ -239,12 +339,13 @@
                 p2AssetInput.value = p2TotalAssetVal; 
             }
 
+            // Layer 0 Calculations
             const p1Noi = p1AssetVal * (p1AssetYield / 100);
             const p1Ds = p1LoanPrinc * (p1LoanRate / 100);
-            
             const p2Noi = p2TotalAssetVal * (p2AssetYield / 100);
             const p2Ds = p2LoanPrinc * (p2LoanRate / 100);
 
+            // Pair Metrics
             const p1Arb = p1AssetYield - p1LoanRate;
             const p1Net = p1Noi - p1Ds;
             const p1Dscr = p1Ds > 0 ? (p1Noi / p1Ds) : (p1Noi > 0 ? Infinity : 0);
@@ -255,13 +356,13 @@
             const p2Dscr = p2Ds > 0 ? (p2Noi / p2Ds) : (p2Noi > 0 ? Infinity : 0);
             const p2Ltv = p2TotalAssetVal > 0 ? (p2LoanPrinc / p2TotalAssetVal) * 100 : 0;
 
-            // Trigger margin alert if LTV is exactly strictly greater than 50%
             if (p2Ltv > 50.01) {
                 p2MarginAlert.classList.remove('hidden');
             } else {
                 p2MarginAlert.classList.add('hidden');
             }
 
+            // Global Metrics
             const globalNoi = p1Noi + p2Noi;
             const globalDs = p1Ds + p2Ds;
             const globalNet = globalNoi - globalDs;
@@ -272,6 +373,129 @@
             const globalTotalDebt = p1LoanPrinc + p2LoanPrinc;
             const globalLtv = globalTotalAssets > 0 ? (globalTotalDebt / globalTotalAssets) * 100 : 0;
 
+            // --- VELOCITY AMORTIZATION LOGIC ---
+            // Cash available to attack Pair 1 Loan is the global income minus Pair 2's required debt payment
+            const annualCashAvailable = globalNoi - p2Ds; 
+            const monthlyCashAvailable = annualCashAvailable / 12;
+            const annualRate = p1LoanRate / 100;
+            const monthlyRate = annualRate / 12;
+            let balance = p1LoanPrinc;
+            let month = 0;
+            let totalMonthsToPayoff = 0;
+            let amortizationRows = '';
+
+            // Update UI Wealth Loop defaults
+            document.getElementById('loopHarvest').innerText = formatVal(p1LoanPrinc);
+
+            if (monthlyCashAvailable <= balance * monthlyRate || p1LoanPrinc === 0) {
+                // Deficit or No Loan Scenario
+                document.getElementById('loopGenerate').innerText = formatVal(globalNet);
+                document.getElementById('loopGenerate').className = "text-xl font-bold text-rose-400 block";
+                document.getElementById('loopSweep').innerText = p1LoanPrinc === 0 ? `N/A` : `Deficit`;
+                
+                document.getElementById('loopNarrative').innerHTML = p1LoanPrinc === 0 
+                    ? "You currently have no foundational debt to pay off." 
+                    : "Because the system is currently bleeding cash, the loop is broken. The system does not generate enough free cash flow to overcome the interest on the Pair 1 Loan.";
+                
+                amortizationRows = `<tr><td colspan="5" class="text-center text-rose-400 p-4">System deficit detected. Amortization impossible.</td></tr>`;
+            } else {
+                // Loop to calculate velocity payoff
+                while (balance > 0.01 && month < 600) { // Limit to 50 years (600 months)
+                    month++;
+                    let interestCost = balance * monthlyRate;
+                    let principalPaid = monthlyCashAvailable - interestCost;
+                    
+                    if (principalPaid >= balance) {
+                        principalPaid = balance;
+                        balance = 0;
+                    } else {
+                        balance -= principalPaid;
+                    }
+
+                    amortizationRows += `
+                        <tr class="hover:bg-slate-800/50 transition-colors">
+                            <td class="p-3 border-b border-slate-800 text-slate-300">Month ${month}</td>
+                            <td class="p-3 border-b border-slate-800 text-slate-400">${formatVal(balance + principalPaid)}</td>
+                            <td class="p-3 border-b border-slate-800 text-rose-400/80">-${formatVal(interestCost)}</td>
+                            <td class="p-3 border-b border-slate-800 text-emerald-400 font-medium">+${formatVal(principalPaid)}</td>
+                            <td class="p-3 border-b border-slate-800 text-white font-bold">${formatVal(balance)}</td>
+                        </tr>
+                    `;
+                }
+
+                totalMonthsToPayoff = month;
+
+                if (balance > 0.01) {
+                    document.getElementById('loopSweep').innerText = `50+ Years`;
+                } else {
+                    const displayYears = Math.floor(totalMonthsToPayoff / 12);
+                    const displayMonths = totalMonthsToPayoff % 12;
+                    document.getElementById('loopSweep').innerText = `${displayYears}y ${displayMonths}m`;
+                }
+
+                document.getElementById('loopGenerate').innerText = `+${formatVal(globalNet)} / yr`;
+                document.getElementById('loopGenerate').className = "text-xl font-bold text-emerald-400 block";
+                
+                document.getElementById('loopNarrative').innerHTML = `
+                    By routing 100% of your free cash flow back to Pair 1, you create wealth out of thin air. 
+                    In exactly <strong>${(totalMonthsToPayoff / 12).toFixed(1)} years</strong>, the Pair 1 foundational loan is completely wiped out by the system's own cash flow. Your original equity is fully restored and ready to be harvested again, <em>without you using a single dollar of your own paycheck</em>.
+                `;
+            }
+
+            // Generate the HTML for the Modal
+            const modalHtml = `
+                <div class="space-y-4 text-sm text-slate-300">
+                    <h4 class="text-indigo-400 font-bold uppercase tracking-widest text-xs">1. The Core Variables</h4>
+                    <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 grid grid-cols-2 gap-4">
+                        <div>
+                            <span class="block text-[10px] text-slate-500 uppercase">Pair 1 Loan Principal</span>
+                            <span class="text-lg font-bold text-white">${formatVal(p1LoanPrinc)}</span>
+                        </div>
+                        <div>
+                            <span class="block text-[10px] text-slate-500 uppercase">Pair 1 Interest Rate</span>
+                            <span class="text-lg font-bold text-white">${formatVal(p1LoanRate, true)}</span>
+                        </div>
+                        <div class="col-span-2 pt-3 border-t border-slate-800">
+                            <span class="block text-[10px] text-emerald-500 uppercase font-bold tracking-wide mb-1">System Free Cash Flow (Before P1 Interest)</span>
+                            <span class="text-2xl font-bold text-emerald-400">${formatVal(annualCashAvailable)} / yr</span>
+                            <span class="block text-[11px] text-slate-400 mt-2 leading-relaxed">
+                                <strong>How we get this:</strong> Total System Income (${formatVal(globalNoi)}) minus Pair 2 Debt Service (${formatVal(p2Ds)}).<br>
+                                This is the absolute maximum cash flow generated by your macro-system that is available to service and aggressively pay down the foundational Pair 1 loan.
+                            </span>
+                        </div>
+                    </div>
+
+                    <h4 class="text-indigo-400 font-bold uppercase tracking-widest text-xs mt-8">2. The Calculation Method (Velocity)</h4>
+                    <p class="text-xs leading-relaxed text-slate-400 mb-2">
+                        If you used traditional straight-line math, you might think it takes <em>(${formatVal(p1LoanPrinc)} &divide; ${formatVal(globalNet)})</em> = <strong>${p1LoanPrinc > 0 && globalNet > 0 ? (p1LoanPrinc/globalNet).toFixed(1) : '--'} years</strong> to pay this off. 
+                        But the wealthy use <strong>Velocity</strong>. 
+                    </p>
+                    <p class="text-xs leading-relaxed text-slate-400">
+                        Because you sweep all free cash flow back against the loan, the principal shrinks. Next year, the interest charged on that smaller principal is lower, meaning <em>even more</em> of your cash flow goes directly to principal. This compounding effect drastically accelerates the payoff time. 
+                    </p>
+
+                    <div class="bg-slate-950 rounded-xl border border-slate-800 overflow-hidden mt-4">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-slate-900 border-b border-slate-800">
+                                <tr>
+                                    <th class="p-3 font-semibold text-slate-400">Month</th>
+                                    <th class="p-3 font-semibold text-slate-400">Start Balance</th>
+                                    <th class="p-3 font-semibold text-slate-400">Interest Cost</th>
+                                    <th class="p-3 font-semibold text-emerald-400">Principal Paid</th>
+                                    <th class="p-3 font-semibold text-white">End Balance</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${amortizationRows}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+            document.getElementById('modalBodyContent').innerHTML = modalHtml;
+
+
+            // Update DOM Dashboard Values
             document.getElementById('p1Noi').innerText = formatVal(p1Noi);
             document.getElementById('p1Ds').innerText = formatVal(p1Ds);
             document.getElementById('p1Arb').innerText = formatVal(p1Arb, true);
@@ -293,7 +517,6 @@
 
             styleSubpairStatus('p1Status', p1Arb, p1Dscr);
             styleSubpairStatus('p2Status', p2Arb, p2Dscr);
-
             buildNarrative(p1AssetYield, p1LoanRate, p2AssetYield, p2LoanRate, globalNet, globalDscr, globalLtv, globalCushion);
         }
 
@@ -334,6 +557,7 @@
         const inputs = document.querySelectorAll('input');
         inputs.forEach(i => i.addEventListener('input', runEngine));
 
+        // Initial Evaluation
         runEngine();
     </script>
 </body>
