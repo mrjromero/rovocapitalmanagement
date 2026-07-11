@@ -73,6 +73,11 @@
                         <div>
                             <label class="block text-xs font-semibold text-emerald-400 uppercase tracking-wider mb-1">Additional Margin/Stack Loan ($)</label>
                             <input type="number" id="p2LoanPrinc" value="50000" class="w-full bg-slate-950 border border-emerald-500/30 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-emerald-500">
+                            
+                            <div id="p2MarginAlert" class="hidden mt-2 p-2 bg-rose-900/40 border border-rose-500/50 rounded-lg text-[10px] text-rose-300 leading-tight">
+                                ⚠️ <strong>Margin Capacity Exceeded:</strong> Your requested loan pushes your Pair 2 LTV above 50%. Standard brokerages (Reg T) generally restrict initial margin borrowing to a 1:1 match of your cash value.
+                            </div>
+                            
                             <span class="text-[10px] text-slate-400 mt-1 block">Extra debt added directly inside Pair 2 to multiply position.</span>
                         </div>
                         
@@ -195,6 +200,7 @@
         const p2Toggle = document.getElementById('p2AssetModeToggle');
         const p2AssetInput = document.getElementById('p2AssetVal');
         const p2ModeLabel = document.getElementById('modeLabelText');
+        const p2MarginAlert = document.getElementById('p2MarginAlert');
 
         p2Toggle.addEventListener('change', (e) => {
             if (e.target.checked) {
@@ -248,6 +254,13 @@
             const p2Net = p2Noi - p2Ds;
             const p2Dscr = p2Ds > 0 ? (p2Noi / p2Ds) : (p2Noi > 0 ? Infinity : 0);
             const p2Ltv = p2TotalAssetVal > 0 ? (p2LoanPrinc / p2TotalAssetVal) * 100 : 0;
+
+            // Trigger margin alert if LTV is exactly strictly greater than 50%
+            if (p2Ltv > 50.01) {
+                p2MarginAlert.classList.remove('hidden');
+            } else {
+                p2MarginAlert.classList.add('hidden');
+            }
 
             const globalNoi = p1Noi + p2Noi;
             const globalDs = p1Ds + p2Ds;
