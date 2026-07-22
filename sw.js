@@ -1,5 +1,5 @@
 // Change this version number (e.g., 'v2', 'v3') to force an update
-const CACHE_NAME = 'joses-toolbox-v2'; 
+const CACHE_NAME = 'joses-toolbox-v3'; 
 
 const ASSETS_TO_CACHE = [
     './',
