@@ -37,6 +37,21 @@
 
         .text-primary-2 { color: var(--primary-color) !important; }
 
+        .back-link {
+            color: var(--secondary-color);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 15px;
+            display: inline-block;
+            margin-bottom: 20px;
+            transition: color 0.2s ease-in-out;
+        }
+
+        .back-link:hover {
+            color: #008580;
+            text-decoration: underline;
+        }
+
         .panel { border: 1px solid var(--border-color); border-radius: 5px; background-color: var(--white-color); }
         .panel-heading { border-bottom: 1px solid var(--border-color); background-color: var(--primary-color); }
 
@@ -118,8 +133,11 @@
 </head>
 <body>
 
-    <div class="container py-5">
+    <div class="container py-4">
         
+        <!-- BACK LINK -->
+        <a href="toolbox" class="back-link">Back to Toolbox</a>
+
         <!-- MAIN HEADER -->
         <div class="section-title mb-5">
             <h2>Expense Coverage Planner</h2>
