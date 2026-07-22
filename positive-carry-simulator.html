@@ -1,0 +1,1088 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Positive Carry Simulator</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            /* Fynanc Color Scheme */
+            --bg-color: #f4f7fa; 
+            --panel-bg: #ffffff; 
+            --text-main: #212529; 
+            --text-muted: #6c757d; 
+            --accent: #1b4a7b; /* Primary Dark Blue */
+            --accent-hover: #133558;
+            --border: #dee2e6;
+            --success: #00b5ae; /* Secondary Teal */
+            --danger: #dc3545;
+            --warning: #f59e0b;
+            --secondary: #6c757d;
+            --secondary-hover: #5a6268;
+        }
+        body {
+            font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        /* Tool Header Styling */
+        .tool-header {
+            width: 100%;
+            max-width: 1650px;
+            margin-bottom: 20px;
+            background-color: var(--panel-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px 24px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            position: relative;
+            z-index: 50;
+        }
+        .back-link {
+            color: var(--accent);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            margin-bottom: 4px;
+            transition: color 0.2s;
+        }
+        .back-link:hover {
+            color: var(--accent-hover);
+            text-decoration: underline;
+        }
+        .tool-title {
+            margin: 0;
+            font-size: 1.6rem;
+            color: var(--accent);
+            letter-spacing: -0.02em;
+        }
+        .tool-description {
+            margin: 0;
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            line-height: 1.5;
+            max-width: 800px;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 20px;
+            max-width: 1650px;
+            width: 100%;
+        }
+        
+        .sidebar-panel {
+            background-color: var(--panel-bg);
+            padding: 24px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            position: relative;
+            z-index: 100;
+            overflow: visible !important;
+        }
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            position: relative;
+            z-index: 5;
+            overflow: visible !important;
+        }
+        
+        .panel {
+            background-color: var(--panel-bg);
+            padding: 24px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            position: relative;
+            overflow: visible !important;
+        }
+        
+        h2 { margin-top: 0; font-size: 1.25rem; color: var(--accent); border-bottom: 1px solid var(--border); padding-bottom: 12px; }
+        h3 { margin-top: 0; font-size: 1.15rem; color: var(--accent); padding-bottom: 6px; }
+        .input-group { margin-bottom: 16px; position: relative; overflow: visible !important; }
+        
+        .checkbox-group { margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+        .checkbox-group input { width: auto; cursor: pointer; }
+        .checkbox-group label { margin-bottom: 0; cursor: pointer; color: var(--text-main); font-weight: 500; font-size: 0.9rem; }
+        label { display: flex; align-items: center; justify-content: space-between; font-size: 0.875rem; color: var(--text-main); font-weight: 600; margin-bottom: 6px; }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-main);
+            font-family: monospace;
+            font-size: 1rem;
+            box-sizing: border-box;
+            transition: border-color 0.2s;
+        }
+        input:focus, select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(27, 74, 123, 0.1); }
+        
+        button {
+            width: 100%;
+            padding: 12px;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            margin-top: 10px;
+        }
+        .btn-primary { background-color: var(--accent); }
+        .btn-primary:hover { background-color: var(--accent-hover); }
+        .btn-secondary { background-color: var(--secondary); margin-top: 8px; }
+        .btn-secondary:hover { background-color: var(--secondary-hover); }
+        
+        /* Universal Layer-Safe Tooltip Framework (Intelligent Right-Edge & Grid-Aware Alignment) */
+        .tooltip-icon {
+            display: inline-block;
+            cursor: help;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            margin-left: 4px;
+            position: relative;
+        }
+        .tooltip-icon:hover { color: var(--accent); }
+        .tooltip-text {
+            visibility: hidden;
+            width: 250px;
+            background-color: var(--accent);
+            color: #ffffff;
+            text-align: left;
+            border: 1px solid var(--accent-hover);
+            border-radius: 6px;
+            padding: 12px;
+            font-weight: 400;
+            font-size: 0.75rem;
+            line-height: 1.4;
+            position: absolute;
+            z-index: 99999 !important;
+            bottom: 140%;
+            left: 0;
+            right: auto;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            opacity: 0;
+            transition: opacity 0.15s ease, visibility 0.15s ease;
+            pointer-events: none;
+        }
+        
+        /* Force right-edge alignment for cards in column 4 or containing cards near the edge */
+        .metric-card:nth-child(4n) .tooltip-text,
+        .metric-card:last-child .tooltip-text,
+        .metric-card:nth-child(3) .tooltip-text {
+            left: auto;
+            right: 0;
+        }
+
+        .tooltip-icon:hover .tooltip-text {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .tier-ledger-title {
+            font-weight: bold;
+            color: var(--accent);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-size: 0.7rem;
+        }
+        .tier-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: monospace;
+        }
+        .tier-table th {
+            text-align: left;
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 4px;
+        }
+        .tier-table td { padding: 6px 0; color: var(--text-main); }
+        .tier-active td { color: var(--success) !important; font-weight: bold; }
+        .status-badge {
+            font-size: 0.65rem;
+            padding: 2px 5px;
+            border-radius: 3px;
+            background-color: #e9ecef;
+            color: var(--text-muted);
+        }
+        .status-active { background-color: rgba(0, 181, 174, 0.15); color: var(--success); }
+
+        .warning-box {
+            display: none;
+            background-color: rgba(245, 158, 11, 0.1);
+            border: 1px solid var(--warning);
+            color: #b45309; /* Darker amber for readability on light bg */
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            margin-top: 16px;
+            font-weight: 500;
+            line-height: 1.4;
+        }
+        .danger-box {
+            display: none;
+            background-color: rgba(220, 53, 69, 0.1);
+            border: 1px solid var(--danger);
+            color: var(--danger);
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            margin-top: 16px;
+            font-weight: 500;
+            line-height: 1.4;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 20px;
+            overflow: visible !important;
+        }
+        
+        .metric-card {
+            background-color: var(--panel-bg);
+            padding: 16px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+            z-index: 10;
+            overflow: visible !important;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            transition: border-color 0.2s, box-shadow 0.2s, z-index 0s;
+        }
+        
+        .metric-card:hover {
+            z-index: 10000 !important;
+            border-color: var(--accent);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .metric-title { display: flex; align-items: center; justify-content: center; font-size: 0.75rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; position: relative; overflow: visible !important; }
+        .metric-value { font-size: 1.4rem; font-weight: bold; margin-top: 8px; font-family: monospace; color: var(--accent); }
+        .good-metric { color: var(--success); }
+        .warn-metric { color: var(--danger); }
+        .info-metric { color: var(--accent); }
+        canvas { width: 100% !important; height: 500px !important; }
+        
+        .summary-narrative { font-size: 0.95rem; line-height: 1.6; color: var(--text-main); }
+        .summary-narrative p { margin: 0 0 12px 0; }
+        .summary-narrative ul { margin: 0 0 16px 0; padding-left: 20px; }
+        .summary-narrative li { margin-bottom: 8px; color: var(--text-main); }
+        .summary-narrative strong { color: var(--accent); }
+        .badge { display: inline-block; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-family: monospace; font-size: 0.85rem; }
+        .badge-success { background-color: rgba(0, 181, 174, 0.15); color: var(--success); border: 1px solid var(--success); }
+        .badge-danger { background-color: rgba(220, 53, 69, 0.15); color: var(--danger); border: 1px solid var(--danger); }
+        .badge-warning { background-color: rgba(245, 158, 11, 0.15); color: #d97706; border: 1px solid var(--warning); }
+        
+        @media (max-width: 1400px) { .metrics-grid { grid-template-columns: repeat(3, 1fr); } }
+        
+        @media (max-width: 900px) {
+            .container { grid-template-columns: 1fr; }
+            .metrics-grid { grid-template-columns: repeat(2, 1fr); }
+            .tooltip-text { width: 220px; bottom: auto; top: 140%; left: auto; right: 0; transform: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="tool-header">
+        <a href="toolbox" class="back-link">&larr; Back to Toolbox</a>
+        <h1 class="tool-title">Positive Carry Simulator</h1>
+        <p class="tool-description">Model the compounded cash flow and equity expansion of a positive carry margin strategy versus traditional cash-only buy-and-hold investing over time.</p>
+    </div>
+
+    <div class="container">
+        <div class="sidebar-panel">
+            <h2>Simulation Parameters</h2>
+            
+            <div class="input-group">
+                <label>
+                    Starting Capital ($)
+                    <span class="tooltip-icon">ⓘ<span class="tooltip-text">Initial out-of-pocket cash principal used to launch the portfolio.</span></span>
+                </label>
+                <input type="number" id="startCapital" value="100000" step="1000">
+            </div>
+
+            <div class="input-group" id="standardContributionGroup">
+                <label>
+                    Monthly Contribution ($)
+                    <span class="tooltip-icon">ⓘ<span class="tooltip-text">Additional out-of-pocket cash savings injected into the equity base monthly.</span></span>
+                </label>
+                <input type="number" id="monthlyContribution" value="1000" step="100">
+            </div>
+
+            <div id="paycheckRoutingInputs" style="display: none;">
+                <div class="input-group">
+                    <label>
+                        Net Monthly Paycheck ($)
+                        <span class="tooltip-icon">ⓘ<span class="tooltip-text">Your entire net monthly paycheck flowed completely into the leveraged asset base on Day 1.</span></span>
+                    </label>
+                    <input type="number" id="grossPaycheck" value="5000" step="500">
+                </div>
+                <div class="input-group">
+                    <label>
+                        Monthly Living Expenses ($)
+                        <span class="tooltip-icon">ⓘ<span class="tooltip-text">Total capital drawn back out of the brokerage account via a margin loan to fund lifestyle bills.</span></span>
+                    </label>
+                    <input type="number" id="livingExpenses" value="4000" step="200">
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>
+                    Target DTA (%)
+                    <span class="tooltip-icon">ⓘ<span class="tooltip-text">Debt-to-Asset Ratio. Defines what percentage of your portfolio value consists of borrowed margin debt.</span></span>
+                </label>
+                <input type="number" id="dta" value="30" step="1" max="99">
+            </div>
+            
+            <div class="input-group">
+                <label>
+                    Portfolio Yield (%) Annual
+                    <span class="tooltip-icon">ⓘ<span class="tooltip-text">The annual dividend yield or interest cash flow rate generated by your underlying holdings.</span></span>
+                </label>
+                <input type="number" id="yield" value="15.0" step="0.1">
+            </div>
+
+            <div class="input-group">
+                <label>
+                    Base Margin Rate (%)
+                    <span class="tooltip-icon">ⓘ<span class="tooltip-text">The base annual interest rate charged by the broker on borrowed margin debt balances.</span></span>
+                </label>
+                <input type="number" id="marginRate" value="5.65" step="0.05" oninput="runSimulation()">
+            </div>
+            
+            <div class="input-group" id="tierScheduleGroup" style="margin-bottom: 20px; background-color: var(--bg-color); border: 1px solid var(--border); border-radius: 6px; padding: 12px; display: none;">
+                <div class="tier-ledger-title">Dynamic Margin Tier Ledger</div>
+                <table class="tier-table">
+                    <thead>
+                        <tr style="text-align: left; font-size: 0.75rem; color: var(--text-muted); border-bottom: 1px solid var(--border);">
+                            <th>Brackets</th>
+                            <th>Rate</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody style="font-size: 0.8rem;">
+                        <tr id="rowTier1"><td>$0 - $100k</td><td id="rateTier1">5.65%</td><td><span id="badgeTier1" class="status-badge">Off</span></td></tr>
+                        <tr id="rowTier2"><td>$100k - $1M</td><td id="rateTier2">5.15%</td><td><span id="badgeTier2" class="status-badge">Off</span></td></tr>
+                        <tr id="rowTier3"><td>$1M - $3M</td><td id="rateTier3">4.65%</td><td><span id="badgeTier3" class="status-badge">Off</span></td></tr>
+                        <tr id="rowTier4"><td>$3M+</td><td id="rateTier4">4.15%</td><td><span id="badgeTier4" class="status-badge">Off</span></td></tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="input-group">
+                <label>
+                    Portfolio Appreciation (%) Annual
+                    <span class="tooltip-icon">ⓘ<span class="tooltip-text">The projected organic annual price appreciation rate of your holdings.</span></span>
+                </label>
+                <input type="number" id="appreciation" value="4.0" step="0.1">
+            </div>
+
+            <div class="input-group">
+                <label>
+                    Maintenance Requirement (%)
+                    <span class="tooltip-icon">ⓘ<span class="tooltip-text">The minimum account equity percentage required by the broker before forced liquidations occur.</span></span>
+                </label>
+                <input type="number" id="maintReq" value="30" step="1">
+            </div>
+            
+            <div class="input-group">
+                <label>
+                    Simulation Time (Months)
+                    <span class="tooltip-icon">ⓘ<span class="tooltip-text">The total timeline length of the compound simulation run in months.</span></span>
+                </label>
+                <input type="number" id="months" value="120" step="12">
+            </div>
+
+            <div style="border-top: 1px solid var(--border); padding-top: 14px; margin-top: 14px;">
+                <div class="checkbox-group">
+                    <input type="checkbox" id="enablePaycheck" onchange="togglePaycheckMode(); runSimulation();">
+                    <label for="enablePaycheck">Model Paycheck Flow (Buy, Borrow, Die)</label>
+                </div>
+
+                <div class="checkbox-group">
+                    <input type="checkbox" id="enableTiered" onchange="runSimulation()">
+                    <label for="enableTiered">Enable Tiered Margin Rates</label>
+                </div>
+
+                <div class="input-group">
+                    <label>Inflation Mode</label>
+                    <select id="inflationMode" onchange="toggleInflationInput(); runSimulation();">
+                        <option value="nominal">Nominal Dollars (No Adjustment)</option>
+                        <option value="hurdle">Nominal + Show Inflation Hurdle Line</option>
+                        <option value="real" selected>Real Dollars (Adjust All Metrics & Curves)</option>
+                    </select>
+                </div>
+                
+                <div class="input-group" id="inflationInputGroup" style="margin-bottom: 16px; padding-left: 8px;">
+                    <label>
+                        Annual Inflation Rate (%)
+                        <span class="tooltip-icon">ⓘ<span class="tooltip-text">The annual loss of purchasing power percentage benchmark.</span></span>
+                    </label>
+                    <input type="number" id="inflationRate" value="4" step="0.1">
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label style="color: var(--danger); font-weight: 700;">
+                    💥 Black Swan Crash (%)
+                    <span class="tooltip-icon">ⓘ<span class="tooltip-text">Injects an instant, unexpected systemic percentage drop into the macro asset base.</span></span>
+                </label>
+                <input type="number" id="crashSeverity" value="0" min="0" max="95" step="5" style="border-color: rgba(220, 53, 69, 0.5);">
+            </div>
+
+            <div class="input-group">
+                <label>
+                    Crash Occurrence (Month)
+                    <span class="tooltip-icon">ⓘ<span class="tooltip-text">The specific month index layout when the market shock event strikes.</span></span>
+                </label>
+                <input type="number" id="crashMonth" value="36" min="1" step="1">
+            </div>
+
+            <button class="btn-primary" onclick="runSimulation()">Calculate Curve</button>
+            <button class="btn-secondary" onclick="exportToCSV()">💾 Export Run to CSV</button>
+            <button class="btn-secondary" onclick="resetDefaults()" style="margin-top: 8px;">🔄 Reset to Defaults</button>
+
+            <div id="carryWarning" class="warning-box">
+                ⚠️ <strong>Negative Carry Warning:</strong> Your borrowing cost exceeds your asset growth rate (Yield + Appreciation). Leverage will actively decay your wealth.
+            </div>
+
+            <div id="marginCallAlert" class="danger-box">
+                🚨 <strong>Margin Call Triggered:</strong> At Month <span id="alertMonth">X</span>, the crash dropped assets below your maintenance threshold, forcing broker liquidation.
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-title" id="titleInvested">
+                        Total Invested
+                        <span class="tooltip-icon">ⓘ<span class="tooltip-text">The cumulative sum of all out-of-pocket cash principal injections made over the timeline.</span></span>
+                    </div>
+                    <div class="metric-value" id="outInvested">$0</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-title" id="titleEquity">
+                        Final Equity
+                        <span class="tooltip-icon">ⓘ<span class="tooltip-text">Your true net worth (Total Assets minus Debt) at the end of the simulation timeline.</span></span>
+                    </div>
+                    <div class="metric-value" id="outEquity">$0</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-title" id="titleAssets">
+                        Final Total Assets
+                        <span class="tooltip-icon">ⓘ<span class="tooltip-text">The gross value of the entire portfolio under management (Your Equity + Borrowed Margin).</span></span>
+                    </div>
+                    <div class="metric-value" id="outAssets">$0</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-title">
+                        Leverage Ratio
+                        <span class="tooltip-icon">ⓘ<span class="tooltip-text">Total Assets divided by Base Equity. Tracks the asset exposure multiplier applied to your capital base.</span></span>
+                    </div>
+                    <div class="metric-value" id="outLeverage">0.00x</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-title">
+                        Total ROI
+                        <span class="tooltip-icon">ⓘ<span class="tooltip-text">Return on Investment. Cumulative net percentage growth achieved strictly on your out-of-pocket cash deposits.</span></span>
+                    </div>
+                    <div class="metric-value good-metric" id="outROI">0.0%</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-title">
+                        Return on Equity
+                        <span class="tooltip-icon">ⓘ<span class="tooltip-text">Annualized net carry return + price appreciation run-rate calculated relative to your final equity base.</span></span>
+                    </div>
+                    <div class="metric-value good-metric" id="outROE">0.0%</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-title" id="titleGrossIncome">
+                        Gross Monthly Income
+                        <span class="tooltip-icon">ⓘ<span class="tooltip-text">Total crude cash flow generated monthly by the expanded asset pool before loan fees are subtracted.</span></span>
+                    </div>
+                    <div class="metric-value" id="outIncome">$0</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-title" id="titleNetIncome">
+                        Net Monthly Income
+                        <span class="tooltip-icon">ⓘ<span class="tooltip-text">Net monthly investment dividend/interest cash flow remaining after paying your margin debt fees.</span></span>
+                    </div>
+                    <div class="metric-value good-metric" id="outNetIncome">$0</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-title">
+                        Final DSCR
+                        <span class="tooltip-icon">ⓘ<span class="tooltip-text">Debt Service Coverage Ratio. Gross income divided by margin interest. Safety targets should sit comfortably above 1.50x.</span></span>
+                    </div>
+                    <div class="metric-value" id="outDSCR">0.0x</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-title">
+                        Max Drawdown
+                        <span class="tooltip-icon">ⓘ<span class="tooltip-text">The maximum localized price decline your portfolio can absorb before hitting the broker's margin call limit.</span></span>
+                    </div>
+                    <div class="metric-value" id="outDrawdown">0%</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-title">
+                        Effective Margin Rate
+                        <span class="tooltip-icon">ⓘ<span class="tooltip-text">The actual blended annual interest rate paid across your scale under the tiered structure.</span></span>
+                    </div>
+                    <div class="metric-value info-metric" id="outEffectiveMargin">0.00%</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-title" id="titleSavings">
+                        Tiered Savings
+                        <span class="tooltip-icon">ⓘ<span class="tooltip-text">Total compounded dollar amount saved by utilizing size-tiered discount borrow brackets vs a flat fee.</span></span>
+                    </div>
+                    <div class="metric-value good-metric" id="outSavings">$0</div>
+                </div>
+            </div>
+            
+            <div class="panel">
+                <canvas id="compoundingChart"></canvas>
+            </div>
+
+            <div class="panel summary-narrative">
+                <h3>Simulation Summary & Chart Guide</h3>
+                <div id="narrativeOutput"></div>
+                
+                <hr style="border: none; border-top: 1px solid var(--border); margin: 20px 0;">
+                
+                <h3>Understanding the Data Curves</h3>
+                <p>The interactive charting component maps out your asset structure over time. Here is what each line measures:</p>
+                <ul>
+                    <li><strong style="color: var(--accent);">Total Assets (Solid Blue Area):</strong> The gross market valuation of your total holding power. It visually expands away from your net worth line based on how much structural debt you have introduced onto the balance sheet.</li>
+                    <li><strong style="color: var(--success);">Base Equity / Leveraged (Solid Teal Line):</strong> Your true personal net worth over time under this leveraged framework. It represents gross assets minus the outstanding margin debt balance. All positive carry, price appreciation, and savings injections compound directly into this curve.</li>
+                    <li><strong style="color: var(--warning);">Standard Buy-and-Hold (Dashed Amber Line):</strong> Your baseline financial control run. It outlines what your exact net worth trajectory would look like if you avoided borrowing entirely and simply bought and held the underlying assets with 100% cash, reinvesting dividends over time.</li>
+                    <li><strong style="color: #6f42c1;">Inflation Breakeven Hurdle (Solid Purple Line):</strong> The purchasing power baseline. This tracks how much your out-of-pocket savings injections must grow *just to protect your baseline purchasing power* against inflation. If your equity curve is above this line, you have real gains. If it flies drastically above it, leverage has achieved financial escape velocity.</li>
+                    <li><strong style="color: var(--danger);">Liquidation Threshold / Margin Call Line (Dotted Red Line):</strong> The critical safety floor. Calculated dynamically as <span style="font-family: monospace; background: #e9ecef; padding: 2px 4px; border-radius: 4px;">Outstanding Debt ÷ (1 - Maintenance Requirement)</span>. If the blue asset area ever breaches or touches this line, your capital faces an immediate forced broker liquidation.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let chartInstance = null;
+        let lastSimulationRecords = [];
+
+        function formatCurrency(value) {
+            return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(value);
+        }
+
+        function toggleInflationInput() {
+            const mode = document.getElementById('inflationMode').value;
+            const inputGroup = document.getElementById('inflationInputGroup');
+            inputGroup.style.display = (mode === 'nominal') ? 'none' : 'block';
+        }
+
+        function togglePaycheckMode() {
+            const isPaycheckMode = document.getElementById('enablePaycheck').checked;
+            document.getElementById('standardContributionGroup').style.display = isPaycheckMode ? 'none' : 'block';
+            document.getElementById('paycheckRoutingInputs').style.display = isPaycheckMode ? 'block' : 'none';
+        }
+
+        function updateTierScheduleDisplay(currentDebt = 0) {
+            const enableTiered = document.getElementById('enableTiered').checked;
+            const panel = document.getElementById('tierScheduleGroup');
+            const baseRate = parseFloat(document.getElementById('marginRate').value) / 100;
+            
+            const r1 = baseRate;
+            const r2 = Math.max(0.015, baseRate - 0.005);
+            const r3 = Math.max(0.015, baseRate - 0.010);
+            const r4 = Math.max(0.015, baseRate - 0.015);
+
+            document.getElementById('rateTier1').innerText = `${(r1 * 100).toFixed(2)}%`;
+            document.getElementById('rateTier2').innerText = `${(r2 * 100).toFixed(2)}%`;
+            document.getElementById('rateTier3').innerText = `${(r3 * 100).toFixed(2)}%`;
+            document.getElementById('rateTier4').innerText = `${(r4 * 100).toFixed(2)}%`;
+
+            ['rowTier1', 'rowTier2', 'rowTier3', 'rowTier4'].forEach(id => document.getElementById(id).className = '');
+            ['badgeTier1', 'badgeTier2', 'badgeTier3', 'badgeTier4'].forEach(id => {
+                const b = document.getElementById(id);
+                b.innerText = 'Off';
+                b.className = 'status-badge';
+            });
+
+            if (!enableTiered) {
+                panel.style.display = 'none';
+                return;
+            }
+            panel.style.display = 'block';
+
+            if (currentDebt > 0) {
+                document.getElementById('rowTier1').className = 'tier-active';
+                document.getElementById('badgeTier1').innerText = 'Active';
+                document.getElementById('badgeTier1').className = 'status-badge status-active';
+                
+                if (currentDebt > 100000) {
+                    document.getElementById('rowTier2').className = 'tier-active';
+                    document.getElementById('badgeTier2').innerText = 'Active';
+                    document.getElementById('badgeTier2').className = 'status-badge status-active';
+                }
+                if (currentDebt > 1000000) {
+                    document.getElementById('rowTier3').className = 'tier-active';
+                    document.getElementById('badgeTier3').innerText = 'Active';
+                    document.getElementById('badgeTier3').className = 'status-badge status-active';
+                }
+                if (currentDebt > 3000000) {
+                    document.getElementById('rowTier4').className = 'tier-active';
+                    document.getElementById('badgeTier4').innerText = 'Active';
+                    document.getElementById('badgeTier4').className = 'status-badge status-active';
+                }
+            }
+        }
+
+        function calculateMonthlyMarginInterest(debt, baseRate) {
+            if (debt <= 0) return 0;
+            let totalAnnualInterest = 0;
+            let remainingDebt = debt;
+
+            let t1 = Math.min(remainingDebt, 100000);
+            totalAnnualInterest += t1 * baseRate;
+            remainingDebt -= t1;
+
+            if (remainingDebt > 0) {
+                let t2 = Math.min(remainingDebt, 900000);
+                let r2 = Math.max(0.015, baseRate - 0.005);
+                totalAnnualInterest += t2 * r2;
+                remainingDebt -= t2;
+            }
+
+            if (remainingDebt > 0) {
+                let t3 = Math.min(remainingDebt, 2000000);
+                let r3 = Math.max(0.015, baseRate - 0.010);
+                totalAnnualInterest += t3 * r3;
+                remainingDebt -= t3;
+            }
+
+            if (remainingDebt > 0) {
+                let r4 = Math.max(0.015, baseRate - 0.015);
+                totalAnnualInterest += remainingDebt * r4;
+            }
+
+            return totalAnnualInterest / 12;
+        }
+
+        function runSimulation() {
+            const P = parseFloat(document.getElementById('startCapital').value);
+            const targetDTA = parseFloat(document.getElementById('dta').value) / 100;
+            const annYield = parseFloat(document.getElementById('yield').value) / 100;
+            const annMargin = parseFloat(document.getElementById('marginRate').value) / 100;
+            const annAppreciation = parseFloat(document.getElementById('appreciation').value) / 100;
+            const maintReq = parseFloat(document.getElementById('maintReq').value) / 100;
+            const months = parseInt(document.getElementById('months').value);
+            
+            const inflationMode = document.getElementById('inflationMode').value;
+            const annInflationInput = parseFloat(document.getElementById('inflationRate').value) / 100;
+            const enableTiered = document.getElementById('enableTiered').checked;
+            const isPaycheckMode = document.getElementById('enablePaycheck').checked;
+            
+            const crashSeverity = parseFloat(document.getElementById('crashSeverity').value) / 100;
+            const crashMonth = parseInt(document.getElementById('crashMonth').value);
+
+            const moYield = annYield / 12;
+            const moAppreciation = annAppreciation / 12;
+            const moInflationRate = annInflationInput / 12;
+
+            let baselineMonthlyContribution = 0;
+            let grossPaycheck = 0;
+            let livingExpenses = 0;
+
+            if (isPaycheckMode) {
+                grossPaycheck = parseFloat(document.getElementById('grossPaycheck').value);
+                livingExpenses = parseFloat(document.getElementById('livingExpenses').value);
+                baselineMonthlyContribution = grossPaycheck - livingExpenses;
+            } else {
+                baselineMonthlyContribution = parseFloat(document.getElementById('monthlyContribution').value);
+            }
+
+            if (targetDTA >= 1.0) {
+                alert("DTA must be strictly less than 100%");
+                return;
+            }
+
+            const warningEl = document.getElementById('carryWarning');
+            warningEl.style.display = (annMargin > (annYield + annAppreciation) && targetDTA > 0) ? 'block' : 'none';
+
+            let maxDrawdown = 0;
+            if (targetDTA < (1 - maintReq)) {
+                maxDrawdown = (1 - (targetDTA / (1 - maintReq))) * 100;
+            }
+            const drawdownEl = document.getElementById('outDrawdown');
+            drawdownEl.innerText = `${maxDrawdown.toFixed(1)}%`;
+            drawdownEl.className = `metric-value ${maxDrawdown < 35 ? 'warn-metric' : 'good-metric'}`;
+
+            const leverageRatio = 1 / (1 - targetDTA);
+            document.getElementById('outLeverage').innerText = `${leverageRatio.toFixed(2)}x`;
+
+            lastSimulationRecords = [];
+            let labels = [];
+            let equityData = [];
+            let assetData = [];
+            let debtData = [];
+            let benchmarkData = [];
+            let liquidationData = [];
+            let inflationFloorData = [];
+
+            let currentEquity = P;
+            let currentBenchmark = P;
+            let cumulativeInflationFloor = P;
+            
+            let currentDebt = currentEquity * (targetDTA / (1 - targetDTA));
+            let currentAssets = currentEquity + currentDebt;
+            
+            let finalMonthlyIncome = 0;
+            let finalMonthlyInterest = 0;
+            let finalMonthlyAppreciation = 0;
+            let finalDebtSnapshot = 0;
+            let finalBenchmarkMonthlyIncome = 0;
+            
+            let marginCallOccurred = false;
+            let marginCallMonthIndex = -1;
+            let cumulativeSavingsNominal = 0;
+
+            const totalInvestedNominal = P + (baselineMonthlyContribution * months);
+
+            labels.push("Month 0");
+            equityData.push(currentEquity);
+            assetData.push(currentAssets);
+            debtData.push(currentDebt);
+            benchmarkData.push(currentBenchmark);
+            liquidationData.push(currentDebt / (1 - maintReq));
+            inflationFloorData.push(cumulativeInflationFloor);
+            lastSimulationRecords.push({
+                month: 0,
+                nominalAssets: currentAssets,
+                nominalEquity: currentEquity,
+                nominalDebt: currentDebt,
+                nominalBenchmark: currentBenchmark,
+                nominalLiquidation: currentDebt / (1 - maintReq),
+                nominalInflationFloor: cumulativeInflationFloor
+            });
+
+            for (let i = 1; i <= months; i++) {
+                labels.push(`Month ${i}`);
+
+                let grossIncome = currentAssets * moYield;
+                let interestExpense = enableTiered ? calculateMonthlyMarginInterest(currentDebt, annMargin) : currentDebt * (annMargin / 12);
+                let appreciationValue = currentAssets * moAppreciation;
+                
+                let benchIncome = currentBenchmark * moYield;
+                let benchAppreciation = currentBenchmark * moAppreciation;
+                
+                let flatInterestBaseline = currentDebt * (annMargin / 12);
+                cumulativeSavingsNominal += enableTiered ? (flatInterestBaseline - interestExpense) : 0;
+
+                currentEquity += (grossIncome - interestExpense + appreciationValue);
+                currentAssets += (grossIncome + appreciationValue);
+
+                if (isPaycheckMode) {
+                    currentAssets += grossPaycheck;
+                    currentDebt += livingExpenses;
+                    currentEquity += (grossPaycheck - livingExpenses);
+                } else {
+                    currentAssets += baselineMonthlyContribution;
+                    currentEquity += baselineMonthlyContribution;
+                }
+
+                currentBenchmark += (benchIncome + benchAppreciation + baselineMonthlyContribution);
+
+                if (i === crashMonth && crashSeverity > 0) {
+                    currentAssets = currentAssets * (1 - crashSeverity);
+                    currentEquity = currentAssets - currentDebt;
+                    currentBenchmark = currentBenchmark * (1 - crashSeverity);
+                    
+                    if (currentAssets < (currentDebt / (1 - maintReq)) || currentEquity <= 0) {
+                        marginCallOccurred = true;
+                        marginCallMonthIndex = i;
+                    }
+                }
+
+                if (currentEquity < 0) currentEquity = 0;
+
+                let idealDebt = currentEquity * (targetDTA / (1 - targetDTA));
+                
+                if (currentDebt < idealDebt) {
+                    let additionalBorrow = idealDebt - currentDebt;
+                    currentDebt = idealDebt;
+                    currentAssets += additionalBorrow;
+                } 
+
+                if (i === months) {
+                    finalMonthlyIncome = grossIncome;
+                    finalMonthlyInterest = interestExpense;
+                    finalMonthlyAppreciation = appreciationValue;
+                    finalDebtSnapshot = currentDebt;
+                    finalBenchmarkMonthlyIncome = benchIncome;
+                }
+
+                equityData.push(currentEquity);
+                assetData.push(currentAssets);
+                debtData.push(currentDebt);
+                benchmarkData.push(currentBenchmark);
+                liquidationData.push(currentDebt / (1 - maintReq));
+                inflationFloorData.push(cumulativeInflationFloor);
+
+                lastSimulationRecords.push({
+                    month: i,
+                    nominalAssets: currentAssets,
+                    nominalEquity: currentEquity,
+                    nominalDebt: currentDebt,
+                    nominalBenchmark: currentBenchmark,
+                    nominalLiquidation: currentDebt / (1 - maintReq),
+                    nominalInflationFloor: cumulativeInflationFloor
+                });
+
+                cumulativeInflationFloor = (cumulativeInflationFloor * (1 + moInflationRate)) + baselineMonthlyContribution;
+            }
+
+            updateTierScheduleDisplay(enableTiered ? finalDebtSnapshot : 0);
+
+            const discountFactor = (inflationMode === 'real') ? Math.pow(1 + moInflationRate, months) : 1;
+            
+            let calculatedInvested = P;
+            if (inflationMode === 'real') {
+                calculatedInvested = P;
+                for (let m = 1; m <= months; m++) {
+                    calculatedInvested += baselineMonthlyContribution / Math.pow(1 + moInflationRate, m);
+                }
+            } else {
+                calculatedInvested = totalInvestedNominal;
+            }
+
+            const finalEquityDisplay = equityData[months] / discountFactor;
+            const finalAssetsDisplay = assetData[months] / discountFactor;
+            const finalBenchmarkDisplay = benchmarkData[months] / discountFactor;
+            const finalIncomeDisplay = finalMonthlyIncome / discountFactor;
+            const finalNetIncomeDisplay = (finalMonthlyIncome - finalMonthlyInterest) / discountFactor;
+            const finalSavingsDisplay = cumulativeSavingsNominal / discountFactor;
+            const finalBenchmarkIncomeDisplay = finalBenchmarkMonthlyIncome / discountFactor;
+
+            const effectiveAnnualMarginRate = finalDebtSnapshot > 0 ? ((finalMonthlyInterest * 12) / finalDebtSnapshot) * 100 : annMargin * 100;
+
+            const totalROI = calculatedInvested > 0 ? ((finalEquityDisplay - calculatedInvested) / calculatedInvested) * 100 : 0;
+            const finalAnnualNetReturnNominal = ((finalMonthlyIncome - finalMonthlyInterest) + finalMonthlyAppreciation) * 12;
+            const finalROE = equityData[months] > 0 ? (finalAnnualNetReturnNominal / equityData[months]) * 100 : 0;
+
+            const isReal = (inflationMode === 'real');
+            document.getElementById('titleInvested').innerText = isReal ? "Total Invested (Real)" : "Total Invested";
+            document.getElementById('titleEquity').innerText = isReal ? "Final Equity (Real)" : "Final Equity";
+            document.getElementById('titleAssets').innerText = isReal ? "Total Assets (Real)" : "Final Total Assets";
+            document.getElementById('titleGrossIncome').innerText = isReal ? "Gross Income (Real)" : "Gross Monthly Income";
+            document.getElementById('titleNetIncome').innerText = isReal ? "Net Income (Real)" : "Net Monthly Income";
+            document.getElementById('titleSavings').innerText = isReal ? "Tiered Savings (Real)" : "Tiered Savings";
+
+            document.getElementById('outInvested').innerText = formatCurrency(calculatedInvested);
+            document.getElementById('outEquity').innerText = formatCurrency(finalEquityDisplay);
+            document.getElementById('outAssets').innerText = formatCurrency(finalAssetsDisplay);
+            document.getElementById('outIncome').innerText = formatCurrency(finalIncomeDisplay);
+            document.getElementById('outNetIncome').innerText = formatCurrency(finalNetIncomeDisplay);
+            document.getElementById('outSavings').innerText = formatCurrency(finalSavingsDisplay);
+            document.getElementById('outROE').innerText = `${finalROE.toFixed(2)}%`;
+            document.getElementById('outEffectiveMargin').innerText = `${effectiveAnnualMarginRate.toFixed(2)}%`;
+            
+            const roiEl = document.getElementById('outROI');
+            roiEl.innerText = `${totalROI.toFixed(2)}%`;
+            roiEl.className = `metric-value ${totalROI < 0 ? 'warn-metric' : 'good-metric'}`;
+            
+            const dscr = finalMonthlyInterest > 0 ? (finalMonthlyIncome / finalMonthlyInterest).toFixed(2) : '∞';
+            const dscrEl = document.getElementById('outDSCR');
+            dscrEl.innerText = `${dscr}x`;
+            dscrEl.className = `metric-value ${dscr < 1.5 ? 'warn-metric' : 'good-metric'}`;
+
+            const alertEl = document.getElementById('marginCallAlert');
+            alertEl.style.display = marginCallOccurred ? 'block' : 'none';
+            if (marginCallOccurred) document.getElementById('alertMonth').innerText = marginCallMonthIndex;
+
+            const alphaPerformance = finalEquityDisplay - finalBenchmarkDisplay;
+            const incomeDifferential = finalNetIncomeDisplay - finalBenchmarkIncomeDisplay;
+            const inflationHurdleAlpha = finalEquityDisplay - (inflationFloorData[months] / discountFactor);
+            
+            let performanceVerdict = "";
+            let incomeVerdict = "";
+            let safetyVerdict = "";
+            let escapeVelocityVerdict = "";
+            let paycheckRoutingPreamble = "";
+
+            if (isPaycheckMode) {
+                paycheckRoutingPreamble = `<p>🚀 <strong>Buy, Borrow, Die Paycheck Flow Enabled:</strong> Instead of holding your paycheck in dead cash accounts to pay bills, you are modeling routing your full net monthly income of <strong>${formatCurrency(grossPaycheck)}</strong> directly into assets, using margin to float your monthly lifestyle bills of <strong>${formatCurrency(livingExpenses)}</strong>. This expands balance sheet velocity compared to traditional investors who only let their baseline surplus savings of <strong>${formatCurrency(baselineMonthlyContribution)}</strong> touch market compounding.</p>`;
+            }
+
+            if (alphaPerformance > 0) {
+                performanceVerdict = `outperformed a standard cash-based <strong>Buy-and-Hold Strategy</strong> by <span class="badge badge-success">${formatCurrency(alphaPerformance)}</span> due to the compounding power of your positive margin carry.`;
+            } else {
+                performanceVerdict = `underperformed a standard cash-based <strong>Buy-and-Hold Strategy</strong> by <span class="badge badge-danger">${formatCurrency(Math.abs(alphaPerformance))}</span> because the combination of borrowing costs or portfolio crash shocks dragged your returns below a simple 0% leverage plan.`;
+            }
+
+            if (incomeDifferential > 0) {
+                incomeVerdict = `By using debt to expand your productive asset base, your portfolio scaled up cash production to a net monthly income of <strong>${formatCurrency(finalNetIncomeDisplay)}</strong>. This generates <span class="badge badge-success">${formatCurrency(incomeDifferential)} more monthly cash flow</span> than a traditional cash <strong>Buy-and-Hold Strategy</strong>, which only generated a dividend flow of <strong>${formatCurrency(finalBenchmarkIncomeDisplay)}</strong>.`;
+            } else if (incomeDifferential < 0) {
+                incomeVerdict = `Because monthly margin interest expenses outpaced your asset gains, your net monthly dividend flow dropped to <strong>${formatCurrency(finalNetIncomeDisplay)}</strong>. This is <span class="badge badge-danger">${formatCurrency(Math.abs(incomeDifferential))} less monthly cash flow</span> than a standard cash <strong>Buy-and-Hold Strategy</strong>, which yielded a clean <strong>${formatCurrency(finalBenchmarkIncomeDisplay)}</strong>.`;
+            } else {
+                incomeVerdict = `Both approaches produced an identical net monthly cash flow of <strong>${formatCurrency(finalNetIncomeDisplay)}</strong>.`;
+            }
+
+            if (inflationHurdleAlpha > 0) {
+                escapeVelocityVerdict = `Crucially, your final wealth cleared the baseline inflation hurdle line by <strong>${formatCurrency(inflationHurdleAlpha)}</strong>, proving that your amplified strategy created genuine purchasing power expansion over time.`;
+            } else {
+                escapeVelocityVerdict = `Regrettably, your final wealth failed to clear the inflation hurdle line, meaning your capital lost real purchasing power over the course of the simulation.`;
+            }
+
+            if (marginCallOccurred) {
+                safetyVerdict = `
+                    <div style="margin-top: 12px; border-left: 4px solid var(--danger); padding-left: 12px;">
+                        ⚠️ <span class="badge badge-danger" style="color:#fff;">CRITICAL BREACH</span>: Injected stress-testing parameters triggered forced broker liquidations at <strong>Month ${marginCallMonthIndex}</strong>.
+                    </div>`;
+            } else if (crashSeverity > 0) {
+                safetyVerdict = `
+                    <div style="margin-top: 12px; border-left: 4px solid var(--success); padding-left: 12px;">
+                        🔒 <span class="badge badge-success">SURVIVED STRESS TEST</span>: Your account absorbed the injected ${document.getElementById('crashSeverity').value}% market shock at <strong>Month ${crashMonth}</strong> without crossing maintenance boundaries.
+                    </div>`;
+            } else {
+                safetyVerdict = `ℹ️ <span class="badge badge-warning">NO ACTIVE SHOCK</span>: The timeline ran without an active market crash event. Under normal conditions, you maintained a safety cushion of <strong>${maxDrawdown.toFixed(1)}%</strong> before structural asset thresholds would trigger a margin call.`;
+            }
+
+            document.getElementById('narrativeOutput').innerHTML = `
+                ${paycheckRoutingPreamble}
+                <p>Over a span of <strong>${months} months</strong>, your strategy generated a final net equity valuation of <strong>${formatCurrency(finalEquityDisplay)}</strong> on an out-of-pocket cash commitment of <strong>${formatCurrency(calculatedInvested)}</strong>.</p>
+                <p>Compared to a standard unleveraged <strong>Buy-and-Hold Strategy</strong>, this design ${performanceVerdict} ${incomeVerdict}</p>
+                <p>${escapeVelocityVerdict}</p>
+                <p>${safetyVerdict}</p>
+            `;
+
+            let chartAssets = [];
+            let chartEquity = [];
+            let chartBenchmark = [];
+            let chartLiquidation = [];
+            let chartInflationFloor = [];
+
+            for (let i = 0; i <= months; i++) {
+                let df = (inflationMode === 'real') ? Math.pow(1 + moInflationRate, i) : 1;
+                chartAssets.push(assetData[i] / df);
+                chartEquity.push(equityData[i] / df);
+                chartBenchmark.push(benchmarkData[i] / df);
+                chartLiquidation.push(liquidationData[i] / df);
+                chartInflationFloor.push(inflationFloorData[i] / df);
+            }
+
+            const ctx = document.getElementById('compoundingChart').getContext('2d');
+            if (chartInstance) chartInstance.destroy();
+
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        { label: 'Total Assets', data: chartAssets, borderColor: '#1b4a7b', backgroundColor: 'rgba(27, 74, 123, 0.05)', borderWidth: 2, fill: true, pointRadius: 0 },
+                        { label: 'Base Equity (Leveraged)', data: chartEquity, borderColor: '#00b5ae', backgroundColor: 'transparent', borderWidth: 2, fill: false, pointRadius: 0 },
+                        { label: 'Standard Buy-and-Hold (0% Leverage)', data: chartBenchmark, borderColor: '#f59e0b', backgroundColor: 'transparent', borderWidth: 2, borderDash: [5, 5], fill: false, pointRadius: 0 }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: {
+                        tooltip: { callbacks: { label: function(context) { return context.dataset.label + ': ' + formatCurrency(context.raw); } } },
+                        legend: { labels: { color: '#212529', font: { family: 'system-ui, sans-serif' } } }
+                    },
+                    scales: {
+                        y: { ticks: { color: '#6c757d', callback: function(value) { return '$' + (value / 1000) + 'k'; } }, grid: { color: '#e9ecef' } },
+                        x: { ticks: { color: '#6c757d', maxTicksLimit: 12 }, grid: { display: false } }
+                    }
+                }
+            });
+            
+            if (inflationMode === 'hurdle') {
+                chartInstance.data.datasets.push({ label: 'Inflation Hurdle Floor', data: chartInflationFloor, borderColor: '#6f42c1', backgroundColor: 'transparent', borderWidth: 2, fill: false, pointRadius: 0 });
+            }
+            chartInstance.data.datasets.push({ label: 'Liquidation Threshold (Margin Call Line)', data: chartLiquidation, borderColor: '#dc3545', backgroundColor: 'transparent', borderWidth: 1.5, borderDash: [3, 3], fill: false, pointRadius: 0 });
+            chartInstance.update();
+        }
+
+        function resetDefaults() {
+            document.getElementById('startCapital').value = 100000;
+            document.getElementById('monthlyContribution').value = 1000;
+            document.getElementById('grossPaycheck').value = 5000;
+            document.getElementById('livingExpenses').value = 4000;
+            document.getElementById('dta').value = 30;
+            document.getElementById('yield').value = 15.0;
+            document.getElementById('marginRate').value = 5.65;
+            document.getElementById('appreciation').value = 4.0;
+            document.getElementById('maintReq').value = 30;
+            document.getElementById('months').value = 120;
+            document.getElementById('inflationRate').value = 4;
+            document.getElementById('crashSeverity').value = 0;
+            document.getElementById('crashMonth').value = 36;
+            
+            document.getElementById('inflationMode').value = 'real';
+            document.getElementById('enablePaycheck').checked = false;
+            document.getElementById('enableTiered').checked = false;
+            
+            togglePaycheckMode();
+            toggleInflationInput();
+            runSimulation();
+        }
+
+        function exportToCSV() {
+            if (!lastSimulationRecords || lastSimulationRecords.length === 0) {
+                alert("Please run a simulation calculation curve before exporting data.");
+                return;
+            }
+            const mode = document.getElementById('inflationMode').value;
+            const annInflationInput = parseFloat(document.getElementById('inflationRate').value) / 100;
+            const moInflationRate = annInflationInput / 12;
+
+            let csvContent = "data:text/csv;charset=utf-8,";
+            csvContent += `Month,Total Assets,Base Equity,Debt,Standard Buy-and-Hold,Inflation Hurdle Floor,Liquidation Threshold\n`;
+
+            lastSimulationRecords.forEach(rec => {
+                let df = (mode === 'real') ? Math.pow(1 + moInflationRate, rec.month) : 1;
+                csvContent += `${rec.month},${(rec.nominalAssets / df).toFixed(0)},${(rec.nominalEquity / df).toFixed(0)},${(rec.nominalDebt).toFixed(0)},${(rec.nominalBenchmark / df).toFixed(0)},${(rec.nominalInflationFloor / df).toFixed(0)},${(rec.nominalLiquidation / df).toFixed(0)}\n`;
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `capital_amplifier_export_${mode}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        window.onload = function() {
+            toggleInflationInput();
+            updateTierScheduleDisplay();
+            runSimulation();
+        };
+    </script>
+</body>
+</html>
