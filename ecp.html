@@ -70,6 +70,9 @@
 
         .form-control:focus { box-shadow: none !important; border-color: var(--primary-color) !important; }
 
+        /* Custom styling for readonly elements */
+        .form-control[readonly] { background-color: #e9ecef !important; cursor: not-allowed; }
+
         .mb-title { font-weight: 600; font-size: 18px; color: var(--text-color); }
 
         .section-title { padding: 21px; border-radius: 5px; background: linear-gradient(160deg, #0d1728 0%, #0b1b35 29%, #00465b 80%, #007193 100%); color: var(--white-color); }
@@ -226,7 +229,8 @@
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Allocation for Dividends to Pay Margin (%)</label>
                                 <div class="input-group mb-3">
-                                    <input type="text" inputmode="decimal" id="allocMargin" class="form-control format-number" value="80.00">
+                                    <!-- Field is now readonly and visually shaded gray -->
+                                    <input type="text" id="allocMargin" class="form-control format-number bg-light" value="80.00" readonly tabindex="-1">
                                     <span class="input-group-text">%</span>
                                 </div>
                                 <div class="projected-cash-flow-text">Portion of dividends used to pay down margin instead of reinvested.</div>
@@ -444,11 +448,11 @@
         let csvSummaryData = [];
         let csvDetailedData = [];
 
-        // Input Identifiers for LocalStorage
+        // Removed 'allocMargin' from cached IDs since it is dynamically derived now
         const inputIds = [
             'portfolioValue', 'marginDebt', 'monthlyContribution', 'monthlyExpenses', 
-            'inflationRate', 'allocReinvest', 'allocMargin', 'yieldReinvest', 
-            'yieldCash', 'growthRate', 'marginInterest', 'maxDTA', 'minDSCR', 'projectionMonths'
+            'inflationRate', 'allocReinvest', 'yieldReinvest', 'yieldCash', 
+            'growthRate', 'marginInterest', 'maxDTA', 'minDSCR', 'projectionMonths'
         ];
 
         // Format Helper: Strip commas and parse float safely
@@ -458,8 +462,8 @@
         window.onload = () => {
             loadState();
             
-            // Format existing values on load
-            document.querySelectorAll('.format-currency, .format-number').forEach(input => {
+            // Format existing values on load (excluding the readonly allocMargin)
+            document.querySelectorAll('.format-currency, .format-number:not([readonly])').forEach(input => {
                 applyFormatting(input);
                 
                 // Add Focus/Blur formatting events
@@ -544,22 +548,11 @@
 
         // Auto-Balancing Allocations logic
         const allocReinvestInput = document.getElementById('allocReinvest');
-        const allocMarginInput = document.getElementById('allocMargin');
-
+        
         allocReinvestInput.addEventListener('blur', function(e) {
             let val = parseFormattedValue(e.target.value);
             if(val > 100) val = 100;
             if(val < 0) val = 0;
-            allocMarginInput.value = (100 - val).toLocaleString('en-US', { maximumFractionDigits: 2 });
-            e.target.value = val.toLocaleString('en-US', { maximumFractionDigits: 2 });
-            calculateProjection();
-        });
-
-        allocMarginInput.addEventListener('blur', function(e) {
-            let val = parseFormattedValue(e.target.value);
-            if(val > 100) val = 100;
-            if(val < 0) val = 0;
-            allocReinvestInput.value = (100 - val).toLocaleString('en-US', { maximumFractionDigits: 2 });
             e.target.value = val.toLocaleString('en-US', { maximumFractionDigits: 2 });
             calculateProjection();
         });
@@ -615,8 +608,18 @@
             const monthlyContribution = parseFormattedValue(document.getElementById('monthlyContribution').value);
             const livingExpensesBase = parseFormattedValue(document.getElementById('monthlyExpenses').value);
             const inflationRateAnnual = parseFormattedValue(document.getElementById('inflationRate').value) / 100;
-            const allocReinvest = parseFormattedValue(document.getElementById('allocReinvest').value) / 100;
-            const allocMargin = parseFormattedValue(document.getElementById('allocMargin').value) / 100;
+            
+            // Dynamic derived margin allocation to prevent manual desync
+            let allocReinvestVal = parseFormattedValue(document.getElementById('allocReinvest').value);
+            if (allocReinvestVal > 100) allocReinvestVal = 100;
+            if (allocReinvestVal < 0) allocReinvestVal = 0;
+            
+            // Set the read-only field automatically based on Reinvest Value
+            document.getElementById('allocMargin').value = (100 - allocReinvestVal).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            
+            const allocReinvest = allocReinvestVal / 100;
+            const allocMargin = (100 - allocReinvestVal) / 100;
+
             const yieldReinvestAnnual = parseFormattedValue(document.getElementById('yieldReinvest').value) / 100;
             const yieldCashAnnual = parseFormattedValue(document.getElementById('yieldCash').value) / 100;
             const growthRateAnnual = parseFormattedValue(document.getElementById('growthRate').value) / 100;
