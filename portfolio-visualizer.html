@@ -1118,13 +1118,12 @@
         }
         
         window.applyScenario = function(scenario) {
-            // First reset simulation to baseline values before applying the stress test
+            // Reset simulation to baseline values before applying any scenario
             resetSimulation();
 
             const baseSec = parseFloat(document.getElementById('secValue').value) || 0;
             const baseBorr = parseFloat(document.getElementById('borrowed').value) || 0;
             
-            // Get fresh base/current market rates from localStorage or inputs
             const saved = localStorage.getItem(STORAGE_KEY);
             let baseMarginRate = 4.15;
             let baseYieldRate = 14.50;
@@ -1166,9 +1165,21 @@
                 flashElement('yieldRate');
                 isRateYieldScenario = true;
             } else if (scenario === 'covid') {
+                // -34% equity drawdown, -30% expected yield, -30% total return impact, +3 pp rate increase
                 setSimulationValue('simSecValue', 'simSecValueSlider', baseSec * 0.66);
+                document.getElementById('yieldRate').value = (baseYieldRate * 0.70).toFixed(2);
+                document.getElementById('marginRate').value = (baseMarginRate + 3.0).toFixed(2);
+                flashElement('marginRate');
+                flashElement('yieldRate');
+                isRateYieldScenario = true;
             } else if (scenario === 'gfc') {
+                // -50% equity drawdown, -30% expected yield, -30% total return impact, +3 pp rate increase
                 setSimulationValue('simSecValue', 'simSecValueSlider', baseSec * 0.50);
+                document.getElementById('yieldRate').value = (baseYieldRate * 0.70).toFixed(2);
+                document.getElementById('marginRate').value = (baseMarginRate + 3.0).toFixed(2);
+                flashElement('marginRate');
+                flashElement('yieldRate');
+                isRateYieldScenario = true;
             } else if (scenario === 'pull_back') {
                 setSimulationValue('simSecValue', 'simSecValueSlider', baseSec * (1 - 0.05));
                 document.getElementById('yieldRate').value = (baseYieldRate * (1 - 0.05)).toFixed(2);
@@ -1571,7 +1582,7 @@
                         const histReturn = historicalMonthlyReturns[(i - 1) % historicalMonthlyReturns.length];
                         assetAppreciation = cAssets * histReturn;
                         if (assetAppreciation > 0) {
-                            assetAppreciation *= 0.85;
+                            assetAppreciation *= 0.70; // Adjusted for the 30% total return reduction during historical stress
                         }
                     }
 
