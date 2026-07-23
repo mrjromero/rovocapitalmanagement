@@ -610,6 +610,16 @@
                         </button>
                     </div>
 
+                    <!-- Jump to Trigger Buttons -->
+                    <div class="w-full grid grid-cols-2 gap-2 mt-4 pt-4 border-t border-[#E8ECF2] z-10">
+                        <button onclick="jumpToTrigger('margin_call')" class="bg-[#fffbeb] border border-[#fde68a] text-[#b45309] hover:bg-[#fef3c7] font-bold text-[11px] uppercase tracking-wider py-2 rounded transition-colors shadow-sm">
+                            Jump to Margin Call
+                        </button>
+                        <button onclick="jumpToTrigger('liquidation')" class="bg-[#fef2f2] border border-[#fecaca] text-[#b91c1c] hover:bg-[#fee2e2] font-bold text-[11px] uppercase tracking-wider py-2 rounded transition-colors shadow-sm">
+                            Jump to Liquidation
+                        </button>
+                    </div>
+
                     <p class="text-[11px] text-[var(--text-secondary)] font-['DM_Sans'] leading-relaxed mt-4 pt-4 border-t border-[#E8ECF2] text-center w-full">
                         M1 Finance and other brokers establish standard thresholds at 30% of your account value but can dynamically lift maintenance requirements up to 100% for high volatility or asset concentration. Please review the safety guidelines to configure solid protective margins.
                     </p>
@@ -1118,7 +1128,6 @@
         }
         
         window.applyScenario = function(scenario) {
-            // Reset simulation to baseline values before applying any scenario
             resetSimulation();
 
             const baseSec = parseFloat(document.getElementById('secValue').value) || 0;
@@ -1165,7 +1174,6 @@
                 flashElement('yieldRate');
                 isRateYieldScenario = true;
             } else if (scenario === 'covid') {
-                // -34% equity drawdown, -30% expected yield, -30% total return impact, +3 pp rate increase
                 setSimulationValue('simSecValue', 'simSecValueSlider', baseSec * 0.66);
                 document.getElementById('yieldRate').value = (baseYieldRate * 0.70).toFixed(2);
                 document.getElementById('marginRate').value = (baseMarginRate + 3.0).toFixed(2);
@@ -1173,7 +1181,6 @@
                 flashElement('yieldRate');
                 isRateYieldScenario = true;
             } else if (scenario === 'gfc') {
-                // -50% equity drawdown, -30% expected yield, -30% total return impact, +3 pp rate increase
                 setSimulationValue('simSecValue', 'simSecValueSlider', baseSec * 0.50);
                 document.getElementById('yieldRate').value = (baseYieldRate * 0.70).toFixed(2);
                 document.getElementById('marginRate').value = (baseMarginRate + 3.0).toFixed(2);
@@ -1209,6 +1216,43 @@
                 flashElement('yieldRate');
                 isRateYieldScenario = true;
             }
+
+            simulationMode = true;
+            calculate();
+        }
+
+        window.jumpToTrigger = function(type) {
+            const baseSecValue = parseFloat(document.getElementById('secValue').value) || 0;
+            const baseBorrowed = parseFloat(document.getElementById('borrowed').value) || 0;
+            const cash = parseFloat(document.getElementById('cash').value) || 0;
+            const baseReqEquity = parseFloat(document.getElementById('reqEquity').value) || 0;
+            const maintRatio = baseSecValue > 0 ? (baseReqEquity / baseSecValue) : 0;
+
+            if (baseSecValue <= 0 || maintRatio >= 1) return;
+
+            // Target portfolio value where excess equity hits exactly 0 (Margin Call trigger)
+            // Equity = SecValue + Cash - Borrowed = ReqEquity (SecValue * maintRatio)
+            // SecValue * (1 - maintRatio) = Borrowed - Cash
+            // Exact Call Portfolio Value = (Borrowed - Cash) / (1 - maintRatio)
+            const exactCallVal = (baseBorrowed - cash) / (1 - maintRatio);
+
+            let targetSecVal = exactCallVal;
+
+            if (type === 'margin_call') {
+                // Drop slightly past the exact call point (-2% more) so the margin call issues clearly
+                targetSecVal = exactCallVal * 0.98;
+            } else if (type === 'liquidation') {
+                // Drop past liquidation threshold (where deficit exceeds 5% of required equity)
+                // Liquidation occurs when Excess <= -0.05 * ReqEquity
+                // SecValue + Cash - Borrowed - (SecValue * maintRatio) = -0.05 * SecValue * maintRatio
+                // SecValue * (1 - 0.95 * maintRatio) = Borrowed - Cash
+                const exactLiqVal = (baseBorrowed - cash) / (1 - 0.95 * maintRatio);
+                targetSecVal = exactLiqVal * 0.98; // Drop slightly further to guarantee liquidation trigger
+            }
+
+            targetSecVal = Math.max(0, targetSecVal);
+            setSimulationValue('simSecValue', 'simSecValueSlider', targetSecVal);
+            setSimulationValue('simBorrowed', 'simBorrowedSlider', baseBorrowed);
 
             simulationMode = true;
             calculate();
@@ -1582,7 +1626,7 @@
                         const histReturn = historicalMonthlyReturns[(i - 1) % historicalMonthlyReturns.length];
                         assetAppreciation = cAssets * histReturn;
                         if (assetAppreciation > 0) {
-                            assetAppreciation *= 0.70; // Adjusted for the 30% total return reduction during historical stress
+                            assetAppreciation *= 0.70;
                         }
                     }
 
