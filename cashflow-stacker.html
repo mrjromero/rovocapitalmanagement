@@ -243,6 +243,76 @@
         
         .modal-body { padding: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; }
 
+        /* --- Gantt Chart Modal Specifics --- */
+        #ganttModal { z-index: 1500; } /* Keep slightly below amortization modal so they can stack */
+        #ganttModal .modal-container { max-width: 95vw; width: 1400px; max-height: 90vh; }
+        #ganttModal .modal-body { padding: 20px; overflow-x: auto; background-color: #ffffff; }
+        
+        .gantt-grid {
+            display: grid;
+            grid-template-columns: repeat(var(--max-months), 65px); /* 65px column width */
+            gap: 4px 0;
+            background-image: repeating-linear-gradient(to right, transparent, transparent 72px, #f3f4f6 72px, #f3f4f6 73px);
+            padding-bottom: 20px;
+        }
+        
+        .gantt-header-cell {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            text-align: center;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 8px;
+            margin-bottom: 8px;
+            position: relative;
+            height: 55px; 
+        }
+
+        .gantt-cf-label {
+            font-size: 0.65rem;
+            font-weight: 700;
+            color: var(--profit-green);
+            margin-bottom: 4px;
+            white-space: nowrap;
+        }
+        
+        .gantt-dot {
+            width: 10px; height: 10px;
+            background-color: #3f8fb2;
+            border-radius: 50%;
+            margin: 0 auto 6px auto;
+            opacity: 0;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+        .gantt-dot.active { opacity: 1; transition: transform 0.1s; }
+        .gantt-dot.active:hover { transform: scale(1.3); }
+        
+        .gantt-bar {
+            height: 32px;
+            display: flex; align-items: center; padding: 0 10px;
+            font-size: 0.75rem; font-weight: 500; color: white;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            border: 1px solid rgba(0,0,0,0.1);
+        }
+        .gantt-bar.income {
+            background-color: #084298; /* Deep dark blue */
+            cursor: default;
+        }
+        .gantt-bar.stack {
+            background-color: #408fb3; /* Teal/Medium blue to match image */
+            cursor: pointer;
+            transition: filter 0.2s, transform 0.1s;
+        }
+        .gantt-bar.stack:hover {
+            filter: brightness(1.1);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-sm);
+        }
+
         /* --- Right Panel & Narrative Card --- */
         .results-panel { display: flex; flex-direction: column; gap: 24px; }
         
@@ -397,7 +467,7 @@
     </a>
     <h1 class="app-title">Cash Flow Stacker</h1>
     <p class="app-description">
-        Model and stress-test a positive-carry cash flow stacking strategy using a HELOC or PLOC to fund amortized notes, accelerate velocity of capital, and scale passive yield.
+        Model and stress-test a positive-carry cash flow stacking strategy using a variable interest line of credit to fund amortized investments, accelerate velocity of capital, and scale passive yield.
     </p>
 </div>
 
@@ -487,7 +557,8 @@
 
         <div class="btn-group">
             <button class="btn" onclick="runSimulation()">Run Simulation</button>
-            <button class="btn btn-secondary" onclick="downloadCSV()">Download CSV Data</button>
+            <button class="btn btn-secondary" id="btnDownload" onclick="downloadCSV()" style="display: none;">Download CSV Data</button>
+            <button class="btn btn-secondary" id="btnGantt" onclick="openGanttModal()" style="display: none;">View Timeline Calendar</button>
         </div>
     </div>
 
@@ -500,6 +571,22 @@
                 <line x1="12" y1="22.08" x2="12" y2="12"></line>
             </svg>
             <div>Enter your parameters and click <strong>Run Simulation</strong> to generate your metrics, interactive charts, and ledgers.</div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL FOR GANTT CALENDAR TIMELINE -->
+<div class="modal-overlay" id="ganttModal" onclick="handleGanttModalClick(event)">
+    <div class="modal-container">
+        <div class="modal-header">
+            <div>
+                <h3 class="modal-title">Strategy Timeline</h3>
+                <div class="modal-subtitle">Visualizing the Active Cash Flow Stack</div>
+            </div>
+            <button class="modal-close" onclick="closeGanttModal()" aria-label="Close modal">&times;</button>
+        </div>
+        <div class="modal-body" id="ganttBody">
+            <!-- Rendered by JS -->
         </div>
     </div>
 </div>
@@ -655,7 +742,7 @@
                     stacks[stacks.length - 1].payoffMonths = payoffTime;
                 }
 
-                // Calculate total RPB of existing notes BEFORE adding the new stack
+                // Calculate total RPB of existing investments BEFORE adding the new stack
                 let currentRPB = 0;
                 stacks.forEach((stack) => {
                     let k = (month - stack.startMonth) + 1;
@@ -762,6 +849,10 @@
 
         globalSimulationData = { stacks, chartData, yearlyData, maxMonths, csvData, maxActiveStacks, config, crossoverMonth };
 
+        // Reveal the dynamic buttons
+        document.getElementById('btnDownload').style.display = 'block';
+        document.getElementById('btnGantt').style.display = 'block';
+
         renderDashboard({
             netProfit: totalEarnings - totalDeployed,
             totalEarnings, totalDeployed,
@@ -800,7 +891,7 @@
                 </div>
                 <div class="narrative-body">
                     By contributing a fixed <span class="narrative-highlight">${formatCurrency(metrics.personalCash)}</span> in personal cash flow over ${metrics.totalYears} years, this strategy completes <span class="narrative-highlight">${metrics.totalStacks} investment velocity cycles</span>. 
-                    Rather than leaving idle capital, every note's monthly yield is funneled back into your line of credit to pay down debt faster—scaling your active yield to <span class="narrative-green">${formatCurrency(metrics.monthlyIncomeFromActiveStacks)}/month</span> while incurring only <span class="narrative-highlight">${formatCurrency(metrics.locInterest)}</span> in total borrowing costs.
+                    Rather than leaving idle capital, every investment's monthly yield is funneled back into your line of credit to pay down debt faster—scaling your active yield to <span class="narrative-green">${formatCurrency(metrics.monthlyIncomeFromActiveStacks)}/month</span> while incurring only <span class="narrative-highlight">${formatCurrency(metrics.locInterest)}</span> in total borrowing costs.
                     <br><br>
                     ${crossoverText}
                 </div>
@@ -813,7 +904,7 @@
                 </div>
                 <div class="snapshot-metrics-row">
                     <div class="snapshot-metric-item">
-                        <div class="snapshot-metric-title">Active Notes Still Paying</div>
+                        <div class="snapshot-metric-title">Active Investments</div>
                         <div class="snapshot-metric-value" style="color: var(--text-main);">${metrics.activeStacksStillPaying}</div>
                     </div>
                     <div class="snapshot-metric-item">
@@ -821,7 +912,7 @@
                         <div class="snapshot-metric-value" style="color: var(--profit-green); font-size: 1.75rem;">${formatCurrency(metrics.monthlyIncomeFromActiveStacks)}</div>
                     </div>
                     <div class="snapshot-metric-item">
-                        <div class="snapshot-metric-title">Contracted Note Balance</div>
+                        <div class="snapshot-metric-title">Contracted Asset Balance</div>
                         <div class="snapshot-metric-value" style="color: var(--primary);">${formatCurrency(metrics.remainingFutureIncome)}</div>
                     </div>
                     <div class="snapshot-metric-item">
@@ -874,8 +965,8 @@
                             <p>Measures point-in-time safety at the precise moment a new stack is purchased:</p>
                             <ul>
                                 <li><strong>Peak DTA (Max Leverage):</strong> Your exact Debt-to-Asset ratio on Day 1 of the purchase. A stepping-down curve proves your capital velocity is outpacing leverage.</li>
-                                <li><strong>Payoff Duration:</strong> The exact window of time the HELOC stays in the red before returning to zero. Short windows shield you from variable rate risk.</li>
-                                <li><strong>Net System Equity:</strong> Total Note Balance minus LOC Debt immediately after drawing funds.</li>
+                                <li><strong>Payoff Duration:</strong> The exact window of time the line of credit stays in the red before returning to zero. Short windows shield you from variable rate risk.</li>
+                                <li><strong>Net System Equity:</strong> Total Asset Balance minus LOC Debt immediately after drawing funds.</li>
                             </ul>
                         </div>
                     </div>
@@ -957,7 +1048,7 @@
                 <!-- TABLE: RISK & SAFETY METRICS -->
                 <div id="risk-tab" class="table-container">
                     <div class="table-header-title">Risk & Safety Summary</div>
-                    <div class="table-header-sub">Point-in-time stress testing at the exact moment of each new HELOC draw</div>
+                    <div class="table-header-sub">Point-in-time stress testing at the exact moment of each new credit draw</div>
                     <table>
                         <thead>
                             <tr>
@@ -1234,6 +1325,82 @@
         }
     }
 
+    // --- Modal Logic for Gantt Chart ---
+    function openGanttModal() {
+        if (!globalSimulationData || !globalSimulationData.stacks || globalSimulationData.stacks.length === 0) {
+            alert("Please run the simulation first to generate the timeline.");
+            return;
+        }
+
+        const maxMonths = globalSimulationData.maxMonths;
+        const stacks = globalSimulationData.stacks;
+        const personalCash = globalSimulationData.config.personalCashFlow;
+
+        let html = `<div class="gantt-grid" style="--max-months: ${maxMonths};">`;
+        
+        // Render Header Row (Months)
+        for(let i = 1; i <= maxMonths; i++) {
+            let hasStack = stacks.some(s => s.startMonth === i);
+            let currentCashFlow = globalSimulationData.chartData.cashFlow[i - 1];
+            
+            let tooltipHTML = hasStack ? `title="Total Cash Flow: ${formatCurrency(currentCashFlow)} /mo"` : '';
+            let cashFlowLabel = hasStack ? `<div class="gantt-cf-label">${formatCurrency(currentCashFlow)}</div>` : `<div class="gantt-cf-label" style="opacity: 0;">-</div>`;
+            
+            html += `
+                <div class="gantt-header-cell" style="grid-column: ${i}; grid-row: 1;">
+                    ${cashFlowLabel}
+                    <div class="gantt-dot ${hasStack ? 'active' : ''}" ${tooltipHTML}></div>
+                    M${i}
+                </div>
+            `;
+        }
+        
+        // Render Personal Contribution Row (always spans full simulation)
+        html += `
+            <div class="gantt-bar income" style="grid-column: 1 / span ${maxMonths}; grid-row: 2;"
+                 title="Personal Contribution: ${formatCurrency(personalCash)}/mo">
+                Personal Contribution - ${formatCurrency(personalCash)} /mo
+            </div>
+        `;
+        
+        // Render Stack Rows
+        stacks.forEach((stack, index) => {
+            // Cap duration to the simulation window for the visual rendering
+            let duration = Math.min(stack.endMonth - stack.startMonth + 1, maxMonths - stack.startMonth + 1);
+            if (duration <= 0) return; // investment starts after simulation ends
+            
+            let row = index + 3; // Starts after header(1) and personal income(2)
+            
+            html += `
+                <div class="gantt-bar stack" 
+                     style="grid-column: ${stack.startMonth} / span ${duration}; grid-row: ${row};"
+                     title="Stack #${stack.id}: ${formatCurrency(stack.pmt)}/mo generated. Click to view schedule."
+                     onclick="openScheduleModal(${stack.id})">
+                    Stack (#${stack.id}) ${formatCurrency(stack.pmt)} /mo
+                </div>
+            `;
+        });
+        
+        html += `</div>`; // Close gantt-grid
+        
+        document.getElementById('ganttBody').innerHTML = html;
+        document.getElementById('ganttModal').classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeGanttModal() {
+        document.getElementById('ganttModal').classList.remove('active');
+        if (!document.getElementById('amortizationModal').classList.contains('active')) {
+            document.body.style.overflow = '';
+        }
+    }
+
+    function handleGanttModalClick(event) {
+        if (event.target.classList.contains('modal-overlay')) {
+            closeGanttModal();
+        }
+    }
+
     // --- Modal Logic for Amortization Schedules ---
     function openScheduleModal(stackId) {
         if (!globalSimulationData) return;
@@ -1278,25 +1445,31 @@
         
         document.getElementById('modalTableBody').innerHTML = tbodyHTML;
         document.getElementById('amortizationModal').classList.add('active');
-        document.body.style.overflow = 'hidden'; // Prevent background scrolling
+        document.body.style.overflow = 'hidden'; 
     }
 
     function closeModal() {
         document.getElementById('amortizationModal').classList.remove('active');
-        document.body.style.overflow = ''; // Restore background scrolling
+        // Only restore background scroll if the Gantt modal is also closed
+        if (!document.getElementById('ganttModal').classList.contains('active')) {
+            document.body.style.overflow = ''; 
+        }
     }
 
     function handleModalClick(event) {
-        // Close modal if clicking directly on the dark overlay background
         if (event.target.classList.contains('modal-overlay')) {
             closeModal();
         }
     }
 
-    // Escape key to close modal
+    // Escape key to close modals (closes top one first)
     document.addEventListener('keydown', function(event) {
-        if (event.key === "Escape" && document.getElementById('amortizationModal').classList.contains('active')) {
-            closeModal();
+        if (event.key === "Escape") {
+            if (document.getElementById('amortizationModal').classList.contains('active')) {
+                closeModal();
+            } else if (document.getElementById('ganttModal').classList.contains('active')) {
+                closeGanttModal();
+            }
         }
     });
 
