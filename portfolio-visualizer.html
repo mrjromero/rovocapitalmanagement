@@ -221,6 +221,53 @@
             width: 16px;
             height: 16px;
         }
+
+        /* Info Tooltip for Cash Balance */
+        .label-with-tooltip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            position: relative;
+        }
+        .tooltip-icon {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            line-height: 16px;
+            text-align: center;
+            border-radius: 50%;
+            background-color: #e2e8f0;
+            color: #475569;
+            font-size: 11px;
+            font-weight: bold;
+            cursor: help;
+            position: relative;
+        }
+        .tooltip-icon::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #1e293b;
+            color: #ffffff;
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: normal;
+            white-space: normal;
+            width: 200px;
+            text-align: center;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.2s ease, visibility 0.2s ease;
+            z-index: 100;
+        }
+        .tooltip-icon:hover::after {
+            opacity: 1;
+            visibility: visible;
+        }
     </style>
 </head>
 <body class="p-4 sm:p-6 lg:p-8">
@@ -260,7 +307,10 @@
                             <input type="number" id="monthlyContrib" step="1" value="0" oninput="syncBaseGeneric()">
                         </div>
                         <div class="input-group">
-                            <label>Cash Balance ($)</label>
+                            <label class="label-with-tooltip">
+                                Cash Balance ($)
+                                <span class="tooltip-icon" data-tooltip="The uninvested cash held within the portfolio's cash management or settlement account.">ⓘ</span>
+                            </label>
                             <input type="number" id="cash" step="1" value="0" oninput="syncBaseGeneric()">
                         </div>
                     </div>
@@ -1054,6 +1104,17 @@
             setSimulationValue('simSecValue', 'simSecValueSlider', parseFloat(baseSec) || 0);
             setSimulationValue('simBorrowed', 'simBorrowedSlider', parseFloat(baseBorr) || 0);
 
+            // Reset Market Variables back to baseline inputs
+            document.getElementById('marginRate').value = document.getElementById('marginRate').value; // or sync to saved base data
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                try {
+                    const data = JSON.parse(saved);
+                    if (data.marginRate !== undefined) document.getElementById('marginRate').value = data.marginRate;
+                    if (data.yieldRate !== undefined) document.getElementById('yieldRate').value = data.yieldRate;
+                } catch(e) {}
+            }
+
             simulationMode = false;
             calculate();
         }
@@ -1070,6 +1131,21 @@
             
             const simSecValue = parseFloat(document.getElementById('simSecValue').value) || 0;
             const simBorrowed = parseFloat(document.getElementById('simBorrowed').value) || 0;
+
+            const saved = localStorage.getItem(STORAGE_KEY);
+            let baseMarginRate = 5.65;
+            let baseYieldRate = 15;
+            if (saved) {
+                try {
+                    const data = JSON.parse(saved);
+                    if (data.marginRate !== undefined) baseMarginRate = parseFloat(data.marginRate);
+                    if (data.yieldRate !== undefined) baseYieldRate = parseFloat(data.yieldRate);
+                } catch(e) {}
+            }
+
+            const currentMarginRateInput = parseFloat(document.getElementById('marginRate').value) || 0;
+            const currentYieldRateInput = parseFloat(document.getElementById('yieldRate').value) || 0;
+            const isMarketVarSimulated = (Math.abs(currentMarginRateInput - baseMarginRate) > 0.001) || (Math.abs(currentYieldRateInput - baseYieldRate) > 0.001);
 
             const maintRatio = baseSecValue > 0 ? (baseReqEquity / baseSecValue) : 0;
 
@@ -1099,7 +1175,7 @@
             const utilWithdraw = simBorrowed > 0 ? (simBorrowed / (simBorrowed + Math.max(0, simExcess))) : 0;
             const utilReinvest = simBorrowed > 0 ? (simBorrowed / (simBorrowed + Math.max(0, simExcess / 0.5))) : 0;
 
-            const isSimulating = Math.abs(simSecValue - baseSecValue) > 0.01 || Math.abs(simBorrowed - baseBorrowed) > 0.01;
+            const isSimulating = Math.abs(simSecValue - baseSecValue) > 0.01 || Math.abs(simBorrowed - baseBorrowed) > 0.01 || isMarketVarSimulated;
             simulationMode = isSimulating;
 
             const modeBadge = document.getElementById('modeBadge');
@@ -1111,7 +1187,7 @@
                 modeBadge.className = "px-2.5 py-1 rounded text-[11px] font-bold tracking-wider uppercase font-['Poppins'] badge-baseline";
             }
 
-            document.getElementById('outPortValueLabel').innerText = isSimulating ? 'Simulated Portfolio Value' : 'Base Portfolio Value';
+            document.getElementById('outPortValueLabel').innerText = (Math.abs(simSecValue - baseSecValue) > 0.01) ? 'Simulated Portfolio Value' : 'Base Portfolio Value';
             document.getElementById('outPortValue').innerText = fmtCNoDecimals.format(simSecValue);
 
             document.getElementById('outEquity').innerText = fmtCNoDecimals.format(simEquity);
