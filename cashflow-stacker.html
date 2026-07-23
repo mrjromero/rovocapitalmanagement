@@ -197,13 +197,13 @@
             transition: all 0.2s ease; box-shadow: var(--shadow-lg);
             font-size: 0.85rem; max-height: 60vh; overflow-y: auto; pointer-events: auto;
             font-weight: normal; line-height: 1.5;
-            width: 320px; max-width: 85vw; left: 50%; transform: translateX(-50%);
+            width: 320px; max-width: min(90vw, 400px); left: 50%; transform: translateX(-50%);
         }
         .tooltip-wrapper:hover .tooltip-content, 
         .tooltip-wrapper:focus-within .tooltip-content { visibility: visible; opacity: 1; }
         
         @media (min-width: 768px) {
-            .tooltip-content { width: 400px; max-width: none; left: 0; transform: none; }
+            .tooltip-content { width: 400px; max-width: min(90vw, 400px); left: 50%; transform: translateX(-50%); }
         }
 
         .tooltip-content h4 { margin: 0 0 8px 0; color: var(--primary); font-size: 0.9rem; }
@@ -904,22 +904,51 @@
                     End of Year ${metrics.totalYears} System Snapshot
                 </div>
                 <div class="snapshot-metrics-row">
+                    
                     <div class="snapshot-metric-item">
-                        <div class="snapshot-metric-title">Active Investments</div>
+                        <div class="snapshot-metric-title tooltip-wrapper">
+                            <span>Active Investments</span>
+                            <button class="info-icon" style="width: 14px; height: 14px; font-size: 10px; margin-left: 4px;" aria-label="More info" tabindex="0">?</button>
+                            <div class="tooltip-content" style="font-weight: normal; color: var(--text-main);">
+                                <p>The exact number of individual investment stacks that are currently open and generating yield at this point in the simulation.</p>
+                            </div>
+                        </div>
                         <div class="snapshot-metric-value" style="color: var(--text-main);">${metrics.activeStacksStillPaying}</div>
                     </div>
+                    
                     <div class="snapshot-metric-item">
-                        <div class="snapshot-metric-title">Monthly Passive Yield</div>
+                        <div class="snapshot-metric-title tooltip-wrapper">
+                            <span>Monthly Passive Yield</span>
+                            <button class="info-icon" style="width: 14px; height: 14px; font-size: 10px; margin-left: 4px;" aria-label="More info" tabindex="0">?</button>
+                            <div class="tooltip-content" style="font-weight: normal; color: var(--text-main);">
+                                <p>The total combined cash flow generated strictly by your active investments during this final month.</p>
+                            </div>
+                        </div>
                         <div class="snapshot-metric-value" style="color: var(--profit-green); font-size: 1.75rem;">${formatCurrency(metrics.monthlyIncomeFromActiveStacks)}</div>
                     </div>
+                    
                     <div class="snapshot-metric-item">
-                        <div class="snapshot-metric-title">Contracted Asset Balance</div>
+                        <div class="snapshot-metric-title tooltip-wrapper">
+                            <span>Contracted Asset Balance</span>
+                            <button class="info-icon" style="width: 14px; height: 14px; font-size: 10px; margin-left: 4px;" aria-label="More info" tabindex="0">?</button>
+                            <div class="tooltip-content" style="font-weight: normal; color: var(--text-main);">
+                                <p>The total remaining future cash payments that are legally/contractually owed to you from all active investments if you stopped deploying new capital today.</p>
+                            </div>
+                        </div>
                         <div class="snapshot-metric-value" style="color: var(--primary);">${formatCurrency(metrics.remainingFutureIncome)}</div>
                     </div>
+                    
                     <div class="snapshot-metric-item">
-                        <div class="snapshot-metric-title">Portfolio Run-Off Time</div>
+                        <div class="snapshot-metric-title tooltip-wrapper">
+                            <span>Portfolio Run-Off Time</span>
+                            <button class="info-icon" style="width: 14px; height: 14px; font-size: 10px; margin-left: 4px;" aria-label="More info" tabindex="0">?</button>
+                            <div class="tooltip-content" style="font-weight: normal; color: var(--text-main);">
+                                <p>The exact amount of time it would take for all currently active investments to fully mature and pay out their remaining balances if no new investments were made.</p>
+                            </div>
+                        </div>
                         <div class="snapshot-metric-value" style="color: #6b7280;">${metrics.runoffDisplay}</div>
                     </div>
+
                 </div>
             </div>
 
