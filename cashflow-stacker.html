@@ -81,7 +81,7 @@
             font-size: 1rem;
             color: var(--text-muted);
             margin: 0;
-            max-width: 900px;
+            max-width: 800px;
         }
 
         .dashboard-container {
@@ -384,7 +384,7 @@
 
 <!-- HEADER SECTION -->
 <div class="header-container">
-    <a href="toolbox" class="back-link">
+    <a href="../index.html" class="back-link">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <line x1="19" y1="12" x2="5" y2="12"></line>
             <polyline points="12 19 5 12 12 5"></polyline>
@@ -393,7 +393,7 @@
     </a>
     <h1 class="app-title">Cash Flow Stacker</h1>
     <p class="app-description">
-        Model a cash flow stacking strategy using a line of credit to fund amortized notes, accelerate velocity of capital, and scale passive yield.
+        Model and stress-test a positive-carry cash flow stacking strategy using a HELOC or PLOC to fund amortized notes, accelerate velocity of capital, and scale passive yield.
     </p>
 </div>
 
@@ -869,7 +869,7 @@
                                 <th>Investment<br>Income /mo</th>
                                 <th>Personal<br>Cash Flow</th>
                                 <th>Total<br>Monthly /mo</th>
-                                <th>Net System<br>Income /mo</th>
+                                <th>Peak LOC<br>Debt</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -879,8 +879,8 @@
                                     <td>${y.activeStacks}</td>
                                     <td>${formatCurrency(y.investmentIncome)}</td>
                                     <td>${formatCurrency(y.personalCashFlow)}</td>
-                                    <td>${formatCurrency(y.totalMonthly)}</td>
                                     <td class="net-blue">${formatCurrency(y.totalMonthly)}</td>
+                                    <td class="dta-red">${formatCurrency(y.maxLocBalance)}</td>
                                 </tr>
                             `).join('')}
                         </tbody>
