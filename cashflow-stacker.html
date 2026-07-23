@@ -2,7 +2,6 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="robots" content="noindex, nofollow">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cash Flow Stack Simulator Dashboard</title>
     <!-- Include Chart.js for Projections -->
@@ -312,7 +311,12 @@
         }
         @media (min-width: 640px) {
             .snapshot-metrics-row {
-                grid-template-columns: repeat(3, 1fr);
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        @media (min-width: 1024px) {
+            .snapshot-metrics-row {
+                grid-template-columns: repeat(4, 1fr);
             }
         }
 
@@ -384,7 +388,7 @@
 
 <!-- HEADER SECTION -->
 <div class="header-container">
-    <a href="toolbox" class="back-link">
+    <a href="../index.html" class="back-link">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <line x1="19" y1="12" x2="5" y2="12"></line>
             <polyline points="12 19 5 12 12 5"></polyline>
@@ -393,7 +397,7 @@
     </a>
     <h1 class="app-title">Cash Flow Stacker</h1>
     <p class="app-description">
-        Model a cash flow stacking strategy using a LOC to fund amortized notes, accelerate velocity of capital, and scale passive yield.
+        Model and stress-test a positive-carry cash flow stacking strategy using a HELOC or PLOC to fund amortized notes, accelerate velocity of capital, and scale passive yield.
     </p>
 </div>
 
@@ -736,7 +740,22 @@
         
         let lastMonthActiveStacks = stacks.filter(s => s.endMonth >= maxMonths);
         let monthlyIncomeFromActiveStacks = lastMonthActiveStacks.reduce((sum, s) => sum + s.pmt, 0);
-        let remainingFutureIncome = lastMonthActiveStacks.reduce((sum, s) => sum + (s.pmt * (s.endMonth - maxMonths)), 0);
+        let remainingFutureIncome = lastMonthActiveStacks.reduce((sum, s) => sum + (s.pmt * (s.endMonth - maxMonths + 1)), 0);
+
+        // Calculate Portfolio Run-Off Time
+        let maxEndMonth = 0;
+        if (lastMonthActiveStacks.length > 0) {
+            maxEndMonth = Math.max(...lastMonthActiveStacks.map(s => s.endMonth));
+        }
+        let monthsToDeplete = maxEndMonth > maxMonths ? (maxEndMonth - maxMonths + 1) : 0;
+        
+        let runoffYears = Math.floor(monthsToDeplete / 12);
+        let runoffMonths = monthsToDeplete % 12;
+        let runoffDisplay = '';
+        if (monthsToDeplete === 0) runoffDisplay = '0 Months';
+        else if (runoffYears > 0 && runoffMonths > 0) runoffDisplay = `${runoffYears} yr ${runoffMonths} mo`;
+        else if (runoffYears > 0) runoffDisplay = `${runoffYears} yrs`;
+        else runoffDisplay = `${runoffMonths} mos`;
 
         // Store configuration used for the run (needed for modal schedules)
         let config = { investmentRate, investmentLength, personalCashFlow };
@@ -753,7 +772,8 @@
             activeStacksStillPaying: lastMonthActiveStacks.length,
             monthlyIncomeFromActiveStacks,
             remainingFutureIncome,
-            crossoverMonth
+            crossoverMonth,
+            runoffDisplay
         });
         
         if (window.innerWidth < 992) {
@@ -804,6 +824,10 @@
                         <div class="snapshot-metric-title">Contracted Note Balance</div>
                         <div class="snapshot-metric-value" style="color: var(--primary);">${formatCurrency(metrics.remainingFutureIncome)}</div>
                     </div>
+                    <div class="snapshot-metric-item">
+                        <div class="snapshot-metric-title">Portfolio Run-Off Time</div>
+                        <div class="snapshot-metric-value" style="color: #6b7280;">${metrics.runoffDisplay}</div>
+                    </div>
                 </div>
             </div>
 
@@ -818,7 +842,7 @@
                                 <h4>Interactive Feature</h4>
                                 <ul>
                                     <li><strong>Stack-by-Stack Tab:</strong> Shows granular, month-by-month "sawtooth" velocity mechanics alongside your flat personal contribution baseline and the highlighted <strong>Yield Crossover Milestone</strong>.</li>
-                                    <li><strong>Year-by-Year Tab:</strong> Plots your <strong>Maximum Debt Exposure</strong> (highest LOC balance reached) for that year to provide a smooth, clean macro trendline.</li>
+                                    <li><strong>Year-by-Year Tab:</strong> A mixed chart layering your <strong>Maximum Debt Exposure</strong> (line) over your <strong>Total Income</strong> (stacked bars) to show the snowball effect of yields outgrowing personal contributions.</li>
                                     <li><strong>Risk & Safety Tab:</strong> Transitions to a dual-axis chart plotting Peak Leverage (Max DTA) against Payoff Velocity (Months in Debt) for each stack.</li>
                                 </ul>
                             </div>
@@ -1027,14 +1051,16 @@
             let locData, cashData, incomeData, pointRadius;
 
             if (viewMode === 'year') {
+                // Year-by-Year View (Mixed Chart: Line for Debt + Stacked Bars for Income)
                 labels = globalSimulationData.yearlyData.map(y => 'Year ' + y.year);
                 locData = globalSimulationData.yearlyData.map(y => y.maxLocBalance); 
-                cashData = globalSimulationData.yearlyData.map(y => y.totalMonthly);
                 incomeData = globalSimulationData.yearlyData.map(y => y.investmentIncome);
+                let personalContribData = globalSimulationData.yearlyData.map(y => y.personalCashFlow);
                 pointRadius = window.innerWidth < 768 ? 3 : 4;
 
                 chartDataSets = [
                     {
+                        type: 'line',
                         label: 'Max LOC Balance (Inverted)',
                         data: locData,
                         borderColor: '#2563eb',
@@ -1045,26 +1071,37 @@
                         yAxisID: 'y'
                     },
                     {
-                        label: 'Total Cash Flow',
-                        data: cashData,
-                        borderColor: '#10b981',
-                        backgroundColor: '#10b981',
-                        borderWidth: 2,
-                        pointRadius: pointRadius > 0 ? pointRadius - 1 : 0,
-                        tension: 0.3,
+                        type: 'bar',
+                        label: 'Investment Income',
+                        data: incomeData,
+                        backgroundColor: '#8b5cf6',
+                        borderColor: '#8b5cf6',
+                        stack: 'IncomeStack',
                         yAxisID: 'y'
                     },
                     {
-                        label: 'Investment Income',
-                        data: incomeData,
-                        borderColor: '#8b5cf6',
-                        backgroundColor: '#8b5cf6',
-                        borderWidth: 2,
-                        pointRadius: pointRadius > 0 ? pointRadius - 1 : 0,
-                        tension: 0.3,
+                        type: 'bar',
+                        label: 'Personal Contribution',
+                        data: personalContribData,
+                        backgroundColor: '#10b981',
+                        borderColor: '#10b981',
+                        stack: 'IncomeStack',
                         yAxisID: 'y'
                     }
                 ];
+
+                optionsScales = {
+                    y: {
+                        type: 'linear', position: 'left',
+                        beginAtZero: true,
+                        stacked: true,
+                        ticks: { callback: val => '$' + val.toLocaleString() }
+                    },
+                    x: { 
+                        stacked: true,
+                        ticks: { maxTicksLimit: window.innerWidth < 768 ? 6 : 12 } 
+                    }
+                };
             } else {
                 // Stack-by-Stack View (Includes Flat Personal Contribution Line & Crossover Highlight)
                 labels = globalSimulationData.chartData.labels;
@@ -1083,6 +1120,7 @@
 
                 chartDataSets = [
                     {
+                        type: 'line',
                         label: 'LOC Balance (Inverted)',
                         data: locData,
                         borderColor: '#2563eb',
@@ -1093,6 +1131,7 @@
                         yAxisID: 'y'
                     },
                     {
+                        type: 'line',
                         label: 'Total Cash Flow',
                         data: cashData,
                         borderColor: '#10b981',
@@ -1103,6 +1142,7 @@
                         yAxisID: 'y'
                     },
                     {
+                        type: 'line',
                         label: 'Investment Income',
                         data: incomeData,
                         borderColor: '#8b5cf6',
@@ -1116,6 +1156,7 @@
                         yAxisID: 'y'
                     },
                     {
+                        type: 'line',
                         label: 'Personal Contribution Baseline',
                         data: personalContribData,
                         borderColor: '#6b7280',
@@ -1133,6 +1174,7 @@
                     let crossoverData = new Array(incomeData.length).fill(null);
                     crossoverData[crossoverIdx] = incomeData[crossoverIdx];
                     chartDataSets.push({
+                        type: 'line',
                         label: `⚡ Yield Crossover (M${globalSimulationData.crossoverMonth})`,
                         data: crossoverData,
                         borderColor: '#d97706',
@@ -1143,16 +1185,20 @@
                         yAxisID: 'y'
                     });
                 }
-            }
 
-            optionsScales = {
-                y: {
-                    type: 'linear', position: 'left',
-                    beginAtZero: true,
-                    ticks: { callback: val => '$' + val.toLocaleString() }
-                },
-                x: { ticks: { maxTicksLimit: window.innerWidth < 768 ? 6 : 12 } }
-            };
+                optionsScales = {
+                    y: {
+                        type: 'linear', position: 'left',
+                        beginAtZero: true,
+                        stacked: false,
+                        ticks: { callback: val => '$' + val.toLocaleString() }
+                    },
+                    x: { 
+                        stacked: false,
+                        ticks: { maxTicksLimit: window.innerWidth < 768 ? 6 : 12 } 
+                    }
+                };
+            }
         }
 
         // Update Title (preserve tooltip element)
@@ -1161,7 +1207,6 @@
         if(tooltipElement) titleElement.appendChild(tooltipElement);
 
         projectionChart = new Chart(ctx, {
-            type: 'line',
             data: { labels: labels, datasets: chartDataSets },
             options: {
                 responsive: true,
