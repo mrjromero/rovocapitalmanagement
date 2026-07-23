@@ -334,15 +334,15 @@
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-3 gap-y-2">
                         <div class="input-group">
                             <label>Base Portfolio ($)</label>
-                            <input type="number" id="secValue" step="1" value="100000" oninput="syncBaseSec()">
+                            <input type="number" id="secValue" step="1" value="199250" oninput="syncBaseSec()">
                         </div>
                         <div class="input-group">
                             <label>Base Borrowed ($)</label>
-                            <input type="number" id="borrowed" step="1" value="25000" oninput="syncBaseBorrow()">
+                            <input type="number" id="borrowed" step="1" value="51357" oninput="syncBaseBorrow()">
                         </div>
                         <div class="input-group">
                             <label>Monthly Contrib ($)</label>
-                            <input type="number" id="monthlyContrib" step="1" value="0" oninput="syncBaseGeneric()">
+                            <input type="number" id="monthlyContrib" step="1" value="15000" oninput="syncBaseGeneric()">
                         </div>
                         <div class="input-group">
                             <label class="label-with-tooltip">
@@ -354,18 +354,18 @@
                     </div>
                     <div class="input-group mt-2">
                         <label>Required Equity ($)</label>
-                        <input type="number" id="reqEquity" step="1" value="30000" oninput="syncBaseGeneric()">
+                        <input type="number" id="reqEquity" step="1" value="54152" oninput="syncBaseGeneric()">
                     </div>
 
                     <h2 class="text-lg font-bold border-b border-[#E8ECF2] pb-1.5 mb-3 mt-5">2. Market Variables</h2>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-3 gap-y-2">
                         <div class="input-group">
                             <label>Margin Rate (%)</label>
-                            <input type="number" id="marginRate" step="any" value="5.65" oninput="syncBaseGeneric()">
+                            <input type="number" id="marginRate" step="any" value="4.15" oninput="syncBaseGeneric()">
                         </div>
                         <div class="input-group">
                             <label>Expected Yield (%)</label>
-                            <input type="number" id="yieldRate" step="any" value="15" oninput="syncBaseGeneric()">
+                            <input type="number" id="yieldRate" step="any" value="14.50" oninput="syncBaseGeneric()">
                         </div>
                     </div>
 
@@ -374,16 +374,16 @@
                     <div class="input-group mb-4">
                         <label>Simulated Portfolio Value ($)</label>
                         <div class="flex items-center gap-3">
-                            <input type="range" id="simSecValueSlider" min="0" max="1000000" step="1000" value="100000" oninput="syncSimSec('slider')" class="w-full">
-                            <input type="number" id="simSecValue" class="w-28 shrink-0" step="1" value="100000" oninput="syncSimSec('number')">
+                            <input type="range" id="simSecValueSlider" min="0" max="1000000" step="1000" value="199250" oninput="syncSimSec('slider')" class="w-full">
+                            <input type="number" id="simSecValue" class="w-28 shrink-0" step="1" value="199250" oninput="syncSimSec('number')">
                         </div>
                     </div>
 
                     <div class="input-group">
                         <label>Simulated Total Borrowed ($)</label>
                         <div class="flex items-center gap-3">
-                            <input type="range" id="simBorrowedSlider" min="0" max="500000" step="1000" value="25000" oninput="syncSimBorrow('slider')" class="w-full">
-                            <input type="number" id="simBorrowed" class="w-28 shrink-0" step="1" value="25000" oninput="syncSimBorrow('number')">
+                            <input type="range" id="simBorrowedSlider" min="0" max="500000" step="1000" value="51357" oninput="syncSimBorrow('slider')" class="w-full">
+                            <input type="number" id="simBorrowed" class="w-28 shrink-0" step="1" value="51357" oninput="syncSimBorrow('number')">
                         </div>
                     </div>
 
@@ -429,7 +429,7 @@
                         </div>
                         
                         <label class="font-['DM_Sans'] text-[11px] font-bold text-[#595959] uppercase tracking-widest mt-3 mb-2 block">Historical Stress Tests</label>
-                        <div class="grid grid-cols-2 gap-2">
+                        <div class="grid grid-cols-2 gap-2 mb-2">
                             <button onclick="applyScenario('covid')" class="group flex flex-col items-center justify-center py-1.5 bg-[#1e293b] border border-[#0f172a] rounded-lg hover:bg-[#334155] transition-colors cursor-pointer shadow-sm">
                                 <span class="text-[#f8fafc] font-bold text-[12px] mb-0.5">-34%</span>
                                 <span class="text-[#cbd5e1] text-[9px] uppercase tracking-wider font-semibold">2020 COVID</span>
@@ -437,6 +437,28 @@
                             <button onclick="applyScenario('gfc')" class="group flex flex-col items-center justify-center py-1.5 bg-[#1e293b] border border-[#0f172a] rounded-lg hover:bg-[#334155] transition-colors cursor-pointer shadow-sm">
                                 <span class="text-[#f8fafc] font-bold text-[12px] mb-0.5">-50%</span>
                                 <span class="text-[#cbd5e1] text-[9px] uppercase tracking-wider font-semibold">2008 Crisis</span>
+                            </button>
+                        </div>
+
+                        <label class="font-['DM_Sans'] text-[11px] font-bold text-[#595959] uppercase tracking-widest mt-3 mb-2 block">General Stress Tests</label>
+                        <div class="grid grid-cols-2 gap-2 mb-2">
+                            <button onclick="applyScenario('pull_back')" class="group flex flex-col items-center justify-center py-1.5 bg-[#334155] border border-[#1e293b] rounded-lg hover:bg-[#475569] transition-colors cursor-pointer shadow-sm">
+                                <span class="text-[#f8fafc] font-bold text-[12px] mb-0.5">-5% / +0.5%</span>
+                                <span class="text-[#cbd5e1] text-[9px] uppercase tracking-wider font-semibold">Pull Back</span>
+                            </button>
+                            <button onclick="applyScenario('correction')" class="group flex flex-col items-center justify-center py-1.5 bg-[#334155] border border-[#1e293b] rounded-lg hover:bg-[#475569] transition-colors cursor-pointer shadow-sm">
+                                <span class="text-[#f8fafc] font-bold text-[12px] mb-0.5">-10% / +1.0%</span>
+                                <span class="text-[#cbd5e1] text-[9px] uppercase tracking-wider font-semibold">Correction</span>
+                            </button>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button onclick="applyScenario('bear_market')" class="group flex flex-col items-center justify-center py-1.5 bg-[#334155] border border-[#1e293b] rounded-lg hover:bg-[#475569] transition-colors cursor-pointer shadow-sm">
+                                <span class="text-[#f8fafc] font-bold text-[12px] mb-0.5">-25% / +2.0%</span>
+                                <span class="text-[#cbd5e1] text-[9px] uppercase tracking-wider font-semibold">Bear Market</span>
+                            </button>
+                            <button onclick="applyScenario('rare_crisis')" class="group flex flex-col items-center justify-center py-1.5 bg-[#334155] border border-[#1e293b] rounded-lg hover:bg-[#475569] transition-colors cursor-pointer shadow-sm">
+                                <span class="text-[#f8fafc] font-bold text-[12px] mb-0.5">-40% / +3.0%</span>
+                                <span class="text-[#cbd5e1] text-[9px] uppercase tracking-wider font-semibold">Rare Crisis</span>
                             </button>
                         </div>
                     </div>
@@ -631,8 +653,19 @@
         </div>
 
         <div class="card p-5 mt-6">
-            <h2 class="text-xl font-bold border-b border-[#E8ECF2] pb-2 mb-4">10-Year Growth Projection</h2>
-            <p class="text-xs text-[#595959] mb-4 font-['DM_Sans'] leading-relaxed">Assumes simulated DTA leverage is maintained, Net Carry is reinvested, and Monthly Contributions are added. The <strong>Total Portfolio Value</strong> is the sum of your <strong>Total Equity</strong> and <strong>Margin Debt</strong> at any given time.</p>
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-[#E8ECF2] pb-2 mb-4 gap-3">
+                <div>
+                    <h2 class="text-xl font-bold m-0">10-Year Growth Projection</h2>
+                    <p class="text-xs text-[#595959] mt-1 font-['DM_Sans'] leading-relaxed">Assumes simulated DTA leverage is maintained, Net Carry is reinvested, and Monthly Contributions are added. The <strong>Total Portfolio Value</strong> is the sum of your <strong>Total Equity</strong> and <strong>Margin Debt</strong> at any given time.</p>
+                </div>
+                <div class="flex items-center gap-3 shrink-0">
+                    <span class="text-xs font-bold text-[#595959] uppercase tracking-wider font-['Poppins']">Realistic Monte Carlo / Historical Engine</span>
+                    <label class="switch">
+                        <input type="checkbox" id="monteCarloToggle" onchange="calculate()">
+                        <span class="slider-toggle"></span>
+                    </label>
+                </div>
+            </div>
             <div style="position: relative; height: 350px; width: 100%;">
                 <canvas id="projectionChart"></canvas>
             </div>
@@ -1085,11 +1118,27 @@
         }
         
         window.applyScenario = function(scenario) {
+            // First reset simulation to baseline values before applying the stress test
+            resetSimulation();
+
             const baseSec = parseFloat(document.getElementById('secValue').value) || 0;
             const baseBorr = parseFloat(document.getElementById('borrowed').value) || 0;
-            const currentMarginRate = parseFloat(document.getElementById('marginRate').value) || 0;
-            const currentYieldRate = parseFloat(document.getElementById('yieldRate').value) || 0;
             
+            // Get fresh base/current market rates from localStorage or inputs
+            const saved = localStorage.getItem(STORAGE_KEY);
+            let baseMarginRate = 4.15;
+            let baseYieldRate = 14.50;
+            if (saved) {
+                try {
+                    const data = JSON.parse(saved);
+                    if (data.marginRate !== undefined) baseMarginRate = parseFloat(data.marginRate);
+                    if (data.yieldRate !== undefined) baseYieldRate = parseFloat(data.yieldRate);
+                } catch(e) {}
+            }
+
+            document.getElementById('marginRate').value = baseMarginRate;
+            document.getElementById('yieldRate').value = baseYieldRate;
+
             let isRateYieldScenario = false;
 
             if (scenario === 'crash') {
@@ -1101,44 +1150,67 @@
             } else if (scenario === 'deleverage') {
                 setSimulationValue('simBorrowed', 'simBorrowedSlider', baseBorr * 0.5);
             } else if (scenario === 'rate_hike') {
-                document.getElementById('marginRate').value = (currentMarginRate + 1.5).toFixed(2);
+                document.getElementById('marginRate').value = (baseMarginRate + 1.5).toFixed(2);
                 flashElement('marginRate');
                 isRateYieldScenario = true;
             } else if (scenario === 'rate_cut') {
-                document.getElementById('marginRate').value = Math.max(0, currentMarginRate - 1.5).toFixed(2);
+                document.getElementById('marginRate').value = Math.max(0, baseMarginRate - 1.5).toFixed(2);
                 flashElement('marginRate');
                 isRateYieldScenario = true;
             } else if (scenario === 'yield_spike') {
-                document.getElementById('yieldRate').value = (currentYieldRate + 2.0).toFixed(2);
+                document.getElementById('yieldRate').value = (baseYieldRate + 2.0).toFixed(2);
                 flashElement('yieldRate');
                 isRateYieldScenario = true;
             } else if (scenario === 'yield_drop') {
-                document.getElementById('yieldRate').value = Math.max(0, currentYieldRate - 2.0).toFixed(2);
+                document.getElementById('yieldRate').value = Math.max(0, baseYieldRate - 2.0).toFixed(2);
                 flashElement('yieldRate');
                 isRateYieldScenario = true;
             } else if (scenario === 'covid') {
                 setSimulationValue('simSecValue', 'simSecValueSlider', baseSec * 0.66);
             } else if (scenario === 'gfc') {
                 setSimulationValue('simSecValue', 'simSecValueSlider', baseSec * 0.50);
+            } else if (scenario === 'pull_back') {
+                setSimulationValue('simSecValue', 'simSecValueSlider', baseSec * (1 - 0.05));
+                document.getElementById('yieldRate').value = (baseYieldRate * (1 - 0.05)).toFixed(2);
+                document.getElementById('marginRate').value = (baseMarginRate + 0.5).toFixed(2);
+                flashElement('marginRate');
+                flashElement('yieldRate');
+                isRateYieldScenario = true;
+            } else if (scenario === 'correction') {
+                setSimulationValue('simSecValue', 'simSecValueSlider', baseSec * (1 - 0.10));
+                document.getElementById('yieldRate').value = (baseYieldRate * (1 - 0.10)).toFixed(2);
+                document.getElementById('marginRate').value = (baseMarginRate + 1.0).toFixed(2);
+                flashElement('marginRate');
+                flashElement('yieldRate');
+                isRateYieldScenario = true;
+            } else if (scenario === 'bear_market') {
+                setSimulationValue('simSecValue', 'simSecValueSlider', baseSec * (1 - 0.25));
+                document.getElementById('yieldRate').value = (baseYieldRate * (1 - 0.20)).toFixed(2);
+                document.getElementById('marginRate').value = (baseMarginRate + 2.0).toFixed(2);
+                flashElement('marginRate');
+                flashElement('yieldRate');
+                isRateYieldScenario = true;
+            } else if (scenario === 'rare_crisis') {
+                setSimulationValue('simSecValue', 'simSecValueSlider', baseSec * (1 - 0.40));
+                document.getElementById('yieldRate').value = (baseYieldRate * (1 - 0.30)).toFixed(2);
+                document.getElementById('marginRate').value = (baseMarginRate + 3.0).toFixed(2);
+                flashElement('marginRate');
+                flashElement('yieldRate');
+                isRateYieldScenario = true;
             }
 
-            if (isRateYieldScenario) {
-                flashElement('carryExplanation');
-            } else {
-                simulationMode = true;
-            }
-            
+            simulationMode = true;
             calculate();
         }
 
         window.resetBaseData = function() {
-            document.getElementById('secValue').value = 100000;
-            document.getElementById('monthlyContrib').value = 0;
+            document.getElementById('secValue').value = 199250;
+            document.getElementById('monthlyContrib').value = 15000;
             document.getElementById('cash').value = 0;
-            document.getElementById('borrowed').value = 25000;
-            document.getElementById('reqEquity').value = 30000;
-            document.getElementById('marginRate').value = 5.65;
-            document.getElementById('yieldRate').value = 15;
+            document.getElementById('borrowed').value = 51357;
+            document.getElementById('reqEquity').value = 54152;
+            document.getElementById('marginRate').value = 4.15;
+            document.getElementById('yieldRate').value = 14.50;
             
             saveBaseData();
             resetSimulation();
@@ -1178,8 +1250,8 @@
             const simBorrowed = parseFloat(document.getElementById('simBorrowed').value) || 0;
 
             const saved = localStorage.getItem(STORAGE_KEY);
-            let baseMarginRate = 5.65;
-            let baseYieldRate = 15;
+            let baseMarginRate = 4.15;
+            let baseYieldRate = 14.50;
             if (saved) {
                 try {
                     const data = JSON.parse(saved);
@@ -1470,6 +1542,15 @@
                 if (targetDta >= 1 || targetDta < 0 || isNaN(targetDta)) targetDta = 0; 
 
                 let curEq = simEquity;
+                const useMonteCarlo = document.getElementById('monteCarloToggle').checked;
+
+                const historicalMonthlyReturns = [
+                    0.021, 0.015, -0.082, 0.043, 0.012, 0.028, -0.035, 0.019, 0.031, 0.008, 0.014, 0.025,
+                    0.032, -0.124, 0.065, 0.018, 0.022, 0.009, -0.015, 0.041, 0.027, 0.013, -0.042, 0.033,
+                    0.019, 0.024, 0.011, -0.021, 0.038, 0.015, 0.029, -0.065, 0.045, 0.021, 0.012, 0.026,
+                    0.015, 0.022, -0.048, 0.031, 0.014, 0.025, 0.019, -0.012, 0.037, 0.018, 0.022, 0.011,
+                    0.028, 0.019, -0.095, 0.052, 0.021, 0.033, -0.025, 0.014, 0.041, 0.012, 0.022, 0.019
+                ];
 
                 for (let i = 0; i <= 120; i++) {
                     projLabels.push('Month ' + i);
@@ -1485,7 +1566,16 @@
                     let mCost = cDebt * (marginRate / 12);
                     let mNet = mYield - mCost;
                     
-                    curEq += mNet + monthlyContrib; 
+                    let assetAppreciation = 0;
+                    if (useMonteCarlo && i > 0) {
+                        const histReturn = historicalMonthlyReturns[(i - 1) % historicalMonthlyReturns.length];
+                        assetAppreciation = cAssets * histReturn;
+                        if (assetAppreciation > 0) {
+                            assetAppreciation *= 0.85;
+                        }
+                    }
+
+                    curEq += mNet + monthlyContrib + assetAppreciation; 
                     if (curEq < 0) curEq = 0;
                 }
 
