@@ -1218,7 +1218,7 @@
                         type: 'linear', position: 'left',
                         beginAtZero: true,
                         stacked: true,
-                        ticks: { callback: val => '$' + val.toLocaleString() }
+                        ticks: { callback: val => formatCurrency(val) }
                     },
                     x: { 
                         stacked: true,
@@ -1314,7 +1314,7 @@
                         type: 'linear', position: 'left',
                         beginAtZero: true,
                         stacked: false,
-                        ticks: { callback: val => '$' + val.toLocaleString() }
+                        ticks: { callback: val => formatCurrency(val) }
                     },
                     x: { 
                         stacked: false,
@@ -1336,7 +1336,29 @@
                 maintainAspectRatio: false,
                 interaction: { mode: 'index', intersect: false },
                 plugins: {
-                    legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 6, padding: 20 } }
+                    legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 6, padding: 20 } },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.parsed.y !== null) {
+                                    if (viewMode === 'risk') {
+                                        if (context.datasetIndex === 0) {
+                                            label += context.parsed.y.toFixed(1) + '%';
+                                        } else {
+                                            label += context.parsed.y.toFixed(1) + ' mo';
+                                        }
+                                    } else {
+                                        label += formatCurrency(context.parsed.y);
+                                    }
+                                }
+                                return label;
+                            }
+                        }
+                    }
                 },
                 scales: optionsScales
             }
