@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QR Code Generator</title>
-    <!-- Load qrcode.js via CDN for high compatibility -->
+    <title>Advanced QR Code Generator</title>
+    <!-- Load qrcode.js via CDN -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
         body {
@@ -23,32 +23,66 @@
             padding: 2rem;
             border-radius: 12px;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-            text-align: center;
-            max-width: 400px;
+            max-width: 450px;
             width: 100%;
         }
         h2 {
             margin-top: 0;
             color: #1f2937;
+            text-align: center;
         }
         p {
             color: #6b7280;
             font-size: 0.9rem;
             margin-bottom: 1.5rem;
+            text-align: center;
         }
-        input {
+        .input-group {
+            margin-bottom: 1rem;
+        }
+        .input-group label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.3rem;
+        }
+        input[type="text"], select {
             width: 100%;
             padding: 0.75rem;
-            margin-bottom: 1rem;
             border: 1px solid #d1d5db;
             border-radius: 6px;
             box-sizing: border-box;
             font-size: 1rem;
+            background-color: #fff;
         }
-        input:focus {
+        input[type="text"]:focus, select:focus {
             outline: none;
             border-color: #3b82f6;
             box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f9fafb;
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+        }
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            color: #374151;
+            cursor: pointer;
+        }
+        .checkbox-group input {
+            cursor: pointer;
+            width: 1.1rem;
+            height: 1.1rem;
         }
         button {
             color: white;
@@ -59,18 +93,18 @@
             font-weight: 600;
             font-size: 1rem;
             width: 100%;
-            margin-bottom: 0.5rem;
             transition: background-color 0.2s;
         }
         #generate-btn {
             background-color: #3b82f6;
+            margin-bottom: 0.5rem;
         }
         #generate-btn:hover {
             background-color: #2563eb;
         }
         #download-btn {
             background-color: #10b981;
-            display: none; /* Hidden until QR is generated */
+            display: none;
         }
         #download-btn:hover {
             background-color: #059669;
@@ -84,27 +118,69 @@
             background-color: #f9fafb;
             border-radius: 8px;
             border: 1px dashed #d1d5db;
+            overflow: hidden;
+            position: relative;
         }
         #qrcode-container img, 
         #qrcode-container canvas {
             max-width: 100%;
+            height: auto;
             border-radius: 4px;
+        }
+        /* Checkered background for transparent preview */
+        .checkered-bg {
+            background-image: 
+                linear-gradient(45deg, #e5e7eb 25%, transparent 25%), 
+                linear-gradient(-45deg, #e5e7eb 25%, transparent 25%), 
+                linear-gradient(45deg, transparent 75%, #e5e7eb 75%), 
+                linear-gradient(-45deg, transparent 75%, #e5e7eb 75%);
+            background-size: 20px 20px;
+            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
         }
     </style>
 </head>
 <body>
 
     <div class="app-container">
-        <h2>QR Code Generator</h2>
-        <p>Enter a URL or text to generate a downloadable QR code.</p>
+        <h2>Advanced QR Generator</h2>
         
-        <input type="text" id="text-input" placeholder="e.g., https://example.com" autocomplete="off">
+        <div class="input-group">
+            <label for="text-input">Content (URL or Text)</label>
+            <input type="text" id="text-input" placeholder="https://example.com" autocomplete="off">
+        </div>
+
+        <div class="options-grid">
+            <div class="input-group" style="margin: 0;">
+                <label for="resolution-select">Resolution</label>
+                <select id="resolution-select">
+                    <option value="128">128 x 128</option>
+                    <option value="256" selected>256 x 256</option>
+                    <option value="512">512 x 512</option>
+                    <option value="1024">1024 x 1024</option>
+                    <option value="2048">2048 x 2048</option>
+                </select>
+            </div>
+            
+            <div class="input-group" style="margin: 0;">
+                <label for="filename-input">File Name</label>
+                <input type="text" id="filename-input" placeholder="qrcode" autocomplete="off">
+            </div>
+
+            <label class="checkbox-group">
+                <input type="checkbox" id="inverse-checkbox">
+                Inverse B/W
+            </label>
+            
+            <label class="checkbox-group">
+                <input type="checkbox" id="transparent-checkbox">
+                Transparent BG
+            </label>
+        </div>
         
         <button id="generate-btn" onclick="generateQR()">Generate QR Code</button>
         
         <div id="qrcode-container">
-            <!-- QR Code will be injected here -->
-            <span id="placeholder-text" style="color: #9ca3af;">Preview</span>
+            <span id="placeholder-text" style="color: #9ca3af;">Preview will appear here</span>
         </div>
         
         <button id="download-btn" onclick="downloadQR()">Download PNG</button>
@@ -116,7 +192,7 @@
         const downloadBtn = document.getElementById('download-btn');
         const placeholder = document.getElementById('placeholder-text');
 
-        // Allow generating by pressing "Enter"
+        // Allow generating by pressing "Enter" on text input
         input.addEventListener("keypress", function(event) {
             if (event.key === "Enter") {
                 event.preventDefault();
@@ -131,30 +207,49 @@
                 return;
             }
 
-            // Clear previous QR code and placeholder
+            // Get settings
+            const size = parseInt(document.getElementById('resolution-select').value);
+            const isInverse = document.getElementById('inverse-checkbox').checked;
+            const isTransparent = document.getElementById('transparent-checkbox').checked;
+
+            // Determine Colors
+            let colorDark = isInverse ? "#ffffff" : "#000000";
+            let colorLight = isInverse ? "#000000" : "#ffffff";
+
+            if (isTransparent) {
+                colorLight = "rgba(0,0,0,0)"; // Sets HTML canvas fillStyle to transparent
+            }
+
+            // Clear previous QR code
             qrContainer.innerHTML = "";
+
+            // Apply checkered background to preview container if transparent is selected
+            if (isTransparent) {
+                qrContainer.classList.add("checkered-bg");
+                qrContainer.style.backgroundColor = "transparent";
+            } else {
+                qrContainer.classList.remove("checkered-bg");
+                qrContainer.style.backgroundColor = "#f9fafb";
+            }
 
             // Generate new QR Code
             new QRCode(qrContainer, {
                 text: text,
-                width: 256,
-                height: 256,
-                colorDark: "#000000",
-                colorLight: "#ffffff",
-                correctLevel: QRCode.CorrectLevel.H // High error correction (30%)
+                width: size,
+                height: size,
+                colorDark: colorDark,
+                colorLight: colorLight,
+                correctLevel: QRCode.CorrectLevel.H 
             });
 
-            // Remove dashed border once generated and show download button
             qrContainer.style.border = "none";
             
-            // Short timeout to ensure canvas/img is rendered in the DOM before displaying button
             setTimeout(() => {
                 downloadBtn.style.display = "block";
             }, 100);
         }
 
         function downloadQR() {
-            // qrcode.js generates a <canvas> element first, and sometimes converts it to an <img>
             const canvas = qrContainer.querySelector('canvas');
             const img = qrContainer.querySelector('img');
             let dataUrl = "";
@@ -166,10 +261,20 @@
             }
 
             if (dataUrl) {
-                // Create a temporary anchor element to trigger the download
+                // Get File Name
+                let filename = document.getElementById('filename-input').value.trim();
+                if (!filename) {
+                    filename = "qrcode"; // Default fallback
+                }
+                // Ensure it ends with .png
+                if (!filename.toLowerCase().endsWith(".png")) {
+                    filename += ".png";
+                }
+
+                // Trigger Download
                 const link = document.createElement('a');
                 link.href = dataUrl;
-                link.download = 'qrcode.png';
+                link.download = filename;
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
