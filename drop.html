@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>PeerJS File Transfer</title>
+  <title>PeerJS File Transfer (with STUN)</title>
   <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.5/dist/peerjs.min.js"></script>
   <style>
     body { font-family: system-ui, sans-serif; padding: 20px; max-width: 450px; margin: auto; }
@@ -19,7 +19,6 @@
 <body>
   <h2>Peer-to-Peer File Transfer</h2>
   
-  <!-- New: Copy ID Button -->
   <p>
     <strong>Your ID:</strong> <span id="my-id">Generating...</span>
     <button id="copy-id-btn" class="copy-btn" disabled>Copy ID</button>
@@ -43,19 +42,26 @@
   </div>
 
   <script>
-    const peer = new Peer(); 
+    // 1. Initialize PeerJS with explicit Google STUN servers
+    const peer = new Peer({
+      config: {
+        'iceServers': [
+          { urls: 'stun:stun.l.google.com:19302' },
+          { urls: 'stun:stun1.l.google.com:19302' }
+        ]
+      }
+    }); 
+    
     let activeConnection;
 
     peer.on('open', (id) => {
       document.getElementById('my-id').innerText = id;
       
-      // Enable the copy button and add click logic
       const copyBtn = document.getElementById('copy-id-btn');
       copyBtn.disabled = false;
       
       copyBtn.addEventListener('click', () => {
         navigator.clipboard.writeText(id).then(() => {
-          // Visual feedback
           const originalText = copyBtn.innerText;
           copyBtn.innerText = 'Copied!';
           setTimeout(() => { copyBtn.innerText = originalText; }, 2000);
