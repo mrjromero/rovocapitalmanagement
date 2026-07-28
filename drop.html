@@ -2,21 +2,28 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>PeerJS Serverless Chat</title>
-  <!-- Load PeerJS from jsDelivr CDN -->
+  <title>PeerJS File Transfer</title>
   <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.5/dist/peerjs.min.js"></script>
   <style>
-    body { font-family: system-ui, sans-serif; padding: 20px; max-width: 400px; margin: auto; }
+    body { font-family: system-ui, sans-serif; padding: 20px; max-width: 450px; margin: auto; }
     #chat-box { height: 300px; border: 1px solid #ccc; overflow-y: auto; padding: 10px; margin: 10px 0; background: #f9f9f9;}
     .controls { display: flex; gap: 5px; margin-bottom: 10px; }
-    input { flex: 1; padding: 8px; }
+    input[type="text"] { flex: 1; padding: 8px; }
+    input[type="file"] { flex: 1; font-size: 14px; }
     button { padding: 8px 12px; cursor: pointer; }
+    .copy-btn { padding: 4px 8px; font-size: 12px; margin-left: 10px; cursor: pointer; }
+    a.download-link { color: #0066cc; font-weight: bold; text-decoration: none; }
+    a.download-link:hover { text-decoration: underline; }
   </style>
 </head>
 <body>
-  <h2>Peer-to-Peer Chat</h2>
+  <h2>Peer-to-Peer File Transfer</h2>
   
-  <p><strong>Your ID:</strong> <span id="my-id">Generating...</span></p>
+  <!-- New: Copy ID Button -->
+  <p>
+    <strong>Your ID:</strong> <span id="my-id">Generating...</span>
+    <button id="copy-id-btn" class="copy-btn" disabled>Copy ID</button>
+  </p>
   
   <div class="controls">
     <input type="text" id="remote-id" placeholder="Enter friend's ID">
@@ -27,34 +34,47 @@
   
   <div class="controls">
     <input type="text" id="msg-input" placeholder="Type a message..." disabled>
-    <button id="send-btn" disabled>Send</button>
+    <button id="send-btn" disabled>Send text</button>
+  </div>
+
+  <div class="controls">
+    <input type="file" id="file-input" disabled>
+    <button id="send-file-btn" disabled>Send file</button>
   </div>
 
   <script>
-    // 1. Initialize PeerJS (defaults to the free cloud signaling server)
     const peer = new Peer(); 
     let activeConnection;
 
-    // Display the random ID assigned to us by the server
     peer.on('open', (id) => {
       document.getElementById('my-id').innerText = id;
+      
+      // Enable the copy button and add click logic
+      const copyBtn = document.getElementById('copy-id-btn');
+      copyBtn.disabled = false;
+      
+      copyBtn.addEventListener('click', () => {
+        navigator.clipboard.writeText(id).then(() => {
+          // Visual feedback
+          const originalText = copyBtn.innerText;
+          copyBtn.innerText = 'Copied!';
+          setTimeout(() => { copyBtn.innerText = originalText; }, 2000);
+        }).catch(err => {
+          console.error('Failed to copy ID: ', err);
+        });
+      });
     });
 
-    // 2. Listen for INCOMING connection requests
     peer.on('connection', (conn) => {
       handleConnection(conn);
     });
 
-    // 3. Initiate an OUTGOING connection
     document.getElementById('connect-btn').addEventListener('click', () => {
       const remoteId = document.getElementById('remote-id').value;
       if (!remoteId) return;
-      
-      const conn = peer.connect(remoteId);
-      handleConnection(conn);
+      handleConnection(peer.connect(remoteId));
     });
 
-    // 4. Setup message sending and receiving logic for both peers
     function handleConnection(conn) {
       activeConnection = conn;
       
@@ -62,29 +82,51 @@
         log(`System: Connected to ${conn.peer}`);
         document.getElementById('msg-input').disabled = false;
         document.getElementById('send-btn').disabled = false;
+        document.getElementById('file-input').disabled = false;
+        document.getElementById('send-file-btn').disabled = false;
       });
 
       conn.on('data', (data) => {
-        log(`Friend: ${data}`);
+        if (data.type === 'file') {
+          const blob = new Blob([data.file], { type: data.filetype });
+          const downloadUrl = URL.createObjectURL(blob);
+          log(`Friend sent a file: <a class="download-link" href="${downloadUrl}" download="${data.filename}">Download ${data.filename}</a>`);
+        } else {
+          log(`Friend: ${data}`);
+        }
       });
     }
 
-    // 5. Send message on button click
     document.getElementById('send-btn').addEventListener('click', () => {
       const input = document.getElementById('msg-input');
-      const msg = input.value;
-      
-      if (msg && activeConnection) {
-        activeConnection.send(msg); // Send directly via WebRTC DataChannel
-        log(`You: ${msg}`);
+      if (input.value && activeConnection) {
+        activeConnection.send(input.value);
+        log(`You: ${input.value}`);
         input.value = '';
       }
     });
 
-    // Helper to print messages to the screen
+    document.getElementById('send-file-btn').addEventListener('click', () => {
+      const fileInput = document.getElementById('file-input');
+      const file = fileInput.files[0];
+      
+      if (file && activeConnection) {
+        log(`You sent a file: ${file.name} (${Math.round(file.size / 1024)} KB)`);
+        
+        activeConnection.send({
+          type: 'file',
+          file: file,
+          filename: file.name,
+          filetype: file.type
+        });
+        
+        fileInput.value = '';
+      }
+    });
+
     function log(text) {
       const chatBox = document.getElementById('chat-box');
-      chatBox.innerHTML += `<div>${text}</div>`;
+      chatBox.innerHTML += `<div>${text}</div><br>`;
       chatBox.scrollTop = chatBox.scrollHeight;
     }
   </script>
