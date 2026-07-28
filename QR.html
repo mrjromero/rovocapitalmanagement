@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Advanced QR Code Generator</title>
+    <title>QR Generator</title>
     <!-- Load qrcode.js via CDN -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
@@ -142,7 +142,8 @@
 <body>
 
     <div class="app-container">
-        <h2>Advanced QR Generator</h2>
+        <h2>IAD QR Generator</h2>
+        <p>Enter a URL or text to generate a downloadable QR code.</p>
         
         <div class="input-group">
             <label for="text-input">Content (URL or Text)</label>
@@ -154,10 +155,10 @@
                 <label for="resolution-select">Resolution</label>
                 <select id="resolution-select">
                     <option value="128">128 x 128</option>
-                    <option value="256" selected>256 x 256</option>
+                    <option value="256">256 x 256</option>
                     <option value="512">512 x 512</option>
                     <option value="1024">1024 x 1024</option>
-                    <option value="2048">2048 x 2048</option>
+                    <option value="2048" selected>2048 x 2048</option>
                 </select>
             </div>
             
