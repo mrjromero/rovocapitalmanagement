@@ -130,6 +130,7 @@
             align-items: center;
             justify-content: center;
             gap: 8px;
+            margin-top: 12px;
         }
         button.action-btn:hover { background: var(--primary-hover); }
         button.action-btn:active { transform: scale(0.98); }
@@ -163,7 +164,7 @@
             width: 100%;
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
             border-radius: 8px;
             border: 1px solid var(--border-color);
             background: var(--card-bg);
@@ -215,8 +216,6 @@
             margin-top: 20px;
         }
 
-        /* Actions Bar */
-        .header-actions { margin-bottom: 25px; display: flex; gap: 12px; }
         .error-text { color: #dc3545; font-size: 0.9em; margin-bottom: 5px; }
         
         #printable-area { padding: 5px 0; }
@@ -271,8 +270,7 @@
             }
             h2 { padding-right: 0; }
             
-            .header-actions { flex-direction: column; gap: 10px; }
-            .header-actions button { width: 100%; font-size: 16px; padding: 14px;}
+            button.action-btn { width: 100%; font-size: 16px; padding: 14px;}
             
             .name-select-btn {
                 display: block;
@@ -314,11 +312,6 @@
 </div>
 
 <div id="export-section" class="hidden card">
-    <div class="header-actions">
-        <button class="action-btn" id="btn-copy" onclick="copyToClipboard()">📋 Copy to Clipboard</button>
-        <button class="action-btn" id="btn-pdf" onclick="downloadPDF()">📄 Download as PDF</button>
-    </div>
-    
     <div id="printable-area"></div>
 </div>
 
@@ -343,7 +336,6 @@
             checkScheduleBelow: "Please check the Hotel Departure Schedule below to find your specific hotel departure time.",
             hotelScheduleTitle: "Hotel Departure Schedule",
             excelEmpty: "Excel file is empty.",
-            copyFail: "Failed to copy data. Your browser might block this action.",
             unknown: "Unknown",
             clipNotice: "--- 🚐 HOTEL DEPARTURE NOTICE ---",
             clipFlight: "Flight: {date} at {time}",
@@ -368,7 +360,6 @@
             checkScheduleBelow: "Por favor, consulte el Horario de Salida del Hotel a continuación para encontrar su hora específica de salida del hotel.",
             hotelScheduleTitle: "Horario de Salida del Hotel",
             excelEmpty: "El archivo Excel está vacío.",
-            copyFail: "Error al copiar los datos. Es posible que su navegador bloquee esta acción.",
             unknown: "Desconocido",
             clipNotice: "--- 🚐 AVISO DE SALIDA DEL HOTEL ---",
             clipFlight: "Vuelo: {date} a las {time}",
@@ -393,7 +384,6 @@
             checkScheduleBelow: "Veuillez consulter l'horaire de départ de l'hôtel ci-dessous pour trouver votre heure de départ spécifique.",
             hotelScheduleTitle: "Horaire de Départ de l'Hôtel",
             excelEmpty: "Le fichier Excel est vide.",
-            copyFail: "Échec de la copie des données. Votre navigateur pourrait bloquer cette action.",
             unknown: "Inconnu",
             clipNotice: "--- 🚐 AVIS DE DÉPART DE L'HÔTEL ---",
             clipFlight: "Vol: {date} à {time}",
@@ -420,8 +410,6 @@
         document.getElementById('search-input').placeholder = langData.searchPlaceholder;
         document.getElementById('ui-notice').innerHTML = langData.fallbackNotice;
         document.getElementById('ui-select-file').innerHTML = langData.selectFile;
-        document.getElementById('btn-copy').innerText = langData.copyBtn;
-        document.getElementById('btn-pdf').innerText = langData.pdfBtn;
 
         const searchInput = document.getElementById('search-input');
         if (searchInput.value.length >= 2) {
@@ -664,7 +652,10 @@
             if (key.toUpperCase().includes('DATE') || key.toUpperCase().includes('FECHA')) attDate = value;
             if (key.toUpperCase().includes('TIME') || key.toUpperCase().includes('HORA')) attTime = value;
         }
-        tableHtml += `</table></div>`;
+        
+        // Add Download to PDF button directly under Attendee Particulars table
+        tableHtml += `<button class="action-btn" id="btn-pdf" onclick="downloadPDF()">${langData.pdfBtn}</button>`;
+        tableHtml += `</div>`;
         
         const exactDepartureTime = findDepartureInfo(attDate, attTime);
         let narrativeHtml = `<div class="narrative-card">
@@ -683,6 +674,9 @@
             narrativeHtml += `<p>${fallbackFlight}</p>
             <p>${langData.checkScheduleBelow}</p>`;
         }
+        
+        // Add Copy to Clipboard button directly under Hotel Departure Notice
+        narrativeHtml += `<button class="action-btn" id="btn-copy" onclick="copyToClipboard()">${langData.copyBtn}</button>`;
         narrativeHtml += `</div>`;
 
         textForClipboard += `${langData.clipParticulars}\n`;
