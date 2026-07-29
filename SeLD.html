@@ -42,7 +42,7 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.05); 
             margin-bottom: 25px; 
             border: 1px solid rgba(0,0,0,0.02);
-            position: relative; /* For language selector positioning */
+            position: relative; 
         }
 
         /* Language Selector Styling */
@@ -78,7 +78,7 @@
             margin-bottom: 10px;
             font-weight: 700;
             letter-spacing: -0.5px;
-            padding-right: 120px; /* Make room for the language selector */
+            padding-right: 120px; 
         }
         h3 { 
             color: #0f172a; 
@@ -195,6 +195,15 @@
             letter-spacing: 0.5px;
         }
         
+        /* Highlight row styling for dates in timeline schedule */
+        .schedule-date-row td {
+            background-color: #e2e8f0 !important;
+            font-weight: 700;
+            color: #1e293b;
+            font-size: 1.05rem;
+            letter-spacing: 0.3px;
+        }
+
         .data-table tr:nth-child(even) td { background-color: var(--table-row-alt); }
         .data-table tr:hover td { background-color: #f1f5f9; transition: background-color 0.15s; }
         .data-table tr:last-child th, .data-table tr:last-child td { border-bottom: none; }
@@ -395,18 +404,16 @@
     let currentLang = 'en';
     const targetFileName = "departures.xlsx";
     
-    let timelineTableHtmlOnly = ""; // Stores just the <table> elements for the schedule
+    let timelineTableHtmlOnly = ""; 
     let timelineDataRaw = [];
     let attendeesData = [];
     let currentDisplayedData = ""; 
-    let activeMatchContext = null; // Stores the currently selected attendee for language switching
+    let activeMatchContext = null; 
 
-    // 1. Language Swapping Logic
     function changeLanguage() {
         currentLang = document.getElementById('lang-selector').value;
         const langData = i18n[currentLang];
         
-        // Update Static UI elements
         document.getElementById('ui-title').innerText = langData.title;
         document.getElementById('ui-desc').innerText = langData.desc;
         document.getElementById('search-input').placeholder = langData.searchPlaceholder;
@@ -415,19 +422,16 @@
         document.getElementById('btn-copy').innerText = langData.copyBtn;
         document.getElementById('btn-pdf').innerText = langData.pdfBtn;
 
-        // Re-trigger search if input has value to update button translations
         const searchInput = document.getElementById('search-input');
         if (searchInput.value.length >= 2) {
             searchInput.dispatchEvent(new Event('input'));
         }
 
-        // Re-render selected attendee if one is actively viewed
         if (activeMatchContext && !document.getElementById('export-section').classList.contains('hidden')) {
             displayData(activeMatchContext);
         }
     }
 
-    // 2. Initialize App
     window.onload = async () => {
         try {
             const response = await fetch(targetFileName);
@@ -448,7 +452,6 @@
         reader.readAsArrayBuffer(file);
     });
 
-    // 3. Process Excel
     function processExcel(data) {
         const workbook = XLSX.read(data, { type: 'array' });
         const sheetNames = workbook.SheetNames;
@@ -458,15 +461,23 @@
         const timelineSheet = workbook.Sheets[sheetNames[0]];
         timelineDataRaw = XLSX.utils.sheet_to_json(timelineSheet, { header: 1, raw: false });
         
-        // Generate just the table contents, the header is generated dynamically per language
         timelineTableHtmlOnly = `<div class="table-responsive"><table class='data-table'>`;
         timelineDataRaw.forEach(row => {
             if (row.length > 0) {
-                timelineTableHtmlOnly += "<tr>";
-                row.forEach(cell => {
-                    timelineTableHtmlOnly += `<td>${cell !== undefined ? cell : ''}</td>`;
-                });
-                timelineTableHtmlOnly += "</tr>";
+                // Check if this row is a date section header (e.g. contains month names or is a single cell/spanning row)
+                const cell0 = String(row[0] || "").trim();
+                const cell1 = String(row[1] || "").trim();
+                const isDateRow = (row.length === 1 || cell1 === "") && cell0 !== "" && !cell0.toLowerCase().includes('flight');
+
+                if (isDateRow) {
+                    timelineTableHtmlOnly += `<tr class="schedule-date-row"><td colspan="2">${cell0}</td></tr>`;
+                } else {
+                    timelineTableHtmlOnly += "<tr>";
+                    row.forEach(cell => {
+                        timelineTableHtmlOnly += `<td>${cell !== undefined ? cell : ''}</td>`;
+                    });
+                    timelineTableHtmlOnly += "</tr>";
+                }
             }
         });
         timelineTableHtmlOnly += "</table></div>";
@@ -484,7 +495,6 @@
         document.getElementById('search-section').classList.remove('hidden');
     }
 
-    // 4. Handle Search
     document.getElementById('search-input').addEventListener('input', (e) => {
         const query = e.target.value.toLowerCase().trim();
         const resultsContainer = document.getElementById('search-results');
@@ -516,7 +526,6 @@
             btn.className = "name-select-btn";
             btn.textContent = nameLabel;
             btn.onclick = (event) => {
-                // Ensure only this button is active
                 document.querySelectorAll('.name-select-btn').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
                 displayData(match);
@@ -524,14 +533,12 @@
             resultsContainer.appendChild(btn);
         });
         
-        // Retain active state if we are just switching languages while a match is shown
         if (activeMatchContext && !document.getElementById('export-section').classList.contains('hidden')) {
             const activeBtn = Array.from(document.querySelectorAll('.name-select-btn')).find(b => b.textContent === getMatchName(activeMatchContext));
             if (activeBtn) activeBtn.classList.add('active');
         }
     });
 
-    // Helper to get name for active match retention
     function getMatchName(match) {
         for (const [key, value] of Object.entries(match.data)) {
             if (key.toLowerCase().includes('name') || key.toLowerCase().includes('nombres')) return value;
@@ -539,7 +546,6 @@
         return "";
     }
 
-    // 5. Smart Time Matcher - Helpers
     function parseSingleTime(timeStr) {
         if (!timeStr) return null;
         let str = String(timeStr).trim().toLowerCase().replace(/\./g, '');
@@ -641,9 +647,8 @@
         return null;
     }
 
-    // 6. Display Data & Build Narrative
     function displayData(match) {
-        activeMatchContext = match; // Save state for language switching
+        activeMatchContext = match; 
         const langData = i18n[currentLang];
 
         let attDate = "";
@@ -687,7 +692,6 @@
         let fullHtml = narrativeHtml + tableHtml;
         fullHtml += `<hr style="margin: 40px 0; border: 0; border-top: 1px solid var(--border-color);">`;
         
-        // Append dynamically translated Schedule Header and the table
         const timelineHtmlFull = `<h3>${langData.hotelScheduleTitle}</h3>` + timelineTableHtmlOnly;
         fullHtml += timelineHtmlFull;
 
@@ -708,7 +712,6 @@
         document.getElementById('export-section').classList.remove('hidden');
     }
 
-    // 7. Copy to Clipboard
     function copyToClipboard() {
         navigator.clipboard.writeText(currentDisplayedData).then(() => {
             alert(i18n[currentLang].copySuccess);
@@ -717,7 +720,6 @@
         });
     }
 
-    // 8. Download PDF
     function downloadPDF() {
         const element = document.getElementById('printable-area');
         const opt = {
