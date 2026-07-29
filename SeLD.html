@@ -343,7 +343,6 @@
             checkScheduleBelow: "Please check the Hotel Departure Schedule below to find your specific hotel departure time.",
             hotelScheduleTitle: "Hotel Departure Schedule",
             excelEmpty: "Excel file is empty.",
-            copySuccess: "Departure data copied to clipboard!",
             copyFail: "Failed to copy data. Your browser might block this action.",
             unknown: "Unknown",
             clipNotice: "--- 🚐 HOTEL DEPARTURE NOTICE ---",
@@ -369,7 +368,6 @@
             checkScheduleBelow: "Por favor, consulte el Horario de Salida del Hotel a continuación para encontrar su hora específica de salida del hotel.",
             hotelScheduleTitle: "Horario de Salida del Hotel",
             excelEmpty: "El archivo Excel está vacío.",
-            copySuccess: "¡Datos de salida copiados al portapapeles!",
             copyFail: "Error al copiar los datos. Es posible que su navegador bloquee esta acción.",
             unknown: "Desconocido",
             clipNotice: "--- 🚐 AVISO DE SALIDA DEL HOTEL ---",
@@ -395,7 +393,6 @@
             checkScheduleBelow: "Veuillez consulter l'horaire de départ de l'hôtel ci-dessous pour trouver votre heure de départ spécifique.",
             hotelScheduleTitle: "Horaire de Départ de l'Hôtel",
             excelEmpty: "Le fichier Excel est vide.",
-            copySuccess: "Données de départ copiées dans le presse-papiers !",
             copyFail: "Échec de la copie des données. Votre navigateur pourrait bloquer cette action.",
             unknown: "Inconnu",
             clipNotice: "--- 🚐 AVIS DE DÉPART DE L'HÔTEL ---",
@@ -529,7 +526,8 @@
             btn.className = "name-select-btn";
             btn.textContent = nameLabel;
             btn.onclick = (event) => {
-                document.querySelectorAll('.name-select-btn').forEach(b => b.classList.remove('active'));
+                resultsContainer.innerHTML = "";
+                resultsContainer.appendChild(btn);
                 btn.classList.add('active');
                 displayData(match);
             };
@@ -692,26 +690,18 @@
             textForClipboard += `${key}: ${value}\n`;
         }
 
-        // For Screen / Clipboard: Notice + Attendee details ONLY (Timeline excluded from clipboard per instructions)
         let screenHtml = narrativeHtml + tableHtml;
-        
-        // For PDF: Add a page break element before the Hotel Departure Schedule section
         let pdfHtml = screenHtml + `<div class="pdf-page-break"></div>` + `<h3>${langData.hotelScheduleTitle}</h3>` + timelineTableHtmlOnly;
 
-        // Keep printable area with PDF version so downloadPDF includes it on a clean page
         document.getElementById('printable-area').innerHTML = pdfHtml;
-        
-        // Save clipboard data (Notice + Attendee details without schedule)
         currentDisplayedData = textForClipboard;
         
         document.getElementById('export-section').classList.remove('hidden');
     }
 
     function copyToClipboard() {
-        navigator.clipboard.writeText(currentDisplayedData).then(() => {
-            alert(i18n[currentLang].copySuccess);
-        }).catch(err => {
-            alert(i18n[currentLang].copyFail);
+        navigator.clipboard.writeText(currentDisplayedData).catch(err => {
+            console.error("Failed to copy data.", err);
         });
     }
 
