@@ -83,6 +83,36 @@
         .error-text { color: #dc3545; font-size: 0.9em; margin-bottom: 5px; }
         
         #printable-area { padding: 15px; }
+
+        /* Styling for the new Notice Card */
+        .narrative-card {
+            background: #e1f5fe;
+            border-left: 6px solid #0288d1;
+            padding: 15px 20px;
+            border-radius: 6px;
+            margin-bottom: 25px;
+            color: #01579b;
+        }
+        .narrative-card h3 { 
+            color: #0277bd; 
+            margin-top: 0; 
+            margin-bottom: 10px;
+            font-size: 1.3em;
+        }
+        .narrative-card p {
+            margin: 8px 0;
+            font-size: 1.05em;
+        }
+        .highlight-time {
+            font-size: 1.25em;
+            font-weight: 700;
+            color: #d32f2f;
+            background: #ffffff;
+            padding: 3px 10px;
+            border-radius: 4px;
+            border: 1px solid #ffcdd2;
+            display: inline-block;
+        }
     </style>
 </head>
 <body>
@@ -119,6 +149,7 @@
     const targetFileName = "departures.xlsx";
     
     let timelineHtml = "";
+    let timelineDataRaw = []; // Holds the raw timeline array for the matching logic
     let attendeesData = [];
     let currentDisplayedData = ""; // Used to hold plain-text for the clipboard
 
@@ -135,7 +166,7 @@
         }
     };
 
-    // 2. Handle manual file selection (if auto-fetch fails)
+    // 2. Handle manual file selection
     document.getElementById('excel-file').addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (!file) return;
@@ -153,15 +184,13 @@
 
         // Tab 1: Extract General Timeline
         const timelineSheet = workbook.Sheets[sheetNames[0]];
-        // FIX applied here: added { raw: false } to read formatted text dates/times
-        const timelineJson = XLSX.utils.sheet_to_json(timelineSheet, { header: 1, raw: false });
+        timelineDataRaw = XLSX.utils.sheet_to_json(timelineSheet, { header: 1, raw: false });
         
         timelineHtml = `<h3>General Timeline (${sheetNames[0]})</h3><table class='data-table'>`;
-        timelineJson.forEach(row => {
+        timelineDataRaw.forEach(row => {
             if (row.length > 0) {
                 timelineHtml += "<tr>";
                 row.forEach(cell => {
-                    // Render cell value or an empty space
                     timelineHtml += `<td>${cell !== undefined ? cell : ''}</td>`;
                 });
                 timelineHtml += "</tr>";
@@ -173,15 +202,12 @@
         attendeesData = [];
         for (let i = 1; i < sheetNames.length; i++) {
             const sheet = workbook.Sheets[sheetNames[i]];
-            // FIX applied here: added { raw: false } to read formatted text dates/times
             const sheetData = XLSX.utils.sheet_to_json(sheet, { raw: false });
-            
             sheetData.forEach(row => {
                 attendeesData.push({ sheetName: sheetNames[i], data: row });
             });
         }
 
-        // Show the search section
         document.getElementById('file-upload-section').classList.add('hidden');
         document.getElementById('search-section').classList.remove('hidden');
     }
@@ -194,9 +220,8 @@
         resultsContainer.innerHTML = "";
         document.getElementById('export-section').classList.add('hidden');
         
-        if (query.length < 2) return; // Wait for at least 2 characters
+        if (query.length < 2) return; 
 
-        // Search through all properties in the attendee data across all tabs
         const matches = attendeesData.filter(att => 
             Object.values(att.data).some(val => String(val).toLowerCase().includes(query))
         );
@@ -206,9 +231,7 @@
             return;
         }
 
-        // Create selectable buttons for matching names
         matches.forEach((match, index) => {
-            // Attempt to find a 'Name' field to label the button; default to generic label if missing
             let nameLabel = "Record Match " + (index + 1);
             for (const [key, value] of Object.entries(match.data)) {
                 if (key.toLowerCase().includes('name') || key.toLowerCase().includes('nombres')) {
@@ -225,27 +248,160 @@
         });
     });
 
-    // 5. Display Selected Attendee Data
+    // 5. Smart Time Matcher - Helpers
+    function parseSingleTime(timeStr) {
+        if (!timeStr) return null;
+        let str = String(timeStr).trim().toLowerCase().replace(/\./g, '');
+        str = str.replace(/12:00\s*m/, '12:00 pm');
+        
+        let match = str.match(/(\d+):(\d+)\s*(am|pm)/);
+        if (!match) return null;
+        
+        let h = parseInt(match[1], 10);
+        let m = parseInt(match[2], 10);
+        let p = match[3];
+        
+        return (p === 'pm' && h !== 12 ? h + 12 : (p === 'am' && h === 12 ? 0 : h)) * 60 + m;
+    }
+
+    function parseTimeRange(rangeStr) {
+        let parts = rangeStr.split('-');
+        if (parts.length !== 2) return null;
+        
+        let startStr = parts[0].trim().toLowerCase().replace(/\./g, '');
+        let endStr = parts[1].trim().toLowerCase().replace(/\./g, '');
+        
+        startStr = startStr.replace(/12:00\s*m/, '12:00 pm');
+        endStr = endStr.replace(/12:00\s*m/, '12:00 pm');
+        
+        let startMatch = startStr.match(/(\d+):(\d+)\s*(am|pm)?/);
+        let endMatch = endStr.match(/(\d+):(\d+)\s*(am|pm)?/);
+        
+        if (!startMatch || !endMatch) return null;
+        
+        let startH = parseInt(startMatch[1], 10);
+        let startM = parseInt(startMatch[2], 10);
+        let startP = startMatch[3];
+        
+        let endH = parseInt(endMatch[1], 10);
+        let endM = parseInt(endMatch[2], 10);
+        let endP = endMatch[3];
+        
+        if (!endP) {
+            if (endH === 12) endP = 'pm'; else endP = startP || 'am';
+        }
+        if (!startP) {
+            if (startH === 12) startP = 'pm'; else startP = endP || 'am';
+        }
+        
+        let start = (startP === 'pm' && startH !== 12 ? startH + 12 : (startP === 'am' && startH === 12 ? 0 : startH)) * 60 + startM;
+        let end = (endP === 'pm' && endH !== 12 ? endH + 12 : (endP === 'am' && endH === 12 ? 0 : endH)) * 60 + endM;
+        
+        // Auto-correct AM/PM typoes spanning past noon/midnight
+        if (end < start && end + 12 * 60 >= start) end += 12 * 60;
+        
+        return { start, end };
+    }
+
+    function findDepartureInfo(attDate, attTime) {
+        if (!attDate || !attTime) return null;
+        
+        const flightTime = parseSingleTime(attTime);
+        if (flightTime === null) return null;
+        
+        let numbers = [];
+        let words = [];
+        String(attDate).toLowerCase().split(/[-/\s,]+/).forEach(p => {
+            if (!isNaN(p) && p.trim() !== '') numbers.push(p);
+            else if (p.length >= 3) words.push(p.substring(0, 3));
+        });
+        
+        let currentDateContext = "";
+        
+        for (let i = 0; i < timelineDataRaw.length; i++) {
+            const row = timelineDataRaw[i];
+            
+            if (row.length > 0) {
+                const cell0 = String(row[0]).trim();
+                const cell1 = row[1] !== undefined ? String(row[1]).trim() : "";
+                
+                // Track the date groupings
+                if ((row.length === 1 || cell1 === "") && cell0 !== "" && !cell0.toLowerCase().includes('flight')) {
+                    currentDateContext = cell0.toLowerCase();
+                    continue;
+                }
+                
+                if (row.length >= 2) {
+                    const rangeStr = String(row[0]);
+                    const depTimeStr = String(row[1]);
+                    
+                    if (rangeStr.toLowerCase().includes("flight") || rangeStr.toLowerCase().includes("departure")) continue;
+                    
+                    // Validate Date Match
+                    let dateMatch = true;
+                    if (words.length > 0 && !currentDateContext.includes(words[0])) dateMatch = false;
+                    if (numbers.length > 0 && !numbers.some(n => currentDateContext.includes(n))) dateMatch = false;
+                    if (!dateMatch) continue;
+                    
+                    // Validate Time Match
+                    const range = parseTimeRange(rangeStr);
+                    if (range && flightTime >= range.start && flightTime <= range.end) {
+                        return depTimeStr;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    // 6. Display Data & Build Narrative
     function displayData(match, event) {
-        // Manage active button styling
         document.querySelectorAll('.name-select-btn').forEach(b => b.classList.remove('active'));
         if (event) event.target.classList.add('active');
 
-        // Build HTML for the particular attendee
-        let html = `<h3>Attendee Particulars (Tab: ${match.sheetName})</h3><table class="data-table">`;
-        let textForClipboard = `--- Attendee Particulars ---\n`;
+        let attDate = "";
+        let attTime = "";
+        
+        let tableHtml = `<h3>Attendee Particulars (Tab: ${match.sheetName})</h3><table class="data-table">`;
+        let textForClipboard = ``;
         
         for (const [key, value] of Object.entries(match.data)) {
-            html += `<tr><th>${key}</th><td>${value}</td></tr>`;
+            tableHtml += `<tr><th>${key}</th><td>${value}</td></tr>`;
+            if (key.toUpperCase().includes('DATE')) attDate = value;
+            if (key.toUpperCase().includes('TIME')) attTime = value;
+        }
+        tableHtml += `</table>`;
+        
+        // Build Narrative Card
+        const exactDepartureTime = findDepartureInfo(attDate, attTime);
+        let narrativeHtml = `<div class="narrative-card">
+            <h3>🚐 Hotel Departure Notice</h3>`;
+            
+        if (exactDepartureTime) {
+            narrativeHtml += `<p>Based on your flight scheduled for <strong>${attTime}</strong> on <strong>${attDate}</strong>:</p>
+            <p>Please meet transportation in the hotel lobby at <span class="highlight-time">${exactDepartureTime}</span>.</p>`;
+            
+            textForClipboard += `--- 🚐 HOTEL DEPARTURE NOTICE ---\n`;
+            textForClipboard += `Flight: ${attDate} at ${attTime}\n`;
+            textForClipboard += `TRANSPORTATION MEETS IN LOBBY AT: ${exactDepartureTime}\n\n`;
+        } else {
+            narrativeHtml += `<p>Your flight is scheduled for <strong>${attTime || "Unknown"}</strong> on <strong>${attDate || "Unknown"}</strong>.</p>
+            <p>Please check the General Timeline below to find your specific hotel departure time.</p>`;
+        }
+        narrativeHtml += `</div>`;
+
+        // Assemble text for clipboard
+        textForClipboard += `--- Attendee Particulars ---\n`;
+        for (const [key, value] of Object.entries(match.data)) {
             textForClipboard += `${key}: ${value}\n`;
         }
-        html += `</table>`;
-        
-        // Append Timeline
-        html += `<hr style="margin: 30px 0; border: 0; border-top: 1px solid #eee;">`;
-        html += timelineHtml;
 
-        // Extract Timeline data as plain text for the clipboard
+        // Add Timeline to HTML
+        let fullHtml = narrativeHtml + tableHtml;
+        fullHtml += `<hr style="margin: 30px 0; border: 0; border-top: 1px solid #eee;">`;
+        fullHtml += timelineHtml;
+
+        // Add Timeline to text clipboard
         let timelineText = "\n--- General Timeline ---\n";
         const tempDiv = document.createElement('div');
         tempDiv.innerHTML = timelineHtml;
@@ -259,11 +415,11 @@
         }
         
         currentDisplayedData = textForClipboard + timelineText;
-        document.getElementById('printable-area').innerHTML = html;
+        document.getElementById('printable-area').innerHTML = fullHtml;
         document.getElementById('export-section').classList.remove('hidden');
     }
 
-    // 6. Copy to Clipboard Functionality
+    // 7. Copy to Clipboard Functionality
     function copyToClipboard() {
         navigator.clipboard.writeText(currentDisplayedData).then(() => {
             alert("Departure data copied to clipboard!");
@@ -272,7 +428,7 @@
         });
     }
 
-    // 7. Download PDF Functionality
+    // 8. Download PDF Functionality
     function downloadPDF() {
         const element = document.getElementById('printable-area');
         const opt = {
