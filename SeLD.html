@@ -116,7 +116,6 @@
 </div>
 
 <script>
-    // Updated target filename
     const targetFileName = "departures.xlsx";
     
     let timelineHtml = "";
@@ -154,7 +153,8 @@
 
         // Tab 1: Extract General Timeline
         const timelineSheet = workbook.Sheets[sheetNames[0]];
-        const timelineJson = XLSX.utils.sheet_to_json(timelineSheet, { header: 1 });
+        // FIX applied here: added { raw: false } to read formatted text dates/times
+        const timelineJson = XLSX.utils.sheet_to_json(timelineSheet, { header: 1, raw: false });
         
         timelineHtml = `<h3>General Timeline (${sheetNames[0]})</h3><table class='data-table'>`;
         timelineJson.forEach(row => {
@@ -173,7 +173,8 @@
         attendeesData = [];
         for (let i = 1; i < sheetNames.length; i++) {
             const sheet = workbook.Sheets[sheetNames[i]];
-            const sheetData = XLSX.utils.sheet_to_json(sheet);
+            // FIX applied here: added { raw: false } to read formatted text dates/times
+            const sheetData = XLSX.utils.sheet_to_json(sheet, { raw: false });
             
             sheetData.forEach(row => {
                 attendeesData.push({ sheetName: sheetNames[i], data: row });
@@ -210,7 +211,7 @@
             // Attempt to find a 'Name' field to label the button; default to generic label if missing
             let nameLabel = "Record Match " + (index + 1);
             for (const [key, value] of Object.entries(match.data)) {
-                if (key.toLowerCase().includes('name')) {
+                if (key.toLowerCase().includes('name') || key.toLowerCase().includes('nombres')) {
                     nameLabel = value;
                     break;
                 }
