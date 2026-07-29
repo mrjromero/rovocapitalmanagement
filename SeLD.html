@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendee Departure Information</title>
+    
+    <!-- SheetJS for processing the Excel File -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+    <!-- html2pdf for rendering the PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    
+    <style>
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            max-width: 900px; 
+            margin: 0 auto; 
+            padding: 30px 20px; 
+            background: #f4f7f6; 
+            color: #333; 
+        }
+        .card { 
+            background: #fff; 
+            padding: 25px; 
+            border-radius: 8px; 
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05); 
+            margin-bottom: 25px; 
+        }
+        h2, h3 { color: #2c3e50; margin-top: 0; }
+        
+        input[type="text"] { 
+            width: 100%; 
+            padding: 12px; 
+            margin: 10px 0; 
+            border: 1px solid #ced4da; 
+            border-radius: 5px; 
+            box-sizing: border-box; 
+            font-size: 16px;
+        }
+        input[type="file"] { margin-top: 10px; }
+        
+        button { 
+            background: #0056b3; 
+            color: white; 
+            border: none; 
+            padding: 10px 18px; 
+            border-radius: 5px; 
+            cursor: pointer; 
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+        button:hover { background: #004494; }
+        
+        .name-select-btn { 
+            background: #e9ecef; 
+            color: #333; 
+            border: 1px solid #ced4da; 
+            margin: 5px 5px 5px 0; 
+        }
+        .name-select-btn:hover { background: #dde2e6; }
+        .name-select-btn.active { 
+            background: #28a745; 
+            color: white; 
+            border-color: #28a745; 
+        }
+        
+        .hidden { display: none !important; }
+        
+        .data-table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin-top: 15px; 
+            margin-bottom: 25px;
+        }
+        .data-table th, .data-table td { 
+            padding: 10px; 
+            border: 1px solid #e0e0e0; 
+            text-align: left; 
+        }
+        .data-table th { background: #f8f9fa; width: 35%; font-weight: 600;}
+        
+        .header-actions { margin-bottom: 20px; display: flex; gap: 10px; }
+        .error-text { color: #dc3545; font-size: 0.9em; margin-bottom: 5px; }
+        
+        #printable-area { padding: 15px; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>Attendee Departure Search</h2>
+    <p>Search for your name to retrieve your departure information and general conference timeline.</p>
+    
+    <!-- Fallback if the browser blocks automatic fetching of the local Excel file -->
+    <div id="file-upload-section" class="hidden">
+        <p class="error-text"><strong>Notice:</strong> Browser security prevented auto-loading. Please select the file manually.</p>
+        <label for="excel-file">Select <strong>DEPARTURES SELD.  SELD TTO PUBLISH.xlsx</strong>:</label><br>
+        <input type="file" id="excel-file" accept=".xlsx, .xls">
+    </div>
+
+    <!-- Main Search UI -->
+    <div id="search-section" class="hidden">
+        <input type="text" id="search-input" placeholder="Type your name to search...">
+        <div id="search-results"></div>
+    </div>
+</div>
+
+<div id="export-section" class="hidden card">
+    <div class="header-actions">
+        <button onclick="copyToClipboard()">📋 Copy to Clipboard</button>
+        <button onclick="downloadPDF()">📄 Download as PDF</button>
+    </div>
+    
+    <!-- Data rendered here for both on-screen viewing and PDF export -->
+    <div id="printable-area"></div>
+</div>
+
+<script>
+    const targetFileName = "DEPARTURES SELD.  SELD TTO PUBLISH.xlsx";
+    
+    let timelineHtml = "";
+    let attendeesData = [];
+    let currentDisplayedData = ""; // Used to hold plain-text for the clipboard
+
+    // 1. Attempt to auto-fetch the file on load
+    window.onload = async () => {
+        try {
+            const response = await fetch(targetFileName);
+            if (!response.ok) throw new Error("Fetch failed");
+            const arrayBuffer = await response.arrayBuffer();
+            processExcel(arrayBuffer);
+        } catch (e) {
+            console.warn("Could not auto-fetch " + targetFileName + ". Showing file input fallback.");
+            document.getElementById('file-upload-section').classList.remove('hidden');
+        }
+    };
+
+    // 2. Handle manual file selection (if auto-fetch fails)
+    document.getElementById('excel-file').addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (evt) => processExcel(evt.target.result);
+        reader.readAsArrayBuffer(file);
+    });
+
+    // 3. Process and parse the Excel file
+    function processExcel(data) {
+        const workbook = XLSX.read(data, { type: 'array' });
+        const sheetNames = workbook.SheetNames;
+        
+        if (sheetNames.length === 0) return alert("Excel file is empty.");
+
+        // Tab 1: Extract General Timeline
+        const timelineSheet = workbook.Sheets[sheetNames[0]];
+        const timelineJson = XLSX.utils.sheet_to_json(timelineSheet, { header: 1 });
+        
+        timelineHtml = `<h3>General Timeline (${sheetNames[0]})</h3><table class='data-table'>`;
+        timelineJson.forEach(row => {
+            if (row.length > 0) {
+                timelineHtml += "<tr>";
+                row.forEach(cell => {
+                    // Render cell value or an empty space
+                    timelineHtml += `<td>${cell !== undefined ? cell : ''}</td>`;
+                });
+                timelineHtml += "</tr>";
+            }
+        });
+        timelineHtml += "</table>";
+
+        // Subsequent Tabs: Extract Attendee Particulars
+        attendeesData = [];
+        for (let i = 1; i < sheetNames.length; i++) {
+            const sheet = workbook.Sheets[sheetNames[i]];
+            const sheetData = XLSX.utils.sheet_to_json(sheet);
+            
+            sheetData.forEach(row => {
+                attendeesData.push({ sheetName: sheetNames[i], data: row });
+            });
+        }
+
+        // Show the search section
+        document.getElementById('file-upload-section').classList.add('hidden');
+        document.getElementById('search-section').classList.remove('hidden');
+    }
+
+    // 4. Handle Search Input
+    document.getElementById('search-input').addEventListener('input', (e) => {
+        const query = e.target.value.toLowerCase().trim();
+        const resultsContainer = document.getElementById('search-results');
+        
+        resultsContainer.innerHTML = "";
+        document.getElementById('export-section').classList.add('hidden');
+        
+        if (query.length < 2) return; // Wait for at least 2 characters
+
+        // Search through all properties in the attendee data across all tabs
+        const matches = attendeesData.filter(att => 
+            Object.values(att.data).some(val => String(val).toLowerCase().includes(query))
+        );
+
+        if (matches.length === 0) {
+            resultsContainer.innerHTML = "<p>No matches found.</p>";
+            return;
+        }
+
+        // Create selectable buttons for matching names
+        matches.forEach((match, index) => {
+            // Attempt to find a 'Name' field to label the button; default to generic label if missing
+            let nameLabel = "Record Match " + (index + 1);
+            for (const [key, value] of Object.entries(match.data)) {
+                if (key.toLowerCase().includes('name')) {
+                    nameLabel = value;
+                    break;
+                }
+            }
+            
+            const btn = document.createElement('button');
+            btn.className = "name-select-btn";
+            btn.textContent = nameLabel;
+            btn.onclick = (event) => displayData(match, event);
+            resultsContainer.appendChild(btn);
+        });
+    });
+
+    // 5. Display Selected Attendee Data
+    function displayData(match, event) {
+        // Manage active button styling
+        document.querySelectorAll('.name-select-btn').forEach(b => b.classList.remove('active'));
+        if (event) event.target.classList.add('active');
+
+        // Build HTML for the particular attendee
+        let html = `<h3>Attendee Particulars (Tab: ${match.sheetName})</h3><table class="data-table">`;
+        let textForClipboard = `--- Attendee Particulars ---\n`;
+        
+        for (const [key, value] of Object.entries(match.data)) {
+            html += `<tr><th>${key}</th><td>${value}</td></tr>`;
+            textForClipboard += `${key}: ${value}\n`;
+        }
+        html += `</table>`;
+        
+        // Append Timeline
+        html += `<hr style="margin: 30px 0; border: 0; border-top: 1px solid #eee;">`;
+        html += timelineHtml;
+
+        // Extract Timeline data as plain text for the clipboard
+        let timelineText = "\n--- General Timeline ---\n";
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = timelineHtml;
+        const table = tempDiv.querySelector('table');
+        if (table) {
+            for (let row of table.rows) {
+                let rowData = [];
+                for (let cell of row.cells) rowData.push(cell.innerText.trim());
+                timelineText += rowData.join(" | ") + "\n";
+            }
+        }
+        
+        currentDisplayedData = textForClipboard + timelineText;
+        document.getElementById('printable-area').innerHTML = html;
+        document.getElementById('export-section').classList.remove('hidden');
+    }
+
+    // 6. Copy to Clipboard Functionality
+    function copyToClipboard() {
+        navigator.clipboard.writeText(currentDisplayedData).then(() => {
+            alert("Departure data copied to clipboard!");
+        }).catch(err => {
+            alert("Failed to copy data. Your browser might block this action.");
+        });
+    }
+
+    // 7. Download PDF Functionality
+    function downloadPDF() {
+        const element = document.getElementById('printable-area');
+        const opt = {
+            margin:       0.5,
+            filename:     'Departure_Information.pdf',
+            image:        { type: 'jpeg', quality: 0.98 },
+            html2canvas:  { scale: 2 }, // Scale to improve table resolution
+            jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+        };
+        html2pdf().set(opt).from(element).save();
+    }
+</script>
+
+</body>
+</html>
