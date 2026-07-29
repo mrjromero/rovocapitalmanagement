@@ -130,10 +130,24 @@
             align-items: center;
             justify-content: center;
             gap: 8px;
-            margin-top: 12px;
         }
         button.action-btn:hover { background: var(--primary-hover); }
         button.action-btn:active { transform: scale(0.98); }
+
+        /* PDF Button Styling (Floating bottom bar or bottom-right action) */
+        .pdf-action-container {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: flex-end;
+        }
+        button.pdf-btn {
+            background: #0f172a;
+        }
+        button.pdf-btn:hover {
+            background: #1e293b;
+        }
         
         /* Search Result Buttons */
         #search-results { margin-top: 15px; }
@@ -164,7 +178,7 @@
             width: 100%;
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
-            margin-bottom: 20px;
+            margin-bottom: 30px;
             border-radius: 8px;
             border: 1px solid var(--border-color);
             background: var(--card-bg);
@@ -216,8 +230,11 @@
             margin-top: 20px;
         }
 
-        .error-text { color: #dc3545; font-size: 0.9em; margin-bottom: 5px; }
-        
+        /* Hide specific elements during PDF rendering */
+        @media print {
+            .no-print { display: none !important; }
+        }
+
         #printable-area { padding: 5px 0; }
 
         /* Notice Card */
@@ -252,6 +269,11 @@
             display: inline-block;
             box-shadow: 0 1px 2px rgba(0,0,0,0.05);
         }
+        .notice-action-bar {
+            margin-top: 15px;
+            display: flex;
+            justify-content: flex-start;
+        }
         
         /* =========================================
            MOBILE SPECIFIC ADJUSTMENTS 
@@ -270,7 +292,8 @@
             }
             h2 { padding-right: 0; }
             
-            button.action-btn { width: 100%; font-size: 16px; padding: 14px;}
+            button.action-btn, button.pdf-btn { width: 100%; font-size: 16px; padding: 14px;}
+            .pdf-action-container { justify-content: stretch; }
             
             .name-select-btn {
                 display: block;
@@ -313,6 +336,11 @@
 
 <div id="export-section" class="hidden card">
     <div id="printable-area"></div>
+    
+    <!-- Download PDF Button placed cleanly at the bottom of the card -->
+    <div class="pdf-action-container">
+        <button class="action-btn pdf-btn" id="btn-pdf" onclick="downloadPDF()">📄 Download as PDF</button>
+    </div>
 </div>
 
 <script>
@@ -410,6 +438,12 @@
         document.getElementById('search-input').placeholder = langData.searchPlaceholder;
         document.getElementById('ui-notice').innerHTML = langData.fallbackNotice;
         document.getElementById('ui-select-file').innerHTML = langData.selectFile;
+        document.getElementById('btn-pdf').innerText = langData.pdfBtn;
+        
+        // Update copy buttons dynamically if rendered
+        document.querySelectorAll('.copy-btn-dynamic').forEach(btn => {
+            btn.innerText = langData.copyBtn;
+        });
 
         const searchInput = document.getElementById('search-input');
         if (searchInput.value.length >= 2) {
@@ -652,10 +686,7 @@
             if (key.toUpperCase().includes('DATE') || key.toUpperCase().includes('FECHA')) attDate = value;
             if (key.toUpperCase().includes('TIME') || key.toUpperCase().includes('HORA')) attTime = value;
         }
-        
-        // Add Download to PDF button directly under Attendee Particulars table
-        tableHtml += `<button class="action-btn" id="btn-pdf" onclick="downloadPDF()">${langData.pdfBtn}</button>`;
-        tableHtml += `</div>`;
+        tableHtml += `</table></div>`;
         
         const exactDepartureTime = findDepartureInfo(attDate, attTime);
         let narrativeHtml = `<div class="narrative-card">
@@ -675,8 +706,11 @@
             <p>${langData.checkScheduleBelow}</p>`;
         }
         
-        // Add Copy to Clipboard button directly under Hotel Departure Notice
-        narrativeHtml += `<button class="action-btn" id="btn-copy" onclick="copyToClipboard()">${langData.copyBtn}</button>`;
+        // Add Copy to Clipboard button directly inside/under the Hotel Departure Notice card (hidden from print/PDF)
+        narrativeHtml += `<div class="notice-action-bar no-print">
+            <button class="action-btn copy-btn-dynamic" onclick="copyToClipboard()">${langData.copyBtn}</button>
+        </div>`;
+        
         narrativeHtml += `</div>`;
 
         textForClipboard += `${langData.clipParticulars}\n`;
