@@ -90,7 +90,6 @@
     
     .message { margin-bottom: 8px; line-height: 1.4; }
     
-    /* New CSS class for debug logs */
     .debug-log { 
       margin-bottom: 8px; 
       font-size: 0.85em; 
@@ -157,9 +156,8 @@
       shareBtn.addEventListener('click', async () => {
         if (navigator.share) {
           try {
+            // UPDATED: Now only sending the raw URL, no extra title or text
             await navigator.share({
-              title: 'Send files securely',
-              text: 'Tap this link to connect directly to my device:',
               url: shareUrl
             });
           } catch (err) {
@@ -195,8 +193,6 @@
     function handleConnection(conn) {
       activeConnection = conn;
       
-      // === NEW: Extract the underlying WebRTC Connection for Debugging ===
-      // PeerJS instantiates the raw WebRTC object shortly after connection creation
       const pollPc = setInterval(() => {
         if (conn.peerConnection) {
           clearInterval(pollPc);
@@ -204,12 +200,10 @@
           
           logDebug('Network negotiation started...');
 
-          // 1. Listen for connection state changes (checking, connected, failed)
           pc.addEventListener('iceconnectionstatechange', () => {
             logDebug(`Status updated: <strong>${pc.iceConnectionState.toUpperCase()}</strong>`);
           });
 
-          // 2. Listen for route discoveries (Host, STUN, TURN)
           pc.addEventListener('icecandidate', (event) => {
             if (event.candidate) {
               const candidateStr = event.candidate.candidate;
@@ -224,7 +218,6 @@
           });
         }
       }, 50);
-      // ===================================================================
 
       conn.on('open', () => {
         log(`<em>System: Connected to ${conn.peer}</em>`);
@@ -272,14 +265,12 @@
       }
     });
 
-    // Helper for main chat logs
     function log(text) {
       const chatBox = document.getElementById('chat-box');
       chatBox.innerHTML += `<div class="message">${text}</div>`;
       chatBox.scrollTop = chatBox.scrollHeight;
     }
     
-    // Helper for smaller, grey debugging logs
     function logDebug(text) {
       const chatBox = document.getElementById('chat-box');
       chatBox.innerHTML += `<div class="debug-log">🛠 ${text}</div>`;
