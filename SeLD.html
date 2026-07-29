@@ -208,6 +208,13 @@
         .data-table tr:hover td { background-color: #f1f5f9; transition: background-color 0.15s; }
         .data-table tr:last-child th, .data-table tr:last-child td { border-bottom: none; }
         
+        /* Page break styling for PDF export */
+        .pdf-page-break {
+            page-break-before: always;
+            break-before: page;
+            margin-top: 20px;
+        }
+
         /* Actions Bar */
         .header-actions { margin-bottom: 25px; display: flex; gap: 12px; }
         .error-text { color: #dc3545; font-size: 0.9em; margin-bottom: 5px; }
@@ -342,8 +349,7 @@
             clipNotice: "--- 🚐 HOTEL DEPARTURE NOTICE ---",
             clipFlight: "Flight: {date} at {time}",
             clipMeet: "TRANSPORTATION MEETS IN LOBBY AT: {time}",
-            clipParticulars: "--- Attendee Particulars ---",
-            clipSchedule: "--- Hotel Departure Schedule ---"
+            clipParticulars: "--- Attendee Particulars ---"
         },
         es: {
             title: "Búsqueda de Salida de Asistentes",
@@ -369,8 +375,7 @@
             clipNotice: "--- 🚐 AVISO DE SALIDA DEL HOTEL ---",
             clipFlight: "Vuelo: {date} a las {time}",
             clipMeet: "EL TRANSPORTE SE REÚNE EN EL LOBBY A LAS: {time}",
-            clipParticulars: "--- Detalles del Asistente ---",
-            clipSchedule: "--- Horario de Salida del Hotel ---"
+            clipParticulars: "--- Detalles del Asistente ---"
         },
         fr: {
             title: "Recherche de Départ des Participants",
@@ -396,8 +401,7 @@
             clipNotice: "--- 🚐 AVIS DE DÉPART DE L'HÔTEL ---",
             clipFlight: "Vol: {date} à {time}",
             clipMeet: "LE TRANSPORT SE RÉUNIT DANS LE HALL À: {time}",
-            clipParticulars: "--- Détails du Participant ---",
-            clipSchedule: "--- Horaire de Départ de l'Hôtel ---"
+            clipParticulars: "--- Détails du Participant ---"
         }
     };
 
@@ -464,7 +468,6 @@
         timelineTableHtmlOnly = `<div class="table-responsive"><table class='data-table'>`;
         timelineDataRaw.forEach(row => {
             if (row.length > 0) {
-                // Check if this row is a date section header (e.g. contains month names or is a single cell/spanning row)
                 const cell0 = String(row[0] || "").trim();
                 const cell1 = String(row[1] || "").trim();
                 const isDateRow = (row.length === 1 || cell1 === "") && cell0 !== "" && !cell0.toLowerCase().includes('flight');
@@ -689,26 +692,18 @@
             textForClipboard += `${key}: ${value}\n`;
         }
 
-        let fullHtml = narrativeHtml + tableHtml;
-        fullHtml += `<hr style="margin: 40px 0; border: 0; border-top: 1px solid var(--border-color);">`;
+        // For Screen / Clipboard: Notice + Attendee details ONLY (Timeline excluded from clipboard per instructions)
+        let screenHtml = narrativeHtml + tableHtml;
         
-        const timelineHtmlFull = `<h3>${langData.hotelScheduleTitle}</h3>` + timelineTableHtmlOnly;
-        fullHtml += timelineHtmlFull;
+        // For PDF: Add a page break element before the Hotel Departure Schedule section
+        let pdfHtml = screenHtml + `<div class="pdf-page-break"></div>` + `<h3>${langData.hotelScheduleTitle}</h3>` + timelineTableHtmlOnly;
 
-        let timelineText = `\n${langData.clipSchedule}\n`;
-        const tempDiv = document.createElement('div');
-        tempDiv.innerHTML = timelineHtmlFull;
-        const table = tempDiv.querySelector('table');
-        if (table) {
-            for (let row of table.rows) {
-                let rowData = [];
-                for (let cell of row.cells) rowData.push(cell.innerText.trim());
-                timelineText += rowData.join(" | ") + "\n";
-            }
-        }
+        // Keep printable area with PDF version so downloadPDF includes it on a clean page
+        document.getElementById('printable-area').innerHTML = pdfHtml;
         
-        currentDisplayedData = textForClipboard + timelineText;
-        document.getElementById('printable-area').innerHTML = fullHtml;
+        // Save clipboard data (Notice + Attendee details without schedule)
+        currentDisplayedData = textForClipboard;
+        
         document.getElementById('export-section').classList.remove('hidden');
     }
 
