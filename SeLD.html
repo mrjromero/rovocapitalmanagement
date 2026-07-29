@@ -444,7 +444,7 @@
         }
 
         if (activeMatchContext && !document.getElementById('export-section').classList.contains('hidden')) {
-            displayData(activeMatchContext, false); // Don't re-scroll on language change
+            displayData(activeMatchContext, false); 
         }
     }
 
@@ -544,7 +544,7 @@
                 resultsContainer.innerHTML = "";
                 resultsContainer.appendChild(btn);
                 btn.classList.add('active');
-                displayData(match, true); // Scroll to top when chosen by user
+                displayData(match, true); 
             };
             resultsContainer.appendChild(btn);
         });
@@ -615,6 +615,7 @@
         return { start, end };
     }
 
+    // Intelligent Time Matcher with "Closest Earlier Time" Fallback
     function findDepartureInfo(attDate, attTime) {
         if (!attDate || !attTime) return null;
         
@@ -629,6 +630,7 @@
         });
         
         let currentDateContext = "";
+        let dayValidRanges = []; // Store parsed ranges and corresponding hotel departure times for this date
         
         for (let i = 0; i < timelineDataRaw.length; i++) {
             const row = timelineDataRaw[i];
@@ -654,13 +656,43 @@
                     if (!dateMatch) continue;
                     
                     const range = parseTimeRange(rangeStr);
-                    if (range && flightTime >= range.start && flightTime <= range.end) {
-                        return depTimeStr;
+                    if (range) {
+                        dayValidRanges.push({ start: range.start, end: range.end, depTime: depTimeStr });
                     }
                 }
             }
         }
-        return null;
+        
+        if (dayValidRanges.length === 0) return null;
+
+        // 1. First, check for an exact bracket match
+        for (let item of dayValidRanges) {
+            if (flightTime >= item.start && flightTime <= item.end) {
+                return item.depTime;
+            }
+        }
+
+        // 2. Fallback: Find the closest earlier time bracket (delta where range end <= flight time)
+        let closestEarlier = null;
+        let minDelta = Infinity;
+
+        for (let item of dayValidRanges) {
+            // Check if this range is earlier than or equal to the flight time
+            if (item.end <= flightTime) {
+                let delta = flightTime - item.end;
+                if (delta < minDelta) {
+                    minDelta = delta;
+                    closestEarlier = item.depTime;
+                }
+            }
+        }
+
+        if (closestEarlier !== null) {
+            return closestEarlier;
+        }
+
+        // 3. Absolute fallback: Return the very first departure time of that day if flight is earlier than all ranges
+        return dayValidRanges[0].depTime;
     }
 
     function displayData(match, shouldScroll = false) {
@@ -718,7 +750,6 @@
         
         document.getElementById('export-section').classList.remove('hidden');
 
-        // Smoothly scroll the browser so the Hotel Departure Notice card is at the top of the viewport
         if (shouldScroll) {
             const noticeCard = document.getElementById('departure-notice-card');
             if (noticeCard) {
