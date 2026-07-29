@@ -2,7 +2,6 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <!-- CRITICAL FOR MOBILE: Tells the browser to scale the app to the device width -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>PeerJS File Transfer</title>
   <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.5/dist/peerjs.min.js"></script>
@@ -47,10 +46,8 @@
       word-break: break-all;
     }
 
-    /* Flex-wrap allows buttons to drop below inputs on tiny screens */
     .controls { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
     
-    /* 16px font size prevents iOS auto-zoom. Larger padding makes better touch targets */
     input[type="text"], input[type="file"] { 
       flex: 1; 
       min-width: 150px;
@@ -79,7 +76,6 @@
     
     .copy-btn { padding: 6px 12px; font-size: 14px; border-radius: 6px; }
     
-    /* Height adjusts to screen size, word-wrap prevents text from breaking the layout */
     #chat-box { 
       height: 40vh; 
       min-height: 250px;
@@ -103,7 +99,8 @@
     
     <div class="id-container">
       <span><strong>Your ID:</strong> <span id="my-id">Generating...</span></span>
-      <button id="copy-id-btn" class="copy-btn" disabled>Copy</button>
+      <!-- Changed from Copy ID to Share Link -->
+      <button id="share-btn" class="copy-btn" disabled>Share Link</button>
     </div>
     
     <div class="controls">
@@ -125,7 +122,6 @@
   </div>
 
   <script>
-    // 1. Initialize PeerJS with explicit STUN and TURN servers
     const peer = new Peer({
       config: {
         'iceServers': [
@@ -140,19 +136,57 @@
     
     let activeConnection;
 
+    // === URL PARAMETER CHECK ===
+    // Check if someone opened a link like https://yourdomain.com/drop?id=XXXXX
+    const urlParams = new URLSearchParams(window.location.search);
+    const targetPeerId = urlParams.get('id');
+
     peer.on('open', (id) => {
       document.getElementById('my-id').innerText = id;
       
-      const copyBtn = document.getElementById('copy-id-btn');
-      copyBtn.disabled = false;
+      const shareBtn = document.getElementById('share-btn');
+      shareBtn.disabled = false;
       
-      copyBtn.addEventListener('click', () => {
-        navigator.clipboard.writeText(id).then(() => {
-          const originalText = copyBtn.innerText;
-          copyBtn.innerText = 'Copied!';
-          setTimeout(() => { copyBtn.innerText = originalText; }, 2000);
-        }).catch(err => console.error('Failed to copy: ', err));
+      // Generate the clean share URL for the current user's session
+      const shareUrl = `${window.location.origin}${window.location.pathname}?id=${id}`;
+      
+      // Handle the Share Link button click
+      shareBtn.addEventListener('click', async () => {
+        // If on mobile, use the native sharing menu (iMessage, WhatsApp, Email, etc)
+        if (navigator.share) {
+          try {
+            await navigator.share({
+              title: 'Send files securely',
+              text: 'Tap this link to connect directly to my device:',
+              url: shareUrl
+            });
+          } catch (err) {
+            console.log('User cancelled share or share failed', err);
+          }
+        } else {
+          // If on desktop (or unsupported browser), fallback to copying to clipboard
+          navigator.clipboard.writeText(shareUrl).then(() => {
+            const originalText = shareBtn.innerText;
+            shareBtn.innerText = 'Link Copied!';
+            setTimeout(() => { shareBtn.innerText = originalText; }, 2000);
+          }).catch(err => console.error('Failed to copy: ', err));
+        }
       });
+
+      // === AUTO-CONNECT EXECUTION ===
+      // If a target ID was found in the URL, automatically initiate the connection
+      if (targetPeerId) {
+        document.getElementById('remote-id').value = targetPeerId;
+        log(`<em>System: Auto-connecting to link...</em>`);
+        
+        // Trigger the connection process
+        setTimeout(() => {
+          handleConnection(peer.connect(targetPeerId));
+        }, 500);
+
+        // Clean up the URL in the browser bar so refreshing doesn't re-trigger it
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
     });
 
     peer.on('connection', (conn) => {
