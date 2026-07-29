@@ -94,7 +94,7 @@
     <!-- Fallback if the browser blocks automatic fetching of the local Excel file -->
     <div id="file-upload-section" class="hidden">
         <p class="error-text"><strong>Notice:</strong> Browser security prevented auto-loading. Please select the file manually.</p>
-        <label for="excel-file">Select <strong>DEPARTURES SELD.  SELD TTO PUBLISH.xlsx</strong>:</label><br>
+        <label for="excel-file">Select <strong>departures.xlsx</strong>:</label><br>
         <input type="file" id="excel-file" accept=".xlsx, .xls">
     </div>
 
@@ -116,7 +116,8 @@
 </div>
 
 <script>
-    const targetFileName = "DEPARTURES SELD.  SELD TTO PUBLISH.xlsx";
+    // Updated target filename
+    const targetFileName = "departures.xlsx";
     
     let timelineHtml = "";
     let attendeesData = [];
