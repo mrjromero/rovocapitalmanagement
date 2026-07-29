@@ -66,20 +66,30 @@
         
         .hidden { display: none !important; }
         
+        /* Responsive Table Wrapper */
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            margin-bottom: 25px;
+            border-radius: 4px;
+        }
+        
         .data-table { 
             width: 100%; 
             border-collapse: collapse; 
             margin-top: 15px; 
-            margin-bottom: 25px;
+            min-width: 450px; /* Prevents squishing on very narrow screens */
         }
         .data-table th, .data-table td { 
-            padding: 10px; 
+            padding: 12px 10px; 
             border: 1px solid #e0e0e0; 
             text-align: left; 
         }
         .data-table th { background: #f8f9fa; width: 35%; font-weight: 600;}
+        .data-table tr:nth-child(even) { background-color: #fafafa; }
         
-        .header-actions { margin-bottom: 20px; display: flex; gap: 10px; }
+        .header-actions { margin-bottom: 20px; display: flex; gap: 10px; flex-wrap: wrap; }
         .error-text { color: #dc3545; font-size: 0.9em; margin-bottom: 5px; }
         
         #printable-area { padding: 15px; }
@@ -113,13 +123,20 @@
             border: 1px solid #ffcdd2;
             display: inline-block;
         }
+        
+        /* Mobile specific adjustments */
+        @media (max-width: 600px) {
+            body { padding: 15px 10px; }
+            .card { padding: 15px; }
+            .data-table th, .data-table td { padding: 8px; font-size: 0.9em; }
+        }
     </style>
 </head>
 <body>
 
 <div class="card">
     <h2>Attendee Departure Search</h2>
-    <p>Search for your name to retrieve your departure information and general conference timeline.</p>
+    <p>Search for your name to retrieve your departure information and hotel departure schedule.</p>
     
     <!-- Fallback if the browser blocks automatic fetching of the local Excel file -->
     <div id="file-upload-section" class="hidden">
@@ -186,7 +203,8 @@
         const timelineSheet = workbook.Sheets[sheetNames[0]];
         timelineDataRaw = XLSX.utils.sheet_to_json(timelineSheet, { header: 1, raw: false });
         
-        timelineHtml = `<h3>General Timeline (${sheetNames[0]})</h3><table class='data-table'>`;
+        // Changed title and added table-responsive wrapper
+        timelineHtml = `<h3>Hotel Departure Schedule</h3><div class="table-responsive"><table class='data-table'>`;
         timelineDataRaw.forEach(row => {
             if (row.length > 0) {
                 timelineHtml += "<tr>";
@@ -196,7 +214,7 @@
                 timelineHtml += "</tr>";
             }
         });
-        timelineHtml += "</table>";
+        timelineHtml += "</table></div>";
 
         // Subsequent Tabs: Extract Attendee Particulars
         attendeesData = [];
@@ -362,7 +380,8 @@
         let attDate = "";
         let attTime = "";
         
-        let tableHtml = `<h3>Attendee Particulars (Tab: ${match.sheetName})</h3><table class="data-table">`;
+        // Use table-responsive here as well for consistency
+        let tableHtml = `<h3>Attendee Particulars (Tab: ${match.sheetName})</h3><div class="table-responsive"><table class="data-table">`;
         let textForClipboard = ``;
         
         for (const [key, value] of Object.entries(match.data)) {
@@ -370,7 +389,7 @@
             if (key.toUpperCase().includes('DATE')) attDate = value;
             if (key.toUpperCase().includes('TIME')) attTime = value;
         }
-        tableHtml += `</table>`;
+        tableHtml += `</table></div>`;
         
         // Build Narrative Card
         const exactDepartureTime = findDepartureInfo(attDate, attTime);
@@ -386,7 +405,7 @@
             textForClipboard += `TRANSPORTATION MEETS IN LOBBY AT: ${exactDepartureTime}\n\n`;
         } else {
             narrativeHtml += `<p>Your flight is scheduled for <strong>${attTime || "Unknown"}</strong> on <strong>${attDate || "Unknown"}</strong>.</p>
-            <p>Please check the General Timeline below to find your specific hotel departure time.</p>`;
+            <p>Please check the Hotel Departure Schedule below to find your specific hotel departure time.</p>`;
         }
         narrativeHtml += `</div>`;
 
@@ -402,7 +421,7 @@
         fullHtml += timelineHtml;
 
         // Add Timeline to text clipboard
-        let timelineText = "\n--- General Timeline ---\n";
+        let timelineText = "\n--- Hotel Departure Schedule ---\n";
         const tempDiv = document.createElement('div');
         tempDiv.innerHTML = timelineHtml;
         const table = tempDiv.querySelector('table');
