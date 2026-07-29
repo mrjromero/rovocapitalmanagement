@@ -42,7 +42,33 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.05); 
             margin-bottom: 25px; 
             border: 1px solid rgba(0,0,0,0.02);
+            position: relative; /* For language selector positioning */
         }
+
+        /* Language Selector Styling */
+        .lang-selector-wrapper {
+            position: absolute;
+            top: 25px;
+            right: 30px;
+        }
+        
+        .lang-selector {
+            padding: 6px 30px 6px 12px;
+            font-size: 14px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            background-color: #f8fafc;
+            color: var(--text-main);
+            cursor: pointer;
+            outline: none;
+            appearance: none;
+            -webkit-appearance: none;
+            background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2364748b%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+            background-repeat: no-repeat;
+            background-position: right 10px top 50%;
+            background-size: 10px auto;
+        }
+        .lang-selector:focus { border-color: var(--primary); }
         
         /* Section Header Styling */
         h2 { 
@@ -52,6 +78,7 @@
             margin-bottom: 10px;
             font-weight: 700;
             letter-spacing: -0.5px;
+            padding-right: 120px; /* Make room for the language selector */
         }
         h3 { 
             color: #0f172a; 
@@ -88,7 +115,7 @@
         input[type="file"] { margin-top: 10px; font-size: 14px; }
         
         /* Touch-Friendly Buttons */
-        button { 
+        button.action-btn { 
             background: var(--primary); 
             color: white; 
             border: none; 
@@ -104,8 +131,8 @@
             justify-content: center;
             gap: 8px;
         }
-        button:hover { background: var(--primary-hover); }
-        button:active { transform: scale(0.98); }
+        button.action-btn:hover { background: var(--primary-hover); }
+        button.action-btn:active { transform: scale(0.98); }
         
         /* Search Result Buttons */
         #search-results { margin-top: 15px; }
@@ -115,6 +142,10 @@
             border: 1px solid #cbd5e1; 
             margin: 0 8px 8px 0; 
             font-weight: 500;
+            padding: 10px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
         }
         .name-select-btn:hover { background: #e2e8f0; border-color: #94a3b8; }
         .name-select-btn.active { 
@@ -142,7 +173,7 @@
         .data-table { 
             width: 100%; 
             border-collapse: collapse; 
-            table-layout: auto; /* Allows table to organically fit the screen */
+            table-layout: auto; 
         }
         
         .data-table th, .data-table td { 
@@ -159,12 +190,11 @@
             width: 35%; 
             font-weight: 700;
             color: #475569;
-            text-transform: uppercase; /* Creates a clean, structured look */
+            text-transform: uppercase; 
             font-size: 12px;
             letter-spacing: 0.5px;
         }
         
-        /* Alternating row colors and hover effects */
         .data-table tr:nth-child(even) td { background-color: var(--table-row-alt); }
         .data-table tr:hover td { background-color: #f1f5f9; transition: background-color 0.15s; }
         .data-table tr:last-child th, .data-table tr:last-child td { border-bottom: none; }
@@ -215,6 +245,16 @@
             body { padding: 12px 10px; }
             .card { padding: 20px 15px; border-radius: 10px;}
             
+            .lang-selector-wrapper {
+                position: relative;
+                top: 0;
+                right: 0;
+                margin-bottom: 15px;
+                display: flex;
+                justify-content: flex-end;
+            }
+            h2 { padding-right: 0; }
+            
             .header-actions { flex-direction: column; gap: 10px; }
             .header-actions button { width: 100%; font-size: 16px; padding: 14px;}
             
@@ -234,12 +274,20 @@
 <body>
 
 <div class="card">
-    <h2>Attendee Departure Search</h2>
-    <p>Search for your name to retrieve your departure information and hotel departure schedule.</p>
+    <div class="lang-selector-wrapper">
+        <select class="lang-selector" id="lang-selector" onchange="changeLanguage()">
+            <option value="en">English</option>
+            <option value="es">Español</option>
+            <option value="fr">Français</option>
+        </select>
+    </div>
+
+    <h2 id="ui-title">Attendee Departure Search</h2>
+    <p id="ui-desc">Search for your name to retrieve your departure information and hotel departure schedule.</p>
     
     <div id="file-upload-section" class="hidden">
-        <p class="error-text"><strong>Notice:</strong> Browser security prevented auto-loading. Please select the file manually.</p>
-        <label for="excel-file">Select <strong>departures.xlsx</strong>:</label><br>
+        <p class="error-text" id="ui-notice"><strong>Notice:</strong> Browser security prevented auto-loading. Please select the file manually.</p>
+        <label for="excel-file" id="ui-select-file">Select <strong>departures.xlsx</strong>:</label><br>
         <input type="file" id="excel-file" accept=".xlsx, .xls">
     </div>
 
@@ -251,21 +299,135 @@
 
 <div id="export-section" class="hidden card">
     <div class="header-actions">
-        <button onclick="copyToClipboard()">📋 Copy to Clipboard</button>
-        <button onclick="downloadPDF()">📄 Download as PDF</button>
+        <button class="action-btn" id="btn-copy" onclick="copyToClipboard()">📋 Copy to Clipboard</button>
+        <button class="action-btn" id="btn-pdf" onclick="downloadPDF()">📄 Download as PDF</button>
     </div>
     
     <div id="printable-area"></div>
 </div>
 
 <script>
+    // --- Translations Dictionary ---
+    const i18n = {
+        en: {
+            title: "Attendee Departure Search",
+            desc: "Search for your name to retrieve your departure information and hotel departure schedule.",
+            searchPlaceholder: "Type your name to search...",
+            fallbackNotice: "<strong>Notice:</strong> Browser security prevented auto-loading. Please select the file manually.",
+            selectFile: "Select <strong>departures.xlsx</strong>:",
+            copyBtn: "📋 Copy to Clipboard",
+            pdfBtn: "📄 Download as PDF",
+            noMatches: "No matches found.",
+            recordMatch: "Record Match",
+            attendeeParticulars: "Attendee Particulars (Tab: {tab})",
+            hotelNoticeTitle: "🚐 Hotel Departure Notice",
+            flightBasedOn: "Based on your flight scheduled for <strong>{time}</strong> on <strong>{date}</strong>:",
+            meetAt: "Please meet transportation in the hotel lobby at",
+            flightScheduledFor: "Your flight is scheduled for <strong>{time}</strong> on <strong>{date}</strong>.",
+            checkScheduleBelow: "Please check the Hotel Departure Schedule below to find your specific hotel departure time.",
+            hotelScheduleTitle: "Hotel Departure Schedule",
+            excelEmpty: "Excel file is empty.",
+            copySuccess: "Departure data copied to clipboard!",
+            copyFail: "Failed to copy data. Your browser might block this action.",
+            unknown: "Unknown",
+            clipNotice: "--- 🚐 HOTEL DEPARTURE NOTICE ---",
+            clipFlight: "Flight: {date} at {time}",
+            clipMeet: "TRANSPORTATION MEETS IN LOBBY AT: {time}",
+            clipParticulars: "--- Attendee Particulars ---",
+            clipSchedule: "--- Hotel Departure Schedule ---"
+        },
+        es: {
+            title: "Búsqueda de Salida de Asistentes",
+            desc: "Busque su nombre para recuperar su información de salida y el horario de salida del hotel.",
+            searchPlaceholder: "Escriba su nombre para buscar...",
+            fallbackNotice: "<strong>Aviso:</strong> La seguridad del navegador impidió la carga automática. Seleccione el archivo manualmente.",
+            selectFile: "Seleccione <strong>departures.xlsx</strong>:",
+            copyBtn: "📋 Copiar al Portapapeles",
+            pdfBtn: "📄 Descargar como PDF",
+            noMatches: "No se encontraron coincidencias.",
+            recordMatch: "Coincidencia de Registro",
+            attendeeParticulars: "Detalles del Asistente (Pestaña: {tab})",
+            hotelNoticeTitle: "🚐 Aviso de Salida del Hotel",
+            flightBasedOn: "Basado en su vuelo programado para las <strong>{time}</strong> el <strong>{date}</strong>:",
+            meetAt: "Por favor, reúnase con el transporte en el lobby del hotel a las",
+            flightScheduledFor: "Su vuelo está programado para las <strong>{time}</strong> el <strong>{date}</strong>.",
+            checkScheduleBelow: "Por favor, consulte el Horario de Salida del Hotel a continuación para encontrar su hora específica de salida del hotel.",
+            hotelScheduleTitle: "Horario de Salida del Hotel",
+            excelEmpty: "El archivo Excel está vacío.",
+            copySuccess: "¡Datos de salida copiados al portapapeles!",
+            copyFail: "Error al copiar los datos. Es posible que su navegador bloquee esta acción.",
+            unknown: "Desconocido",
+            clipNotice: "--- 🚐 AVISO DE SALIDA DEL HOTEL ---",
+            clipFlight: "Vuelo: {date} a las {time}",
+            clipMeet: "EL TRANSPORTE SE REÚNE EN EL LOBBY A LAS: {time}",
+            clipParticulars: "--- Detalles del Asistente ---",
+            clipSchedule: "--- Horario de Salida del Hotel ---"
+        },
+        fr: {
+            title: "Recherche de Départ des Participants",
+            desc: "Recherchez votre nom pour récupérer vos informations de départ et l'horaire de départ de l'hôtel.",
+            searchPlaceholder: "Tapez votre nom pour rechercher...",
+            fallbackNotice: "<strong>Avis:</strong> La sécurité du navigateur a empêché le chargement automatique. Veuillez sélectionner le fichier manuellement.",
+            selectFile: "Sélectionnez <strong>departures.xlsx</strong>:",
+            copyBtn: "📋 Copier dans le Presse-papiers",
+            pdfBtn: "📄 Télécharger en PDF",
+            noMatches: "Aucun résultat trouvé.",
+            recordMatch: "Correspondance de Dossier",
+            attendeeParticulars: "Détails du Participant (Onglet: {tab})",
+            hotelNoticeTitle: "🚐 Avis de Départ de l'Hôtel",
+            flightBasedOn: "Basé sur votre vol prévu à <strong>{time}</strong> le <strong>{date}</strong>:",
+            meetAt: "Veuillez rejoindre le transport dans le hall de l'hôtel à",
+            flightScheduledFor: "Votre vol est prévu à <strong>{time}</strong> le <strong>{date}</strong>.",
+            checkScheduleBelow: "Veuillez consulter l'horaire de départ de l'hôtel ci-dessous pour trouver votre heure de départ spécifique.",
+            hotelScheduleTitle: "Horaire de Départ de l'Hôtel",
+            excelEmpty: "Le fichier Excel est vide.",
+            copySuccess: "Données de départ copiées dans le presse-papiers !",
+            copyFail: "Échec de la copie des données. Votre navigateur pourrait bloquer cette action.",
+            unknown: "Inconnu",
+            clipNotice: "--- 🚐 AVIS DE DÉPART DE L'HÔTEL ---",
+            clipFlight: "Vol: {date} à {time}",
+            clipMeet: "LE TRANSPORT SE RÉUNIT DANS LE HALL À: {time}",
+            clipParticulars: "--- Détails du Participant ---",
+            clipSchedule: "--- Horaire de Départ de l'Hôtel ---"
+        }
+    };
+
+    let currentLang = 'en';
     const targetFileName = "departures.xlsx";
     
-    let timelineHtml = "";
+    let timelineTableHtmlOnly = ""; // Stores just the <table> elements for the schedule
     let timelineDataRaw = [];
     let attendeesData = [];
     let currentDisplayedData = ""; 
+    let activeMatchContext = null; // Stores the currently selected attendee for language switching
 
+    // 1. Language Swapping Logic
+    function changeLanguage() {
+        currentLang = document.getElementById('lang-selector').value;
+        const langData = i18n[currentLang];
+        
+        // Update Static UI elements
+        document.getElementById('ui-title').innerText = langData.title;
+        document.getElementById('ui-desc').innerText = langData.desc;
+        document.getElementById('search-input').placeholder = langData.searchPlaceholder;
+        document.getElementById('ui-notice').innerHTML = langData.fallbackNotice;
+        document.getElementById('ui-select-file').innerHTML = langData.selectFile;
+        document.getElementById('btn-copy').innerText = langData.copyBtn;
+        document.getElementById('btn-pdf').innerText = langData.pdfBtn;
+
+        // Re-trigger search if input has value to update button translations
+        const searchInput = document.getElementById('search-input');
+        if (searchInput.value.length >= 2) {
+            searchInput.dispatchEvent(new Event('input'));
+        }
+
+        // Re-render selected attendee if one is actively viewed
+        if (activeMatchContext && !document.getElementById('export-section').classList.contains('hidden')) {
+            displayData(activeMatchContext);
+        }
+    }
+
+    // 2. Initialize App
     window.onload = async () => {
         try {
             const response = await fetch(targetFileName);
@@ -286,26 +448,28 @@
         reader.readAsArrayBuffer(file);
     });
 
+    // 3. Process Excel
     function processExcel(data) {
         const workbook = XLSX.read(data, { type: 'array' });
         const sheetNames = workbook.SheetNames;
         
-        if (sheetNames.length === 0) return alert("Excel file is empty.");
+        if (sheetNames.length === 0) return alert(i18n[currentLang].excelEmpty);
 
         const timelineSheet = workbook.Sheets[sheetNames[0]];
         timelineDataRaw = XLSX.utils.sheet_to_json(timelineSheet, { header: 1, raw: false });
         
-        timelineHtml = `<h3>Hotel Departure Schedule</h3><div class="table-responsive"><table class='data-table'>`;
+        // Generate just the table contents, the header is generated dynamically per language
+        timelineTableHtmlOnly = `<div class="table-responsive"><table class='data-table'>`;
         timelineDataRaw.forEach(row => {
             if (row.length > 0) {
-                timelineHtml += "<tr>";
+                timelineTableHtmlOnly += "<tr>";
                 row.forEach(cell => {
-                    timelineHtml += `<td>${cell !== undefined ? cell : ''}</td>`;
+                    timelineTableHtmlOnly += `<td>${cell !== undefined ? cell : ''}</td>`;
                 });
-                timelineHtml += "</tr>";
+                timelineTableHtmlOnly += "</tr>";
             }
         });
-        timelineHtml += "</table></div>";
+        timelineTableHtmlOnly += "</table></div>";
 
         attendeesData = [];
         for (let i = 1; i < sheetNames.length; i++) {
@@ -320,6 +484,7 @@
         document.getElementById('search-section').classList.remove('hidden');
     }
 
+    // 4. Handle Search
     document.getElementById('search-input').addEventListener('input', (e) => {
         const query = e.target.value.toLowerCase().trim();
         const resultsContainer = document.getElementById('search-results');
@@ -334,12 +499,12 @@
         );
 
         if (matches.length === 0) {
-            resultsContainer.innerHTML = "<p>No matches found.</p>";
+            resultsContainer.innerHTML = `<p>${i18n[currentLang].noMatches}</p>`;
             return;
         }
 
         matches.forEach((match, index) => {
-            let nameLabel = "Record Match " + (index + 1);
+            let nameLabel = i18n[currentLang].recordMatch + " " + (index + 1);
             for (const [key, value] of Object.entries(match.data)) {
                 if (key.toLowerCase().includes('name') || key.toLowerCase().includes('nombres')) {
                     nameLabel = value;
@@ -350,11 +515,31 @@
             const btn = document.createElement('button');
             btn.className = "name-select-btn";
             btn.textContent = nameLabel;
-            btn.onclick = (event) => displayData(match, event);
+            btn.onclick = (event) => {
+                // Ensure only this button is active
+                document.querySelectorAll('.name-select-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                displayData(match);
+            };
             resultsContainer.appendChild(btn);
         });
+        
+        // Retain active state if we are just switching languages while a match is shown
+        if (activeMatchContext && !document.getElementById('export-section').classList.contains('hidden')) {
+            const activeBtn = Array.from(document.querySelectorAll('.name-select-btn')).find(b => b.textContent === getMatchName(activeMatchContext));
+            if (activeBtn) activeBtn.classList.add('active');
+        }
     });
 
+    // Helper to get name for active match retention
+    function getMatchName(match) {
+        for (const [key, value] of Object.entries(match.data)) {
+            if (key.toLowerCase().includes('name') || key.toLowerCase().includes('nombres')) return value;
+        }
+        return "";
+    }
+
+    // 5. Smart Time Matcher - Helpers
     function parseSingleTime(timeStr) {
         if (!timeStr) return null;
         let str = String(timeStr).trim().toLowerCase().replace(/\./g, '');
@@ -456,52 +641,59 @@
         return null;
     }
 
-    function displayData(match, event) {
-        document.querySelectorAll('.name-select-btn').forEach(b => b.classList.remove('active'));
-        if (event) event.target.classList.add('active');
+    // 6. Display Data & Build Narrative
+    function displayData(match) {
+        activeMatchContext = match; // Save state for language switching
+        const langData = i18n[currentLang];
 
         let attDate = "";
         let attTime = "";
         
-        let tableHtml = `<h3>Attendee Particulars (Tab: ${match.sheetName})</h3><div class="table-responsive"><table class="data-table">`;
+        const particularsTitle = langData.attendeeParticulars.replace("{tab}", match.sheetName);
+        let tableHtml = `<h3>${particularsTitle}</h3><div class="table-responsive"><table class="data-table">`;
         let textForClipboard = ``;
         
         for (const [key, value] of Object.entries(match.data)) {
             tableHtml += `<tr><th>${key}</th><td>${value}</td></tr>`;
-            if (key.toUpperCase().includes('DATE')) attDate = value;
-            if (key.toUpperCase().includes('TIME')) attTime = value;
+            if (key.toUpperCase().includes('DATE') || key.toUpperCase().includes('FECHA')) attDate = value;
+            if (key.toUpperCase().includes('TIME') || key.toUpperCase().includes('HORA')) attTime = value;
         }
         tableHtml += `</table></div>`;
         
         const exactDepartureTime = findDepartureInfo(attDate, attTime);
         let narrativeHtml = `<div class="narrative-card">
-            <h3>🚐 Hotel Departure Notice</h3>`;
+            <h3>${langData.hotelNoticeTitle}</h3>`;
             
         if (exactDepartureTime) {
-            narrativeHtml += `<p>Based on your flight scheduled for <strong>${attTime}</strong> on <strong>${attDate}</strong>:</p>
-            <p>Please meet transportation in the hotel lobby at <span class="highlight-time">${exactDepartureTime}</span>.</p>`;
+            const flightBasedHtml = langData.flightBasedOn.replace('{time}', attTime).replace('{date}', attDate);
+            narrativeHtml += `<p>${flightBasedHtml}</p>
+            <p>${langData.meetAt} <span class="highlight-time">${exactDepartureTime}</span>.</p>`;
             
-            textForClipboard += `--- 🚐 HOTEL DEPARTURE NOTICE ---\n`;
-            textForClipboard += `Flight: ${attDate} at ${attTime}\n`;
-            textForClipboard += `TRANSPORTATION MEETS IN LOBBY AT: ${exactDepartureTime}\n\n`;
+            textForClipboard += `${langData.clipNotice}\n`;
+            textForClipboard += `${langData.clipFlight.replace('{date}', attDate).replace('{time}', attTime)}\n`;
+            textForClipboard += `${langData.clipMeet.replace('{time}', exactDepartureTime)}\n\n`;
         } else {
-            narrativeHtml += `<p>Your flight is scheduled for <strong>${attTime || "Unknown"}</strong> on <strong>${attDate || "Unknown"}</strong>.</p>
-            <p>Please check the Hotel Departure Schedule below to find your specific hotel departure time.</p>`;
+            const fallbackFlight = langData.flightScheduledFor.replace('{time}', attTime || langData.unknown).replace('{date}', attDate || langData.unknown);
+            narrativeHtml += `<p>${fallbackFlight}</p>
+            <p>${langData.checkScheduleBelow}</p>`;
         }
         narrativeHtml += `</div>`;
 
-        textForClipboard += `--- Attendee Particulars ---\n`;
+        textForClipboard += `${langData.clipParticulars}\n`;
         for (const [key, value] of Object.entries(match.data)) {
             textForClipboard += `${key}: ${value}\n`;
         }
 
         let fullHtml = narrativeHtml + tableHtml;
         fullHtml += `<hr style="margin: 40px 0; border: 0; border-top: 1px solid var(--border-color);">`;
-        fullHtml += timelineHtml;
+        
+        // Append dynamically translated Schedule Header and the table
+        const timelineHtmlFull = `<h3>${langData.hotelScheduleTitle}</h3>` + timelineTableHtmlOnly;
+        fullHtml += timelineHtmlFull;
 
-        let timelineText = "\n--- Hotel Departure Schedule ---\n";
+        let timelineText = `\n${langData.clipSchedule}\n`;
         const tempDiv = document.createElement('div');
-        tempDiv.innerHTML = timelineHtml;
+        tempDiv.innerHTML = timelineHtmlFull;
         const table = tempDiv.querySelector('table');
         if (table) {
             for (let row of table.rows) {
@@ -516,14 +708,16 @@
         document.getElementById('export-section').classList.remove('hidden');
     }
 
+    // 7. Copy to Clipboard
     function copyToClipboard() {
         navigator.clipboard.writeText(currentDisplayedData).then(() => {
-            alert("Departure data copied to clipboard!");
+            alert(i18n[currentLang].copySuccess);
         }).catch(err => {
-            alert("Failed to copy data. Your browser might block this action.");
+            alert(i18n[currentLang].copyFail);
         });
     }
 
+    // 8. Download PDF
     function downloadPDF() {
         const element = document.getElementById('printable-area');
         const opt = {
