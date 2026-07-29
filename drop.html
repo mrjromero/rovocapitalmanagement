@@ -89,6 +89,15 @@
     }
     
     .message { margin-bottom: 8px; line-height: 1.4; }
+    
+    /* New CSS class for debug logs */
+    .debug-log { 
+      margin-bottom: 8px; 
+      font-size: 0.85em; 
+      color: #6c757d; 
+      font-family: monospace; 
+    }
+    
     a.download-link { color: var(--primary); font-weight: bold; text-decoration: none; word-break: break-all; }
     a.download-link:hover { text-decoration: underline; }
   </style>
@@ -99,7 +108,6 @@
     
     <div class="id-container">
       <span><strong>Your ID:</strong> <span id="my-id">Generating...</span></span>
-      <!-- Changed from Copy ID to Share Link -->
       <button id="share-btn" class="copy-btn" disabled>Share Link</button>
     </div>
     
@@ -136,8 +144,6 @@
     
     let activeConnection;
 
-    // === URL PARAMETER CHECK ===
-    // Check if someone opened a link like https://yourdomain.com/drop?id=XXXXX
     const urlParams = new URLSearchParams(window.location.search);
     const targetPeerId = urlParams.get('id');
 
@@ -146,13 +152,9 @@
       
       const shareBtn = document.getElementById('share-btn');
       shareBtn.disabled = false;
-      
-      // Generate the clean share URL for the current user's session
       const shareUrl = `${window.location.origin}${window.location.pathname}?id=${id}`;
       
-      // Handle the Share Link button click
       shareBtn.addEventListener('click', async () => {
-        // If on mobile, use the native sharing menu (iMessage, WhatsApp, Email, etc)
         if (navigator.share) {
           try {
             await navigator.share({
@@ -164,7 +166,6 @@
             console.log('User cancelled share or share failed', err);
           }
         } else {
-          // If on desktop (or unsupported browser), fallback to copying to clipboard
           navigator.clipboard.writeText(shareUrl).then(() => {
             const originalText = shareBtn.innerText;
             shareBtn.innerText = 'Link Copied!';
@@ -173,18 +174,10 @@
         }
       });
 
-      // === AUTO-CONNECT EXECUTION ===
-      // If a target ID was found in the URL, automatically initiate the connection
       if (targetPeerId) {
         document.getElementById('remote-id').value = targetPeerId;
         log(`<em>System: Auto-connecting to link...</em>`);
-        
-        // Trigger the connection process
-        setTimeout(() => {
-          handleConnection(peer.connect(targetPeerId));
-        }, 500);
-
-        // Clean up the URL in the browser bar so refreshing doesn't re-trigger it
+        setTimeout(() => { handleConnection(peer.connect(targetPeerId)); }, 500);
         window.history.replaceState({}, document.title, window.location.pathname);
       }
     });
@@ -202,6 +195,37 @@
     function handleConnection(conn) {
       activeConnection = conn;
       
+      // === NEW: Extract the underlying WebRTC Connection for Debugging ===
+      // PeerJS instantiates the raw WebRTC object shortly after connection creation
+      const pollPc = setInterval(() => {
+        if (conn.peerConnection) {
+          clearInterval(pollPc);
+          const pc = conn.peerConnection;
+          
+          logDebug('Network negotiation started...');
+
+          // 1. Listen for connection state changes (checking, connected, failed)
+          pc.addEventListener('iceconnectionstatechange', () => {
+            logDebug(`Status updated: <strong>${pc.iceConnectionState.toUpperCase()}</strong>`);
+          });
+
+          // 2. Listen for route discoveries (Host, STUN, TURN)
+          pc.addEventListener('icecandidate', (event) => {
+            if (event.candidate) {
+              const candidateStr = event.candidate.candidate;
+              let routeType = "Unknown Route";
+              
+              if (candidateStr.includes('typ host')) routeType = "Local Network (Host)";
+              else if (candidateStr.includes('typ srflx')) routeType = "Public IP (STUN)";
+              else if (candidateStr.includes('typ relay')) routeType = "Cloud Relay (TURN)";
+              
+              logDebug(`Found potential path: <strong>${routeType}</strong>`);
+            }
+          });
+        }
+      }, 50);
+      // ===================================================================
+
       conn.on('open', () => {
         log(`<em>System: Connected to ${conn.peer}</em>`);
         document.getElementById('msg-input').disabled = false;
@@ -248,9 +272,17 @@
       }
     });
 
+    // Helper for main chat logs
     function log(text) {
       const chatBox = document.getElementById('chat-box');
       chatBox.innerHTML += `<div class="message">${text}</div>`;
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+    
+    // Helper for smaller, grey debugging logs
+    function logDebug(text) {
+      const chatBox = document.getElementById('chat-box');
+      chatBox.innerHTML += `<div class="debug-log">🛠 ${text}</div>`;
       chatBox.scrollTop = chatBox.scrollHeight;
     }
   </script>
