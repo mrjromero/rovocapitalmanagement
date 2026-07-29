@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#0056b3">
     <title>Attendee Departure Information</title>
     
     <!-- SheetJS for processing the Excel File -->
@@ -11,57 +12,93 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
     <style>
+        :root {
+            --primary: #0056b3;
+            --primary-hover: #004494;
+            --success: #28a745;
+            --bg-color: #f0f2f5;
+            --card-bg: #ffffff;
+            --text-main: #333333;
+            --text-muted: #666666;
+            --border-color: #e0e0e0;
+        }
+
         body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
             max-width: 900px; 
             margin: 0 auto; 
-            padding: 30px 20px; 
-            background: #f4f7f6; 
-            color: #333; 
+            padding: 20px 15px; 
+            background: var(--bg-color); 
+            color: var(--text-main); 
+            line-height: 1.5;
         }
+
         .card { 
-            background: #fff; 
+            background: var(--card-bg); 
             padding: 25px; 
-            border-radius: 8px; 
-            box-shadow: 0 4px 8px rgba(0,0,0,0.05); 
-            margin-bottom: 25px; 
+            border-radius: 12px; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08); 
+            margin-bottom: 20px; 
         }
-        h2, h3 { color: #2c3e50; margin-top: 0; }
         
+        h2 { color: #1a1a1a; margin-top: 0; font-size: 1.5rem; margin-bottom: 8px;}
+        h3 { color: #2c3e50; margin-top: 0; font-size: 1.2rem;}
+        p { color: var(--text-muted); margin-top: 0; }
+        
+        /* Modern Input Styling */
         input[type="text"] { 
             width: 100%; 
-            padding: 12px; 
-            margin: 10px 0; 
-            border: 1px solid #ced4da; 
-            border-radius: 5px; 
+            padding: 14px 16px; 
+            margin: 15px 0 5px 0; 
+            border: 2px solid #d1d5db; 
+            border-radius: 8px; 
             box-sizing: border-box; 
-            font-size: 16px;
+            font-size: 16px; /* Prevents iOS auto-zoom */
+            transition: border-color 0.2s, box-shadow 0.2s;
+            outline: none;
+            -webkit-appearance: none;
         }
-        input[type="file"] { margin-top: 10px; }
+        input[type="text"]:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(0, 86, 179, 0.15);
+        }
         
+        input[type="file"] { margin-top: 10px; font-size: 14px; }
+        
+        /* Touch-Friendly Buttons */
         button { 
-            background: #0056b3; 
+            background: var(--primary); 
             color: white; 
             border: none; 
-            padding: 10px 18px; 
-            border-radius: 5px; 
+            padding: 12px 20px; 
+            border-radius: 8px; 
             cursor: pointer; 
-            font-size: 14px;
-            transition: background 0.2s;
+            font-size: 15px;
+            font-weight: 600;
+            min-height: 44px; /* Apple HIG standard touch target */
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
         }
-        button:hover { background: #004494; }
+        button:hover { background: var(--primary-hover); }
+        button:active { transform: scale(0.98); }
         
+        /* Search Result Buttons */
+        #search-results { margin-top: 15px; }
         .name-select-btn { 
-            background: #e9ecef; 
-            color: #333; 
-            border: 1px solid #ced4da; 
-            margin: 5px 5px 5px 0; 
+            background: #f3f4f6; 
+            color: var(--text-main); 
+            border: 1px solid #d1d5db; 
+            margin: 0 8px 8px 0; 
+            font-weight: 500;
         }
-        .name-select-btn:hover { background: #dde2e6; }
+        .name-select-btn:hover { background: #e5e7eb; border-color: #9ca3af; }
         .name-select-btn.active { 
-            background: #28a745; 
+            background: var(--success); 
             color: white; 
-            border-color: #28a745; 
+            border-color: var(--success); 
         }
         
         .hidden { display: none !important; }
@@ -72,63 +109,96 @@
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
             margin-bottom: 25px;
-            border-radius: 4px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
         }
         
         .data-table { 
             width: 100%; 
             border-collapse: collapse; 
-            margin-top: 15px; 
-            min-width: 450px; /* Prevents squishing on very narrow screens */
+            min-width: 450px; 
         }
         .data-table th, .data-table td { 
-            padding: 12px 10px; 
-            border: 1px solid #e0e0e0; 
+            padding: 14px 16px; 
+            border-bottom: 1px solid var(--border-color); 
             text-align: left; 
+            font-size: 14px;
         }
-        .data-table th { background: #f8f9fa; width: 35%; font-weight: 600;}
-        .data-table tr:nth-child(even) { background-color: #fafafa; }
+        .data-table th { 
+            background: #f8f9fa; 
+            width: 35%; 
+            font-weight: 600;
+            color: #4b5563;
+        }
+        .data-table tr:last-child th, .data-table tr:last-child td { border-bottom: none; }
         
-        .header-actions { margin-bottom: 20px; display: flex; gap: 10px; flex-wrap: wrap; }
+        /* Actions Bar */
+        .header-actions { 
+            margin-bottom: 20px; 
+            display: flex; 
+            gap: 12px; 
+        }
+        
         .error-text { color: #dc3545; font-size: 0.9em; margin-bottom: 5px; }
         
-        #printable-area { padding: 15px; }
+        #printable-area { padding: 5px 0; }
 
-        /* Styling for the new Notice Card */
+        /* Notice Card */
         .narrative-card {
-            background: #e1f5fe;
-            border-left: 6px solid #0288d1;
-            padding: 15px 20px;
-            border-radius: 6px;
+            background: #f0f9ff;
+            border-left: 6px solid #0ea5e9;
+            padding: 16px 20px;
+            border-radius: 0 8px 8px 0;
             margin-bottom: 25px;
-            color: #01579b;
+            color: #0369a1;
         }
         .narrative-card h3 { 
-            color: #0277bd; 
+            color: #075985; 
             margin-top: 0; 
-            margin-bottom: 10px;
-            font-size: 1.3em;
-        }
-        .narrative-card p {
-            margin: 8px 0;
-            font-size: 1.05em;
-        }
-        .highlight-time {
+            margin-bottom: 8px;
             font-size: 1.25em;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .narrative-card p { margin: 6px 0; font-size: 1rem; color: #0c4a6e; }
+        .highlight-time {
+            font-size: 1.15em;
             font-weight: 700;
-            color: #d32f2f;
+            color: #b91c1c;
             background: #ffffff;
-            padding: 3px 10px;
-            border-radius: 4px;
-            border: 1px solid #ffcdd2;
+            padding: 4px 10px;
+            border-radius: 6px;
+            border: 1px solid #fecaca;
             display: inline-block;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
         }
         
-        /* Mobile specific adjustments */
+        /* =========================================
+           MOBILE SPECIFIC ADJUSTMENTS 
+           ========================================= */
         @media (max-width: 600px) {
-            body { padding: 15px 10px; }
-            .card { padding: 15px; }
-            .data-table th, .data-table td { padding: 8px; font-size: 0.9em; }
+            body { padding: 12px 10px; }
+            .card { padding: 20px 15px; border-radius: 10px;}
+            
+            /* Stack Action Buttons on Mobile */
+            .header-actions { 
+                flex-direction: column; 
+                gap: 10px;
+            }
+            .header-actions button { width: 100%; font-size: 16px; padding: 14px;}
+            
+            /* Stack Name Selection Buttons */
+            .name-select-btn {
+                display: block;
+                width: 100%;
+                margin: 0 0 10px 0;
+                padding: 14px;
+                font-size: 16px;
+            }
+
+            .data-table th, .data-table td { padding: 12px; }
+            .narrative-card { padding: 15px; }
         }
     </style>
 </head>
@@ -138,16 +208,14 @@
     <h2>Attendee Departure Search</h2>
     <p>Search for your name to retrieve your departure information and hotel departure schedule.</p>
     
-    <!-- Fallback if the browser blocks automatic fetching of the local Excel file -->
     <div id="file-upload-section" class="hidden">
         <p class="error-text"><strong>Notice:</strong> Browser security prevented auto-loading. Please select the file manually.</p>
         <label for="excel-file">Select <strong>departures.xlsx</strong>:</label><br>
         <input type="file" id="excel-file" accept=".xlsx, .xls">
     </div>
 
-    <!-- Main Search UI -->
     <div id="search-section" class="hidden">
-        <input type="text" id="search-input" placeholder="Type your name to search...">
+        <input type="text" id="search-input" placeholder="Type your name to search..." autocomplete="off">
         <div id="search-results"></div>
     </div>
 </div>
@@ -158,7 +226,6 @@
         <button onclick="downloadPDF()">📄 Download as PDF</button>
     </div>
     
-    <!-- Data rendered here for both on-screen viewing and PDF export -->
     <div id="printable-area"></div>
 </div>
 
@@ -166,11 +233,10 @@
     const targetFileName = "departures.xlsx";
     
     let timelineHtml = "";
-    let timelineDataRaw = []; // Holds the raw timeline array for the matching logic
+    let timelineDataRaw = [];
     let attendeesData = [];
-    let currentDisplayedData = ""; // Used to hold plain-text for the clipboard
+    let currentDisplayedData = ""; 
 
-    // 1. Attempt to auto-fetch the file on load
     window.onload = async () => {
         try {
             const response = await fetch(targetFileName);
@@ -183,7 +249,6 @@
         }
     };
 
-    // 2. Handle manual file selection
     document.getElementById('excel-file').addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (!file) return;
@@ -192,18 +257,15 @@
         reader.readAsArrayBuffer(file);
     });
 
-    // 3. Process and parse the Excel file
     function processExcel(data) {
         const workbook = XLSX.read(data, { type: 'array' });
         const sheetNames = workbook.SheetNames;
         
         if (sheetNames.length === 0) return alert("Excel file is empty.");
 
-        // Tab 1: Extract General Timeline
         const timelineSheet = workbook.Sheets[sheetNames[0]];
         timelineDataRaw = XLSX.utils.sheet_to_json(timelineSheet, { header: 1, raw: false });
         
-        // Changed title and added table-responsive wrapper
         timelineHtml = `<h3>Hotel Departure Schedule</h3><div class="table-responsive"><table class='data-table'>`;
         timelineDataRaw.forEach(row => {
             if (row.length > 0) {
@@ -216,7 +278,6 @@
         });
         timelineHtml += "</table></div>";
 
-        // Subsequent Tabs: Extract Attendee Particulars
         attendeesData = [];
         for (let i = 1; i < sheetNames.length; i++) {
             const sheet = workbook.Sheets[sheetNames[i]];
@@ -230,7 +291,6 @@
         document.getElementById('search-section').classList.remove('hidden');
     }
 
-    // 4. Handle Search Input
     document.getElementById('search-input').addEventListener('input', (e) => {
         const query = e.target.value.toLowerCase().trim();
         const resultsContainer = document.getElementById('search-results');
@@ -266,7 +326,6 @@
         });
     });
 
-    // 5. Smart Time Matcher - Helpers
     function parseSingleTime(timeStr) {
         if (!timeStr) return null;
         let str = String(timeStr).trim().toLowerCase().replace(/\./g, '');
@@ -315,7 +374,6 @@
         let start = (startP === 'pm' && startH !== 12 ? startH + 12 : (startP === 'am' && startH === 12 ? 0 : startH)) * 60 + startM;
         let end = (endP === 'pm' && endH !== 12 ? endH + 12 : (endP === 'am' && endH === 12 ? 0 : endH)) * 60 + endM;
         
-        // Auto-correct AM/PM typoes spanning past noon/midnight
         if (end < start && end + 12 * 60 >= start) end += 12 * 60;
         
         return { start, end };
@@ -343,7 +401,6 @@
                 const cell0 = String(row[0]).trim();
                 const cell1 = row[1] !== undefined ? String(row[1]).trim() : "";
                 
-                // Track the date groupings
                 if ((row.length === 1 || cell1 === "") && cell0 !== "" && !cell0.toLowerCase().includes('flight')) {
                     currentDateContext = cell0.toLowerCase();
                     continue;
@@ -355,13 +412,11 @@
                     
                     if (rangeStr.toLowerCase().includes("flight") || rangeStr.toLowerCase().includes("departure")) continue;
                     
-                    // Validate Date Match
                     let dateMatch = true;
                     if (words.length > 0 && !currentDateContext.includes(words[0])) dateMatch = false;
                     if (numbers.length > 0 && !numbers.some(n => currentDateContext.includes(n))) dateMatch = false;
                     if (!dateMatch) continue;
                     
-                    // Validate Time Match
                     const range = parseTimeRange(rangeStr);
                     if (range && flightTime >= range.start && flightTime <= range.end) {
                         return depTimeStr;
@@ -372,7 +427,6 @@
         return null;
     }
 
-    // 6. Display Data & Build Narrative
     function displayData(match, event) {
         document.querySelectorAll('.name-select-btn').forEach(b => b.classList.remove('active'));
         if (event) event.target.classList.add('active');
@@ -380,7 +434,6 @@
         let attDate = "";
         let attTime = "";
         
-        // Use table-responsive here as well for consistency
         let tableHtml = `<h3>Attendee Particulars (Tab: ${match.sheetName})</h3><div class="table-responsive"><table class="data-table">`;
         let textForClipboard = ``;
         
@@ -391,7 +444,6 @@
         }
         tableHtml += `</table></div>`;
         
-        // Build Narrative Card
         const exactDepartureTime = findDepartureInfo(attDate, attTime);
         let narrativeHtml = `<div class="narrative-card">
             <h3>🚐 Hotel Departure Notice</h3>`;
@@ -409,18 +461,15 @@
         }
         narrativeHtml += `</div>`;
 
-        // Assemble text for clipboard
         textForClipboard += `--- Attendee Particulars ---\n`;
         for (const [key, value] of Object.entries(match.data)) {
             textForClipboard += `${key}: ${value}\n`;
         }
 
-        // Add Timeline to HTML
         let fullHtml = narrativeHtml + tableHtml;
-        fullHtml += `<hr style="margin: 30px 0; border: 0; border-top: 1px solid #eee;">`;
+        fullHtml += `<hr style="margin: 30px 0; border: 0; border-top: 1px solid #e0e0e0;">`;
         fullHtml += timelineHtml;
 
-        // Add Timeline to text clipboard
         let timelineText = "\n--- Hotel Departure Schedule ---\n";
         const tempDiv = document.createElement('div');
         tempDiv.innerHTML = timelineHtml;
@@ -438,7 +487,6 @@
         document.getElementById('export-section').classList.remove('hidden');
     }
 
-    // 7. Copy to Clipboard Functionality
     function copyToClipboard() {
         navigator.clipboard.writeText(currentDisplayedData).then(() => {
             alert("Departure data copied to clipboard!");
@@ -447,14 +495,13 @@
         });
     }
 
-    // 8. Download PDF Functionality
     function downloadPDF() {
         const element = document.getElementById('printable-area');
         const opt = {
-            margin:       0.5,
+            margin:       [0.5, 0.5, 0.5, 0.5],
             filename:     'Departure_Information.pdf',
             image:        { type: 'jpeg', quality: 0.98 },
-            html2canvas:  { scale: 2 }, // Scale to improve table resolution
+            html2canvas:  { scale: 2, useCORS: true }, 
             jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
         };
         html2pdf().set(opt).from(element).save();
