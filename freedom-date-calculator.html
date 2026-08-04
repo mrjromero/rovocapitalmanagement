@@ -43,6 +43,23 @@
         .prefix { background: #f3f4f6; color: var(--text-muted); padding: 10px 14px; border-right: 1px solid var(--border-color); font-weight: 500; }
         .input-wrapper input { flex: 1; border: none; padding: 10px 14px; font-size: 1rem; color: var(--text-main); outline: none; width: 100%; }
 
+        /* Tooltip Styling */
+        .tooltip-container { position: relative; display: inline-flex; align-items: center; cursor: pointer; margin-left: 4px; color: var(--link-color); font-weight: normal; }
+        .tooltip-icon { font-size: 0.85rem; }
+        .tooltip-text {
+            visibility: hidden; width: 310px; background-color: var(--navy-dark); color: #ffffff; text-align: left;
+            padding: 12px 14px; border-radius: 8px; position: absolute; z-index: 100; bottom: 125%; left: 50%;
+            transform: translateX(-50%); opacity: 0; transition: opacity 0.2s ease-in-out; font-size: 0.78rem; font-weight: normal; line-height: 1.45;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3); pointer-events: none;
+        }
+        .tooltip-text::after {
+            content: ""; position: absolute; top: 100%; left: 50%; margin-left: -6px; border-width: 6px; border-style: solid; border-color: var(--navy-dark) transparent transparent transparent;
+        }
+        .tooltip-container:hover .tooltip-text { visibility: visible; opacity: 1; }
+        .tooltip-text p { margin-bottom: 8px; }
+        .tooltip-text p:last-child { margin-bottom: 0; }
+        .tooltip-text strong { color: #38bdf8; }
+
         .strategy-toggle { display: flex; background: #e5e7eb; border-radius: 8px; padding: 4px; margin-bottom: 24px; }
         .toggle-btn { flex: 1; text-align: center; padding: 10px; font-weight: 600; font-size: 0.9rem; cursor: pointer; border-radius: 6px; transition: all 0.2s; color: var(--text-muted); }
         .toggle-btn.active { background: var(--navy-header); color: white; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
@@ -115,7 +132,17 @@
                     <div class="input-group"><label>Annual Inflation Rate</label><div class="help-text">Yearly decrease in purchasing power.</div><div class="input-wrapper"><input type="number" id="inflationRate" value="4.5" step="0.1" style="padding-left: 14px;"><span class="prefix">%</span></div></div>
                     <div class="input-group">
                         <div style="display: flex; justify-content: space-between; align-items: flex-end;">
-                            <label>Market Volatility</label>
+                            <label>
+                                Market Volatility 
+                                <span class="tooltip-container">
+                                    <span class="tooltip-icon">ⓘ</span>
+                                    <span class="tooltip-text">
+                                        <p><strong>0% (Mechanical Baseline):</strong> Isolate structural math without market noise. Test positive carry & monthly income sweep velocity.</p>
+                                        <p><strong>8% – 12% (Realistic Income Architecture):</strong> Muted price volatility typical of high-yield, covered call, or dividend-heavy portfolios.</p>
+                                        <p><strong>15% – 20%+ (Tail-Risk Stress Test):</strong> Broad equity crash parameters to test downside margin safety and credit utilization rules.</p>
+                                    </span>
+                                </span>
+                            </label>
                             <div class="strategy-toggle" style="margin-bottom: 0; padding: 2px; width: 80px;">
                                 <div class="toggle-btn" id="btn-vol-on" onclick="toggleVolatility(true)" style="padding: 2px 0; font-size: 0.75rem;">On</div>
                                 <div class="toggle-btn active" id="btn-vol-off" onclick="toggleVolatility(false)" style="padding: 2px 0; font-size: 0.75rem;">Off</div>
