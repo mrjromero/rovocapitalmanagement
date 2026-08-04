@@ -30,8 +30,15 @@
         @media (max-width: 1024px) { .layout-grid { grid-template-columns: 1fr; } }
 
         .card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05); }
-        .card-header { background-color: var(--navy-header); color: white; padding: 16px 20px; font-weight: 600; font-size: 1.1rem; }
+        .card-header { background-color: var(--navy-header); color: white; padding: 16px 20px; font-weight: 600; font-size: 1.1rem; display: flex; justify-content: space-between; align-items: center; }
         .card-body { padding: 24px; }
+
+        .optimize-btn {
+            background-color: var(--link-color); color: white; border: none; padding: 6px 12px;
+            border-radius: 6px; font-size: 0.8rem; font-weight: 700; cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s; display: inline-flex; align-items: center; gap: 4px;
+        }
+        .optimize-btn:hover { background-color: #0284c7; transform: translateY(-1px); }
 
         .input-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
         @media (max-width: 600px) { .input-grid { grid-template-columns: 1fr; } }
@@ -123,7 +130,10 @@
             </div>
 
             <div class="card">
-                <div class="card-header">2. Architecture Assumptions</div>
+                <div class="card-header">
+                    <span>2. Architecture Assumptions</span>
+                    <button class="optimize-btn" onclick="optimizeArchitecture()">⚡ Auto-Optimize</button>
+                </div>
                 <div class="card-body input-grid">
                     <div class="input-group"><label>Expected Annual Return</label><div class="help-text">Capital appreciation (price growth).</div><div class="input-wrapper"><input type="number" id="returnRate" value="3.5" step="0.5" style="padding-left: 14px;"><span class="prefix">%</span></div></div>
                     <div class="input-group"><label>Strategic Leverage (DTA)</label><div class="help-text">Target Debt-to-Asset ratio.</div><div class="input-wrapper"><input type="number" id="leverage" value="25" step="1" style="padding-left: 14px;"><span class="prefix">%</span></div></div>
@@ -271,6 +281,75 @@
             rulesMatrix.classList.add('active-stacking');
         }
         updateDashboardUI();
+    }
+
+    function optimizeArchitecture() {
+        const income = parseFloat(document.getElementById('income').value) || 0;
+        const currentExpenses = parseFloat(document.getElementById('expenses').value) || 0;
+        const startingEquity = parseFloat(document.getElementById('balance').value) || 0;
+        const marginRate = (parseFloat(document.getElementById('marginRate').value) || 0) / 100;
+        const maxMarginLimit = (parseFloat(document.getElementById('maxMarginLimit').value) || 0) / 100;
+        const maintMargin = (parseFloat(document.getElementById('maintenanceMargin').value) || 0) / 100;
+
+        let bestMonths = 999;
+        let bestLeverage = 25;
+        let bestYield = 10;
+        let bestReturn = 3.5;
+
+        // Bounded grid search across realistic positive carry parameters
+        for (let l = 15; l <= 35; l += 2.5) { // Strategic Leverage DTA 15% - 35%
+            const levDTA = l / 100;
+            for (let y = 8; y <= 15; y += 0.5) { // Target Yield 8% - 15%
+                const yieldRate = y / 100;
+
+                // Positive Carry Check: Gross asset yield must exceed interest cost on debt
+                const assets = startingEquity / (1 - levDTA);
+                const debt = assets - startingEquity;
+                const netSpread = (assets * yieldRate) - (debt * marginRate);
+
+                if (netSpread <= 0) continue; 
+
+                // Guardrail 1: Credit Utilization check (< 70% of max limit)
+                const creditLine = assets * maxMarginLimit;
+                const util = creditLine > 0 ? (debt / creditLine) : 0;
+                if (util > 0.70) continue; 
+
+                // Guardrail 2: Drop to Margin Call buffer (> 25% drop cushion)
+                let dropToCall = 1.0;
+                if (debt > 0 && maintMargin < 1) {
+                    const callAssets = debt / (1 - maintMargin);
+                    dropToCall = (assets - callAssets) / assets;
+                }
+                if (dropToCall < 0.25) continue; 
+
+                // Objective Function: Target equity required & months to achieve
+                const effectiveNetYield = Math.max(0.001, yieldRate - (levDTA * marginRate));
+                const requiredEquity = (currentExpenses * 12 * (1 - levDTA)) / effectiveNetYield;
+
+                // Approximate speed metric
+                const monthlyNetCashFlow = income - currentExpenses + (netSpread / 12);
+                if (monthlyNetCashFlow <= 0) continue;
+
+                const estMonths = (requiredEquity - startingEquity) / monthlyNetCashFlow;
+
+                if (estMonths > 0 && estMonths < bestMonths) {
+                    bestMonths = estMonths;
+                    bestLeverage = l;
+                    bestYield = y;
+                    // Scale appreciation conservatively with yield
+                    bestReturn = y >= 12 ? 2.5 : y >= 10 ? 3.5 : 4.5;
+                }
+            }
+        }
+
+        // Apply optimal settings
+        document.getElementById('leverage').value = bestLeverage;
+        document.getElementById('yieldRate').value = bestYield;
+        document.getElementById('returnRate').value = bestReturn;
+
+        // Auto-switch to Stacking mode to reveal the optimized velocity
+        setMode('stacking');
+        runSimulations();
     }
 
     function updateRiskGuardrails() {
