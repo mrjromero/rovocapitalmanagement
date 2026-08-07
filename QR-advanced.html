@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QR Generator - Pro</title>
-    <!-- Load qr-code-styling via CDN -->
+    <title>QR Generator</title>
     <script src="https://unpkg.com/qr-code-styling@1.5.0/lib/qr-code-styling.js"></script>
     <style>
         :root {
@@ -169,7 +168,6 @@
             position: relative;
         }
 
-        /* Essential for scaling the 2048px canvas down to fit the preview window */
         #qrcode-container canvas {
             max-width: 100%;
             max-height: 100%;
@@ -198,10 +196,8 @@
             <p>Design, customize, and generate high-resolution QR codes.</p>
         </div>
         
-        <!-- LEFT COLUMN: CONTROLS -->
         <div class="controls-panel">
             
-            <!-- Data & Logo -->
             <div class="control-section">
                 <h3>Data & Logo</h3>
                 <div class="input-group">
@@ -214,7 +210,6 @@
                 </div>
             </div>
 
-            <!-- Design & Shapes -->
             <div class="control-section">
                 <h3>Design & Shapes</h3>
                 <div class="grid-2-col">
@@ -259,7 +254,6 @@
                 </div>
             </div>
 
-            <!-- Output Settings -->
             <div class="control-section">
                 <h3>Output Settings</h3>
                 <div class="grid-2-col">
@@ -282,7 +276,6 @@
             <button id="generate-btn" onclick="triggerGenerate()">Update Preview</button>
         </div>
 
-        <!-- RIGHT COLUMN: PREVIEW -->
         <div class="preview-panel">
             <div id="qrcode-container"></div>
             <button id="download-btn" onclick="downloadQR()">Download High-Res PNG</button>
@@ -358,7 +351,7 @@
                 },
                 imageOptions: {
                     hideBackgroundDots: true,
-                    imageSize: 0.4, // Max size before breaking
+                    imageSize: 0.4, 
                     margin: Math.floor(size * 0.02),
                     crossOrigin: "anonymous"
                 },
@@ -373,7 +366,7 @@
                     color: fgColor1
                 },
                 cornersDotOptions: {
-                    type: "dot", // Usually best left as dot for readability
+                    type: "dot", 
                     color: fgColor1
                 }
             };
@@ -397,6 +390,8 @@
                 };
                 options.cornersSquareOptions.color = fgColor1; // Keep eyes solid for scannability
             } else {
+                // ** BUG FIX: Explicitly remove gradient if unchecked **
+                options.dotsOptions.gradient = null;
                 options.dotsOptions.color = fgColor1;
             }
 
@@ -415,9 +410,8 @@
             if (!qrCodeStyling) return;
             
             let filename = document.getElementById('filename-input').value.trim();
-            if (!filename) filename = "IAD-QRCode";
+            if (!filename) filename = "QR-Code";
             
-            // The library automatically handles the .png extension internally
             qrCodeStyling.download({
                 name: filename,
                 extension: "png"
