@@ -3,86 +3,152 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Optical Tx (Send)</title>
+    <title>Optical Tx (FEC Sender)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+    
+    <!-- 
+      Note: You must include a Reed-Solomon JS library here. 
+      For example, a browserified version of '@ronomon/reed-solomon' 
+      or 'reed-solomon-erasure'. The syntax below assumes a standard RS class.
+    -->
+    <script src="path/to/your/reed-solomon-bundle.js"></script>
+
     <style>
         body { font-family: monospace; background: #111; color: #0f0; text-align: center; padding: 20px; }
         #qr-container { background: #fff; padding: 20px; display: inline-block; border-radius: 10px; margin-top: 20px; }
         canvas { display: block; margin: 0 auto; }
         .controls { max-width: 400px; margin: 0 auto; background: #222; padding: 20px; border: 1px solid #0f0; }
-        input[type="file"], input[type="range"] { width: 100%; margin: 10px 0; }
-        button { background: #0f0; color: #000; border: none; padding: 10px 20px; cursor: pointer; font-family: monospace; font-weight: bold; width: 100%; }
-        button:hover { background: #0c0; }
-        #status { margin-top: 15px; font-size: 0.9em; }
+        input, button { width: 100%; margin: 10px 0; }
+        button { background: #0f0; color: #000; border: none; padding: 10px; font-weight: bold; cursor: pointer; }
+        .stats { color: #aaa; font-size: 0.85em; margin-top: 10px; }
     </style>
 </head>
 <body>
 
     <div class="controls">
-        <h2>Optical TX Protocol</h2>
+        <h2>Optical TX (FEC)</h2>
         <input type="file" id="fileIn">
-        <label>Transmission Speed: <span id="fps-label">5</span> FPS</label>
-        <input type="range" id="fps" min="1" max="15" value="5">
-        <button id="startBtn">Start Broadcast</button>
-        <div id="status">Waiting for file...</div>
+        
+        <label>Overhead (Parity %): <span id="parity-label">25</span>%</label>
+        <input type="range" id="parityRate" min="5" max="100" value="25">
+        
+        <label>Speed: <span id="fps-label">10</span> FPS</label>
+        <input type="range" id="fps" min="1" max="20" value="10">
+        
+        <button id="startBtn">Encode & Broadcast</button>
+        <div id="status" class="stats">Waiting for file...</div>
     </div>
 
     <div id="qr-container" style="display: none;">
         <canvas id="qr"></canvas>
-        <div id="frame-counter" style="color: #000; margin-top: 10px;"></div>
+        <div id="frame-counter" style="color: #000; margin-top: 10px; font-weight: bold;"></div>
+        <div id="frame-type" style="color: #666; font-size: 0.9em;"></div>
     </div>
 
 <script>
-    const CHUNK_SIZE = 150; // Bytes per QR code (balance between density and scan reliability)
-    let chunks = [];
+    const CHUNK_SIZE = 120; // Safe byte limit for Level L QR codes
+    let broadcastFrames = [];
     let currentIndex = 0;
     let intervalId = null;
+    let K = 0; // Data shards
+    let N = 0; // Total shards (Data + Parity)
+
     let qr = new QRious({ element: document.getElementById('qr'), size: 400, level: 'L' });
 
-    document.getElementById('fps').addEventListener('input', (e) => {
-        document.getElementById('fps-label').textContent = e.target.value;
-        if(intervalId) { clearInterval(intervalId); startLoop(); }
-    });
+    // UI Listeners
+    document.getElementById('fps').addEventListener('input', (e) => document.getElementById('fps-label').textContent = e.target.value);
+    document.getElementById('parityRate').addEventListener('input', (e) => document.getElementById('parity-label').textContent = e.target.value);
+
+    // Helper: Safely convert Uint8Array to Base64 without blowing the stack
+    function uint8ToBase64(bytes) {
+        let binary = '';
+        for (let i = 0; i < bytes.byteLength; i++) {
+            binary += String.fromCharCode(bytes[i]);
+        }
+        return btoa(binary);
+    }
 
     document.getElementById('startBtn').addEventListener('click', () => {
         const file = document.getElementById('fileIn').files[0];
         if(!file) return alert("Select a file first.");
 
+        // Read file as ArrayBuffer, not DataURL
         const reader = new FileReader();
         reader.onload = (e) => {
-            const base64Data = e.target.result.split(',')[1]; // Strip data URI scheme
-            const fileId = Math.random().toString(36).substring(2, 6);
-            
-            chunks = [];
-            // Chunk 0: Metadata
-            const meta = JSON.stringify({ n: file.name, t: file.type || 'application/octet-stream' });
-            chunks.push(meta);
-
-            // Chunks 1..N: Payload
-            for (let i = 0; i < base64Data.length; i += CHUNK_SIZE) {
-                chunks.push(base64Data.substring(i, i + CHUNK_SIZE));
-            }
-
-            // Wrap with protocol headers -> ID|TOTAL|INDEX|PAYLOAD
-            chunks = chunks.map((c, i) => `${fileId}|${chunks.length}|${i}|${c}`);
-
-            document.getElementById('qr-container').style.display = 'inline-block';
-            document.getElementById('status').innerText = `Broadcasting ${chunks.length} frames...`;
-            
-            currentIndex = 0;
-            if(intervalId) clearInterval(intervalId);
-            startLoop();
+            const fileBytes = new Uint8Array(e.target.result);
+            processAndEncode(file, fileBytes);
         };
-        reader.readAsDataURL(file);
+        reader.readAsArrayBuffer(file);
     });
+
+    function processAndEncode(file, fileBytes) {
+        document.getElementById('status').innerText = "Calculating parity shards...";
+
+        // 1. Build Metadata Shard (Must be strictly padded to CHUNK_SIZE)
+        const metaStr = JSON.stringify({ n: file.name, t: file.type || 'application/octet-stream' });
+        const metaBytesRaw = new TextEncoder().encode(metaStr);
+        
+        const metaShard = new Uint8Array(CHUNK_SIZE);
+        metaShard.set(metaBytesRaw.slice(0, CHUNK_SIZE), 0);
+        let allShards = [metaShard];
+
+        // 2. Chunk the file into strictly sized shards
+        for (let i = 0; i < fileBytes.length; i += CHUNK_SIZE) {
+            let shard = new Uint8Array(CHUNK_SIZE);
+            let slice = fileBytes.slice(i, i + CHUNK_SIZE);
+            shard.set(slice, 0); // Fills the remainder with zeros automatically
+            allShards.push(shard);
+        }
+
+        K = allShards.length; // Minimum frames required by receiver
+        
+        // 3. Calculate Parity requirements
+        const parityPct = parseInt(document.getElementById('parityRate').value) / 100;
+        const P = Math.ceil(K * parityPct); 
+        N = K + P; 
+
+        // Append empty arrays for the encoder to fill
+        for(let i = 0; i < P; i++) {
+            allShards.push(new Uint8Array(CHUNK_SIZE));
+        }
+
+        // 4. Generate Parity Shards
+        try {
+            // Assume 'ReedSolomon' class from your included library
+            const rs = new ReedSolomon(K, P);
+            rs.encode(allShards); 
+        } catch (error) {
+            console.error("FEC Encoding failed. Check RS library integration.", error);
+            // If library fails, we can still broadcast without parity as a fallback
+        }
+
+        // 5. Format into the Optical Protocol strings
+        const fileId = Math.random().toString(36).substring(2, 6);
+        broadcastFrames = allShards.map((shard, index) => {
+            const b64Payload = uint8ToBase64(shard);
+            return `${fileId}|${N}|${K}|${index}|${b64Payload}`;
+        });
+
+        // 6. Start Broadcast
+        document.getElementById('qr-container').style.display = 'inline-block';
+        document.getElementById('status').innerText = `Data Shards (K): ${K} | Parity Shards (P): ${P}`;
+        
+        currentIndex = 0;
+        if(intervalId) clearInterval(intervalId);
+        startLoop();
+    }
 
     function startLoop() {
         const fps = parseInt(document.getElementById('fps').value);
         intervalId = setInterval(() => {
-            if (chunks.length === 0) return;
-            qr.value = chunks[currentIndex];
-            document.getElementById('frame-counter').innerText = `Frame: ${currentIndex + 1} / ${chunks.length}`;
-            currentIndex = (currentIndex + 1) % chunks.length; // Endless loop
+            if (broadcastFrames.length === 0) return;
+            
+            qr.value = broadcastFrames[currentIndex];
+            
+            document.getElementById('frame-counter').innerText = `Frame: ${currentIndex + 1} / ${N}`;
+            document.getElementById('frame-type').innerText = currentIndex < K ? "(Data Frame)" : "(Parity Frame)";
+            
+            currentIndex = (currentIndex + 1) % N; // Endless loop
         }, 1000 / fps);
     }
 </script>
