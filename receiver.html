@@ -3,8 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Optical Rx (Receive)</title>
+    <title>Optical Rx (FEC Receiver)</title>
+    
+    <!-- QR Code Scanner -->
     <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+    
+    <!-- 
+      Reed-Solomon Library
+      You must include the matching RS library here for erasure decoding to work.
+    -->
+    <script src="path/to/your/reed-solomon-bundle.js"></script>
+
     <style>
         body { font-family: monospace; background: #111; color: #0f0; text-align: center; padding: 20px; }
         .container { max-width: 500px; margin: 0 auto; background: #222; padding: 20px; border: 1px solid #0f0; }
@@ -14,12 +23,13 @@
         #status, #details { margin-top: 10px; }
         .scan-flash { border-color: #0f0 !important; box-shadow: 0 0 15px #0f0; }
         button { background: #0f0; color: #000; border: none; padding: 10px; width: 100%; font-weight: bold; font-family: monospace; cursor: pointer; margin-top: 10px;}
+        .stats { color: #aaa; font-size: 0.85em; margin-top: 10px; }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <h2>Optical RX Protocol</h2>
+        <h2>Optical RX (FEC)</h2>
         <button id="startBtn">Initialize Camera</button>
         <video id="video" playsinline autoplay hidden></video>
         <canvas id="canvas" hidden></canvas>
@@ -27,7 +37,7 @@
         <div id="rx-ui" style="display: none;">
             <div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
             <div id="status">Awaiting optical signal...</div>
-            <div id="details"></div>
+            <div id="details" class="stats"></div>
         </div>
     </div>
 
@@ -37,14 +47,34 @@
     const canvas = canvasElement.getContext("2d", { willReadFrequently: true });
     
     let currentFileId = null;
-    let totalChunks = 0;
-    let chunksReceived = 0;
-    let fileChunks = [];
-    let fileMeta = null;
+    let dataShards = 0;  // K: Required frames
+    let totalShards = 0; // N: Total broadcast frames
+    let receivedCount = 0;
+    let fileChunks = []; // Sparse array
     let isDownloading = false;
 
+    // Helper: Convert Base64 payload back to raw bytes
+    function base64ToUint8Array(base64) {
+        const binString = atob(base64);
+        const bytes = new Uint8Array(binString.length);
+        for (let i = 0; i < binString.length; i++) {
+            bytes[i] = binString.charCodeAt(i);
+        }
+        return bytes;
+    }
+
     document.getElementById('startBtn').addEventListener('click', () => {
-        navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+        // Enforce focus mode and ideal resolution if supported by the device
+        const constraints = { 
+            video: { 
+                facingMode: "environment",
+                width: { ideal: 1280 },
+                height: { ideal: 720 },
+                advanced: [{ focusMode: "continuous" }]
+            } 
+        };
+
+        navigator.mediaDevices.getUserMedia(constraints)
             .then(function(stream) {
                 video.srcObject = stream;
                 video.setAttribute("playsinline", true);
@@ -53,7 +83,7 @@
                 document.getElementById('rx-ui').style.display = 'block';
                 requestAnimationFrame(tick);
             })
-            .catch(err => alert("Camera error (requires HTTPS or localhost): " + err));
+            .catch(err => alert("Camera error: " + err));
     });
 
     function tick() {
@@ -73,76 +103,121 @@
     }
 
     function processPayload(data) {
+        // Protocol: ID | N | K | INDEX | PAYLOAD
         const parts = data.split('|');
-        if(parts.length < 4) return; // Invalid format
+        if(parts.length < 5) return; 
         
         const fileId = parts[0];
-        const total = parseInt(parts[1]);
-        const index = parseInt(parts[2]);
-        const payload = parts.slice(3).join('|'); 
+        const total = parseInt(parts[1]);     // N
+        const required = parseInt(parts[2]);  // K
+        const index = parseInt(parts[3]);
+        const payload = parts.slice(4).join('|'); 
 
-        // Reset if a new transmission starts
+        // Reset if we see a new file broadcast
         if (currentFileId !== fileId) {
             currentFileId = fileId;
-            totalChunks = total;
-            fileChunks = new Array(total).fill(null);
-            chunksReceived = 0;
-            fileMeta = null;
+            totalShards = total;
+            dataShards = required;
+            
+            // Initialize sparse array of size N
+            fileChunks = new Array(totalShards).fill(null);
+            receivedCount = 0;
             isDownloading = false;
             document.getElementById('progress').style.width = '0%';
+            document.getElementById('details').innerText = '';
         }
 
         // Store new chunk
         if (fileChunks[index] === null) {
-            fileChunks[index] = payload;
-            chunksReceived++;
+            fileChunks[index] = base64ToUint8Array(payload);
+            receivedCount++;
             
-            // Visual feedback
+            // UI Feedback
             video.classList.add('scan-flash');
             setTimeout(() => video.classList.remove('scan-flash'), 50);
 
-            if (index === 0) {
-                fileMeta = JSON.parse(payload);
-                document.getElementById('details').innerText = `File: ${fileMeta.n}`;
-            }
-
-            // Update UI
-            const percentage = (chunksReceived / totalChunks) * 100;
+            const percentage = Math.min((receivedCount / dataShards) * 100, 100);
             document.getElementById('progress').style.width = percentage + '%';
-            document.getElementById('status').innerText = `Received ${chunksReceived} of ${totalChunks} packets`;
+            
+            document.getElementById('status').innerText = `Acquired ${receivedCount} of ${dataShards} required frames`;
+            
+            const chunkType = index < dataShards ? "Data" : "Parity";
+            document.getElementById('details').innerText = `Last caught: Index ${index} (${chunkType})`;
 
-            // Trigger download if complete
-            if (chunksReceived === totalChunks && !isDownloading) {
+            // Trigger decode when we hit exactly K chunks (Data + Parity mixed)
+            if (receivedCount === dataShards && !isDownloading) {
                 isDownloading = true;
-                assembleAndDownload();
+                reconstructAndDownload();
             }
         }
     }
 
-    function assembleAndDownload() {
-        document.getElementById('status').innerText = "Transfer Complete. Decrypting payload...";
-        
-        // Exclude index 0 (metadata) and join the rest
-        const base64Data = fileChunks.slice(1).join('');
+    function reconstructAndDownload() {
+        document.getElementById('status').innerText = "K frames acquired. Reconstructing...";
         
         try {
-            const byteCharacters = atob(base64Data);
-            const byteNumbers = new Array(byteCharacters.length);
-            for (let i = 0; i < byteCharacters.length; i++) {
-                byteNumbers[i] = byteCharacters.charCodeAt(i);
+            // Check if we need matrix math (i.e., are we missing any original data shards?)
+            let missingDataFrames = false;
+            for(let i = 0; i < dataShards; i++) {
+                if(fileChunks[i] === null) {
+                    missingDataFrames = true;
+                    break;
+                }
             }
-            const byteArray = new Uint8Array(byteNumbers);
-            const blob = new Blob([byteArray], { type: fileMeta.t });
 
+            // If we missed data frames but caught parity frames to make up for it, use RS to decode
+            if (missingDataFrames) {
+                document.getElementById('details').innerText = "Dropped frames detected. Matrix math engaging...";
+                const parityShards = totalShards - dataShards;
+                
+                if (typeof ReedSolomon !== 'undefined') {
+                    const rs = new ReedSolomon(dataShards, parityShards);
+                    rs.decode(fileChunks); // Interpolates and fills in the 'null' spots
+                } else {
+                    throw new Error("Missing ReedSolomon library. Cannot perform erasure math.");
+                }
+            } else {
+                document.getElementById('details').innerText = "Perfect data capture. No matrix math needed.";
+            }
+
+            // 1. Read Metadata (Chunk 0)
+            // Note: Strip null padding (\x00) introduced by sender's strict chunk sizing
+            const metaChunkStr = new TextDecoder().decode(fileChunks[0]).replace(/\0/g, '');
+            const fileMeta = JSON.parse(metaChunkStr);
+            
+            // 2. Stitch the Data Shards (Indices 1 through K-1)
+            let totalLength = 0;
+            for(let i = 1; i < dataShards; i++) {
+                totalLength += fileChunks[i].length;
+            }
+            
+            const fileBuffer = new Uint8Array(totalLength);
+            let offset = 0;
+            for(let i = 1; i < dataShards; i++) {
+                fileBuffer.set(fileChunks[i], offset);
+                offset += fileChunks[i].length;
+            }
+
+            // 3. Remove trailing null bytes from the final buffer (padded by sender)
+            let finalLength = fileBuffer.length;
+            while (finalLength > 0 && fileBuffer[finalLength - 1] === 0) {
+                finalLength--;
+            }
+            const trimmedBuffer = fileBuffer.slice(0, finalLength);
+
+            // 4. Trigger local download
+            const blob = new Blob([trimmedBuffer], { type: fileMeta.t });
             const link = document.createElement('a');
             link.href = URL.createObjectURL(blob);
             link.download = fileMeta.n;
             link.click();
             
-            document.getElementById('status').innerText = "File downloaded locally.";
+            document.getElementById('status').innerText = "Transfer Complete & Downloaded.";
         } catch (e) {
-            document.getElementById('status').innerText = "Data corruption error during assembly.";
+            document.getElementById('status').innerText = "Reconstruction failed.";
+            document.getElementById('details').innerText = e.message;
             console.error(e);
+            isDownloading = false; // Allow receiver to keep scooping frames and try again
         }
     }
 </script>
