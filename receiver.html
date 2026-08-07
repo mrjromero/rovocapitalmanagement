@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Optical Rx (Receive)</title>
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+    <style>
+        body { font-family: monospace; background: #111; color: #0f0; text-align: center; padding: 20px; }
+        .container { max-width: 500px; margin: 0 auto; background: #222; padding: 20px; border: 1px solid #0f0; }
+        video { width: 100%; border: 2px solid #333; border-radius: 5px; transform: scaleX(-1); }
+        .progress-bar { width: 100%; height: 20px; background: #000; margin-top: 15px; border: 1px solid #0f0; position: relative; }
+        .progress-fill { height: 100%; background: #0f0; width: 0%; transition: width 0.1s; }
+        #status, #details { margin-top: 10px; }
+        .scan-flash { border-color: #0f0 !important; box-shadow: 0 0 15px #0f0; }
+        button { background: #0f0; color: #000; border: none; padding: 10px; width: 100%; font-weight: bold; font-family: monospace; cursor: pointer; margin-top: 10px;}
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>Optical RX Protocol</h2>
+        <button id="startBtn">Initialize Camera</button>
+        <video id="video" playsinline autoplay hidden></video>
+        <canvas id="canvas" hidden></canvas>
+        
+        <div id="rx-ui" style="display: none;">
+            <div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+            <div id="status">Awaiting optical signal...</div>
+            <div id="details"></div>
+        </div>
+    </div>
+
+<script>
+    const video = document.getElementById("video");
+    const canvasElement = document.getElementById("canvas");
+    const canvas = canvasElement.getContext("2d", { willReadFrequently: true });
+    
+    let currentFileId = null;
+    let totalChunks = 0;
+    let chunksReceived = 0;
+    let fileChunks = [];
+    let fileMeta = null;
+    let isDownloading = false;
+
+    document.getElementById('startBtn').addEventListener('click', () => {
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+            .then(function(stream) {
+                video.srcObject = stream;
+                video.setAttribute("playsinline", true);
+                video.removeAttribute("hidden");
+                document.getElementById('startBtn').style.display = 'none';
+                document.getElementById('rx-ui').style.display = 'block';
+                requestAnimationFrame(tick);
+            })
+            .catch(err => alert("Camera error (requires HTTPS or localhost): " + err));
+    });
+
+    function tick() {
+        if (video.readyState === video.HAVE_ENOUGH_DATA) {
+            canvasElement.height = video.videoHeight;
+            canvasElement.width = video.videoWidth;
+            canvas.drawImage(video, 0, 0, canvasElement.width, canvasElement.height);
+            
+            const imageData = canvas.getImageData(0, 0, canvasElement.width, canvasElement.height);
+            const code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: "dontInvert" });
+
+            if (code) {
+                processPayload(code.data);
+            }
+        }
+        requestAnimationFrame(tick);
+    }
+
+    function processPayload(data) {
+        const parts = data.split('|');
+        if(parts.length < 4) return; // Invalid format
+        
+        const fileId = parts[0];
+        const total = parseInt(parts[1]);
+        const index = parseInt(parts[2]);
+        const payload = parts.slice(3).join('|'); 
+
+        // Reset if a new transmission starts
+        if (currentFileId !== fileId) {
+            currentFileId = fileId;
+            totalChunks = total;
+            fileChunks = new Array(total).fill(null);
+            chunksReceived = 0;
+            fileMeta = null;
+            isDownloading = false;
+            document.getElementById('progress').style.width = '0%';
+        }
+
+        // Store new chunk
+        if (fileChunks[index] === null) {
+            fileChunks[index] = payload;
+            chunksReceived++;
+            
+            // Visual feedback
+            video.classList.add('scan-flash');
+            setTimeout(() => video.classList.remove('scan-flash'), 50);
+
+            if (index === 0) {
+                fileMeta = JSON.parse(payload);
+                document.getElementById('details').innerText = `File: ${fileMeta.n}`;
+            }
+
+            // Update UI
+            const percentage = (chunksReceived / totalChunks) * 100;
+            document.getElementById('progress').style.width = percentage + '%';
+            document.getElementById('status').innerText = `Received ${chunksReceived} of ${totalChunks} packets`;
+
+            // Trigger download if complete
+            if (chunksReceived === totalChunks && !isDownloading) {
+                isDownloading = true;
+                assembleAndDownload();
+            }
+        }
+    }
+
+    function assembleAndDownload() {
+        document.getElementById('status').innerText = "Transfer Complete. Decrypting payload...";
+        
+        // Exclude index 0 (metadata) and join the rest
+        const base64Data = fileChunks.slice(1).join('');
+        
+        try {
+            const byteCharacters = atob(base64Data);
+            const byteNumbers = new Array(byteCharacters.length);
+            for (let i = 0; i < byteCharacters.length; i++) {
+                byteNumbers[i] = byteCharacters.charCodeAt(i);
+            }
+            const byteArray = new Uint8Array(byteNumbers);
+            const blob = new Blob([byteArray], { type: fileMeta.t });
+
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = fileMeta.n;
+            link.click();
+            
+            document.getElementById('status').innerText = "File downloaded locally.";
+        } catch (e) {
+            document.getElementById('status').innerText = "Data corruption error during assembly.";
+            console.error(e);
+        }
+    }
+</script>
+</body>
+</html>

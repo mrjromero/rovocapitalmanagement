@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Optical Tx (Send)</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+    <style>
+        body { font-family: monospace; background: #111; color: #0f0; text-align: center; padding: 20px; }
+        #qr-container { background: #fff; padding: 20px; display: inline-block; border-radius: 10px; margin-top: 20px; }
+        canvas { display: block; margin: 0 auto; }
+        .controls { max-width: 400px; margin: 0 auto; background: #222; padding: 20px; border: 1px solid #0f0; }
+        input[type="file"], input[type="range"] { width: 100%; margin: 10px 0; }
+        button { background: #0f0; color: #000; border: none; padding: 10px 20px; cursor: pointer; font-family: monospace; font-weight: bold; width: 100%; }
+        button:hover { background: #0c0; }
+        #status { margin-top: 15px; font-size: 0.9em; }
+    </style>
+</head>
+<body>
+
+    <div class="controls">
+        <h2>Optical TX Protocol</h2>
+        <input type="file" id="fileIn">
+        <label>Transmission Speed: <span id="fps-label">5</span> FPS</label>
+        <input type="range" id="fps" min="1" max="15" value="5">
+        <button id="startBtn">Start Broadcast</button>
+        <div id="status">Waiting for file...</div>
+    </div>
+
+    <div id="qr-container" style="display: none;">
+        <canvas id="qr"></canvas>
+        <div id="frame-counter" style="color: #000; margin-top: 10px;"></div>
+    </div>
+
+<script>
+    const CHUNK_SIZE = 150; // Bytes per QR code (balance between density and scan reliability)
+    let chunks = [];
+    let currentIndex = 0;
+    let intervalId = null;
+    let qr = new QRious({ element: document.getElementById('qr'), size: 400, level: 'L' });
+
+    document.getElementById('fps').addEventListener('input', (e) => {
+        document.getElementById('fps-label').textContent = e.target.value;
+        if(intervalId) { clearInterval(intervalId); startLoop(); }
+    });
+
+    document.getElementById('startBtn').addEventListener('click', () => {
+        const file = document.getElementById('fileIn').files[0];
+        if(!file) return alert("Select a file first.");
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const base64Data = e.target.result.split(',')[1]; // Strip data URI scheme
+            const fileId = Math.random().toString(36).substring(2, 6);
+            
+            chunks = [];
+            // Chunk 0: Metadata
+            const meta = JSON.stringify({ n: file.name, t: file.type || 'application/octet-stream' });
+            chunks.push(meta);
+
+            // Chunks 1..N: Payload
+            for (let i = 0; i < base64Data.length; i += CHUNK_SIZE) {
+                chunks.push(base64Data.substring(i, i + CHUNK_SIZE));
+            }
+
+            // Wrap with protocol headers -> ID|TOTAL|INDEX|PAYLOAD
+            chunks = chunks.map((c, i) => `${fileId}|${chunks.length}|${i}|${c}`);
+
+            document.getElementById('qr-container').style.display = 'inline-block';
+            document.getElementById('status').innerText = `Broadcasting ${chunks.length} frames...`;
+            
+            currentIndex = 0;
+            if(intervalId) clearInterval(intervalId);
+            startLoop();
+        };
+        reader.readAsDataURL(file);
+    });
+
+    function startLoop() {
+        const fps = parseInt(document.getElementById('fps').value);
+        intervalId = setInterval(() => {
+            if (chunks.length === 0) return;
+            qr.value = chunks[currentIndex];
+            document.getElementById('frame-counter').innerText = `Frame: ${currentIndex + 1} / ${chunks.length}`;
+            currentIndex = (currentIndex + 1) % chunks.length; // Endless loop
+        }, 1000 / fps);
+    }
+</script>
+</body>
+</html>
