@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IAD QR Generator</title>
+    <!-- Load qrcode.js via CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f3f4f6;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .app-container {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            max-width: 450px;
+            width: 100%;
+        }
+        h2 {
+            margin-top: 0;
+            color: #1f2937;
+            text-align: center;
+        }
+        p {
+            color: #6b7280;
+            font-size: 0.9rem;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+        .input-group {
+            margin-bottom: 1rem;
+        }
+        .input-group label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.3rem;
+        }
+        input[type="text"], input[type="file"], select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 1rem;
+            background-color: #fff;
+        }
+        input[type="text"]:focus, select:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f9fafb;
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+        }
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            color: #374151;
+            cursor: pointer;
+        }
+        .checkbox-group input {
+            cursor: pointer;
+            width: 1.1rem;
+            height: 1.1rem;
+        }
+        button {
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1rem;
+            width: 100%;
+            transition: background-color 0.2s;
+        }
+        #generate-btn {
+            background-color: #3b82f6;
+            margin-bottom: 0.5rem;
+        }
+        #generate-btn:hover {
+            background-color: #2563eb;
+        }
+        #download-btn {
+            background-color: #10b981;
+            display: none;
+        }
+        #download-btn:hover {
+            background-color: #059669;
+        }
+        #qrcode-container {
+            margin: 1.5rem auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 256px;
+            background-color: #f9fafb;
+            border-radius: 8px;
+            border: 1px dashed #d1d5db;
+            overflow: hidden;
+            position: relative;
+        }
+        #qrcode-container img, 
+        #qrcode-container canvas {
+            max-width: 100%;
+            height: auto;
+            border-radius: 4px;
+        }
+        .checkered-bg {
+            background-image: 
+                linear-gradient(45deg, #e5e7eb 25%, transparent 25%), 
+                linear-gradient(-45deg, #e5e7eb 25%, transparent 25%), 
+                linear-gradient(45deg, transparent 75%, #e5e7eb 75%), 
+                linear-gradient(-45deg, transparent 75%, #e5e7eb 75%);
+            background-size: 20px 20px;
+            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <h2>IAD QR Generator</h2>
+        <p>Enter a URL and optionally upload a logo.</p>
+        
+        <div class="input-group">
+            <label for="text-input">Content (URL or Text)</label>
+            <input type="text" id="text-input" placeholder="https://example.com" autocomplete="off">
+        </div>
+
+        <div class="input-group">
+            <label for="logo-input">Center Logo (Optional)</label>
+            <input type="file" id="logo-input" accept="image/png, image/jpeg, image/svg+xml">
+        </div>
+
+        <div class="options-grid">
+            <div class="input-group" style="margin: 0;">
+                <label for="resolution-select">Resolution</label>
+                <select id="resolution-select">
+                    <option value="128">128 x 128</option>
+                    <option value="256">256 x 256</option>
+                    <option value="512">512 x 512</option>
+                    <option value="1024">1024 x 1024</option>
+                    <option value="2048" selected>2048 x 2048</option>
+                </select>
+            </div>
+            
+            <div class="input-group" style="margin: 0;">
+                <label for="filename-input">File Name</label>
+                <input type="text" id="filename-input" placeholder="qrcode" autocomplete="off">
+            </div>
+
+            <label class="checkbox-group">
+                <input type="checkbox" id="inverse-checkbox">
+                Inverse B/W
+            </label>
+            
+            <label class="checkbox-group">
+                <input type="checkbox" id="transparent-checkbox">
+                Transparent BG
+            </label>
+        </div>
+        
+        <button id="generate-btn" onclick="generateQR()">Generate QR Code</button>
+        
+        <div id="qrcode-container">
+            <span id="placeholder-text" style="color: #9ca3af;">Preview will appear here</span>
+        </div>
+        
+        <button id="download-btn" onclick="downloadQR()">Download PNG</button>
+    </div>
+
+    <script>
+        const qrContainer = document.getElementById('qrcode-container');
+        const input = document.getElementById('text-input');
+        const logoInput = document.getElementById('logo-input');
+        const downloadBtn = document.getElementById('download-btn');
+
+        input.addEventListener("keypress", function(event) {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                generateQR();
+            }
+        });
+
+        function generateQR() {
+            const text = input.value.trim();
+            if (!text) {
+                alert("Please enter some text or a URL.");
+                return;
+            }
+
+            const size = parseInt(document.getElementById('resolution-select').value);
+            const isInverse = document.getElementById('inverse-checkbox').checked;
+            const isTransparent = document.getElementById('transparent-checkbox').checked;
+
+            let colorDark = isInverse ? "#ffffff" : "#000000";
+            let colorLight = isInverse ? "#000000" : "#ffffff";
+
+            if (isTransparent) {
+                colorLight = "rgba(0,0,0,0)"; 
+            }
+
+            qrContainer.innerHTML = "";
+
+            if (isTransparent) {
+                qrContainer.classList.add("checkered-bg");
+                qrContainer.style.backgroundColor = "transparent";
+            } else {
+                qrContainer.classList.remove("checkered-bg");
+                qrContainer.style.backgroundColor = "#f9fafb";
+            }
+
+            // Generate base QR Code
+            new QRCode(qrContainer, {
+                text: text,
+                width: size,
+                height: size,
+                colorDark: colorDark,
+                colorLight: colorLight,
+                correctLevel: QRCode.CorrectLevel.H // Critical for logo overlay
+            });
+
+            qrContainer.style.border = "none";
+            
+            // Wait a brief moment for qrcode.js to finish rendering the canvas
+            setTimeout(() => {
+                const canvas = qrContainer.querySelector('canvas');
+                
+                // If the user uploaded a logo, process it
+                if (canvas && logoInput.files && logoInput.files[0]) {
+                    const ctx = canvas.getContext('2d');
+                    const reader = new FileReader();
+                    
+                    reader.onload = function(e) {
+                        const img = new Image();
+                        img.onload = function() {
+                            // Scale logo to a safe 22% of the QR code size
+                            const logoSize = size * 0.22;
+                            const x = (size - logoSize) / 2;
+                            const y = (size - logoSize) / 2;
+                            
+                            // Draw a solid background box behind the logo to prevent scanning issues
+                            if (!isTransparent) {
+                                ctx.fillStyle = colorLight;
+                                const padding = size * 0.02; // 2% padding
+                                ctx.fillRect(x - padding, y - padding, logoSize + (padding * 2), logoSize + (padding * 2));
+                            }
+
+                            // Draw the logo image
+                            ctx.drawImage(img, x, y, logoSize, logoSize);
+                            
+                            // qrcode.js generates a hidden <img> tag along with the <canvas>. 
+                            // We need to update its src with the newly drawn logo so previews match.
+                            const qrImg = qrContainer.querySelector('img');
+                            if (qrImg) {
+                                qrImg.src = canvas.toDataURL("image/png");
+                            }
+                            
+                            downloadBtn.style.display = "block";
+                        }
+                        img.src = e.target.result;
+                    }
+                    reader.readAsDataURL(logoInput.files[0]);
+                } else {
+                    downloadBtn.style.display = "block";
+                }
+            }, 150); // Slightly longer timeout to ensure large 2048px canvases have rendered
+        }
+
+        function downloadQR() {
+            const canvas = qrContainer.querySelector('canvas');
+            const img = qrContainer.querySelector('img');
+            let dataUrl = "";
+
+            if (canvas) {
+                dataUrl = canvas.toDataURL("image/png");
+            } else if (img && img.src) {
+                dataUrl = img.src;
+            }
+
+            if (dataUrl) {
+                let filename = document.getElementById('filename-input').value.trim();
+                if (!filename) filename = "qrcode";
+                if (!filename.toLowerCase().endsWith(".png")) filename += ".png";
+
+                const link = document.createElement('a');
+                link.href = dataUrl;
+                link.download = filename;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            } else {
+                alert("QR Code not ready yet. Please try again.");
+            }
+        }
+    </script>
+</body>
+</html>
