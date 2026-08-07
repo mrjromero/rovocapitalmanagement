@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IAD QR Generator - Pro</title>
+    <!-- Load qr-code-styling via CDN -->
+    <script src="https://unpkg.com/qr-code-styling@1.5.0/lib/qr-code-styling.js"></script>
+    <style>
+        :root {
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --bg: #f3f4f6;
+            --surface: #ffffff;
+            --border: #d1d5db;
+            --text-main: #1f2937;
+            --text-muted: #6b7280;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background-color: var(--bg);
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .app-container {
+            background: var(--surface);
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+            max-width: 900px;
+            width: 100%;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .app-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .header {
+            grid-column: 1 / -1;
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+        h2 { margin: 0 0 0.5rem 0; color: var(--text-main); }
+        p { margin: 0; color: var(--text-muted); font-size: 0.95rem; }
+
+        .control-section {
+            background: #f9fafb;
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            margin-bottom: 1rem;
+        }
+
+        .control-section h3 {
+            margin-top: 0;
+            font-size: 1.1rem;
+            color: var(--text-main);
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .input-group { margin-bottom: 1rem; }
+        .input-group:last-child { margin-bottom: 0; }
+        
+        label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.3rem;
+        }
+
+        input[type="text"], input[type="file"], select {
+            width: 100%;
+            padding: 0.6rem;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 0.95rem;
+            background-color: #fff;
+        }
+
+        input[type="text"]:focus, select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .grid-2-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .color-picker-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        input[type="color"] {
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            width: 35px;
+            height: 35px;
+            cursor: pointer;
+            padding: 2px;
+            background: #fff;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            color: var(--text-main);
+            cursor: pointer;
+            margin-top: 0.5rem;
+        }
+
+        button {
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1rem;
+            width: 100%;
+            transition: background-color 0.2s;
+        }
+
+        #generate-btn { background-color: var(--primary); margin-bottom: 1rem; }
+        #generate-btn:hover { background-color: var(--primary-hover); }
+        #download-btn { background-color: #10b981; }
+        #download-btn:hover { background-color: #059669; }
+
+        .preview-panel {
+            display: flex;
+            flex-direction: column;
+        }
+
+        #qrcode-container {
+            flex-grow: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #f9fafb;
+            border-radius: 8px;
+            border: 1px dashed var(--border);
+            margin-bottom: 1rem;
+            min-height: 350px;
+            padding: 1rem;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Essential for scaling the 2048px canvas down to fit the preview window */
+        #qrcode-container canvas {
+            max-width: 100%;
+            max-height: 100%;
+            width: auto !important;
+            height: auto !important;
+            border-radius: 4px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+
+        .checkered-bg {
+            background-image: 
+                linear-gradient(45deg, #e5e7eb 25%, transparent 25%), 
+                linear-gradient(-45deg, #e5e7eb 25%, transparent 25%), 
+                linear-gradient(45deg, transparent 75%, #e5e7eb 75%), 
+                linear-gradient(-45deg, transparent 75%, #e5e7eb 75%);
+            background-size: 20px 20px;
+            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <div class="header">
+            <h2>IAD QR Generator</h2>
+            <p>Design, customize, and generate high-resolution QR codes.</p>
+        </div>
+        
+        <!-- LEFT COLUMN: CONTROLS -->
+        <div class="controls-panel">
+            
+            <!-- Data & Logo -->
+            <div class="control-section">
+                <h3>Data & Logo</h3>
+                <div class="input-group">
+                    <label>Content (URL or Text)</label>
+                    <input type="text" id="text-input" placeholder="https://example.com" value="https://example.com" autocomplete="off">
+                </div>
+                <div class="input-group">
+                    <label>Center Logo (Optional)</label>
+                    <input type="file" id="logo-input" accept="image/png, image/jpeg, image/svg+xml">
+                </div>
+            </div>
+
+            <!-- Design & Shapes -->
+            <div class="control-section">
+                <h3>Design & Shapes</h3>
+                <div class="grid-2-col">
+                    <div class="input-group">
+                        <label>Pattern Style</label>
+                        <select id="dot-type">
+                            <option value="square">Square</option>
+                            <option value="rounded">Rounded</option>
+                            <option value="dots">Dots</option>
+                            <option value="classy">Classy</option>
+                            <option value="extra-rounded">Extra Rounded</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>Eye Frame Shape</label>
+                        <select id="corner-square-type">
+                            <option value="square">Square</option>
+                            <option value="extra-rounded">Extra Rounded</option>
+                            <option value="dot">Dot</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="grid-2-col" style="margin-top: 1rem;">
+                    <div class="input-group">
+                        <label>Code Color</label>
+                        <div class="color-picker-group">
+                            <input type="color" id="fg-color" value="#000000">
+                            <input type="color" id="fg-color-2" value="#3b82f6" style="display: none;" title="Gradient End Color">
+                        </div>
+                        <label class="checkbox-group">
+                            <input type="checkbox" id="gradient-checkbox"> Use Gradient
+                        </label>
+                    </div>
+                    <div class="input-group">
+                        <label>Background Color</label>
+                        <input type="color" id="bg-color" value="#ffffff">
+                        <label class="checkbox-group">
+                            <input type="checkbox" id="transparent-checkbox"> Transparent BG
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Output Settings -->
+            <div class="control-section">
+                <h3>Output Settings</h3>
+                <div class="grid-2-col">
+                    <div class="input-group">
+                        <label>Resolution</label>
+                        <select id="resolution-select">
+                            <option value="512">512 x 512</option>
+                            <option value="1024">1024 x 1024</option>
+                            <option value="2048" selected>2048 x 2048</option>
+                            <option value="4096">4096 x 4096</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>File Name</label>
+                        <input type="text" id="filename-input" placeholder="qrcode" autocomplete="off">
+                    </div>
+                </div>
+            </div>
+
+            <button id="generate-btn" onclick="triggerGenerate()">Update Preview</button>
+        </div>
+
+        <!-- RIGHT COLUMN: PREVIEW -->
+        <div class="preview-panel">
+            <div id="qrcode-container"></div>
+            <button id="download-btn" onclick="downloadQR()">Download High-Res PNG</button>
+        </div>
+
+    </div>
+
+    <script>
+        let qrCodeStyling = null;
+        let currentLogoUrl = "";
+
+        // UI Interactions
+        document.getElementById('gradient-checkbox').addEventListener('change', function(e) {
+            document.getElementById('fg-color-2').style.display = e.target.checked ? 'block' : 'none';
+        });
+
+        document.getElementById('logo-input').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(evt) {
+                    currentLogoUrl = evt.target.result;
+                    triggerGenerate();
+                };
+                reader.readAsDataURL(file);
+            } else {
+                currentLogoUrl = "";
+                triggerGenerate();
+            }
+        });
+
+        document.getElementById('transparent-checkbox').addEventListener('change', function(e) {
+            const bgInput = document.getElementById('bg-color');
+            bgInput.disabled = e.target.checked;
+            bgInput.style.opacity = e.target.checked ? "0.5" : "1";
+        });
+
+        // Main Generation Logic
+        function triggerGenerate() {
+            const text = document.getElementById('text-input').value.trim() || "https://example.com";
+            const size = parseInt(document.getElementById('resolution-select').value);
+            
+            // Design Variables
+            const dotType = document.getElementById('dot-type').value;
+            const cornerSquareType = document.getElementById('corner-square-type').value;
+            
+            // Color Variables
+            const useGradient = document.getElementById('gradient-checkbox').checked;
+            const fgColor1 = document.getElementById('fg-color').value;
+            const fgColor2 = document.getElementById('fg-color-2').value;
+            const isTransparent = document.getElementById('transparent-checkbox').checked;
+            const bgColor = isTransparent ? "transparent" : document.getElementById('bg-color').value;
+
+            // Handle Preview Container Checkered BG
+            const qrContainer = document.getElementById('qrcode-container');
+            if (isTransparent) {
+                qrContainer.classList.add("checkered-bg");
+            } else {
+                qrContainer.classList.remove("checkered-bg");
+                qrContainer.style.backgroundColor = bgColor;
+            }
+
+            // Build Options Object
+            let options = {
+                width: size,
+                height: size,
+                data: text,
+                margin: Math.floor(size * 0.05), // 5% quiet zone buffer
+                qrOptions: {
+                    typeNumber: 0,
+                    mode: "Byte",
+                    errorCorrectionLevel: "H" // Critical for logos
+                },
+                imageOptions: {
+                    hideBackgroundDots: true,
+                    imageSize: 0.4, // Max size before breaking
+                    margin: Math.floor(size * 0.02),
+                    crossOrigin: "anonymous"
+                },
+                dotsOptions: {
+                    type: dotType
+                },
+                backgroundOptions: {
+                    color: bgColor
+                },
+                cornersSquareOptions: {
+                    type: cornerSquareType,
+                    color: fgColor1
+                },
+                cornersDotOptions: {
+                    type: "dot", // Usually best left as dot for readability
+                    color: fgColor1
+                }
+            };
+
+            // Apply Logo if uploaded
+            if (currentLogoUrl) {
+                options.image = currentLogoUrl;
+            } else {
+                options.image = "";
+            }
+
+            // Apply Gradient or Solid Color
+            if (useGradient) {
+                options.dotsOptions.gradient = {
+                    type: "linear",
+                    rotation: Math.PI / 4,
+                    colorStops: [
+                        { offset: 0, color: fgColor1 },
+                        { offset: 1, color: fgColor2 }
+                    ]
+                };
+                options.cornersSquareOptions.color = fgColor1; // Keep eyes solid for scannability
+            } else {
+                options.dotsOptions.color = fgColor1;
+            }
+
+            // Render or Update Code
+            if (!qrCodeStyling) {
+                qrCodeStyling = new QRCodeStyling(options);
+                document.getElementById('qrcode-container').innerHTML = "";
+                qrCodeStyling.append(document.getElementById('qrcode-container'));
+            } else {
+                qrCodeStyling.update(options);
+            }
+        }
+
+        // Native Download Logic provided by the library
+        function downloadQR() {
+            if (!qrCodeStyling) return;
+            
+            let filename = document.getElementById('filename-input').value.trim();
+            if (!filename) filename = "IAD-QRCode";
+            
+            // The library automatically handles the .png extension internally
+            qrCodeStyling.download({
+                name: filename,
+                extension: "png"
+            });
+        }
+
+        // Generate default QR on load
+        window.onload = () => {
+            triggerGenerate();
+        };
+
+    </script>
+</body>
+</html>
