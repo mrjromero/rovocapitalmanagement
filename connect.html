@@ -314,11 +314,12 @@
       gap: 10px;
       color: inherit;
       text-decoration: none;
-      background: rgba(255,255,255,0.2);
+      background: rgba(0,0,0,0.06);
       padding: 8px 12px;
       border-radius: 10px;
       margin-top: 4px;
       font-weight: 600;
+      font-size: 14px;
     }
   </style>
 </head>
@@ -400,8 +401,17 @@
       broadcast({ type: 'identity', name: nameInput.value.trim() });
     });
 
-    // 2. PeerJS Setup
-    const peer = new Peer({ config: { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] } });
+    // 2. PeerJS Setup with STUN/TURN fallback for NAT Traversal
+    const peer = new Peer({ 
+      config: { 
+        iceServers: [
+          { urls: 'stun:stun.l.google.com:19302' },
+          { urls: 'stun:stun1.l.google.com:19302' },
+          { urls: 'turn:openrelay.metered.ca:80', username: 'openrelayproject', credential: 'openrelayproject' },
+          { urls: 'turn:openrelay.metered.ca:443', username: 'openrelayproject', credential: 'openrelayproject' }
+        ] 
+      } 
+    });
 
     peer.on('open', (id) => {
       myPeerId = id;
@@ -563,28 +573,53 @@
     }
 
     // 6. User Action Handlers
-    document.getElementById('send-btn').onclick = () => {
-      const input = document.getElementById('msg-input');
-      const text = input.value.trim();
+    const msgInput = document.getElementById('msg-input');
+    const sendBtn = document.getElementById('send-btn');
+    const fileInput = document.getElementById('file-input');
+    const fileBtn = document.getElementById('file-btn');
+
+    // UX Fix: Enter key sends message
+    msgInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') sendBtn.click();
+    });
+
+    sendBtn.onclick = () => {
+      const text = msgInput.value.trim();
       if (text) {
         broadcast(text);
         logBubble('You', text, true);
-        input.value = '';
+        msgInput.value = '';
       }
     };
 
-    const fileInput = document.getElementById('file-input');
-    document.getElementById('file-btn').onclick = () => fileInput.click();
+    fileBtn.onclick = () => fileInput.click();
 
     fileInput.onchange = async () => {
       const file = fileInput.files[0];
       if (!file) return;
+      
+      // UX Fix: Reset early so the same file can be selected again if aborted
+      fileInput.value = '';
 
       logSystem(`Sending ${file.name}...`);
       broadcast({ type: 'file-header', name: file.name, filetype: file.type });
 
       let offset = 0;
       while (offset < file.size) {
+        
+        // Stability Fix: Apply Backpressure across all connections to prevent WebRTC crash
+        let maxBuffer = 0;
+        connections.forEach(c => {
+          if (c.dataChannel && c.dataChannel.bufferedAmount > maxBuffer) {
+            maxBuffer = c.dataChannel.bufferedAmount;
+          }
+        });
+
+        if (maxBuffer > 1024 * 1024) {
+          await new Promise(r => setTimeout(r, 50));
+          continue;
+        }
+
         const buffer = await file.slice(offset, offset + CHUNK_SIZE).arrayBuffer();
         broadcast({ type: 'file-chunk', chunk: buffer });
         offset += CHUNK_SIZE;
@@ -592,7 +627,6 @@
 
       broadcast({ type: 'file-complete' });
       logSystem(`Sent ${file.name}`);
-      fileInput.value = '';
     };
 
     // 7. Display & Log Utilities
@@ -637,12 +671,24 @@
       const chat = document.getElementById('chat-box');
       const div = document.createElement('div');
       div.className = 'bubble bubble-in';
-      div.innerHTML = `
-        <div class="bubble-author">${escapeHTML(sender)}</div>
-        <a class="download-card" href="${url}" download="${escapeHTML(filename)}">
-          📄 Download ${escapeHTML(filename)}
-        </a>
-      `;
+      
+      const author = document.createElement('div');
+      author.className = 'bubble-author';
+      author.textContent = sender;
+
+      const link = document.createElement('a');
+      link.className = 'download-card';
+      link.href = url;
+      link.download = filename;
+      link.innerHTML = `📄 Download ${escapeHTML(filename)}`;
+      
+      // Stability Fix: Prevent Blob memory leak
+      link.addEventListener('click', () => {
+        setTimeout(() => URL.revokeObjectURL(url), 10000);
+      });
+
+      div.appendChild(author);
+      div.appendChild(link);
       chat.appendChild(div);
       chat.scrollTop = chat.scrollHeight;
     }
