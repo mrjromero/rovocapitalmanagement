@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Serverless WebRTC via QR</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+  <style>
+    body { font-family: system-ui, sans-serif; background: #121212; color: #e0e0e0; margin: 0; padding: 20px; display: flex; justify-content: center; }
+    .card { background: #1e1e1e; padding: 20px; border-radius: 12px; width: 100%; max-width: 480px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
+    h2 { text-align: center; margin-top: 0; }
+    .step { background: #2a2a2a; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
+    button { width: 100%; padding: 12px; margin: 5px 0; background: #007bff; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
+    button:disabled { background: #444; cursor: not-allowed; }
+    video { width: 100%; border-radius: 8px; margin-top: 10px; background: #000; }
+    canvas { display: block; margin: 10px auto; border-radius: 8px; background: white; padding: 10px; }
+    #chat-box { height: 150px; overflow-y: auto; background: #111; border: 1px solid #333; padding: 10px; border-radius: 6px; margin-bottom: 10px; }
+    .status { font-size: 0.85em; color: #888; margin-top: 5px; }
+  </style>
+</head>
+<body>
+
+<div class="card">
+  <h2>Serverless P2P via QR</h2>
+
+  <!-- Role Selection -->
+  <div id="role-select" class="step">
+    <h3>Select Role:</h3>
+    <button onclick="startAsHost()">Host (Create Offer)</button>
+    <button onclick="startAsJoiner()">Joiner (Scan Offer)</button>
+  </div>
+
+  <!-- QR Display / Scanner Workspace -->
+  <div id="workspace" class="step" style="display:none;">
+    <div id="status-text" class="status">Initializing WebRTC...</div>
+    <canvas id="qr-canvas" style="display:none;"></canvas>
+    <video id="webcam" playsinline hidden></video>
+    <canvas id="video-canvas" hidden></canvas>
+  </div>
+
+  <!-- Chat UI -->
+  <div id="chat-ui" class="step" style="display:none;">
+    <h3>Connected!</h3>
+    <div id="chat-box"></div>
+    <div style="display: flex; gap: 5px;">
+      <input type="text" id="msg-input" placeholder="Type a message..." style="flex:1; padding: 10px; border-radius: 6px; border: 1px solid #444; background: #222; color: white;">
+      <button onclick="sendMessage()" style="width: auto;">Send</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  let pc, dataChannel;
+  const qrGen = new QRious({ element: document.getElementById('qr-canvas'), size: 300, level: 'L' });
+  
+  const rtcConfig = {
+    iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+  };
+
+  // ==========================================
+  // HOST WORKFLOW (Device A)
+  // ==========================================
+  async function startAsHost() {
+    showWorkspace("Step 1: Gathering ICE candidates for Offer...");
+    pc = new RTCPeerConnection(rtcConfig);
+
+    // Create Data Channel
+    dataChannel = pc.createDataChannel("chat");
+    setupDataChannel(dataChannel);
+
+    // Create SDP Offer
+    const offer = await pc.createOffer();
+    await pc.setLocalDescription(offer);
+
+    // Wait for ICE gathering to complete to capture all candidates in one QR code
+    pc.onicegatheringstatechange = () => {
+      if (pc.iceGatheringState === 'complete') {
+        displayQR(JSON.stringify(pc.localDescription));
+        setStatus("Step 1: Scan this Offer QR code using Device B. Then click below to scan Answer.");
+        addScanButton("Scan Device B's Answer QR", scanAnswerQR);
+      }
+    };
+  }
+
+  async function scanAnswerQR() {
+    hideQR();
+    setStatus("Step 2: Point camera at Device B's Answer QR code...");
+    startScanner(async (scannedAnswer) => {
+      stopScanner();
+      const answerSDP = JSON.parse(scannedAnswer);
+      await pc.setRemoteDescription(answerSDP);
+      setStatus("Establishing connection...");
+    });
+  }
+
+  // ==========================================
+  // JOINER WORKFLOW (Device B)
+  // ==========================================
+  function startAsJoiner() {
+    showWorkspace("Step 1: Scan Device A's Offer QR code...");
+    startScanner(async (scannedOffer) => {
+      stopScanner();
+      setStatus("Processing Offer & Gathering Answer ICE Candidates...");
+
+      pc = new RTCPeerConnection(rtcConfig);
+      
+      pc.ondatachannel = (e) => {
+        dataChannel = e.channel;
+        setupDataChannel(dataChannel);
+      };
+
+      const offerSDP = JSON.parse(scannedOffer);
+      await pc.setRemoteDescription(offerSDP);
+
+      const answer = await pc.createAnswer();
+      await pc.setLocalDescription(answer);
+
+      // Wait for ICE candidates before generating Answer QR
+      pc.onicegatheringstatechange = () => {
+        if (pc.iceGatheringState === 'complete') {
+          displayQR(JSON.stringify(pc.localDescription));
+          setStatus("Step 2: Display this Answer QR code to Device A to complete the connection.");
+        }
+      };
+    });
+  }
+
+  // ==========================================
+  // WEBRTC DATA CHANNEL & CHAT LOGIC
+  // ==========================================
+  function setupDataChannel(channel) {
+    channel.onopen = () => {
+      document.getElementById('workspace').style.display = 'none';
+      document.getElementById('chat-ui').style.display = 'block';
+    };
+
+    channel.onmessage = (e) => {
+      appendChat("Peer", e.data);
+    };
+  }
+
+  function sendMessage() {
+    const input = document.getElementById('msg-input');
+    if (input.value.trim() && dataChannel) {
+      dataChannel.send(input.value);
+      appendChat("You", input.value);
+      input.value = '';
+    }
+  }
+
+  function appendChat(sender, text) {
+    const box = document.getElementById('chat-box');
+    box.innerHTML += `<div><strong>${sender}:</strong> ${text}</div>`;
+    box.scrollTop = box.scrollHeight;
+  }
+
+  // ==========================================
+  // CAMERA SCANNER & QR HELPERS
+  // ==========================================
+  let scanStream = null;
+
+  function startScanner(onScanSuccess) {
+    const video = document.getElementById("webcam");
+    const canvasElement = document.getElementById("video-canvas");
+    const canvas = canvasElement.getContext("2d");
+
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } }).then((stream) => {
+      scanStream = stream;
+      video.srcObject = stream;
+      video.removeAttribute("hidden");
+
+      function tick() {
+        if (video.readyState === video.HAVE_ENOUGH_DATA) {
+          canvasElement.height = video.videoHeight;
+          canvasElement.width = video.videoWidth;
+          canvas.drawImage(video, 0, 0, canvasElement.width, canvasElement.height);
+
+          const imageData = canvas.getImageData(0, 0, canvasElement.width, canvasElement.height);
+          const code = jsQR(imageData.data, imageData.width, imageData.height);
+
+          if (code && code.data) {
+            onScanSuccess(code.data);
+            return;
+          }
+        }
+        if (scanStream) requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
+    });
+  }
+
+  function stopScanner() {
+    if (scanStream) {
+      scanStream.getTracks().forEach(track => track.stop());
+      scanStream = null;
+    }
+    document.getElementById("webcam").setAttribute("hidden", true);
+  }
+
+  function displayQR(data) {
+    const canvas = document.getElementById('qr-canvas');
+    qrGen.value = data;
+    canvas.style.display = 'block';
+  }
+
+  function hideQR() { document.getElementById('qr-canvas').style.display = 'none'; }
+  function setStatus(txt) { document.getElementById('status-text').innerText = txt; }
+  function showWorkspace(txt) {
+    document.getElementById('role-select').style.display = 'none';
+    document.getElementById('workspace').style.display = 'block';
+    setStatus(txt);
+  }
+
+  function addScanButton(label, onClick) {
+    const btn = document.createElement('button');
+    btn.innerText = label;
+    btn.onclick = () => { btn.remove(); onClick(); };
+    document.getElementById('workspace').appendChild(btn);
+  }
+</script>
+</body>
+</html>
