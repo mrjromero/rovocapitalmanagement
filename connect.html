@@ -287,22 +287,23 @@
     async function initLanDiscovery(peerId) {
       const statusEl = document.getElementById('lan-status');
       try {
-        // Step 1: Detect Public IP Address
-        const res = await fetch('https://api.ipify.org?format=json');
+        // Step 1: Force IPv4 lookup to prevent IPv4 vs IPv6 room mismatches
+        const res = await fetch('https://api4.ipify.org?format=json');
         const data = await res.json();
         const publicIp = data.ip;
 
-        // Step 2: Derive a sanitized, unique topic room name for this public IP
+        // Step 2: Derive room topic name
         lanTopic = 'p2plan-' + publicIp.replace(/[^a-zA-Z0-9]/g, '');
         statusEl.textContent = `IP: ${publicIp}`;
 
-        // Step 3: Subscribe to the public IP's event topic
-        const eventSource = new EventSource(`https://ntfy.sh/${lanTopic}/json`);
+        // Step 3: Connect to /sse endpoint for native browser EventSource compatibility
+        const eventSource = new EventSource(`https://ntfy.sh/${lanTopic}/sse`);
 
         eventSource.onmessage = (event) => {
           try {
             const msgData = JSON.parse(event.data);
             if (!msgData.message) return;
+            
             const payload = JSON.parse(msgData.message);
 
             if (payload.peerId && payload.peerId !== myPeerId) {
@@ -310,33 +311,38 @@
               renderLanPeers();
             }
           } catch (err) {
-            // Ignore non-JSON messages
+            // Ignore non-JSON or heartbeat pings
           }
         };
 
-        // Step 4: Periodically announce presence to peers on the same public IP
+        eventSource.onerror = (err) => {
+          console.warn("LAN discovery stream reconnecting...", err);
+        };
+
+        // Step 4: Periodically announce presence (every 5s for fast discovery)
         const sendAnnounce = () => {
           fetch(`https://ntfy.sh/${lanTopic}`, {
             method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ peerId: peerId, timestamp: Date.now() })
           }).catch(() => {});
         };
 
         sendAnnounce();
-        announceInterval = setInterval(sendAnnounce, 10000);
+        announceInterval = setInterval(sendAnnounce, 5000);
 
-        // Prune stale peers inactive for >25 seconds
+        // Prune stale peers inactive for >15 seconds
         setInterval(() => {
           const now = Date.now();
           let changed = false;
           discoveredPeers.forEach((lastSeen, pid) => {
-            if (now - lastSeen > 25000) {
+            if (now - lastSeen > 15000) {
               discoveredPeers.delete(pid);
               changed = true;
             }
           });
           if (changed) renderLanPeers();
-        }, 5000);
+        }, 3000);
 
       } catch (err) {
         statusEl.textContent = 'Offline / Blocked';
