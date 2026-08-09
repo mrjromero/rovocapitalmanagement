@@ -243,8 +243,10 @@
     // LAN Auto-discovery variables
     let discoveredPeers = new Map();
     let lanTopic = null;
+    let fallbackTopic = 'p2proom-Lobby';
     let announceInterval = null;
     let lanEventSource = null;
+    let fallbackEventSource = null;
     let broadcastChan = null;
 
     // --- VANITY NAME GENERATOR & LOCALSTORAGE PERSISTENCE ---
@@ -335,7 +337,15 @@
     });
 
     document.getElementById('join-room-btn').addEventListener('click', () => {
-      if (myPeerId) initLanDiscovery(myPeerId);
+      if (!myPeerId) return alert("Peer service initializing... Please try again in a moment.");
+      initLanDiscovery(myPeerId);
+    });
+
+    // Handle tab visibility recovery for mobile devices
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible' && myPeerId && typeof sendAnnounceGlobal === 'function') {
+        sendAnnounceGlobal();
+      }
     });
 
     function handlePeerJSConnect(remoteId) {
@@ -489,6 +499,8 @@
       throw new Error("Could not fetch IP");
     }
 
+    let sendAnnounceGlobal = null;
+
     async function initLanDiscovery(peerId) {
       const statusEl = document.getElementById('lan-status');
       const listEl = document.getElementById('lan-peer-list');
@@ -496,15 +508,16 @@
       
       initLocalBroadcastChannel();
 
-      // Ensure default room is set if field is empty
-      if (!roomInput.value.trim()) {
+      // Ensure default room fallback
+      let userRoom = roomInput.value.trim();
+      const sanitizedRoom = userRoom.replace(/[^a-zA-Z0-9]/g, '');
+      if (!sanitizedRoom) {
         roomInput.value = 'Lobby';
+        userRoom = 'Lobby';
       }
 
-      let userRoom = roomInput.value.trim();
       let publicIp = null;
 
-      // Try fetching public IP for automatic local subnet isolation
       try {
         statusEl.textContent = 'Fetching IP...';
         publicIp = await getPublicIp();
@@ -512,10 +525,6 @@
         console.warn("IP lookup failed. Falling back to default room.");
       }
 
-      // Determine topic room priority:
-      // 1. Explicit user room (other than 'Lobby')
-      // 2. Local Public IP hash (if IP lookup succeeded)
-      // 3. Default Fallback Room ('Lobby')
       if (userRoom && userRoom.toLowerCase() !== 'lobby') {
         lanTopic = 'p2proom-' + userRoom.replace(/[^a-zA-Z0-9]/g, '');
         statusEl.textContent = `Room: ${userRoom}`;
@@ -527,49 +536,53 @@
         statusEl.textContent = 'Room: Lobby (Fallback)';
       }
 
-      // Clear existing connections & peers when changing rooms
       discoveredPeers.clear();
       renderLanPeers();
 
       if (lanEventSource) lanEventSource.close();
-      lanEventSource = new EventSource(`https://ntfy.sh/${lanTopic}/sse`);
+      if (fallbackEventSource) fallbackEventSource.close();
 
+      lanEventSource = new EventSource(`https://ntfy.sh/${lanTopic}/sse`);
       lanEventSource.onopen = () => {
         if (discoveredPeers.size === 0) listEl.textContent = 'Searching for peers...';
       };
+      lanEventSource.onmessage = handleSSEMessage;
 
-      lanEventSource.onmessage = (event) => {
+      // Subscribe to fallback room if using IP matching to catch peers with blocked IP lookups
+      if (lanTopic !== fallbackTopic) {
+        fallbackEventSource = new EventSource(`https://ntfy.sh/${fallbackTopic}/sse`);
+        fallbackEventSource.onmessage = handleSSEMessage;
+      }
+
+      function handleSSEMessage(event) {
         try {
           const msgData = JSON.parse(event.data);
           if (!msgData.message) return;
-          
           const payload = JSON.parse(msgData.message);
 
           if (payload.peerId && payload.peerId !== myPeerId) {
             handleDiscoveredPeer(payload.peerId, payload.name || payload.peerId);
           }
         } catch (err) {}
-      };
+      }
 
-      lanEventSource.onerror = () => {
-        statusEl.textContent = 'Reconnecting...';
-      };
-
-      const sendAnnounce = async () => {
+      sendAnnounceGlobal = async () => {
         announceLocalBroadcast();
 
         const myName = nameInput.value.trim() || 'Anonymous';
+        const bodyStr = JSON.stringify({ peerId: peerId, name: myName, timestamp: Date.now() });
+
         try {
-          const resp = await fetch(`https://ntfy.sh/${lanTopic}`, {
-            method: 'POST',
-            body: JSON.stringify({ peerId: peerId, name: myName, timestamp: Date.now() })
-          });
+          const resp = await fetch(`https://ntfy.sh/${lanTopic}`, { method: 'POST', body: bodyStr });
+
+          // Dual-announce to lobby fallback if using auto IP mode
+          if (lanTopic !== fallbackTopic) {
+            fetch(`https://ntfy.sh/${fallbackTopic}`, { method: 'POST', body: bodyStr }).catch(() => {});
+          }
 
           if (resp.status === 429) {
             statusEl.textContent = 'Throttled (Rate Limit)';
-          } else if (!resp.ok) {
-            statusEl.textContent = `Relay err ${resp.status}`;
-          } else {
+          } else if (resp.ok) {
             if (userRoom && userRoom.toLowerCase() !== 'lobby') {
               statusEl.textContent = `Room: ${userRoom}`;
             } else if (publicIp) {
@@ -583,9 +596,9 @@
         }
       };
 
-      sendAnnounce();
+      sendAnnounceGlobal();
       if (announceInterval) clearInterval(announceInterval);
-      announceInterval = setInterval(sendAnnounce, 8000);
+      announceInterval = setInterval(sendAnnounceGlobal, 8000);
 
       setInterval(() => {
         const now = Date.now();
@@ -705,21 +718,17 @@
         rawConn: channel,
         send: (data) => {
           if (data && typeof data === 'object' && !(data instanceof ArrayBuffer) && !(data instanceof Blob)) {
+            // Flag internal system protocol payloads cleanly
+            const payload = { __p2p_proto: true, ...data };
             if (data.type === 'file-chunk' && data.chunk instanceof ArrayBuffer) {
               const bytes = new Uint8Array(data.chunk);
               let binary = '';
               for (let i = 0; i < bytes.byteLength; i++) {
                 binary += String.fromCharCode(bytes[i]);
               }
-              const base64Chunk = btoa(binary);
-              channel.send(JSON.stringify({
-                type: 'file-chunk',
-                chunk: base64Chunk,
-                chunkIndex: data.chunkIndex
-              }));
-            } else {
-              channel.send(JSON.stringify(data));
+              payload.chunk = btoa(binary);
             }
+            channel.send(JSON.stringify(payload));
           } else {
             channel.send(data);
           }
@@ -740,20 +749,21 @@
         if (typeof data === 'string') {
           try {
             const parsed = JSON.parse(data);
-            if (parsed.type === 'file-chunk' && typeof parsed.chunk === 'string') {
-              const binary = atob(parsed.chunk);
-              const bytes = new Uint8Array(binary.length);
-              for (let i = 0; i < binary.length; i++) {
-                bytes[i] = binary.charCodeAt(i);
+            if (parsed && typeof parsed === 'object' && parsed.__p2p_proto) {
+              if (parsed.type === 'file-chunk' && typeof parsed.chunk === 'string') {
+                const binary = atob(parsed.chunk);
+                const bytes = new Uint8Array(binary.length);
+                for (let i = 0; i < binary.length; i++) {
+                  bytes[i] = binary.charCodeAt(i);
+                }
+                parsed.chunk = bytes.buffer;
               }
-              parsed.chunk = bytes.buffer;
+              processIncomingData(parsed, peerId);
+              return;
             }
-            processIncomingData(parsed, peerId);
-            return;
-          } catch(err) {
-            processIncomingData(data, peerId);
-            return;
-          }
+          } catch(err) {}
+          processIncomingData(data, peerId);
+          return;
         }
         processIncomingData(data, peerId);
       };
