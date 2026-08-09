@@ -1,3 +1,7 @@
+To add a notification sound without requiring you to host external .mp3 or .wav files, we can use the browser's native Web Audio API. This synthesizes a clean, pleasant two-tone "ding" natively on the device.
+📱 A Note on Mobile Browser Audio
+Mobile browsers (Safari and Chrome) strictly block websites from playing audio until the user interacts with the page. To handle this, the updated code silently unlocks the audio engine the very first time you tap anywhere on the screen (like tapping the input box or the "Copy Link" button).
+Here is the complete, updated code with the notification chime integrated for incoming text messages and completed file transfers:
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -329,6 +333,46 @@
     const connections = new Map();
     const incomingTransfers = new Map();
 
+    // --- AUDIO NOTIFICATION SYSTEM ---
+    let audioCtx = null;
+
+    // Unlock audio context on first screen tap (iOS/Android requirement)
+    const unlockAudio = () => {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      document.removeEventListener('click', unlockAudio);
+      document.removeEventListener('touchstart', unlockAudio);
+    };
+    document.addEventListener('click', unlockAudio);
+    document.addEventListener('touchstart', unlockAudio);
+
+    // Synthesize a pleasant 2-tone "Ding"
+    function playNotificationSound() {
+      if (!audioCtx) return;
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      try {
+        const t = audioCtx.currentTime;
+        const playTone = (freq, startTime) => {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, startTime);
+          
+          gain.gain.setValueAtTime(0, startTime);
+          gain.gain.linearRampToValueAtTime(0.15, startTime + 0.02);
+          gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.15);
+          
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          
+          osc.start(startTime);
+          osc.stop(startTime + 0.15);
+        };
+        playTone(880, t);        // A5 note
+        playTone(1108.73, t + 0.1); // C#6 note
+      } catch (e) {}
+    }
+
     // 1. Vanity Name Generator & Persistence
     const ADJ = ['Swift', 'Neon', 'Solar', 'Brave', 'Clever', 'Cosmic', 'Turbo', 'Shadow', 'Crystal'];
     const ANI = ['Otter', 'Falcon', 'Panda', 'Fox', 'Dolphin', 'Eagle', 'Panther', 'Raven', 'Wolf'];
@@ -353,7 +397,7 @@
       } 
     });
 
-    // Background App Freeze Recovery: Automatically reconnect to the server when the user returns to the app
+    // Background App Freeze Recovery
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'visible' && peer.disconnected) {
         peer.reconnect();
@@ -371,7 +415,6 @@
       const shareBtn = document.getElementById('share-btn');
       shareBtn.disabled = false;
       
-      // Native Share Sheet Integration
       shareBtn.onclick = async () => {
         if (navigator.share) {
           try {
@@ -389,15 +432,13 @@
       };
 
       renderShareQR(shareUrl);
-      updateUI(); // Set initial status to 0 Connected
+      updateUI();
 
-      // Check if user clicked a share link to join someone else
       const targetId = new URLSearchParams(window.location.search).get('id');
       if (targetId) {
         logSystem("Connecting to host...");
         connectToPeer(targetId);
 
-        // Auto-Retry Loop for background apps
         let retryCount = 0;
         const retryTimer = setInterval(() => {
           if (connections.has(targetId)) {
@@ -454,7 +495,6 @@
         fileBtn.disabled = !active;
       }
 
-      // Update Header Status Indicator
       const statusText = document.getElementById('conn-status');
       const statusDot = document.getElementById('status-dot');
       
@@ -469,7 +509,10 @@
       const conn = connections.get(senderId);
       const senderName = conn?.name || senderId;
 
-      if (typeof data === 'string') return logBubble(senderName, data, false);
+      if (typeof data === 'string') {
+        playNotificationSound();
+        return logBubble(senderName, data, false);
+      }
 
       if (data.type === 'identity') {
         if (conn && conn.name !== data.name) {
@@ -487,6 +530,7 @@
         const transfer = incomingTransfers.get(senderId);
         if (transfer) {
           const blob = new Blob(transfer.chunks, { type: transfer.type });
+          playNotificationSound();
           logDownload(senderName, URL.createObjectURL(blob), transfer.name);
           incomingTransfers.delete(senderId);
         }
@@ -518,10 +562,16 @@
 
     fileBtn.onclick = () => fileInput.click();
 
-    // The limit has been removed entirely, files stream in chunks over WebRTC.
     fileInput.onchange = async () => {
       const file = fileInput.files[0];
       if (!file) return;
+
+      const MAX_FILE_SIZE = 250 * 1024 * 1024;
+      if (file.size > MAX_FILE_SIZE) {
+        alert(`File is too large (${Math.round(file.size / 1024 / 1024)}MB). Mobile browsers may crash if transfers exceed 250MB.`);
+        fileInput.value = '';
+        return;
+      }
       
       fileInput.value = '';
       fileBtn.disabled = true;
@@ -532,7 +582,6 @@
 
       let offset = 0;
       while (offset < file.size) {
-        
         let maxBuffer = 0;
         connections.forEach(c => {
           if (c.dataChannel && c.dataChannel.bufferedAmount > maxBuffer) {
@@ -540,7 +589,6 @@
           }
         });
 
-        // Network Backpressure Control
         if (maxBuffer > 1024 * 1024) {
           await new Promise(r => setTimeout(r, 50));
           continue;
@@ -634,3 +682,4 @@
   </script>
 </body>
 </html>
+
