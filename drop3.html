@@ -35,7 +35,7 @@
   <div id="workspace" class="step" style="display:none;">
     <div id="status-text" class="status">Initializing WebRTC...</div>
     <canvas id="qr-canvas" style="display:none;"></canvas>
-    <video id="webcam" playsinline hidden></video>
+    <video id="webcam" playsinline autoplay muted hidden></video>
     <canvas id="video-canvas" hidden></canvas>
   </div>
 
@@ -151,8 +151,14 @@
 
   function appendChat(sender, text) {
     const box = document.getElementById('chat-box');
-    box.innerHTML += `<div><strong>${sender}:</strong> ${text}</div>`;
+    const msg = document.createElement('div');
+    msg.innerHTML = `<strong>${escapeHTML(sender)}:</strong> ${escapeHTML(text)}`;
+    box.appendChild(msg);
     box.scrollTop = box.scrollHeight;
+  }
+
+  function escapeHTML(str) {
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
 
   // ==========================================
@@ -163,31 +169,51 @@
   function startScanner(onScanSuccess) {
     const video = document.getElementById("webcam");
     const canvasElement = document.getElementById("video-canvas");
-    const canvas = canvasElement.getContext("2d");
+    const canvas = canvasElement.getContext("2d", { willReadFrequently: true });
 
-    navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } }).then((stream) => {
-      scanStream = stream;
-      video.srcObject = stream;
-      video.removeAttribute("hidden");
+    // Verify HTTPS or localhost context
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      alert("Camera API blocked! Mobile browsers require HTTPS or localhost to access the camera.");
+      return;
+    }
 
-      function tick() {
-        if (video.readyState === video.HAVE_ENOUGH_DATA) {
-          canvasElement.height = video.videoHeight;
-          canvasElement.width = video.videoWidth;
-          canvas.drawImage(video, 0, 0, canvasElement.width, canvasElement.height);
+    const requestCamera = (constraints) => navigator.mediaDevices.getUserMedia(constraints);
 
-          const imageData = canvas.getImageData(0, 0, canvasElement.width, canvasElement.height);
-          const code = jsQR(imageData.data, imageData.width, imageData.height);
+    // Try rear camera first; fall back to default camera if rejected
+    requestCamera({ video: { facingMode: "environment" } })
+      .catch(() => requestCamera({ video: true }))
+      .then(async (stream) => {
+        scanStream = stream;
+        video.srcObject = stream;
+        video.removeAttribute("hidden");
 
-          if (code && code.data) {
-            onScanSuccess(code.data);
-            return;
-          }
+        try {
+          await video.play();
+        } catch (err) {
+          console.warn("Video play error:", err);
         }
-        if (scanStream) requestAnimationFrame(tick);
-      }
-      requestAnimationFrame(tick);
-    });
+
+        function tick() {
+          if (video.readyState === video.HAVE_ENOUGH_DATA) {
+            canvasElement.height = video.videoHeight;
+            canvasElement.width = video.videoWidth;
+            canvas.drawImage(video, 0, 0, canvasElement.width, canvasElement.height);
+
+            const imageData = canvas.getImageData(0, 0, canvasElement.width, canvasElement.height);
+            const code = jsQR(imageData.data, imageData.width, imageData.height);
+
+            if (code && code.data) {
+              onScanSuccess(code.data);
+              return;
+            }
+          }
+          if (scanStream) requestAnimationFrame(tick);
+        }
+        requestAnimationFrame(tick);
+      })
+      .catch((err) => {
+        alert(`Camera Permission or Device Error: ${err.name} - ${err.message}`);
+      });
   }
 
   function stopScanner() {
