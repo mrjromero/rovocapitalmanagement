@@ -160,7 +160,7 @@
 </head>
 <body>
   <div class="app-container">
-    <h2>P2P Connect</h2>
+    <h2>P2P Group Transfer</h2>
 
     <!-- Display Name Control -->
     <div class="controls" style="margin-bottom: 12px;">
@@ -180,6 +180,10 @@
       <div class="lan-title">
         <span>🌐 Local Network Peers</span>
         <span id="lan-status" style="font-weight: normal; font-size: 11px; color: #6c757d;">Scanning...</span>
+      </div>
+      <div style="display: flex; gap: 6px; margin-bottom: 8px;">
+        <input type="text" id="room-name-input" placeholder="Custom Room (Optional)" style="padding: 6px 10px; font-size: 12px; flex: 1; border: 1px solid var(--border); border-radius: 6px;">
+        <button id="join-room-btn" style="padding: 6px 12px; font-size: 12px; background: #17a2b8;">Join Room</button>
       </div>
       <div id="lan-peer-list" class="debug-log">Searching for devices on your network...</div>
     </div>
@@ -228,7 +232,7 @@
     let scanStream = null;
     let nativePc = null;
 
-    // Multi-Peer Mesh Map: Map<peerId, { id, name, isPeerJS, send: fn, bufferedAmount: getter }>
+    // Multi-Peer Mesh Map
     const connections = new Map();
     const incomingTransfers = new Map();
 
@@ -240,6 +244,8 @@
     let discoveredPeers = new Map();
     let lanTopic = null;
     let announceInterval = null;
+    let lanEventSource = null;
+    let broadcastChan = null;
 
     // --- VANITY NAME GENERATOR & LOCALSTORAGE PERSISTENCE ---
     const ADJECTIVES = ['Swift', 'Neon', 'Solar', 'Cozy', 'Brave', 'Silent', 'Clever', 'Cosmic', 'Turbo', 'Shadow', 'Electric', 'Lunar', 'Velvet', 'Crystal'];
@@ -328,6 +334,10 @@
       handlePeerJSConnect(remoteId);
     });
 
+    document.getElementById('join-room-btn').addEventListener('click', () => {
+      if (myPeerId) initLanDiscovery(myPeerId);
+    });
+
     function handlePeerJSConnect(remoteId) {
       if (remoteId === myPeerId) return;
       if (connections.has(remoteId)) return;
@@ -345,7 +355,6 @@
       updateControlsState();
       updateConnectedPeersBar();
 
-      // Send identity packet on open
       const myName = nameInput.value.trim() || 'Anonymous';
       connWrapper.send({ type: 'identity', name: myName });
     }
@@ -404,7 +413,7 @@
       };
 
       conn.on('open', () => {
-        reconnectAttempts.delete(conn.peer); // Clear retries on success
+        reconnectAttempts.delete(conn.peer);
         addConnection(conn.peer, connWrapper);
         logSystem(`Connected to ${conn.peer}`);
       });
@@ -419,7 +428,6 @@
         
         removeConnection(conn.peer);
 
-        // Auto-reconnect up to 3 times for transient drops
         let attempts = reconnectAttempts.get(conn.peer) || 0;
         if (attempts < 3) {
           reconnectAttempts.set(conn.peer, attempts + 1);
@@ -438,21 +446,72 @@
     }
 
     // ==========================================
-    // PUBLIC IP MATCHING (SAME-LAN AUTO-DISCOVERY)
+    // LOCAL BROADCAST CHANNEL (SAME DEVICE)
     // ==========================================
+    function initLocalBroadcastChannel() {
+      if (broadcastChan) return;
+      try {
+        broadcastChan = new BroadcastChannel('p2p_lan_discovery_channel');
+        broadcastChan.onmessage = (event) => {
+          const payload = event.data;
+          if (payload && payload.peerId && payload.peerId !== myPeerId) {
+            handleDiscoveredPeer(payload.peerId, payload.name || payload.peerId);
+          }
+        };
+      } catch (e) {
+        console.warn("BroadcastChannel not supported", e);
+      }
+    }
+
+    function announceLocalBroadcast() {
+      if (broadcastChan && myPeerId) {
+        const myName = nameInput.value.trim() || 'Anonymous';
+        broadcastChan.postMessage({ peerId: myPeerId, name: myName, timestamp: Date.now() });
+      }
+    }
+
+    // ==========================================
+    // PUBLIC IP MATCHING (AUTO-DISCOVERY)
+    // ==========================================
+    async function getPublicIp() {
+      const services = [
+        'https://api4.ipify.org?format=json',
+        'https://api.ipify.org?format=json'
+      ];
+      for (const url of services) {
+        try {
+          const res = await fetch(url);
+          if (!res.ok) continue;
+          const data = await res.json();
+          if (data.ip) return data.ip;
+        } catch (e) {}
+      }
+      throw new Error("Could not fetch IP");
+    }
+
     async function initLanDiscovery(peerId) {
       const statusEl = document.getElementById('lan-status');
+      const listEl = document.getElementById('lan-peer-list');
+      
+      initLocalBroadcastChannel();
+
       try {
-        const res = await fetch('https://api4.ipify.org?format=json');
-        const data = await res.json();
-        const publicIp = data.ip;
+        statusEl.textContent = 'Fetching IP...';
+        const publicIp = await getPublicIp();
+        
+        const customRoom = document.getElementById('room-name-input').value.trim();
+        lanTopic = customRoom ? ('p2proom-' + customRoom.replace(/[^a-zA-Z0-9]/g, '')) : ('p2plan-' + publicIp.replace(/[^a-zA-Z0-9]/g, ''));
+        
+        statusEl.textContent = customRoom ? `Room: ${customRoom}` : `IP: ${publicIp}`;
 
-        lanTopic = 'p2plan-' + publicIp.replace(/[^a-zA-Z0-9]/g, '');
-        statusEl.textContent = `IP: ${publicIp}`;
+        if (lanEventSource) lanEventSource.close();
+        lanEventSource = new EventSource(`https://ntfy.sh/${lanTopic}/sse`);
 
-        const eventSource = new EventSource(`https://ntfy.sh/${lanTopic}/sse`);
+        lanEventSource.onopen = () => {
+          if (discoveredPeers.size === 0) listEl.textContent = 'Searching for peers...';
+        };
 
-        eventSource.onmessage = (event) => {
+        lanEventSource.onmessage = (event) => {
           try {
             const msgData = JSON.parse(event.data);
             if (!msgData.message) return;
@@ -460,59 +519,80 @@
             const payload = JSON.parse(msgData.message);
 
             if (payload.peerId && payload.peerId !== myPeerId) {
-              discoveredPeers.set(payload.peerId, {
-                name: payload.name || payload.peerId,
-                lastSeen: Date.now()
-              });
-
-              // Auto-reconnect if a refreshed peer's display name is recognized
-              const isConnected = connections.has(payload.peerId);
-              const isKnownPeer = knownConnectedNames.has(payload.name);
-
-              if (!isConnected && isKnownPeer) {
-                logSystem(`Peer "${payload.name}" refreshed. Auto-reconnecting...`);
-                handlePeerJSConnect(payload.peerId);
-              }
-
-              renderLanPeers();
+              handleDiscoveredPeer(payload.peerId, payload.name || payload.peerId);
             }
           } catch (err) {}
         };
 
-        const sendAnnounce = () => {
+        lanEventSource.onerror = () => {
+          statusEl.textContent = 'Reconnecting...';
+        };
+
+        const sendAnnounce = async () => {
+          announceLocalBroadcast();
+
           const myName = nameInput.value.trim() || 'Anonymous';
-          // Raw string body so ntfy doesn't treat JSON keys as HTTP headers/configs
-          fetch(`https://ntfy.sh/${lanTopic}`, {
-            method: 'POST',
-            body: JSON.stringify({ peerId: peerId, name: myName, timestamp: Date.now() })
-          }).catch(() => {});
+          try {
+            const resp = await fetch(`https://ntfy.sh/${lanTopic}`, {
+              method: 'POST',
+              body: JSON.stringify({ peerId: peerId, name: myName, timestamp: Date.now() })
+            });
+
+            if (resp.status === 429) {
+              statusEl.textContent = 'Rate limited (throttled)';
+            } else if (!resp.ok) {
+              statusEl.textContent = `Relay err ${resp.status}`;
+            } else {
+              statusEl.textContent = customRoom ? `Room: ${customRoom}` : `Active (${publicIp})`;
+            }
+          } catch (err) {
+            statusEl.textContent = 'Network Blocked';
+          }
         };
 
         sendAnnounce();
-        announceInterval = setInterval(sendAnnounce, 5000);
+        if (announceInterval) clearInterval(announceInterval);
+        announceInterval = setInterval(sendAnnounce, 8000);
 
         setInterval(() => {
           const now = Date.now();
           let changed = false;
           discoveredPeers.forEach((data, pid) => {
-            if (now - data.lastSeen > 15000) {
+            if (now - data.lastSeen > 20000) {
               discoveredPeers.delete(pid);
               changed = true;
             }
           });
           if (changed) renderLanPeers();
-        }, 3000);
+        }, 4000);
 
       } catch (err) {
-        statusEl.textContent = 'Offline / Blocked';
-        document.getElementById('lan-peer-list').textContent = 'LAN auto-discovery unavailable.';
+        statusEl.textContent = 'IP Fetch Failed';
+        listEl.innerHTML = `Auto-discovery blocked by network/adblocker.<br><small>Tip: Type a custom Room Name above and click "Join Room".</small>`;
       }
+    }
+
+    function handleDiscoveredPeer(peerId, name) {
+      discoveredPeers.set(peerId, {
+        name: name,
+        lastSeen: Date.now()
+      });
+
+      const isConnected = connections.has(peerId);
+      const isKnownPeer = knownConnectedNames.has(name);
+
+      if (!isConnected && isKnownPeer) {
+        logSystem(`Peer "${name}" refreshed. Auto-reconnecting...`);
+        handlePeerJSConnect(peerId);
+      }
+
+      renderLanPeers();
     }
 
     function renderLanPeers() {
       const listEl = document.getElementById('lan-peer-list');
       if (discoveredPeers.size === 0) {
-        listEl.textContent = 'No other peers found on this local network yet.';
+        listEl.textContent = 'No other peers found on this network yet.';
         return;
       }
 
@@ -742,7 +822,7 @@
       if (data.type === 'identity') {
         if (conn) {
           conn.name = data.name;
-          knownConnectedNames.add(data.name); // Track for refresh auto-reconnect
+          knownConnectedNames.add(data.name);
           updateConnectedPeersBar();
           logSystem(`${senderPeerId} updated name to "${data.name}"`);
         }
