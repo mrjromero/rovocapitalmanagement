@@ -301,7 +301,7 @@
         </div>
         <div class="row" style="justify-content: space-between; font-size: 13px;">
           <span style="color: var(--subtext); word-break: break-all;">
-            <strong>Share to connect</strong>
+            <strong>Share link to connect:</strong>
           </span>
           <button id="share-btn" class="btn btn-secondary" disabled>Copy Link</button>
         </div>
@@ -353,16 +353,39 @@
       } 
     });
 
+    // Background App Freeze Recovery: Automatically reconnect to the server when the user returns to the app
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible' && peer.disconnected) {
+        peer.reconnect();
+      }
+    });
+
+    peer.on('disconnected', () => {
+      if (document.visibilityState === 'visible') peer.reconnect();
+    });
+
     peer.on('open', (id) => {
       myPeerId = id;
       
       const shareUrl = `${window.location.origin}${window.location.pathname}?id=${id}`;
       const shareBtn = document.getElementById('share-btn');
       shareBtn.disabled = false;
-      shareBtn.onclick = () => {
-        navigator.clipboard.writeText(shareUrl);
-        shareBtn.innerText = 'Copied!';
-        setTimeout(() => shareBtn.innerText = 'Copy Link', 2000);
+      
+      // Native Share Sheet Integration (Better mobile experience)
+      shareBtn.onclick = async () => {
+        if (navigator.share) {
+          try {
+            await navigator.share({
+              title: 'Local Share',
+              text: 'Join my secure P2P session:',
+              url: shareUrl
+            });
+          } catch (err) { /* User cancelled share */ }
+        } else if (navigator.clipboard) {
+          navigator.clipboard.writeText(shareUrl);
+          shareBtn.innerText = 'Copied!';
+          setTimeout(() => shareBtn.innerText = 'Copy Link', 2000);
+        }
       };
 
       renderShareQR(shareUrl);
@@ -370,7 +393,22 @@
 
       // Check if user clicked a share link to join someone else
       const targetId = new URLSearchParams(window.location.search).get('id');
-      if (targetId) connectToPeer(targetId);
+      if (targetId) {
+        logSystem("Connecting to host...");
+        connectToPeer(targetId);
+
+        // Auto-Retry Loop: If the host is in another app (like Messages), ping every 3s until they return
+        let retryCount = 0;
+        const retryTimer = setInterval(() => {
+          if (connections.has(targetId)) {
+            clearInterval(retryTimer); // Success, stop retrying
+          } else {
+            retryCount++;
+            if (retryCount === 1) logSystem("Host might be in another app. Retrying...");
+            connectToPeer(targetId);
+          }
+        }, 3000);
+      }
     });
 
     peer.on('connection', (conn) => setupConnection(conn));
