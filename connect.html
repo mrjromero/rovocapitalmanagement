@@ -3,223 +3,68 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>P2P Group File Transfer & Chat</title>
+  <title>Local P2P Share</title>
   <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.5/dist/peerjs.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
   <style>
-    :root {
-      --primary: #007bff;
-      --bg: #f4f7f6;
-      --card-bg: #ffffff;
-      --border: #dcdcdc;
-    }
-    
-    body { 
-      font-family: system-ui, -apple-system, sans-serif; 
-      background-color: var(--bg);
-      margin: 0; 
-      padding: 15px; 
-      display: flex;
-      justify-content: center;
-    }
-
-    .app-container {
-      background: var(--card-bg);
-      width: 100%;
-      max-width: 500px;
-      border-radius: 12px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-      padding: 20px;
-      box-sizing: border-box;
-    }
-
-    h2 { margin-top: 0; font-size: 1.5rem; text-align: center; }
-
-    .id-container {
-      background: #e9ecef;
-      padding: 12px;
-      border-radius: 8px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 12px;
-      font-size: 14px;
-      word-break: break-all;
-    }
-
-    .controls { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
-    
-    input[type="text"], input[type="file"] { 
-      flex: 1; 
-      min-width: 150px;
-      padding: 12px; 
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      font-size: 16px; 
-      box-sizing: border-box;
-    }
-    
-    button { 
-      padding: 12px 16px; 
-      background-color: var(--primary);
-      color: white;
-      border: none;
-      border-radius: 8px;
-      font-size: 16px;
-      font-weight: 500;
-      cursor: pointer; 
-      transition: opacity 0.2s;
-      flex-shrink: 0;
-    }
-    
+    :root { --primary: #007bff; --bg: #f4f7f6; --card-bg: #ffffff; --border: #dcdcdc; }
+    body { font-family: system-ui, -apple-system, sans-serif; background-color: var(--bg); margin: 0; padding: 15px; display: flex; justify-content: center; }
+    .app-container { background: var(--card-bg); width: 100%; max-width: 480px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); padding: 20px; box-sizing: border-box; }
+    h2 { margin: 0 0 15px 0; font-size: 1.4rem; text-align: center; color: #333; }
+    .id-box { background: #e9ecef; padding: 12px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-size: 13px; word-break: break-all; }
+    .controls { display: flex; gap: 8px; margin-bottom: 10px; }
+    input[type="text"], input[type="file"] { flex: 1; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; box-sizing: border-box; }
+    button { padding: 10px 14px; background-color: var(--primary); color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; flex-shrink: 0; }
     button:disabled { background-color: #a0cbf5; cursor: not-allowed; }
-    button:active { opacity: 0.8; }
-    
-    .copy-btn { padding: 6px 12px; font-size: 14px; border-radius: 6px; }
-    .secondary-btn { background-color: #6c757d; font-size: 14px; width: 100%; }
-    
-    .qr-section, .lan-section {
-      background: #f8f9fa;
-      border: 1px dashed var(--border);
-      border-radius: 8px;
-      padding: 12px;
-      margin-bottom: 12px;
-      text-align: center;
-    }
-
-    .lan-section {
-      border: 1px solid #cce5ff;
-      background: #f0f7ff;
-      text-align: left;
-    }
-
-    .lan-title {
-      font-weight: bold;
-      font-size: 14px;
-      color: #004085;
-      margin-bottom: 8px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .peer-chip {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background: #ffffff;
-      border: 1px solid #b8daff;
-      padding: 8px 12px;
-      border-radius: 6px;
-      margin-top: 6px;
-      font-size: 13px;
-    }
-
-    .connect-sm-btn {
-      padding: 4px 10px;
-      font-size: 12px;
-      border-radius: 4px;
-      background-color: #28a745;
-    }
-
-    #connected-peers-bar {
-      font-size: 0.85em;
-      font-weight: bold;
-      color: #6c757d;
-      margin-bottom: 8px;
-    }
-
-    #webcam { width: 100%; border-radius: 8px; margin-top: 8px; background: #000; }
-    #qr-canvas { display: block; margin: 10px auto; max-width: 100%; height: auto; border-radius: 8px; background: #fff; padding: 8px; }
-    
-    #chat-box { 
-      height: 40vh; 
-      min-height: 250px;
-      border: 1px solid var(--border); 
-      border-radius: 8px;
-      overflow-y: auto; 
-      padding: 12px; 
-      margin: 15px 0; 
-      background: #fafafa;
-      word-wrap: break-word;
-    }
-    
-    .message { margin-bottom: 8px; line-height: 1.4; }
-    
-    .debug-log { 
-      margin-bottom: 8px; 
-      font-size: 0.85em; 
-      color: #6c757d; 
-      font-family: monospace; 
-    }
-    
+    .lan-section { border: 1px solid #cce5ff; background: #f0f7ff; border-radius: 8px; padding: 12px; margin-bottom: 12px; }
+    .lan-title { font-weight: bold; font-size: 13px; color: #004085; display: flex; justify-content: space-between; margin-bottom: 6px; }
+    .peer-chip { display: flex; justify-content: space-between; align-items: center; background: #fff; border: 1px solid #b8daff; padding: 6px 10px; border-radius: 6px; margin-top: 6px; font-size: 13px; }
+    .sm-btn { padding: 4px 8px; font-size: 12px; background-color: #28a745; }
+    #chat-box { height: 35vh; min-height: 220px; border: 1px solid var(--border); border-radius: 8px; overflow-y: auto; padding: 12px; margin: 12px 0; background: #fafafa; }
+    .message { margin-bottom: 8px; font-size: 14px; line-height: 1.4; }
+    .system-log { font-style: italic; color: #6c757d; margin-bottom: 8px; font-size: 13px; }
     a.download-link { color: var(--primary); font-weight: bold; text-decoration: none; word-break: break-all; }
-    a.download-link:hover { text-decoration: underline; }
   </style>
 </head>
 <body>
   <div class="app-container">
-    <h2>P2P Group Transfer</h2>
+    <h2>⚡ Local P2P Share</h2>
 
-    <!-- Display Name Control -->
-    <div class="controls" style="margin-bottom: 12px;">
-      <label style="font-weight: bold; font-size: 14px; display: flex; align-items: center; width: 100%; gap: 8px;">
-        Your Name:
-        <input type="text" id="display-name" style="padding: 8px; font-size: 14px;" placeholder="Your Name">
-      </label>
-    </div>
-    
-    <div class="id-container">
-      <span><strong>Your ID:</strong> <span id="my-id">Generating...</span></span>
-      <button id="share-btn" class="copy-btn" disabled>Share Link</button>
+    <!-- Name Input -->
+    <div class="controls">
+      <input type="text" id="display-name" placeholder="Your Display Name">
     </div>
 
-    <!-- LAN Auto-Discovery Panel -->
+    <!-- My Peer ID Box -->
+    <div class="id-box">
+      <span><strong>ID:</strong> <span id="my-id">Generating...</span></span>
+      <button id="share-btn" style="padding: 4px 8px; font-size: 12px;" disabled>Copy Link</button>
+    </div>
+
+    <!-- Local LAN Discovery Panel -->
     <div class="lan-section">
       <div class="lan-title">
-        <span>🌐 Network & Room Discovery</span>
-        <span id="lan-status" style="font-weight: normal; font-size: 11px; color: #6c757d;">Scanning...</span>
+        <span>🌐 Local Devices</span>
+        <span id="lan-status" style="font-weight: normal; color: #6c757d;">Scanning...</span>
       </div>
-      <div style="display: flex; gap: 6px; margin-bottom: 8px;">
-        <input type="text" id="room-name-input" value="Lobby" placeholder="Room Name (e.g. Lobby)" style="padding: 6px 10px; font-size: 12px; flex: 1; border: 1px solid var(--border); border-radius: 6px;">
-        <button id="join-room-btn" style="padding: 6px 12px; font-size: 12px; background: #17a2b8;">Switch Room</button>
-      </div>
-      <div id="lan-peer-list" class="debug-log">Searching for devices in room...</div>
+      <div id="lan-peer-list" style="font-size: 12px; color: #6c757d;">Searching network...</div>
     </div>
-    
+
+    <!-- Manual Connection Control -->
     <div class="controls">
-      <input type="text" id="remote-id" placeholder="Enter friend's ID">
+      <input type="text" id="remote-id" placeholder="Enter peer ID manually">
       <button id="connect-btn">Connect</button>
     </div>
 
-    <!-- QR Handshake Fallback Trigger -->
-    <div class="controls">
-      <button id="qr-toggle-btn" class="secondary-btn">📷 Offline / QR Handshake Fallback</button>
-    </div>
-
-    <!-- QR Handshake Workspace -->
-    <div id="qr-section" class="qr-section" style="display: none;">
-      <div style="display: flex; gap: 8px; margin-bottom: 8px;">
-        <button id="qr-host-btn" style="flex:1; font-size: 14px;">Host (Create Offer)</button>
-        <button id="qr-join-btn" style="flex:1; font-size: 14px;">Join (Scan Offer)</button>
-      </div>
-      <div id="qr-status" class="debug-log">Select Host or Joiner to connect serverless via camera</div>
-      <canvas id="qr-canvas" style="display:none;"></canvas>
-      <video id="webcam" playsinline autoplay muted hidden></video>
-      <canvas id="video-canvas" hidden></canvas>
-      <button id="qr-action-btn" style="display:none; margin-top: 8px; width: 100%;"></button>
-    </div>
-    
-    <div id="connected-peers-bar">Connected Peers (0): None</div>
-    
     <div id="chat-box"></div>
-    
+
+    <!-- Message Controls -->
     <div class="controls">
       <input type="text" id="msg-input" placeholder="Type a message..." disabled>
       <button id="send-btn" disabled>Send</button>
     </div>
 
+    <!-- File Controls -->
     <div class="controls">
       <input type="file" id="file-input" disabled>
       <button id="send-file-btn" disabled>Send File</button>
@@ -227,911 +72,245 @@
   </div>
 
   <script>
-    const CHUNK_SIZE = 16384; // 16 KB safe chunk size
+    const CHUNK_SIZE = 16384;
     let myPeerId = null;
-    let scanStream = null;
-    let nativePc = null;
-
-    // Persisted Session ID for Secure Auto-reconnect Validation
-    let mySessionId = sessionStorage.getItem('p2p_session_id');
-    if (!mySessionId) {
-      mySessionId = 'sess-' + Math.random().toString(36).substring(2, 9);
-      sessionStorage.setItem('p2p_session_id', mySessionId);
-    }
-    const knownConnectedSessions = new Set();
-
-    // Deduplication Set for Mesh Forwarding
-    const seenMsgIds = new Set();
-    function markMsgSeen(id) {
-      if (!id) return;
-      seenMsgIds.add(id);
-      if (seenMsgIds.size > 500) {
-        const first = seenMsgIds.values().next().value;
-        seenMsgIds.delete(first);
-      }
-    }
-
-    // Multi-Peer Mesh Map
     const connections = new Map();
+    const discoveredPeers = new Map();
     const incomingTransfers = new Map();
 
-    // Reconnection & Pruning Intervals
-    const reconnectAttempts = new Map();
-    let pruneInterval = null;
-
-    // LAN Auto-discovery variables
-    let discoveredPeers = new Map();
-    let lanTopic = null;
-    let fallbackTopic = 'p2proom-Lobby';
-    let announceInterval = null;
-    let lanEventSource = null;
-    let fallbackEventSource = null;
-    let broadcastChan = null;
-
-    // --- VANITY NAME GENERATOR & LOCALSTORAGE PERSISTENCE ---
-    const ADJECTIVES = ['Swift', 'Neon', 'Solar', 'Cozy', 'Brave', 'Silent', 'Clever', 'Cosmic', 'Turbo', 'Shadow', 'Electric', 'Lunar', 'Velvet', 'Crystal'];
-    const ANIMALS = ['Otter', 'Falcon', 'Panda', 'Fox', 'Dolphin', 'Eagle', 'Badger', 'Lynx', 'Panther', 'Raven', 'Tiger', 'Koala', 'Hawk', 'Wolf'];
-
-    function getInitialDisplayName() {
-      const savedName = localStorage.getItem('p2p_user_name');
-      if (savedName && savedName.trim()) return savedName.trim();
-
-      const adj = ADJECTIVES[Math.floor(Math.random() * ADJECTIVES.length)];
-      const animal = ANIMALS[Math.floor(Math.random() * ANIMALS.length)];
-      const vanityName = `${adj} ${animal}`;
-
-      localStorage.setItem('p2p_user_name', vanityName);
-      return vanityName;
-    }
-
+    // 1. Vanity Name Generator & Persistence
+    const ADJ = ['Swift', 'Neon', 'Solar', 'Brave', 'Clever', 'Cosmic', 'Turbo', 'Shadow', 'Crystal'];
+    const ANI = ['Otter', 'Falcon', 'Panda', 'Fox', 'Dolphin', 'Eagle', 'Panther', 'Raven', 'Wolf'];
+    
     const nameInput = document.getElementById('display-name');
-    nameInput.value = getInitialDisplayName();
-
-    nameInput.addEventListener('change', (e) => {
-      const newName = e.target.value.trim() || 'Anonymous';
-      localStorage.setItem('p2p_user_name', newName);
-      broadcastData({ type: 'identity', name: newName, sessionId: mySessionId });
+    nameInput.value = localStorage.getItem('p2p_name') || `${ADJ[Math.floor(Math.random()*ADJ.length)]} ${ANI[Math.floor(Math.random()*ANI.length)]}`;
+    nameInput.addEventListener('change', () => {
+      localStorage.setItem('p2p_name', nameInput.value.trim());
+      broadcast({ type: 'identity', name: nameInput.value.trim() });
     });
 
-    const qrGen = new QRious({ element: document.getElementById('qr-canvas'), size: 280, level: 'L' });
-
-    const rtcConfig = {
-      iceServers: [
-        { urls: 'stun:stun.l.google.com:19302' },
-        { urls: 'stun:stun1.l.google.com:19302' },
-        { urls: 'turn:openrelay.metered.ca:80', username: 'openrelayproject', credential: 'openrelayproject' },
-        { urls: 'turn:openrelay.metered.ca:443', username: 'openrelayproject', credential: 'openrelayproject' }
-      ]
-    };
-
-    const peer = new Peer({ config: rtcConfig }); 
-
-    const urlParams = new URLSearchParams(window.location.search);
-    const targetPeerId = urlParams.get('id');
+    // 2. PeerJS Setup
+    const peer = new Peer({ config: { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] } });
 
     peer.on('open', (id) => {
       myPeerId = id;
       document.getElementById('my-id').innerText = id;
       
+      const shareUrl = `${window.location.origin}${window.location.pathname}?id=${id}`;
       const shareBtn = document.getElementById('share-btn');
       shareBtn.disabled = false;
-      const shareUrl = `${window.location.origin}${window.location.pathname}?id=${id}`;
-      
-      showShareQR(shareUrl);
+      shareBtn.onclick = () => {
+        navigator.clipboard.writeText(shareUrl);
+        shareBtn.innerText = 'Copied!';
+        setTimeout(() => shareBtn.innerText = 'Copy Link', 2000);
+      };
 
-      shareBtn.addEventListener('click', async () => {
-        if (navigator.share) {
-          try {
-            await navigator.share({ url: shareUrl });
-          } catch (err) {
-            console.log('User cancelled share or share failed', err);
-          }
-        } else {
-          navigator.clipboard.writeText(shareUrl).then(() => {
-            const originalText = shareBtn.innerText;
-            shareBtn.innerText = 'Link Copied!';
-            setTimeout(() => { shareBtn.innerText = originalText; }, 2000);
-          }).catch(err => console.error('Failed to copy: ', err));
-        }
-      });
-
+      renderShareQR(shareUrl);
       initLanDiscovery(id);
 
-      if (targetPeerId) {
-        document.getElementById('remote-id').value = targetPeerId;
-        logSystem('Auto-connecting to link...');
-        setTimeout(() => { handlePeerJSConnect(targetPeerId); }, 500);
-        window.history.replaceState({}, document.title, window.location.pathname);
-      }
+      // URL parameter auto-connect
+      const targetId = new URLSearchParams(window.location.search).get('id');
+      if (targetId) connectToPeer(targetId);
     });
 
-    peer.on('connection', (conn) => {
-      setupPeerJSConnection(conn);
-    });
+    peer.on('connection', (conn) => setupConnection(conn));
 
-    document.getElementById('connect-btn').addEventListener('click', () => {
-      const remoteId = document.getElementById('remote-id').value.trim();
-      if (!remoteId) return;
-      handlePeerJSConnect(remoteId);
-    });
+    document.getElementById('connect-btn').onclick = () => {
+      const id = document.getElementById('remote-id').value.trim();
+      if (id) connectToPeer(id);
+    };
 
-    document.getElementById('join-room-btn').addEventListener('click', () => {
-      if (!myPeerId) return alert("Peer service initializing... Please try again in a moment.");
-      initLanDiscovery(myPeerId);
-    });
-
-    // Handle tab visibility recovery for mobile devices
-    document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'visible' && myPeerId && typeof sendAnnounceGlobal === 'function') {
-        sendAnnounceGlobal();
-      }
-    });
-
-    function handlePeerJSConnect(remoteId, isAuto = false) {
+    function connectToPeer(remoteId) {
       if (remoteId === myPeerId || connections.has(remoteId)) return;
-      // Race Condition Tie-Breaker: lower ID initiates auto-dials
-      if (isAuto && myPeerId > remoteId && discoveredPeers.has(remoteId)) return;
-      const conn = peer.connect(remoteId);
-      setupPeerJSConnection(conn);
+      setupConnection(peer.connect(remoteId));
     }
 
-    // ==========================================
-    // MULTI-PEER MESH ENGINE
-    // ==========================================
-    function addConnection(peerId, connWrapper) {
-      if (connections.has(peerId)) return;
-      connections.set(peerId, connWrapper);
-
-      updateControlsState();
-      updateConnectedPeersBar();
-
-      const myName = nameInput.value.trim() || 'Anonymous';
-      connWrapper.send({ type: 'identity', name: myName, sessionId: mySessionId });
-    }
-
-    function removeConnection(peerId) {
-      if (connections.has(peerId)) {
-        const conn = connections.get(peerId);
-        const name = conn.name || peerId;
-        connections.delete(peerId);
-        incomingTransfers.delete(peerId); // Memory Leak Fix: Clean partial transfers
-        logSystem(`${name} disconnected.`);
-        updateControlsState();
-        updateConnectedPeersBar();
-      }
-    }
-
-    function updateControlsState() {
-      const hasPeers = connections.size > 0;
-      document.getElementById('msg-input').disabled = !hasPeers;
-      document.getElementById('send-btn').disabled = !hasPeers;
-      document.getElementById('file-input').disabled = !hasPeers;
-      document.getElementById('send-file-btn').disabled = !hasPeers;
-    }
-
-    function updateConnectedPeersBar() {
-      const bar = document.getElementById('connected-peers-bar');
-      if (connections.size === 0) {
-        bar.textContent = "Connected Peers (0): None";
-        bar.style.color = "#6c757d";
-      } else {
-        const peerNames = Array.from(connections.values()).map(c => c.name || c.id).join(', ');
-        bar.textContent = `Connected Peers (${connections.size}): ${peerNames}`;
-        bar.style.color = "#28a745";
-      }
-    }
-
-    function broadcastData(data, excludePeerId = null) {
-      connections.forEach((conn, pid) => {
-        if (pid !== excludePeerId) {
-          try {
-            conn.send(data);
-          } catch(err) {
-            console.error("Broadcast failed for peer", pid, err);
-          }
-        }
-      });
-    }
-
-    function setupPeerJSConnection(conn) {
-      const connWrapper = {
-        id: conn.peer,
-        name: conn.peer,
-        isPeerJS: true,
-        rawConn: conn,
-        send: (data) => conn.send(data),
-        get bufferedAmount() {
-          return conn.dataChannel ? conn.dataChannel.bufferedAmount : 0;
-        }
-      };
-
+    // 3. Multi-Peer Management
+    function setupConnection(conn) {
       conn.on('open', () => {
-        reconnectAttempts.delete(conn.peer);
-        addConnection(conn.peer, connWrapper);
+        connections.set(conn.peer, conn);
+        updateUI();
         logSystem(`Connected to ${conn.peer}`);
+        conn.send({ type: 'identity', name: nameInput.value.trim() });
       });
 
-      conn.on('data', (data) => {
-        processIncomingData(data, conn.peer);
-      });
-
-      const handleDrop = () => {
-        const connInfo = connections.get(conn.peer);
-        const peerName = connInfo ? (connInfo.name || conn.peer) : conn.peer;
-        
-        removeConnection(conn.peer);
-
-        let attempts = reconnectAttempts.get(conn.peer) || 0;
-        if (attempts < 3) {
-          reconnectAttempts.set(conn.peer, attempts + 1);
-          logSystem(`Connection to ${peerName} lost. Reconnecting (Attempt ${attempts + 1}/3)...`);
-          
-          setTimeout(() => {
-            if (!connections.has(conn.peer)) {
-              handlePeerJSConnect(conn.peer);
-            }
-          }, 3000 * (attempts + 1));
-        }
+      conn.on('data', (data) => processData(data, conn.peer));
+      
+      const cleanup = () => {
+        connections.delete(conn.peer);
+        incomingTransfers.delete(conn.peer);
+        updateUI();
+        logSystem(`Peer disconnected.`);
       };
-
-      conn.on('close', handleDrop);
-      conn.on('error', handleDrop);
+      conn.on('close', cleanup);
+      conn.on('error', cleanup);
     }
 
-    // ==========================================
-    // LOCAL BROADCAST CHANNEL (SAME DEVICE)
-    // ==========================================
-    function initLocalBroadcastChannel() {
-      if (broadcastChan) return;
-      try {
-        broadcastChan = new BroadcastChannel('p2p_lan_discovery_channel');
-        broadcastChan.onmessage = (event) => {
-          const payload = event.data;
-          if (payload && payload.peerId && payload.peerId !== myPeerId) {
-            handleDiscoveredPeer(payload.peerId, payload.name || payload.peerId, payload.sessionId);
-          }
-        };
-      } catch (e) {
-        console.warn("BroadcastChannel not supported", e);
-      }
+    function broadcast(data) {
+      connections.forEach(conn => { if (conn.open) conn.send(data); });
     }
 
-    function announceLocalBroadcast() {
-      if (broadcastChan && myPeerId) {
-        const myName = nameInput.value.trim() || 'Anonymous';
-        broadcastChan.postMessage({ peerId: myPeerId, name: myName, sessionId: mySessionId, timestamp: Date.now() });
-      }
+    function updateUI() {
+      const active = connections.size > 0;
+      document.getElementById('msg-input').disabled = !active;
+      document.getElementById('send-btn').disabled = !active;
+      document.getElementById('file-input').disabled = !active;
+      document.getElementById('send-file-btn').disabled = !active;
     }
 
-    // ==========================================
-    // PUBLIC IP & ROOM DISCOVERY
-    // ==========================================
-    async function getPublicIp() {
-      const services = [
-        'https://api4.ipify.org?format=json',
-        'https://api.ipify.org?format=json'
-      ];
-      for (const url of services) {
-        try {
-          const res = await fetch(url);
-          if (!res.ok) continue;
-          const data = await res.json();
-          if (data.ip) return data.ip;
-        } catch (e) {}
-      }
-      throw new Error("Could not fetch IP");
-    }
-
-    let sendAnnounceGlobal = null;
-
+    // 4. LAN Auto-Discovery (Public IP Matching via SSE)
     async function initLanDiscovery(peerId) {
       const statusEl = document.getElementById('lan-status');
-      const listEl = document.getElementById('lan-peer-list');
-      const roomInput = document.getElementById('room-name-input');
-      
-      initLocalBroadcastChannel();
-
-      let userRoom = roomInput.value.trim();
-      const sanitizedRoom = userRoom.replace(/[^a-zA-Z0-9]/g, '');
-      if (!sanitizedRoom) {
-        roomInput.value = 'Lobby';
-        userRoom = 'Lobby';
-      }
-
-      let publicIp = null;
-
       try {
-        statusEl.textContent = 'Fetching IP...';
-        publicIp = await getPublicIp();
-      } catch (e) {
-        console.warn("IP lookup failed. Falling back to default room.");
-      }
+        const res = await fetch('https://api4.ipify.org?format=json');
+        const data = await res.json();
+        const topic = 'p2plan-' + data.ip.replace(/[^a-zA-Z0-9]/g, '');
+        statusEl.textContent = `IP: ${data.ip}`;
 
-      if (userRoom && userRoom.toLowerCase() !== 'lobby') {
-        lanTopic = 'p2proom-' + userRoom.replace(/[^a-zA-Z0-9]/g, '');
-        statusEl.textContent = `Room: ${userRoom}`;
-      } else if (publicIp) {
-        lanTopic = 'p2plan-' + publicIp.replace(/[^a-zA-Z0-9]/g, '');
-        statusEl.textContent = `IP: ${publicIp}`;
-      } else {
-        lanTopic = 'p2proom-Lobby';
-        statusEl.textContent = 'Room: Lobby (Fallback)';
-      }
-
-      discoveredPeers.clear();
-      renderLanPeers();
-
-      if (lanEventSource) lanEventSource.close();
-      if (fallbackEventSource) fallbackEventSource.close();
-
-      lanEventSource = new EventSource(`https://ntfy.sh/${lanTopic}/sse`);
-      lanEventSource.onopen = () => {
-        if (discoveredPeers.size === 0) listEl.textContent = 'Searching for peers...';
-      };
-      lanEventSource.onmessage = handleSSEMessage;
-
-      if (lanTopic !== fallbackTopic) {
-        fallbackEventSource = new EventSource(`https://ntfy.sh/${fallbackTopic}/sse`);
-        fallbackEventSource.onmessage = handleSSEMessage;
-      }
-
-      function handleSSEMessage(event) {
-        try {
-          const msgData = JSON.parse(event.data);
-          if (!msgData.message) return;
-          const payload = JSON.parse(msgData.message);
-
-          if (payload.peerId && payload.peerId !== myPeerId) {
-            handleDiscoveredPeer(payload.peerId, payload.name || payload.peerId, payload.sessionId);
-          }
-        } catch (err) {}
-      }
-
-      sendAnnounceGlobal = async () => {
-        announceLocalBroadcast();
-
-        const myName = nameInput.value.trim() || 'Anonymous';
-        const bodyStr = JSON.stringify({ peerId: peerId, name: myName, sessionId: mySessionId, timestamp: Date.now() });
-
-        try {
-          const resp = await fetch(`https://ntfy.sh/${lanTopic}`, { method: 'POST', body: bodyStr });
-
-          if (lanTopic !== fallbackTopic) {
-            fetch(`https://ntfy.sh/${fallbackTopic}`, { method: 'POST', body: bodyStr }).catch(() => {});
-          }
-
-          if (resp.status === 429) {
-            statusEl.textContent = 'Throttled (Rate Limit)';
-          } else if (resp.ok) {
-            if (userRoom && userRoom.toLowerCase() !== 'lobby') {
-              statusEl.textContent = `Room: ${userRoom}`;
-            } else if (publicIp) {
-              statusEl.textContent = `Active (${publicIp})`;
-            } else {
-              statusEl.textContent = `Room: Lobby`;
-            }
-          }
-        } catch (err) {
-          statusEl.textContent = 'Network Blocked';
-        }
-      };
-
-      sendAnnounceGlobal();
-      if (announceInterval) clearInterval(announceInterval);
-      announceInterval = setInterval(sendAnnounceGlobal, 8000);
-
-      if (pruneInterval) clearInterval(pruneInterval);
-      pruneInterval = setInterval(() => {
-        const now = Date.now();
-        let changed = false;
-        discoveredPeers.forEach((data, pid) => {
-          if (now - data.lastSeen > 20000) {
-            discoveredPeers.delete(pid);
-            changed = true;
-          }
-        });
-        if (changed) renderLanPeers();
-      }, 4000);
-    }
-
-    function handleDiscoveredPeer(peerId, name, sessionId) {
-      discoveredPeers.set(peerId, {
-        name: name,
-        sessionId: sessionId,
-        lastSeen: Date.now()
-      });
-
-      const isConnected = connections.has(peerId);
-      const isKnownSession = sessionId && knownConnectedSessions.has(sessionId);
-
-      if (!isConnected && isKnownSession) {
-        logSystem(`Peer "${name}" refreshed. Auto-reconnecting...`);
-        handlePeerJSConnect(peerId, true);
-      }
-
-      renderLanPeers();
-    }
-
-    function renderLanPeers() {
-      const listEl = document.getElementById('lan-peer-list');
-      if (discoveredPeers.size === 0) {
-        listEl.textContent = 'No other peers found in this room or network yet.';
-        return;
-      }
-
-      listEl.innerHTML = '';
-      discoveredPeers.forEach((data, pid) => {
-        const chip = document.createElement('div');
-        chip.className = 'peer-chip';
-        
-        const idSpan = document.createElement('span');
-        idSpan.innerHTML = `📱 <strong>${escapeHTML(data.name)}</strong> <small style="color:#6c757d;">(${escapeHTML(pid)})</small>`;
-        
-        const connBtn = document.createElement('button');
-        connBtn.className = 'connect-sm-btn';
-        connBtn.textContent = connections.has(pid) ? 'Connected' : 'Connect';
-        connBtn.disabled = connections.has(pid);
-        connBtn.onclick = () => {
-          document.getElementById('remote-id').value = pid;
-          handlePeerJSConnect(pid);
-        };
-
-        chip.appendChild(idSpan);
-        chip.appendChild(connBtn);
-        listEl.appendChild(chip);
-      });
-    }
-
-    function showShareQR(url) {
-      const chatBox = document.getElementById('chat-box');
-      const container = document.createElement('div');
-      container.className = 'message';
-      container.style.textAlign = 'center';
-      container.style.backgroundColor = '#ffffff';
-      container.style.padding = '12px';
-      container.style.borderRadius = '8px';
-      container.style.border = '1px solid var(--border)';
-      container.style.margin = '10px 0';
-
-      const title = document.createElement('div');
-      title.style.fontSize = '14px';
-      title.style.fontWeight = 'bold';
-      title.style.marginBottom = '4px';
-      title.style.color = '#333';
-      title.textContent = 'Scan to Connect';
-
-      const subtitle = document.createElement('div');
-      subtitle.style.fontSize = '12px';
-      subtitle.style.color = '#6c757d';
-      subtitle.style.marginBottom = '10px';
-      subtitle.textContent = 'Scan with phone camera to auto-join this peer';
-
-      const canvas = document.createElement('canvas');
-      canvas.style.display = 'block';
-      canvas.style.margin = '0 auto';
-
-      new QRious({ element: canvas, value: url, size: 180, level: 'L' });
-
-      container.appendChild(title);
-      container.appendChild(subtitle);
-      container.appendChild(canvas);
-
-      chatBox.appendChild(container);
-      chatBox.scrollTop = chatBox.scrollHeight;
-    }
-
-    // Toggle QR Fallback Section
-    document.getElementById('qr-toggle-btn').addEventListener('click', () => {
-      const sec = document.getElementById('qr-section');
-      const isHiding = sec.style.display !== 'none';
-      sec.style.display = isHiding ? 'none' : 'block';
-      if (isHiding) stopScanner(); // Resource leak fix
-    });
-
-    document.getElementById('qr-host-btn').addEventListener('click', startAsHost);
-    document.getElementById('qr-join-btn').addEventListener('click', startAsJoiner);
-
-    // ==========================================
-    // SERVERLESS QR WEBRTC HANDSHAKE
-    // ==========================================
-    function setupNativeDataChannel(channel, peerId) {
-      channel.binaryType = 'arraybuffer'; // CPU thrashing fix
-      
-      const connWrapper = {
-        id: peerId,
-        name: peerId,
-        isPeerJS: false,
-        rawConn: channel,
-        send: (data) => {
-          if (data && typeof data === 'object' && !(data instanceof ArrayBuffer) && !(data instanceof Blob)) {
-            channel.send(JSON.stringify({ __p2p_proto: true, ...data }));
-          } else {
-            channel.send(data);
-          }
-        },
-        get bufferedAmount() {
-          return channel.bufferedAmount || 0;
-        }
-      };
-
-      channel.onopen = () => {
-        logSystem(`Connected via QR Handshake! (${peerId})`);
-        addConnection(peerId, connWrapper);
-        document.getElementById('qr-section').style.display = 'none';
-        stopScanner();
-      };
-
-      channel.onmessage = (e) => {
-        let data = e.data;
-        if (typeof data === 'string') {
+        const sse = new EventSource(`https://ntfy.sh/${topic}/sse`);
+        sse.onmessage = (e) => {
           try {
-            const parsed = JSON.parse(data);
-            if (parsed && typeof parsed === 'object' && parsed.__p2p_proto) {
-              processIncomingData(parsed, peerId);
-              return;
+            const payload = JSON.parse(JSON.parse(e.data).message);
+            if (payload.peerId && payload.peerId !== myPeerId) {
+              discoveredPeers.set(payload.peerId, { name: payload.name, lastSeen: Date.now() });
+              renderLanList();
             }
           } catch(err) {}
-          processIncomingData(data, peerId);
-          return;
-        }
-        processIncomingData(data, peerId);
-      };
+        };
 
-      channel.onclose = () => removeConnection(peerId);
-      channel.onerror = () => removeConnection(peerId);
+        const ping = () => {
+          fetch(`https://ntfy.sh/${topic}`, {
+            method: 'POST',
+            body: JSON.stringify({ peerId: peerId, name: nameInput.value.trim() })
+          }).catch(() => {});
+        };
+        ping();
+        setInterval(ping, 6000);
+
+        // Prune inactive peers (>18s)
+        setInterval(() => {
+          const now = Date.now();
+          discoveredPeers.forEach((p, id) => { if (now - p.lastSeen > 18000) discoveredPeers.delete(id); });
+          renderLanList();
+        }, 4000);
+
+      } catch (err) {
+        statusEl.textContent = 'Discovery Offline';
+      }
     }
 
-    async function startAsHost() {
-      hideQR();
-      stopScanner();
-      setQRStatus("Gathering local network candidates...");
-
-      nativePc = new RTCPeerConnection(rtcConfig);
-      const channel = nativePc.createDataChannel("chat");
-      const hostPeerId = "QR-Peer-" + Math.random().toString(36).substring(2, 6);
-
-      setupNativeDataChannel(channel, hostPeerId);
-
-      const offer = await nativePc.createOffer();
-      await nativePc.setLocalDescription(offer);
-
-      nativePc.onicegatheringstatechange = () => {
-        if (nativePc.iceGatheringState === 'complete') {
-          displayQR(JSON.stringify(nativePc.localDescription));
-          setQRStatus("Step 1: Scan this Offer QR using Device B. Then click below to scan Answer.");
-          showQRActionButton("Scan Device B's Answer QR", scanAnswerQR);
-        }
-      };
-    }
-
-    function scanAnswerQR() {
-      hideQR();
-      setQRStatus("Step 2: Point camera at Device B's Answer QR code...");
-      startScanner(async (scannedAnswer) => {
-        stopScanner();
-        try {
-          const answerSDP = JSON.parse(scannedAnswer);
-          await nativePc.setRemoteDescription(answerSDP);
-          setQRStatus("Establishing direct WebRTC connection...");
-        } catch (e) {
-          alert("Invalid Answer QR code.");
-        }
+    function renderLanList() {
+      const list = document.getElementById('lan-peer-list');
+      if (discoveredPeers.size === 0) {
+        list.textContent = 'No other devices detected on this network.';
+        return;
+      }
+      list.innerHTML = '';
+      discoveredPeers.forEach((p, id) => {
+        const div = document.createElement('div');
+        div.className = 'peer-chip';
+        div.innerHTML = `<span>📱 <strong>${escapeHTML(p.name)}</strong></span>`;
+        
+        const btn = document.createElement('button');
+        btn.className = 'sm-btn';
+        btn.textContent = connections.has(id) ? 'Connected' : 'Connect';
+        btn.disabled = connections.has(id);
+        btn.onclick = () => connectToPeer(id);
+        
+        div.appendChild(btn);
+        list.appendChild(div);
       });
     }
 
-    function startAsJoiner() {
-      hideQR();
-      stopScanner();
-      setQRStatus("Step 1: Point camera at Device A's Offer QR code...");
+    // 5. Data & File Transfer Protocol
+    function processData(data, senderId) {
+      const conn = connections.get(senderId);
+      const senderName = conn?.name || senderId;
 
-      startScanner(async (scannedOffer) => {
-        stopScanner();
-        setQRStatus("Processing Offer & Gathering Answer Candidates...");
-
-        try {
-          nativePc = new RTCPeerConnection(rtcConfig);
-          const joinerPeerId = "QR-Peer-" + Math.random().toString(36).substring(2, 6);
-
-          nativePc.ondatachannel = (e) => {
-            setupNativeDataChannel(e.channel, joinerPeerId);
-          };
-
-          const offerSDP = JSON.parse(scannedOffer);
-          await nativePc.setRemoteDescription(offerSDP);
-
-          const answer = await nativePc.createAnswer();
-          await nativePc.setLocalDescription(answer);
-
-          nativePc.onicegatheringstatechange = () => {
-            if (nativePc.iceGatheringState === 'complete') {
-              displayQR(JSON.stringify(nativePc.localDescription));
-              setQRStatus("Step 2: Display this Answer QR code to Device A.");
-            }
-          };
-        } catch (e) {
-          alert("Invalid Offer QR code.");
-        }
-      });
-    }
-
-    // ==========================================
-    // INCOMING DATA & MESH RELAY PROCESSING
-    // ==========================================
-    function processIncomingData(data, senderPeerId) {
-      const conn = connections.get(senderPeerId);
-      const senderName = (conn && conn.name) ? conn.name : senderPeerId;
-
-      if (typeof data === 'string') {
-        logMessage(senderName, data);
-        return;
-      }
-
-      if (data.type === 'chat') {
-        if (data.msgId) {
-          if (seenMsgIds.has(data.msgId)) return; // Prevent loops
-          markMsgSeen(data.msgId);
-        }
-        logMessage(data.senderName || senderName, data.text);
-        broadcastData(data, senderPeerId); // Relay to other peers in mesh
-        return;
-      }
+      if (typeof data === 'string') return logMsg(senderName, data);
 
       if (data.type === 'identity') {
-        if (conn) {
-          conn.name = data.name;
-          if (data.sessionId) knownConnectedSessions.add(data.sessionId);
-          updateConnectedPeersBar();
-          logSystem(`${senderPeerId} updated name to "${data.name}"`);
-        }
+        if (conn) conn.name = data.name;
+        renderLanList();
         return;
       }
 
       if (data.type === 'file-header') {
-        incomingTransfers.set(senderPeerId, {
-          filename: data.filename,
-          filetype: data.filetype,
-          filesize: data.filesize,
-          totalChunks: data.totalChunks,
-          chunks: [],
-          receivedBytes: 0
-        });
-        logDebug(`Receiving file from ${senderName}: ${data.filename} (${Math.round(data.filesize / 1024)} KB)`);
+        incomingTransfers.set(senderId, { name: data.name, type: data.filetype, chunks: [] });
       } else if (data.type === 'file-chunk') {
-        const transfer = incomingTransfers.get(senderPeerId);
-        if (transfer) {
-          transfer.chunks.push(data.chunk);
-          transfer.receivedBytes += (data.chunk.byteLength || data.chunk.size || 0);
-          const percent = Math.round((transfer.receivedBytes / transfer.filesize) * 100);
-          
-          if (percent % 25 === 0 || percent === 100) {
-            logDebug(`Downloading from ${senderName} (${transfer.filename}): ${percent}%`);
-          }
-        }
+        incomingTransfers.get(senderId)?.chunks.push(data.chunk);
       } else if (data.type === 'file-complete') {
-        const transfer = incomingTransfers.get(senderPeerId);
+        const transfer = incomingTransfers.get(senderId);
         if (transfer) {
-          const blob = new Blob(transfer.chunks, { type: transfer.filetype });
-          const downloadUrl = URL.createObjectURL(blob);
-          
-          logDownloadLink(senderName, downloadUrl, transfer.filename);
-          incomingTransfers.delete(senderPeerId);
+          const blob = new Blob(transfer.chunks, { type: transfer.type });
+          logDownload(senderName, URL.createObjectURL(blob), transfer.name);
+          incomingTransfers.delete(senderId);
         }
       }
     }
 
-    // ==========================================
-    // CAMERA SCANNER & QR HELPERS
-    // ==========================================
-    function startScanner(onScanSuccess) {
-      const video = document.getElementById("webcam");
-      const canvasElement = document.getElementById("video-canvas");
-      const canvas = canvasElement.getContext("2d", { willReadFrequently: true });
-
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        alert("Camera API blocked! Mobile browsers require HTTPS or localhost to access the camera.");
-        return;
-      }
-
-      const requestCamera = (constraints) => navigator.mediaDevices.getUserMedia(constraints);
-
-      requestCamera({ video: { facingMode: "environment" } })
-        .catch(() => requestCamera({ video: true }))
-        .then(async (stream) => {
-          scanStream = stream;
-          video.srcObject = stream;
-          video.removeAttribute("hidden");
-
-          try {
-            await video.play();
-          } catch (err) {
-            console.warn("Video play error:", err);
-          }
-
-          function tick() {
-            if (video.readyState === video.HAVE_ENOUGH_DATA) {
-              canvasElement.height = video.videoHeight;
-              canvasElement.width = video.videoWidth;
-              canvas.drawImage(video, 0, 0, canvasElement.width, canvasElement.height);
-
-              const imageData = canvas.getImageData(0, 0, canvasElement.width, canvasElement.height);
-              const code = jsQR(imageData.data, imageData.width, imageData.height);
-
-              if (code && code.data) {
-                onScanSuccess(code.data);
-                return;
-              }
-            }
-            if (scanStream) requestAnimationFrame(tick);
-          }
-          requestAnimationFrame(tick);
-        })
-        .catch((err) => {
-          alert(`Camera Permission or Device Error: ${err.name} - ${err.message}`);
-        });
-    }
-
-    function stopScanner() {
-      if (scanStream) {
-        scanStream.getTracks().forEach(track => track.stop());
-        scanStream = null;
-      }
-      document.getElementById("webcam").setAttribute("hidden", true);
-    }
-
-    function displayQR(data) {
-      const canvas = document.getElementById('qr-canvas');
-      qrGen.value = data;
-      canvas.style.display = 'block';
-    }
-
-    function hideQR() { document.getElementById('qr-canvas').style.display = 'none'; }
-    function setQRStatus(txt) { document.getElementById('qr-status').innerText = txt; }
-    
-    function showQRActionButton(label, onClick) {
-      const btn = document.getElementById('qr-action-btn');
-      btn.innerText = label;
-      btn.style.display = 'block';
-      btn.onclick = () => {
-        btn.style.display = 'none';
-        onClick();
-      };
-    }
-
-    // ==========================================
-    // SEND CONTROLS & UTILITIES
-    // ==========================================
-    document.getElementById('send-btn').addEventListener('click', () => {
+    // 6. User Action Handlers
+    document.getElementById('send-btn').onclick = () => {
       const input = document.getElementById('msg-input');
-      const val = input.value.trim();
-      if (val && connections.size > 0) {
-        const msgObj = {
-          type: 'chat',
-          msgId: myPeerId + '-' + Date.now() + '-' + Math.random().toString(36).substring(2, 6),
-          senderName: nameInput.value.trim() || 'Anonymous',
-          text: val
-        };
-        markMsgSeen(msgObj.msgId);
-        broadcastData(msgObj);
-        logMessage('You', val);
+      const text = input.value.trim();
+      if (text) {
+        broadcast(text);
+        logMsg('You', text);
         input.value = '';
       }
-    });
+    };
 
-    document.getElementById('send-file-btn').addEventListener('click', async () => {
-      const fileInput = document.getElementById('file-input');
-      const file = fileInput.files[0];
-      
-      if (file && connections.size > 0) {
-        const sendBtn = document.getElementById('send-file-btn');
-        sendBtn.disabled = true;
-        logSystem(`Sending file: ${file.name} (${Math.round(file.size / 1024)} KB) to all peers...`);
+    document.getElementById('send-file-btn').onclick = async () => {
+      const input = document.getElementById('file-input');
+      const file = input.files[0];
+      if (!file) return;
 
-        await sendFileInChunks(file);
-        
-        logSystem(`Finished sending ${file.name}`);
-        fileInput.value = '';
-        sendBtn.disabled = false;
-      }
-    });
-
-    async function sendFileInChunks(file) {
-      const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
-
-      broadcastData({
-        type: 'file-header',
-        filename: file.name,
-        filetype: file.type,
-        filesize: file.size,
-        totalChunks: totalChunks
-      });
+      logSystem(`Sending ${file.name}...`);
+      broadcast({ type: 'file-header', name: file.name, filetype: file.type });
 
       let offset = 0;
-      let chunkIndex = 0;
-
       while (offset < file.size) {
-        let maxBuffer = 0;
-        connections.forEach(c => {
-          if (c.bufferedAmount > maxBuffer) maxBuffer = c.bufferedAmount;
-        });
-
-        if (maxBuffer > 1024 * 1024) {
-          await new Promise((resolve) => setTimeout(resolve, 50));
-          continue;
-        }
-
-        const chunkBlob = file.slice(offset, offset + CHUNK_SIZE);
-        const buffer = await chunkBlob.arrayBuffer();
-
-        broadcastData({
-          type: 'file-chunk',
-          chunk: buffer,
-          chunkIndex: chunkIndex
-        });
-
+        const buffer = await file.slice(offset, offset + CHUNK_SIZE).arrayBuffer();
+        broadcast({ type: 'file-chunk', chunk: buffer });
         offset += CHUNK_SIZE;
-        chunkIndex++;
       }
 
-      broadcastData({ type: 'file-complete' });
+      broadcast({ type: 'file-complete' });
+      logSystem(`Sent ${file.name}`);
+      input.value = '';
+    };
+
+    // 7. Display & Log Utilities
+    function renderShareQR(url) {
+      const chat = document.getElementById('chat-box');
+      const box = document.createElement('div');
+      box.style.textAlign = 'center';
+      box.style.padding = '10px';
+      box.innerHTML = `<div style="font-weight:bold; font-size:13px; margin-bottom:6px;">Scan to Auto-Join</div>`;
+      
+      const canvas = document.createElement('canvas');
+      new QRious({ element: canvas, value: url, size: 150 });
+      box.appendChild(canvas);
+      chat.appendChild(box);
     }
 
     function escapeHTML(str) {
-      return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;');
+      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
-
-    function logMessage(sender, text) {
-      const chatBox = document.getElementById('chat-box');
-      const div = document.createElement('div');
-      div.className = 'message';
-      div.innerHTML = `<strong>${escapeHTML(sender)}:</strong> ${escapeHTML(text)}`;
-      chatBox.appendChild(div);
-      chatBox.scrollTop = chatBox.scrollHeight;
+    function logMsg(sender, text) {
+      const chat = document.getElementById('chat-box');
+      chat.innerHTML += `<div class="message"><strong>${escapeHTML(sender)}:</strong> ${escapeHTML(text)}</div>`;
+      chat.scrollTop = chat.scrollHeight;
     }
-
     function logSystem(text) {
-      const chatBox = document.getElementById('chat-box');
-      const div = document.createElement('div');
-      div.className = 'message';
-      div.innerHTML = `<em>System: ${escapeHTML(text)}</em>`;
-      chatBox.appendChild(div);
-      chatBox.scrollTop = chatBox.scrollHeight;
+      const chat = document.getElementById('chat-box');
+      chat.innerHTML += `<div class="system-log">System: ${escapeHTML(text)}</div>`;
+      chat.scrollTop = chat.scrollHeight;
     }
-
-    function logDebug(text) {
-      const chatBox = document.getElementById('chat-box');
-      const div = document.createElement('div');
-      div.className = 'debug-log';
-      div.textContent = `🛠 ${text}`;
-      chatBox.appendChild(div);
-      chatBox.scrollTop = chatBox.scrollHeight;
-    }
-
-    function logDownloadLink(sender, url, filename) {
-      const chatBox = document.getElementById('chat-box');
-      const div = document.createElement('div');
-      div.className = 'message';
-      
-      const label = document.createElement('strong');
-      label.textContent = `${sender}: `;
-      
-      const link = document.createElement('a');
-      link.className = 'download-link';
-      link.href = url;
-      link.download = filename;
-      link.textContent = `Download ${filename}`;
-
-      link.addEventListener('click', () => {
-        setTimeout(() => URL.revokeObjectURL(url), 10000);
-      });
-      
-      div.appendChild(label);
-      div.appendChild(link);
-      chatBox.appendChild(div);
-      chatBox.scrollTop = chatBox.scrollHeight;
+    function logDownload(sender, url, filename) {
+      const chat = document.getElementById('chat-box');
+      chat.innerHTML += `<div class="message"><strong>${escapeHTML(sender)}:</strong> <a class="download-link" href="${url}" download="${escapeHTML(filename)}">Download ${escapeHTML(filename)}</a></div>`;
+      chat.scrollTop = chat.scrollHeight;
     }
   </script>
 </body>
