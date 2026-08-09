@@ -84,7 +84,7 @@
       width: 8px;
       height: 8px;
       border-radius: 50%;
-      background-color: #ff3b30; /* Defaults to red (offline) */
+      background-color: #ff3b30;
       transition: background-color 0.3s;
     }
 
@@ -371,7 +371,7 @@
       const shareBtn = document.getElementById('share-btn');
       shareBtn.disabled = false;
       
-      // Native Share Sheet Integration (Better mobile experience)
+      // Native Share Sheet Integration
       shareBtn.onclick = async () => {
         if (navigator.share) {
           try {
@@ -397,11 +397,11 @@
         logSystem("Connecting to host...");
         connectToPeer(targetId);
 
-        // Auto-Retry Loop: If the host is in another app (like Messages), ping every 3s until they return
+        // Auto-Retry Loop for background apps
         let retryCount = 0;
         const retryTimer = setInterval(() => {
           if (connections.has(targetId)) {
-            clearInterval(retryTimer); // Success, stop retrying
+            clearInterval(retryTimer); 
           } else {
             retryCount++;
             if (retryCount === 1) logSystem("Host might be in another app. Retrying...");
@@ -460,7 +460,6 @@
       
       if (myPeerId) {
         statusText.textContent = `${connections.size} Connected`;
-        // Orange if waiting alone, Green if actively connected to peers
         statusDot.style.backgroundColor = connections.size === 0 ? '#ff9500' : '#34c759';
       }
     }
@@ -500,7 +499,6 @@
     const fileInput = document.getElementById('file-input');
     const fileBtn = document.getElementById('file-btn');
 
-    // Scroll down when mobile software keyboard opens
     msgInput.addEventListener('focus', () => {
       setTimeout(scrollToBottom, 300);
     });
@@ -520,16 +518,10 @@
 
     fileBtn.onclick = () => fileInput.click();
 
+    // The limit has been removed entirely, files stream in chunks over WebRTC.
     fileInput.onchange = async () => {
       const file = fileInput.files[0];
       if (!file) return;
-
-      const MAX_FILE_SIZE = 250 * 1024 * 1024; // 250MB
-      if (file.size > MAX_FILE_SIZE) {
-        alert(`File is too large (${Math.round(file.size / 1024 / 1024)}MB). Mobile browsers may crash if transfers exceed 250MB.`);
-        fileInput.value = '';
-        return;
-      }
       
       fileInput.value = '';
       fileBtn.disabled = true;
@@ -548,6 +540,7 @@
           }
         });
 
+        // Network Backpressure Control
         if (maxBuffer > 1024 * 1024) {
           await new Promise(r => setTimeout(r, 50));
           continue;
