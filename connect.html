@@ -2,73 +2,383 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Local P2P Share</title>
   <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.5/dist/peerjs.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
   <style>
-    :root { --primary: #007bff; --bg: #f4f7f6; --card-bg: #ffffff; --border: #dcdcdc; }
-    body { font-family: system-ui, -apple-system, sans-serif; background-color: var(--bg); margin: 0; padding: 15px; display: flex; justify-content: center; }
-    .app-container { background: var(--card-bg); width: 100%; max-width: 480px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); padding: 20px; box-sizing: border-box; }
-    h2 { margin: 0 0 15px 0; font-size: 1.4rem; text-align: center; color: #333; }
-    .id-box { background: #e9ecef; padding: 12px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-size: 13px; word-break: break-all; }
-    .controls { display: flex; gap: 8px; margin-bottom: 10px; }
-    input[type="text"], input[type="file"] { flex: 1; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; box-sizing: border-box; }
-    button { padding: 10px 14px; background-color: var(--primary); color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; flex-shrink: 0; }
-    button:disabled { background-color: #a0cbf5; cursor: not-allowed; }
-    .lan-section { border: 1px solid #cce5ff; background: #f0f7ff; border-radius: 8px; padding: 12px; margin-bottom: 12px; }
-    .lan-title { font-weight: bold; font-size: 13px; color: #004085; display: flex; justify-content: space-between; margin-bottom: 6px; }
-    .peer-chip { display: flex; justify-content: space-between; align-items: center; background: #fff; border: 1px solid #b8daff; padding: 6px 10px; border-radius: 6px; margin-top: 6px; font-size: 13px; }
-    .sm-btn { padding: 4px 8px; font-size: 12px; background-color: #28a745; }
-    #chat-box { height: 35vh; min-height: 220px; border: 1px solid var(--border); border-radius: 8px; overflow-y: auto; padding: 12px; margin: 12px 0; background: #fafafa; }
-    .message { margin-bottom: 8px; font-size: 14px; line-height: 1.4; }
-    .system-log { font-style: italic; color: #6c757d; margin-bottom: 8px; font-size: 13px; }
-    a.download-link { color: var(--primary); font-weight: bold; text-decoration: none; word-break: break-all; }
+    :root {
+      --primary: #007aff;
+      --primary-active: #0056b3;
+      --bg: #f2f2f7;
+      --card-bg: #ffffff;
+      --border: #e5e5ea;
+      --text: #000000;
+      --subtext: #8e8e93;
+      --bubble-out: #007aff;
+      --bubble-in: #e5e5ea;
+      --safe-bottom: env(safe-area-inset-bottom, 12px);
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      height: 100dvh;
+      overflow: hidden;
+    }
+
+    .app-container {
+      background: var(--bg);
+      width: 100%;
+      max-width: 500px;
+      height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    /* Top Bar */
+    .app-header {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 10;
+    }
+
+    .app-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .status-badge {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--subtext);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: #eef2ff;
+      padding: 4px 10px;
+      border-radius: 12px;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: #34c759;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.85); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+
+    /* Scrollable Content Body */
+    .scroll-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    /* Mobile Cards */
+    .card {
+      background: var(--card-bg);
+      border-radius: 14px;
+      padding: 12px 14px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* iOS 16px font-size to prevent automatic Safari zoom */
+    input[type="text"] {
+      width: 100%;
+      height: 44px;
+      padding: 0 12px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-size: 16px;
+      background: #fafafa;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    input[type="text"]:focus {
+      border-color: var(--primary);
+      background: #ffffff;
+    }
+
+    .btn {
+      height: 44px;
+      padding: 0 16px;
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      touch-action: manipulation;
+      flex-shrink: 0;
+    }
+
+    .btn:active { background-color: var(--primary-active); }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .btn-secondary {
+      background-color: #e5e5ea;
+      color: #000;
+      height: 36px;
+      padding: 0 12px;
+      font-size: 13px;
+    }
+
+    /* LAN Devices Section */
+    .lan-section {
+      background: #f0f7ff;
+      border: 1px solid #cce5ff;
+    }
+
+    .lan-header {
+      font-size: 13px;
+      font-weight: 600;
+      color: #004085;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .peer-chip {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #ffffff;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid #d0e2ff;
+    }
+
+    .peer-chip-info {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+    }
+
+    .btn-connect {
+      background-color: #34c759;
+      height: 32px;
+      padding: 0 12px;
+      font-size: 13px;
+      border-radius: 8px;
+    }
+
+    /* Chat Area & Bubbles */
+    #chat-box {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      min-height: 180px;
+    }
+
+    .bubble {
+      max-width: 80%;
+      padding: 10px 14px;
+      border-radius: 18px;
+      font-size: 15px;
+      line-height: 1.4;
+      word-break: break-word;
+      position: relative;
+    }
+
+    .bubble-out {
+      align-self: flex-end;
+      background-color: var(--bubble-out);
+      color: #ffffff;
+      border-bottom-right-radius: 4px;
+    }
+
+    .bubble-in {
+      align-self: flex-start;
+      background-color: var(--bubble-in);
+      color: #000000;
+      border-bottom-left-radius: 4px;
+    }
+
+    .bubble-author {
+      font-size: 11px;
+      font-weight: 600;
+      margin-bottom: 2px;
+      opacity: 0.7;
+    }
+
+    .system-pill {
+      align-self: center;
+      background: rgba(0,0,0,0.06);
+      color: var(--subtext);
+      font-size: 12px;
+      font-weight: 500;
+      padding: 4px 12px;
+      border-radius: 12px;
+      margin: 4px 0;
+      text-align: center;
+    }
+
+    /* QR Container */
+    .qr-card {
+      text-align: center;
+      align-items: center;
+    }
+
+    .qr-card canvas {
+      border-radius: 12px;
+      border: 1px solid var(--border);
+    }
+
+    /* Bottom Fixed Action Bar */
+    .input-bar {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      padding: 10px 12px calc(10px + var(--safe-bottom)) 12px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      z-index: 10;
+    }
+
+    .icon-btn {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: #e5e5ea;
+      color: #000;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .icon-btn:active { background: #d1d1d6; }
+    .icon-btn:disabled { opacity: 0.4; }
+
+    .send-btn {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      padding: 0;
+    }
+
+    a.download-card {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: inherit;
+      text-decoration: none;
+      background: rgba(255,255,255,0.2);
+      padding: 8px 12px;
+      border-radius: 10px;
+      margin-top: 4px;
+      font-weight: 600;
+    }
   </style>
 </head>
 <body>
   <div class="app-container">
-    <h2>⚡ Local P2P Share</h2>
-
-    <!-- Name Input -->
-    <div class="controls">
-      <input type="text" id="display-name" placeholder="Your Display Name">
-    </div>
-
-    <!-- My Peer ID Box -->
-    <div class="id-box">
-      <span><strong>ID:</strong> <span id="my-id">Generating...</span></span>
-      <button id="share-btn" style="padding: 4px 8px; font-size: 12px;" disabled>Copy Link</button>
-    </div>
-
-    <!-- Local LAN Discovery Panel -->
-    <div class="lan-section">
-      <div class="lan-title">
-        <span>🌐 Local Devices</span>
-        <span id="lan-status" style="font-weight: normal; color: #6c757d;">Scanning...</span>
+    
+    <!-- App Header -->
+    <header class="app-header">
+      <div class="app-title">⚡ Local Share</div>
+      <div class="status-badge">
+        <div class="status-dot"></div>
+        <span id="lan-status">Scanning...</span>
       </div>
-      <div id="lan-peer-list" style="font-size: 12px; color: #6c757d;">Searching network...</div>
+    </header>
+
+    <!-- Main Scrollable Body -->
+    <div class="scroll-body">
+      
+      <!-- User Profile Card -->
+      <div class="card">
+        <div class="row">
+          <input type="text" id="display-name" placeholder="Your Display Name">
+        </div>
+        <div class="row" style="justify-content: space-between; font-size: 13px;">
+          <span style="color: var(--subtext); word-break: break-all;">
+            <strong>ID:</strong> <span id="my-id">Generating...</span>
+          </span>
+          <button id="share-btn" class="btn btn-secondary" disabled>Copy Link</button>
+        </div>
+      </div>
+
+      <!-- LAN Local Discovery Card -->
+      <div class="card lan-section">
+        <div class="lan-header">
+          <span>NEARBY DEVICES</span>
+        </div>
+        <div id="lan-peer-list" style="font-size: 13px; color: var(--subtext);">Searching network...</div>
+      </div>
+
+      <!-- Manual Connection Card -->
+      <div class="card">
+        <div class="row">
+          <input type="text" id="remote-id" placeholder="Enter friend's Peer ID">
+          <button id="connect-btn" class="btn" style="height: 44px;">Connect</button>
+        </div>
+      </div>
+
+      <!-- Chat Stream -->
+      <div id="chat-box"></div>
+
     </div>
 
-    <!-- Manual Connection Control -->
-    <div class="controls">
-      <input type="text" id="remote-id" placeholder="Enter peer ID manually">
-      <button id="connect-btn">Connect</button>
-    </div>
-
-    <div id="chat-box"></div>
-
-    <!-- Message Controls -->
-    <div class="controls">
+    <!-- Fixed Bottom Bar -->
+    <footer class="input-bar">
+      <input type="file" id="file-input" hidden>
+      <button id="file-btn" class="icon-btn" title="Attach File" disabled>📎</button>
       <input type="text" id="msg-input" placeholder="Type a message..." disabled>
-      <button id="send-btn" disabled>Send</button>
-    </div>
+      <button id="send-btn" class="btn send-btn" disabled>➔</button>
+    </footer>
 
-    <!-- File Controls -->
-    <div class="controls">
-      <input type="file" id="file-input" disabled>
-      <button id="send-file-btn" disabled>Send File</button>
-    </div>
   </div>
 
   <script>
@@ -84,6 +394,7 @@
     
     const nameInput = document.getElementById('display-name');
     nameInput.value = localStorage.getItem('p2p_name') || `${ADJ[Math.floor(Math.random()*ADJ.length)]} ${ANI[Math.floor(Math.random()*ANI.length)]}`;
+    
     nameInput.addEventListener('change', () => {
       localStorage.setItem('p2p_name', nameInput.value.trim());
       broadcast({ type: 'identity', name: nameInput.value.trim() });
@@ -108,7 +419,6 @@
       renderShareQR(shareUrl);
       initLanDiscovery(id);
 
-      // URL parameter auto-connect
       const targetId = new URLSearchParams(window.location.search).get('id');
       if (targetId) connectToPeer(targetId);
     });
@@ -130,7 +440,7 @@
       conn.on('open', () => {
         connections.set(conn.peer, conn);
         updateUI();
-        logSystem(`Connected to ${conn.peer}`);
+        logSystem(`Connected to peer`);
         conn.send({ type: 'identity', name: nameInput.value.trim() });
       });
 
@@ -140,7 +450,7 @@
         connections.delete(conn.peer);
         incomingTransfers.delete(conn.peer);
         updateUI();
-        logSystem(`Peer disconnected.`);
+        logSystem(`Peer disconnected`);
       };
       conn.on('close', cleanup);
       conn.on('error', cleanup);
@@ -154,8 +464,7 @@
       const active = connections.size > 0;
       document.getElementById('msg-input').disabled = !active;
       document.getElementById('send-btn').disabled = !active;
-      document.getElementById('file-input').disabled = !active;
-      document.getElementById('send-file-btn').disabled = !active;
+      document.getElementById('file-btn').disabled = !active;
     }
 
     // 4. LAN Auto-Discovery (Public IP Matching via SSE)
@@ -165,7 +474,7 @@
         const res = await fetch('https://api4.ipify.org?format=json');
         const data = await res.json();
         const topic = 'p2plan-' + data.ip.replace(/[^a-zA-Z0-9]/g, '');
-        statusEl.textContent = `IP: ${data.ip}`;
+        statusEl.textContent = 'Active';
 
         const sse = new EventSource(`https://ntfy.sh/${topic}/sse`);
         sse.onmessage = (e) => {
@@ -187,7 +496,6 @@
         ping();
         setInterval(ping, 6000);
 
-        // Prune inactive peers (>18s)
         setInterval(() => {
           const now = Date.now();
           discoveredPeers.forEach((p, id) => { if (now - p.lastSeen > 18000) discoveredPeers.delete(id); });
@@ -195,7 +503,7 @@
         }, 4000);
 
       } catch (err) {
-        statusEl.textContent = 'Discovery Offline';
+        statusEl.textContent = 'Offline';
       }
     }
 
@@ -209,10 +517,15 @@
       discoveredPeers.forEach((p, id) => {
         const div = document.createElement('div');
         div.className = 'peer-chip';
-        div.innerHTML = `<span>📱 <strong>${escapeHTML(p.name)}</strong></span>`;
+        div.innerHTML = `
+          <div class="peer-chip-info">
+            <span>📱</span>
+            <strong>${escapeHTML(p.name)}</strong>
+          </div>
+        `;
         
         const btn = document.createElement('button');
-        btn.className = 'sm-btn';
+        btn.className = 'btn btn-connect';
         btn.textContent = connections.has(id) ? 'Connected' : 'Connect';
         btn.disabled = connections.has(id);
         btn.onclick = () => connectToPeer(id);
@@ -227,7 +540,7 @@
       const conn = connections.get(senderId);
       const senderName = conn?.name || senderId;
 
-      if (typeof data === 'string') return logMsg(senderName, data);
+      if (typeof data === 'string') return logBubble(senderName, data, false);
 
       if (data.type === 'identity') {
         if (conn) conn.name = data.name;
@@ -255,14 +568,16 @@
       const text = input.value.trim();
       if (text) {
         broadcast(text);
-        logMsg('You', text);
+        logBubble('You', text, true);
         input.value = '';
       }
     };
 
-    document.getElementById('send-file-btn').onclick = async () => {
-      const input = document.getElementById('file-input');
-      const file = input.files[0];
+    const fileInput = document.getElementById('file-input');
+    document.getElementById('file-btn').onclick = () => fileInput.click();
+
+    fileInput.onchange = async () => {
+      const file = fileInput.files[0];
       if (!file) return;
 
       logSystem(`Sending ${file.name}...`);
@@ -277,39 +592,58 @@
 
       broadcast({ type: 'file-complete' });
       logSystem(`Sent ${file.name}`);
-      input.value = '';
+      fileInput.value = '';
     };
 
     // 7. Display & Log Utilities
     function renderShareQR(url) {
       const chat = document.getElementById('chat-box');
-      const box = document.createElement('div');
-      box.style.textAlign = 'center';
-      box.style.padding = '10px';
-      box.innerHTML = `<div style="font-weight:bold; font-size:13px; margin-bottom:6px;">Scan to Auto-Join</div>`;
+      const card = document.createElement('div');
+      card.className = 'card qr-card';
+      card.innerHTML = `<div style="font-size:13px; font-weight:600; color:var(--subtext);">SCAN TO JOIN</div>`;
       
       const canvas = document.createElement('canvas');
-      new QRious({ element: canvas, value: url, size: 150 });
-      box.appendChild(canvas);
-      chat.appendChild(box);
+      new QRious({ element: canvas, value: url, size: 160 });
+      card.appendChild(canvas);
+      chat.appendChild(card);
     }
 
     function escapeHTML(str) {
       return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
-    function logMsg(sender, text) {
+
+    function logBubble(sender, text, isOut) {
       const chat = document.getElementById('chat-box');
-      chat.innerHTML += `<div class="message"><strong>${escapeHTML(sender)}:</strong> ${escapeHTML(text)}</div>`;
+      const div = document.createElement('div');
+      div.className = `bubble ${isOut ? 'bubble-out' : 'bubble-in'}`;
+      div.innerHTML = `
+        <div class="bubble-author">${escapeHTML(sender)}</div>
+        <div>${escapeHTML(text)}</div>
+      `;
+      chat.appendChild(div);
       chat.scrollTop = chat.scrollHeight;
     }
+
     function logSystem(text) {
       const chat = document.getElementById('chat-box');
-      chat.innerHTML += `<div class="system-log">System: ${escapeHTML(text)}</div>`;
+      const div = document.createElement('div');
+      div.className = 'system-pill';
+      div.textContent = text;
+      chat.appendChild(div);
       chat.scrollTop = chat.scrollHeight;
     }
+
     function logDownload(sender, url, filename) {
       const chat = document.getElementById('chat-box');
-      chat.innerHTML += `<div class="message"><strong>${escapeHTML(sender)}:</strong> <a class="download-link" href="${url}" download="${escapeHTML(filename)}">Download ${escapeHTML(filename)}</a></div>`;
+      const div = document.createElement('div');
+      div.className = 'bubble bubble-in';
+      div.innerHTML = `
+        <div class="bubble-author">${escapeHTML(sender)}</div>
+        <a class="download-card" href="${url}" download="${escapeHTML(filename)}">
+          📄 Download ${escapeHTML(filename)}
+        </a>
+      `;
+      chat.appendChild(div);
       chat.scrollTop = chat.scrollHeight;
     }
   </script>
