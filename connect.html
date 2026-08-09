@@ -223,6 +223,7 @@
     .qr-card canvas {
       border-radius: 12px;
       border: 1px solid var(--border);
+      margin-top: 8px;
     }
 
     /* Bottom Fixed Action Bar */
@@ -293,24 +294,16 @@
     <!-- Main Scrollable Body -->
     <div class="scroll-body">
       
-      <!-- User Profile Card -->
+      <!-- User Profile & Share Card -->
       <div class="card">
         <div class="row">
           <input type="text" id="display-name" placeholder="Your Display Name">
         </div>
         <div class="row" style="justify-content: space-between; font-size: 13px;">
           <span style="color: var(--subtext); word-break: break-all;">
-            <strong>ID:</strong> <span id="my-id">Generating...</span>
+            <strong>Share to connect</strong>
           </span>
           <button id="share-btn" class="btn btn-secondary" disabled>Copy Link</button>
-        </div>
-      </div>
-
-      <!-- Manual Connection Card -->
-      <div class="card">
-        <div class="row">
-          <input type="text" id="remote-id" placeholder="Enter friend's Peer ID">
-          <button id="connect-btn" class="btn" style="height: 44px;">Connect</button>
         </div>
       </div>
 
@@ -362,7 +355,6 @@
 
     peer.on('open', (id) => {
       myPeerId = id;
-      document.getElementById('my-id').innerText = id;
       
       const shareUrl = `${window.location.origin}${window.location.pathname}?id=${id}`;
       const shareBtn = document.getElementById('share-btn');
@@ -376,16 +368,12 @@
       renderShareQR(shareUrl);
       updateUI(); // Set initial status to 0 Connected
 
+      // Check if user clicked a share link to join someone else
       const targetId = new URLSearchParams(window.location.search).get('id');
       if (targetId) connectToPeer(targetId);
     });
 
     peer.on('connection', (conn) => setupConnection(conn));
-
-    document.getElementById('connect-btn').onclick = () => {
-      const id = document.getElementById('remote-id').value.trim();
-      if (id) connectToPeer(id);
-    };
 
     function connectToPeer(remoteId) {
       if (remoteId === myPeerId || connections.has(remoteId)) return;
@@ -554,7 +542,7 @@
       const chat = document.getElementById('chat-box');
       const card = document.createElement('div');
       card.className = 'card qr-card';
-      card.innerHTML = `<div style="font-size:13px; font-weight:600; color:var(--subtext);">SCAN TO JOIN</div>`;
+      card.innerHTML = `<div style="font-size:13px; font-weight:600; color:var(--subtext);">SCAN TO JOIN THIS SESSION</div>`;
       
       const canvas = document.createElement('canvas');
       new QRious({ element: canvas, value: url, size: 160 });
