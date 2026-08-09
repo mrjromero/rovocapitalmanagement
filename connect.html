@@ -1,7 +1,3 @@
-To add a notification sound without requiring you to host external .mp3 or .wav files, we can use the browser's native Web Audio API. This synthesizes a clean, pleasant two-tone "ding" natively on the device.
-📱 A Note on Mobile Browser Audio
-Mobile browsers (Safari and Chrome) strictly block websites from playing audio until the user interacts with the page. To handle this, the updated code silently unlocks the audio engine the very first time you tap anywhere on the screen (like tapping the input box or the "Copy Link" button).
-Here is the complete, updated code with the notification chime integrated for incoming text messages and completed file transfers:
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -682,4 +678,3 @@ Here is the complete, updated code with the notification chime integrated for in
   </script>
 </body>
 </html>
-
