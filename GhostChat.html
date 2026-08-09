@@ -117,7 +117,13 @@
       z-index: 5;
     }
 
-    .video-wrapper {
+    #local-vid-wrap {
+      display: none; /* FIX: Hidden by default so no black box appears */
+      position: relative;
+      flex-shrink: 0;
+    }
+
+    .remote-vid-wrap {
       position: relative;
       flex-shrink: 0;
     }
@@ -365,6 +371,62 @@
     
     a.download-card { display: flex; align-items: center; gap: 10px; color: var(--slime); text-decoration: none; background: rgba(0,0,0,0.4); padding: 8px 12px; border-radius: 6px; margin-top: 6px; font-family: 'Share Tech Mono', monospace; font-size: 14px; border: 1px solid #444; }
 
+    /* Camera Selection Modal */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.85);
+      z-index: 9999;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(5px);
+    }
+    .modal-card {
+      background: var(--card-bg);
+      border: 2px solid var(--caution);
+      border-radius: 12px;
+      padding: 24px;
+      width: 85%;
+      max-width: 320px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+    }
+    .modal-title {
+      color: var(--caution);
+      font-family: 'Share Tech Mono', monospace;
+      text-align: center;
+      margin-bottom: 8px;
+      font-size: 1.1rem;
+    }
+    .cam-btn {
+      background: #111;
+      color: white;
+      border: 1px solid var(--border);
+      padding: 14px;
+      border-radius: 8px;
+      font-size: 15px;
+      cursor: pointer;
+      text-align: left;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .cam-btn::before { content: '📹'; }
+    .cam-btn:active { background: var(--slime); color: black; border-color: var(--slime); }
+    .modal-close {
+      background: transparent;
+      color: var(--subtext);
+      margin-top: 10px;
+      border: 1px solid var(--border);
+    }
+    .modal-close:active { background: #333; }
   </style>
 </head>
 <body>
@@ -379,10 +441,10 @@
     </header>
 
     <div id="video-container">
-      <div class="video-wrapper" id="local-vid-wrap">
+      <div id="local-vid-wrap">
         <video id="local-video" autoplay playsinline muted></video>
         <div class="vid-ctrls">
-          <button id="btn-flip" class="vid-btn" title="Flip Camera">🔄</button>
+          <button id="btn-flip" class="vid-btn" title="Switch Camera">🔄</button>
           <button id="btn-mute" class="vid-btn" title="Mute Mic">🎤</button>
         </div>
       </div>
@@ -419,13 +481,22 @@
         <button class="action-item" id="menu-screen" disabled>🖥️ Share Screen</button>
       </div>
 
-      <!-- Add Button replaces all the clutter -->
+      <!-- Add Button -->
       <button id="add-btn" class="icon-btn" title="Actions">+</button>
       
       <input type="text" id="msg-input" placeholder="Transmit signal..." disabled>
       <button id="send-btn" class="btn send-btn" disabled>➔</button>
     </footer>
 
+  </div>
+
+  <!-- Camera Selection Modal -->
+  <div id="cam-modal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-title">SELECT OPTICAL SENSOR</div>
+      <div id="cam-list" style="display:flex; flex-direction:column; gap:8px;"></div>
+      <button class="btn modal-close" onclick="closeCamModal()">CANCEL</button>
+    </div>
   </div>
 
   <script>
@@ -598,7 +669,6 @@
         }
         return;
       }
-      // ... File transfer logic ...
       if (data.type === 'file-header') {
         incomingTransfers.set(senderId, { name: data.name, type: data.filetype, chunks: [] });
       } else if (data.type === 'file-chunk') {
@@ -636,9 +706,9 @@
     // --- MEDIA SYSTEM ---
     let localStream = null;
     let screenStream = null;
-    let currentFacingMode = "user"; // Start with front camera
     
     const videoContainer = document.getElementById('video-container');
+    const localVidWrap = document.getElementById('local-vid-wrap');
     const localVideo = document.getElementById('local-video');
     const menuVidBtn = document.getElementById('menu-video');
     
@@ -654,44 +724,139 @@
       }
     };
 
-    // Flip Camera FIX: Stop old video track before requesting new one
-    document.getElementById('btn-flip').onclick = async () => {
-      if (!localStream) return;
+    // --- Camera Selection Logic ---
+    async function getCameras() {
+      try {
+        let devices = await navigator.mediaDevices.enumerateDevices();
+        let videoInputs = devices.filter(d => d.kind === 'videoinput');
+        
+        // If labels are empty (due to permissions), request a dummy stream to unlock labels
+        if (videoInputs.length > 0 && videoInputs[0].label === '') {
+           const tempStream = await navigator.mediaDevices.getUserMedia({ video: true });
+           devices = await navigator.mediaDevices.enumerateDevices();
+           videoInputs = devices.filter(d => d.kind === 'videoinput');
+           tempStream.getTracks().forEach(t => t.stop());
+        }
+        return videoInputs;
+      } catch (err) {
+        return [];
+      }
+    }
+
+    async function openCamModal() {
+      // Hide Action Menu
+      actionMenu.classList.remove('active');
+      addBtn.style.transform = 'rotate(0deg)';
+
+      const list = document.getElementById('cam-list');
+      list.innerHTML = '<div style="color:var(--subtext); text-align:center;">Scanning hardware...</div>';
+      document.getElementById('cam-modal').style.display = 'flex';
+
+      const cams = await getCameras();
+      list.innerHTML = '';
       
-      currentFacingMode = currentFacingMode === "user" ? "environment" : "user";
+      if(cams.length === 0) {
+        list.innerHTML = '<div style="color:#ff0000;text-align:center;">No camera hardware found.</div>';
+      } else {
+        cams.forEach((cam, index) => {
+           const btn = document.createElement('button');
+           btn.className = 'cam-btn';
+           btn.textContent = cam.label || `Optical Sensor ${index + 1}`;
+           btn.onclick = () => startCamera(cam.deviceId);
+           list.appendChild(btn);
+        });
+      }
+    }
+
+    function closeCamModal() {
+      document.getElementById('cam-modal').style.display = 'none';
+    }
+
+    // Now Flip just opens the Modal to let the user pick exactly which lens to use
+    document.getElementById('btn-flip').onclick = openCamModal;
+
+    // Start or Switch Camera
+    async function startCamera(deviceId) {
+      closeCamModal();
       
       try {
-        // 1. MUST stop the current video track first to release Android hardware lock
-        const oldVideoTrack = localStream.getVideoTracks()[0];
+        const isSwitching = !!localStream;
+        const oldVideoTrack = isSwitching ? localStream.getVideoTracks()[0] : null;
+        
+        // Release hardware lock on current video track before requesting the new one
         if (oldVideoTrack) oldVideoTrack.stop();
 
-        // 2. Request a new video stream (keeping the existing audio untouched)
-        const newVideoStream = await navigator.mediaDevices.getUserMedia({ 
-          video: { facingMode: currentFacingMode }
+        const newStream = await navigator.mediaDevices.getUserMedia({ 
+          video: deviceId ? { deviceId: { exact: deviceId } } : true,
+          audio: !isSwitching // Only ask for audio if it's the first time starting
         });
         
-        const newVideoTrack = newVideoStream.getVideoTracks()[0];
+        const newVideoTrack = newStream.getVideoTracks()[0];
 
-        // 3. Replace the video track seamlessly on all active peer connections
-        Object.values(peer.connections).forEach(peerConns => {
-          peerConns.forEach(conn => {
-            if (conn.type === 'media' && conn.peerConnection) {
-              const senders = conn.peerConnection.getSenders();
-              const vidSender = senders.find(s => s.track && s.track.kind === 'video');
-              if (vidSender) vidSender.replaceTrack(newVideoTrack);
-            }
-          });
-        });
+        if (!isSwitching) {
+           // Starting Fresh
+           localStream = newStream;
+           localVideo.srcObject = localStream;
+           
+           // FIX: Show the local video box only when feed is actually live
+           localVidWrap.style.display = 'block'; 
+           videoContainer.style.display = 'flex';
+           menuVidBtn.textContent = '⏹️ Stop Camera';
+           
+           // Reset mute button UI
+           document.getElementById('btn-mute').textContent = '🎤';
+           document.getElementById('btn-mute').classList.remove('muted');
 
-        // 4. Update local stream reference and UI
-        localStream.removeTrack(oldVideoTrack);
-        localStream.addTrack(newVideoTrack);
-        localVideo.srcObject = localStream; 
+           logSystem("Broadcasting camera feed...");
+           connections.forEach((conn) => {
+             const call = peer.call(conn.peer, localStream);
+             handleCallStream(call);
+           });
 
+        } else {
+           // Seamlessly Switching Camera Tracks
+           Object.values(peer.connections).forEach(peerConns => {
+             peerConns.forEach(conn => {
+               if (conn.type === 'media' && conn.peerConnection) {
+                 const senders = conn.peerConnection.getSenders();
+                 const vidSender = senders.find(s => s.track && s.track.kind === 'video');
+                 if (vidSender) vidSender.replaceTrack(newVideoTrack);
+               }
+             });
+           });
+           
+           localStream.removeTrack(oldVideoTrack);
+           localStream.addTrack(newVideoTrack);
+           localVideo.srcObject = localStream;
+        }
       } catch (err) {
-        logSystem("Failed to flip camera. Hardware locked.");
-        // Revert facing mode state if it fails
-        currentFacingMode = currentFacingMode === "user" ? "environment" : "user";
+        logSystem("Failed to access camera.");
+      }
+    }
+
+    // Start or Stop Camera Logic from Action Menu
+    menuVidBtn.onclick = () => {
+      if (localStream) {
+        // STOP LOGIC
+        localStream.getTracks().forEach(track => track.stop()); 
+        localStream = null;
+        
+        // Hide the local box completely
+        localVidWrap.style.display = 'none';
+        
+        // Clean up remote views
+        document.querySelectorAll('.remote-vid-wrap').forEach(v => v.remove());
+        
+        // If nothing else is broadcasting, hide the entire container strip
+        if (!screenStream) videoContainer.style.display = 'none';
+        
+        menuVidBtn.textContent = '📹 Start Camera';
+        actionMenu.classList.remove('active');
+        addBtn.style.transform = 'rotate(0deg)';
+        logSystem("Camera disabled.");
+      } else {
+        // START LOGIC
+        openCamModal();
       }
     };
 
@@ -704,39 +869,6 @@
       handleCallStream(call);
     });
 
-    // Start/Stop Camera
-    menuVidBtn.onclick = async () => {
-      actionMenu.classList.remove('active');
-      addBtn.style.transform = 'rotate(0deg)';
-
-      if (localStream) {
-        localStream.getTracks().forEach(track => track.stop()); 
-        localStream = null;
-        if (!screenStream) videoContainer.style.display = 'none';
-        menuVidBtn.textContent = '📹 Start Camera';
-        
-        // Use the new target-based cleanup
-        document.querySelectorAll('.remote-vid-wrap').forEach(v => v.remove());
-        logSystem("Camera disabled.");
-        return;
-      }
-
-      try {
-        localStream = await navigator.mediaDevices.getUserMedia({ video: {facingMode: currentFacingMode}, audio: true });
-        localVideo.srcObject = localStream;
-        videoContainer.style.display = 'flex';
-        menuVidBtn.textContent = '⏹️ Stop Camera';
-        logSystem("Broadcasting camera feed...");
-
-        connections.forEach((conn) => {
-          const call = peer.call(conn.peer, localStream);
-          handleCallStream(call);
-        });
-      } catch (err) {
-        alert("Camera access denied.");
-      }
-    };
-
     // Start/Stop Screen
     document.getElementById('menu-screen').onclick = async () => {
       actionMenu.classList.remove('active');
@@ -746,6 +878,10 @@
       if (screenStream) {
         screenStream.getTracks().forEach(track => track.stop());
         screenStream = null;
+        
+        const hasRemote = document.querySelectorAll('.remote-vid-wrap').length > 0;
+        if (!hasRemote && !localStream) videoContainer.style.display = 'none';
+        
         screenBtn.textContent = '🖥️ Share Screen';
         logSystem("Screen sharing stopped.");
         return;
@@ -754,11 +890,14 @@
       try {
         screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
         screenBtn.textContent = '⏹️ Stop Screen Share';
+        videoContainer.style.display = 'flex';
         logSystem("Broadcasting screen...");
         
         screenStream.getVideoTracks()[0].onended = () => {
           screenStream = null;
           screenBtn.textContent = '🖥️ Share Screen';
+          const hasRemote = document.querySelectorAll('.remote-vid-wrap').length > 0;
+          if (!hasRemote && !localStream) videoContainer.style.display = 'none';
         };
 
         connections.forEach((conn) => {
@@ -768,15 +907,12 @@
       } catch (err) {}
     };
 
-    // FIX: Render Remote Video strictly keyed by Peer ID to prevent duplicates
     function handleCallStream(call) {
       call.on('stream', (remoteStream) => {
         
-        // Check if we already have a container for this exact peer
         let wrap = document.getElementById(`wrap-${call.peer}`);
         let remoteVid = document.getElementById(`vid-${call.peer}`);
 
-        // If it exists, just update the feed to prevent double-stacking videos
         if (wrap && remoteVid) {
           if (remoteVid.srcObject !== remoteStream) {
              remoteVid.srcObject = remoteStream;
@@ -787,7 +923,7 @@
         videoContainer.style.display = 'flex';
         
         wrap = document.createElement('div');
-        wrap.className = 'video-wrapper remote-vid-wrap';
+        wrap.className = 'remote-vid-wrap';
         wrap.id = `wrap-${call.peer}`;
 
         remoteVid = document.createElement('video');
@@ -796,7 +932,6 @@
         remoteVid.autoplay = true;
         remoteVid.playsInline = true;
         
-        // Tap to fullscreen
         remoteVid.addEventListener('click', () => {
           remoteVid.classList.toggle('video-fullscreen');
         });
@@ -805,12 +940,10 @@
         videoContainer.appendChild(wrap);
       });
 
-      // Tie cleanup directly to the specific peer leaving or closing the call
       call.on('close', () => removeSpecificVideo(call.peer));
       peer.on('connection', (conn) => conn.on('close', () => removeSpecificVideo(conn.peer)));
     }
 
-    // Safely remove only the disconnected peer's video
     function removeSpecificVideo(peerId) {
       const wrap = document.getElementById(`wrap-${peerId}`);
       if (wrap) wrap.remove();
