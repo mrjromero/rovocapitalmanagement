@@ -232,6 +232,10 @@
     const connections = new Map();
     const incomingTransfers = new Map();
 
+    // Reconnection tracking
+    const knownConnectedNames = new Set();
+    const reconnectAttempts = new Map();
+
     // LAN Auto-discovery variables
     let discoveredPeers = new Map();
     let lanTopic = null;
@@ -325,8 +329,8 @@
     });
 
     function handlePeerJSConnect(remoteId) {
-      if (remoteId === myPeerId) return alert("You cannot connect to your own Peer ID.");
-      if (connections.has(remoteId)) return alert("Already connected to this peer.");
+      if (remoteId === myPeerId) return;
+      if (connections.has(remoteId)) return;
       const conn = peer.connect(remoteId);
       setupPeerJSConnection(conn);
     }
@@ -400,6 +404,7 @@
       };
 
       conn.on('open', () => {
+        reconnectAttempts.delete(conn.peer); // Clear retries on success
         addConnection(conn.peer, connWrapper);
         logSystem(`Connected to ${conn.peer}`);
       });
@@ -408,8 +413,28 @@
         processIncomingData(data, conn.peer);
       });
 
-      conn.on('close', () => removeConnection(conn.peer));
-      conn.on('error', () => removeConnection(conn.peer));
+      const handleDrop = () => {
+        const connInfo = connections.get(conn.peer);
+        const peerName = connInfo ? (connInfo.name || conn.peer) : conn.peer;
+        
+        removeConnection(conn.peer);
+
+        // Auto-reconnect up to 3 times for transient drops
+        let attempts = reconnectAttempts.get(conn.peer) || 0;
+        if (attempts < 3) {
+          reconnectAttempts.set(conn.peer, attempts + 1);
+          logSystem(`Connection to ${peerName} lost. Reconnecting (Attempt ${attempts + 1}/3)...`);
+          
+          setTimeout(() => {
+            if (!connections.has(conn.peer)) {
+              handlePeerJSConnect(conn.peer);
+            }
+          }, 3000 * (attempts + 1));
+        }
+      };
+
+      conn.on('close', handleDrop);
+      conn.on('error', handleDrop);
     }
 
     // ==========================================
@@ -439,6 +464,16 @@
                 name: payload.name || payload.peerId,
                 lastSeen: Date.now()
               });
+
+              // Auto-reconnect if a refreshed peer's display name is recognized
+              const isConnected = connections.has(payload.peerId);
+              const isKnownPeer = knownConnectedNames.has(payload.name);
+
+              if (!isConnected && isKnownPeer) {
+                logSystem(`Peer "${payload.name}" refreshed. Auto-reconnecting...`);
+                handlePeerJSConnect(payload.peerId);
+              }
+
               renderLanPeers();
             }
           } catch (err) {}
@@ -707,6 +742,7 @@
       if (data.type === 'identity') {
         if (conn) {
           conn.name = data.name;
+          knownConnectedNames.add(data.name); // Track for refresh auto-reconnect
           updateConnectedPeersBar();
           logSystem(`${senderPeerId} updated name to "${data.name}"`);
         }
@@ -869,7 +905,6 @@
       let chunkIndex = 0;
 
       while (offset < file.size) {
-        // Evaluate backpressure across all connected peers
         let maxBuffer = 0;
         connections.forEach(c => {
           if (c.bufferedAmount > maxBuffer) maxBuffer = c.bufferedAmount;
