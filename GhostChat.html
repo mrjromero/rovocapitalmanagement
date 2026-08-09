@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>GhostChat</title>
+  <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.5/dist/peerjs.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+
+    :root {
+      /* Ghostbusters Theme Colors */
+      --primary: #ff0000;       /* No-Ghost Red */
+      --primary-active: #cc0000;
+      --slime: #39ff14;         /* Ecto Slime Green */
+      --caution: #ffcc00;       /* Caution Tape Yellow */
+      
+      --bg: #111111;            /* Deep Black */
+      --card-bg: #222222;       /* Equipment Gray */
+      --border: #444444;
+      --text: #eeeeee;
+      --subtext: #aaaaaa;
+      
+      --bubble-out: var(--slime);
+      --bubble-out-text: #000000;
+      --bubble-in: #333333;
+      --bubble-in-text: #ffffff;
+      
+      --safe-bottom: env(safe-area-inset-bottom, 12px);
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      height: 100dvh;
+      overflow: hidden;
+    }
+
+    .app-container {
+      background: var(--bg);
+      width: 100%;
+      max-width: 500px;
+      height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    /* Top Bar - Ecto Containment Style */
+    .app-header {
+      background: #000000;
+      padding: 12px 16px;
+      border-bottom: 4px solid var(--caution);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 10;
+      background-image: repeating-linear-gradient(
+        45deg,
+        rgba(255, 204, 0, 0.1) 0px,
+        rgba(255, 204, 0, 0.1) 10px,
+        rgba(0, 0, 0, 0) 10px,
+        rgba(0, 0, 0, 0) 20px
+      );
+    }
+
+    .app-title {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 1.3rem;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .status-badge {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 12px;
+      color: var(--bg);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--caution);
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-weight: bold;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: var(--primary);
+      box-shadow: 0 0 5px var(--primary);
+      transition: background-color 0.3s, box-shadow 0.3s;
+    }
+
+    /* Video Container */
+    #video-container {
+      display: none;
+      background: #000;
+      padding: 12px;
+      gap: 10px;
+      overflow-x: auto;
+      align-items: center;
+      border-bottom: 2px solid var(--border);
+      z-index: 5;
+    }
+
+    #video-container video {
+      height: 120px;
+      border-radius: 6px;
+      border: 2px solid var(--slime);
+      box-shadow: 0 0 8px rgba(57, 255, 20, 0.4);
+      flex-shrink: 0;
+      background: #222;
+      object-fit: cover;
+    }
+
+    /* Scrollable Content Body */
+    .scroll-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      -webkit-overflow-scrolling: touch;
+      scroll-behavior: smooth;
+    }
+
+    /* Mobile Cards */
+    .card {
+      background: var(--card-bg);
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      height: 44px;
+      padding: 0 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 16px;
+      background: #111;
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    input[type="text"]:focus {
+      border-color: var(--slime);
+      box-shadow: 0 0 5px rgba(57, 255, 20, 0.2);
+    }
+
+    .btn {
+      height: 44px;
+      padding: 0 16px;
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      touch-action: manipulation;
+      flex-shrink: 0;
+      font-family: 'Share Tech Mono', monospace;
+      text-transform: uppercase;
+    }
+
+    .btn:active { background-color: var(--primary-active); }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .btn-secondary {
+      background-color: #444;
+      color: #fff;
+      height: 36px;
+      padding: 0 12px;
+      font-size: 13px;
+    }
+
+    /* Chat Area & Bubbles */
+    #chat-box {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      min-height: 180px;
+    }
+
+    .bubble {
+      max-width: 80%;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 15px;
+      line-height: 1.4;
+      word-break: break-word;
+      position: relative;
+    }
+
+    .bubble-out {
+      align-self: flex-end;
+      background-color: var(--bubble-out);
+      color: var(--bubble-out-text);
+      border-bottom-right-radius: 2px;
+      font-weight: 500;
+    }
+
+    .bubble-in {
+      align-self: flex-start;
+      background-color: var(--bubble-in);
+      color: var(--bubble-in-text);
+      border-bottom-left-radius: 2px;
+      border: 1px solid var(--border);
+    }
+
+    .bubble-author {
+      font-size: 11px;
+      font-weight: bold;
+      margin-bottom: 4px;
+      opacity: 0.8;
+      font-family: 'Share Tech Mono', monospace;
+    }
+
+    .system-pill {
+      align-self: center;
+      background: rgba(255, 204, 0, 0.15);
+      color: var(--caution);
+      border: 1px solid rgba(255, 204, 0, 0.3);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 11px;
+      padding: 4px 12px;
+      border-radius: 4px;
+      margin: 4px 0;
+      text-align: center;
+      text-transform: uppercase;
+    }
+
+    /* QR Container */
+    .qr-card {
+      text-align: center;
+      align-items: center;
+    }
+
+    .qr-card canvas {
+      border-radius: 6px;
+      border: 4px solid #fff; /* QR needs white border to scan reliably */
+      margin-top: 8px;
+    }
+
+    /* Bottom Fixed Action Bar */
+    .input-bar {
+      background: #111111;
+      padding: 10px 12px calc(10px + var(--safe-bottom)) 12px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      z-index: 10;
+    }
+
+    .icon-btn {
+      width: 44px;
+      height: 44px;
+      border-radius: 6px;
+      background: #333;
+      color: #fff;
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .icon-btn:active { background: #444; }
+    .icon-btn:disabled { opacity: 0.4; }
+
+    .send-btn {
+      width: 44px;
+      height: 44px;
+      border-radius: 6px;
+      padding: 0;
+      background: var(--slime);
+      color: #000;
+    }
+    .send-btn:active { background: #2ebd10; }
+
+    a.download-card {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--slime);
+      text-decoration: none;
+      background: rgba(0,0,0,0.4);
+      padding: 8px 12px;
+      border-radius: 6px;
+      margin-top: 6px;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 14px;
+      border: 1px solid #444;
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    
+    <!-- App Header -->
+    <header class="app-header">
+      <div class="app-title">👻 GHOSTCHAT 🚫</div>
+      <div class="status-badge">
+        <div id="status-dot" class="status-dot"></div>
+        <span id="conn-status">OFFLINE</span>
+      </div>
+    </header>
+
+    <!-- Video Container -->
+    <div id="video-container">
+      <video id="local-video" autoplay playsinline muted></video>
+    </div>
+
+    <!-- Main Scrollable Body -->
+    <div class="scroll-body">
+      
+      <!-- User Profile & Share Card -->
+      <div class="card">
+        <div class="row">
+          <input type="text" id="display-name" placeholder="Agent Designation (Name)">
+        </div>
+        <div class="row" style="justify-content: space-between; font-size: 13px;">
+          <span style="color: var(--subtext); word-break: break-all;">
+            <strong>Secure link to connect:</strong>
+          </span>
+          <button id="share-btn" class="btn btn-secondary" disabled>COPY LINK</button>
+        </div>
+      </div>
+
+      <!-- Chat Stream -->
+      <div id="chat-box"></div>
+
+    </div>
+
+    <!-- Fixed Bottom Bar -->
+    <footer class="input-bar">
+      <input type="file" id="file-input" hidden>
+      <button id="file-btn" class="icon-btn" title="Attach File" disabled>📎</button>
+      <button id="video-btn" class="icon-btn" title="Start Video Call" disabled>📹</button>
+      <!-- NEW: Screen Share Button -->
+      <button id="screen-btn" class="icon-btn" title="Share Screen" disabled>🖥️</button>
+      
+      <input type="text" id="msg-input" placeholder="Transmit signal..." disabled>
+      <button id="send-btn" class="btn send-btn" disabled>➔</button>
+    </footer>
+
+  </div>
+
+  <script>
+    const CHUNK_SIZE = 16384;
+    let myPeerId = null;
+    
+    const connections = new Map();
+    const incomingTransfers = new Map();
+
+    // --- AUDIO NOTIFICATION SYSTEM ---
+    let audioCtx = null;
+
+    const unlockAudio = () => {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      document.removeEventListener('click', unlockAudio);
+      document.removeEventListener('touchstart', unlockAudio);
+    };
+    document.addEventListener('click', unlockAudio);
+    document.addEventListener('touchstart', unlockAudio);
+
+    function playNotificationSound() {
+      if (!audioCtx) return;
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      try {
+        const t = audioCtx.currentTime;
+        const playTone = (freq, startTime) => {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'square'; // Changed to square for a retro sci-fi PKE meter sound
+          osc.frequency.setValueAtTime(freq, startTime);
+          
+          gain.gain.setValueAtTime(0, startTime);
+          gain.gain.linearRampToValueAtTime(0.05, startTime + 0.02);
+          gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.15);
+          
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          
+          osc.start(startTime);
+          osc.stop(startTime + 0.15);
+        };
+        playTone(600, t);        
+        playTone(1200, t + 0.1); 
+      } catch (e) {}
+    }
+
+    // 1. Vanity Name Generator & Persistence
+    const ADJ = ['Spooky', 'Ecto', 'Spectral', 'Phantom', 'Slime', 'Proton', 'Ghost', 'Venkman', 'Stantz'];
+    const ANI = ['Agent', 'Buster', 'Trap', 'Pack', 'Meter', 'Entity', 'Specter', 'Ghoul', 'Spirit'];
+    
+    const nameInput = document.getElementById('display-name');
+    nameInput.value = localStorage.getItem('ghost_name') || `${ADJ[Math.floor(Math.random()*ADJ.length)]} ${ANI[Math.floor(Math.random()*ANI.length)]}`;
+    
+    nameInput.addEventListener('change', () => {
+      localStorage.setItem('ghost_name', nameInput.value.trim());
+      broadcast({ type: 'identity', name: nameInput.value.trim() });
+    });
+
+    // 2. PeerJS Setup
+    const peer = new Peer({ 
+      config: { 
+        iceServers: [
+          { urls: 'stun:stun.l.google.com:19302' },
+          { urls: 'stun:stun1.l.google.com:19302' },
+          { urls: 'turn:openrelay.metered.ca:80', username: 'openrelayproject', credential: 'openrelayproject' },
+          { urls: 'turn:openrelay.metered.ca:443', username: 'openrelayproject', credential: 'openrelayproject' }
+        ] 
+      } 
+    });
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible' && peer.disconnected) {
+        peer.reconnect();
+      }
+    });
+
+    peer.on('disconnected', () => {
+      if (document.visibilityState === 'visible') peer.reconnect();
+    });
+
+    peer.on('open', (id) => {
+      myPeerId = id;
+      
+      const shareUrl = `${window.location.origin}${window.location.pathname}?id=${id}`;
+      const shareBtn = document.getElementById('share-btn');
+      shareBtn.disabled = false;
+      
+      shareBtn.onclick = async () => {
+        if (navigator.share) {
+          try {
+            await navigator.share({
+              title: 'GhostChat',
+              text: 'Join my secure containment unit:',
+              url: shareUrl
+            });
+          } catch (err) {}
+        } else if (navigator.clipboard) {
+          navigator.clipboard.writeText(shareUrl);
+          shareBtn.innerText = 'COPIED!';
+          setTimeout(() => shareBtn.innerText = 'COPY LINK', 2000);
+        }
+      };
+
+      renderShareQR(shareUrl);
+      updateUI();
+
+      const targetId = new URLSearchParams(window.location.search).get('id');
+      if (targetId) {
+        logSystem("Connecting to host...");
+        connectToPeer(targetId);
+
+        let retryCount = 0;
+        const retryTimer = setInterval(() => {
+          if (connections.has(targetId)) {
+            clearInterval(retryTimer); 
+          } else {
+            retryCount++;
+            if (retryCount === 1) logSystem("Host unresponsive. Retrying signal...");
+            connectToPeer(targetId);
+          }
+        }, 3000);
+      }
+    });
+
+    peer.on('connection', (conn) => setupConnection(conn));
+
+    function connectToPeer(remoteId) {
+      if (remoteId === myPeerId || connections.has(remoteId)) return;
+      setupConnection(peer.connect(remoteId));
+    }
+
+    // 3. Multi-Peer Management
+    function setupConnection(conn) {
+      conn.on('open', () => {
+        connections.set(conn.peer, conn);
+        updateUI();
+        conn.send({ type: 'identity', name: nameInput.value.trim() });
+      });
+
+      conn.on('data', (data) => processData(data, conn.peer));
+      
+      const cleanup = () => {
+        if (!connections.has(conn.peer)) return;
+        const peerName = connections.get(conn.peer).name || conn.peer;
+        connections.delete(conn.peer);
+        incomingTransfers.delete(conn.peer);
+        updateUI();
+        logSystem(`Agent ${peerName} disconnected`);
+      };
+      conn.on('close', cleanup);
+      conn.on('error', cleanup);
+    }
+
+    function broadcast(data) {
+      connections.forEach(conn => { if (conn.open) conn.send(data); });
+    }
+
+    function updateUI() {
+      const active = connections.size > 0;
+      document.getElementById('msg-input').disabled = !active;
+      document.getElementById('send-btn').disabled = !active;
+      document.getElementById('video-btn').disabled = !active; 
+      document.getElementById('screen-btn').disabled = !active; // Enable screen share
+      
+      const fileBtn = document.getElementById('file-btn');
+      if (fileBtn.textContent === '📎') {
+        fileBtn.disabled = !active;
+      }
+
+      const statusText = document.getElementById('conn-status');
+      const statusDot = document.getElementById('status-dot');
+      
+      if (myPeerId) {
+        statusText.textContent = `${connections.size} AGENT${connections.size === 1 ? '' : 'S'} ONLINE`;
+        // Slime green for connected, red for alone
+        statusDot.style.backgroundColor = connections.size === 0 ? '#ff0000' : '#39ff14';
+        statusDot.style.boxShadow = `0 0 8px ${connections.size === 0 ? '#ff0000' : '#39ff14'}`;
+      }
+    }
+
+    // 4. Data & File Transfer Protocol
+    function processData(data, senderId) {
+      const conn = connections.get(senderId);
+      const senderName = conn?.name || senderId;
+
+      if (typeof data === 'string') {
+        playNotificationSound();
+        return logBubble(senderName, data, false);
+      }
+
+      if (data.type === 'identity') {
+        if (conn && conn.name !== data.name) {
+          conn.name = data.name;
+          logSystem(`${data.name} entered the unit`);
+        }
+        return;
+      }
+
+      if (data.type === 'file-header') {
+        incomingTransfers.set(senderId, { name: data.name, type: data.filetype, chunks: [] });
+      } else if (data.type === 'file-chunk') {
+        incomingTransfers.get(senderId)?.chunks.push(data.chunk);
+      } else if (data.type === 'file-complete') {
+        const transfer = incomingTransfers.get(senderId);
+        if (transfer) {
+          const blob = new Blob(transfer.chunks, { type: transfer.type });
+          playNotificationSound();
+          logDownload(senderName, URL.createObjectURL(blob), transfer.name);
+          incomingTransfers.delete(senderId);
+        }
+      }
+    }
+
+    // --- 5. VIDEO & SCREEN CALLING SYSTEM ---
+    let localStream = null;
+    let screenStream = null;
+    
+    const videoBtn = document.getElementById('video-btn');
+    const screenBtn = document.getElementById('screen-btn');
+    const videoContainer = document.getElementById('video-container');
+    const localVideo = document.getElementById('local-video');
+
+    // Listen for incoming calls (Video or Screen)
+    peer.on('call', (call) => {
+      const conn = connections.get(call.peer);
+      const callerName = conn?.name || call.peer;
+      logSystem(`Receiving visual feed from ${callerName}...`);
+      playNotificationSound();
+      
+      // We answer silently with whatever stream we currently have active (or null).
+      // We no longer force the user's camera on!
+      const answerStream = screenStream || localStream || undefined;
+      call.answer(answerStream); 
+      
+      handleCallStream(call);
+    });
+
+    // Start/Stop Camera
+    videoBtn.onclick = async () => {
+      if (localStream) {
+        localStream.getTracks().forEach(track => track.stop()); 
+        localStream = null;
+        
+        // Hide local container only if we aren't also screen sharing
+        if (!screenStream) videoContainer.style.display = 'none';
+        videoBtn.textContent = '📹';
+        
+        videoContainer.querySelectorAll('video:not(#local-video)').forEach(v => v.remove());
+        logSystem("Camera disabled.");
+        return;
+      }
+
+      try {
+        localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        localVideo.srcObject = localStream;
+        videoContainer.style.display = 'flex';
+        videoBtn.textContent = '⏹️';
+        logSystem("Broadcasting camera feed...");
+
+        connections.forEach((conn) => {
+          const call = peer.call(conn.peer, localStream);
+          handleCallStream(call);
+        });
+      } catch (err) {
+        alert("Camera/Mic access denied or unavailable.");
+      }
+    };
+
+    // Start/Stop Screen Share
+    screenBtn.onclick = async () => {
+      if (screenStream) {
+        screenStream.getTracks().forEach(track => track.stop());
+        screenStream = null;
+        screenBtn.textContent = '🖥️';
+        logSystem("Screen sharing stopped.");
+        return;
+      }
+
+      try {
+        // Request screen, usually audio is tricky on system level but we can ask
+        screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
+        screenBtn.textContent = '⏹️';
+        logSystem("Broadcasting screen...");
+
+        // Handle native browser "Stop sharing" button
+        screenStream.getVideoTracks()[0].onended = () => {
+          screenStream = null;
+          screenBtn.textContent = '🖥️';
+          logSystem("Screen sharing stopped.");
+        };
+
+        connections.forEach((conn) => {
+          const call = peer.call(conn.peer, screenStream);
+          handleCallStream(call);
+        });
+      } catch (err) {
+        logSystem("Screen share cancelled.");
+      }
+    };
+
+    // Handle the remote video feed
+    function handleCallStream(call) {
+      call.on('stream', (remoteStream) => {
+        // Prevent duplicate video elements by using the unique stream ID
+        if (document.getElementById(`vid-${remoteStream.id}`)) return;
+
+        videoContainer.style.display = 'flex';
+        
+        const remoteVid = document.createElement('video');
+        remoteVid.id = `vid-${remoteStream.id}`;
+        remoteVid.srcObject = remoteStream;
+        remoteVid.autoplay = true;
+        remoteVid.playsInline = true;
+        
+        videoContainer.appendChild(remoteVid);
+      });
+
+      call.on('close', () => {
+        // Fallback cleanup if the stream closes natively
+        videoContainer.querySelectorAll('video').forEach(vid => {
+            if (vid.id !== 'local-video') vid.remove();
+        });
+        if (!localStream && !screenStream) videoContainer.style.display = 'none';
+      });
+      
+      peer.on('connection', (conn) => {
+          conn.on('close', () => {
+             // General sweep of dead remote videos if a peer drops entirely
+             videoContainer.querySelectorAll('video').forEach(vid => {
+                if (vid.id !== 'local-video') vid.remove();
+             });
+             if (!localStream && !screenStream) videoContainer.style.display = 'none';
+          });
+      });
+    }
+
+    // 6. User Action Handlers (Chat/Files)
+    const msgInput = document.getElementById('msg-input');
+    const sendBtn = document.getElementById('send-btn');
+    const fileInput = document.getElementById('file-input');
+    const fileBtn = document.getElementById('file-btn');
+
+    msgInput.addEventListener('focus', () => {
+      setTimeout(scrollToBottom, 300);
+    });
+
+    msgInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') sendBtn.click();
+    });
+
+    sendBtn.onclick = () => {
+      const text = msgInput.value.trim();
+      if (text) {
+        broadcast(text);
+        logBubble('You', text, true);
+        msgInput.value = '';
+      }
+    };
+
+    fileBtn.onclick = () => fileInput.click();
+
+    fileInput.onchange = async () => {
+      const file = fileInput.files[0];
+      if (!file) return;
+
+      const MAX_FILE_SIZE = 250 * 1024 * 1024;
+      if (file.size > MAX_FILE_SIZE) {
+        alert(`File exceeds containment unit capacity (${Math.round(file.size / 1024 / 1024)}MB).`);
+        fileInput.value = '';
+        return;
+      }
+      
+      fileInput.value = '';
+      fileBtn.disabled = true;
+      fileBtn.textContent = '⏳';
+
+      logSystem(`Transmitting ${file.name}...`);
+      broadcast({ type: 'file-header', name: file.name, filetype: file.type });
+
+      let offset = 0;
+      while (offset < file.size) {
+        let maxBuffer = 0;
+        connections.forEach(c => {
+          if (c.dataChannel && c.dataChannel.bufferedAmount > maxBuffer) {
+            maxBuffer = c.dataChannel.bufferedAmount;
+          }
+        });
+
+        if (maxBuffer > 1024 * 1024) {
+          await new Promise(r => setTimeout(r, 50));
+          continue;
+        }
+
+        const buffer = await file.slice(offset, offset + CHUNK_SIZE).arrayBuffer();
+        broadcast({ type: 'file-chunk', chunk: buffer });
+        offset += CHUNK_SIZE;
+      }
+
+      broadcast({ type: 'file-complete' });
+      logSystem(`Sent ${file.name}`);
+      
+      fileBtn.textContent = '📎';
+      updateUI(); 
+    };
+
+    // 7. Display & Log Utilities
+    function scrollToBottom() {
+      const scrollBody = document.querySelector('.scroll-body');
+      if (scrollBody) {
+        scrollBody.scrollTo({
+          top: scrollBody.scrollHeight,
+          behavior: 'smooth'
+        });
+      }
+    }
+
+    function renderShareQR(url) {
+      const chat = document.getElementById('chat-box');
+      const card = document.createElement('div');
+      card.className = 'card qr-card';
+      card.innerHTML = `<div style="font-size:13px; font-weight:bold; color:var(--caution); font-family:'Share Tech Mono', monospace;">SCAN TO JOIN CONTAINMENT UNIT</div>`;
+      
+      const canvas = document.createElement('canvas');
+      new QRious({ element: canvas, value: url, size: 160 });
+      card.appendChild(canvas);
+      chat.appendChild(card);
+      scrollToBottom();
+    }
+
+    function escapeHTML(str) {
+      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function logBubble(sender, text, isOut) {
+      const chat = document.getElementById('chat-box');
+      const div = document.createElement('div');
+      div.className = `bubble ${isOut ? 'bubble-out' : 'bubble-in'}`;
+      div.innerHTML = `
+        <div class="bubble-author">${escapeHTML(sender)}</div>
+        <div>${escapeHTML(text)}</div>
+      `;
+      chat.appendChild(div);
+      scrollToBottom();
+    }
+
+    function logSystem(text) {
+      const chat = document.getElementById('chat-box');
+      const div = document.createElement('div');
+      div.className = 'system-pill';
+      div.textContent = text;
+      chat.appendChild(div);
+      scrollToBottom();
+    }
+
+    function logDownload(sender, url, filename) {
+      const chat = document.getElementById('chat-box');
+      const div = document.createElement('div');
+      div.className = 'bubble bubble-in';
+      
+      const author = document.createElement('div');
+      author.className = 'bubble-author';
+      author.textContent = sender;
+
+      const link = document.createElement('a');
+      link.className = 'download-card';
+      link.href = url;
+      link.download = filename;
+      link.innerHTML = `⬇️ DOWNLOAD ${escapeHTML(filename).toUpperCase()}`;
+      
+      link.addEventListener('click', () => {
+        setTimeout(() => URL.revokeObjectURL(url), 10000);
+      });
+
+      div.appendChild(author);
+      div.appendChild(link);
+      chat.appendChild(div);
+      scrollToBottom();
+    }
+  </script>
+</body>
+</html>
