@@ -10,7 +10,6 @@
     @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
 
     :root {
-      /* Ghostbusters Theme Colors */
       --primary: #ff0000;       
       --primary-active: #cc0000;
       --slime: #39ff14;         
@@ -655,22 +654,25 @@
       }
     };
 
-    // Flip Camera
+    // Flip Camera FIX: Stop old video track before requesting new one
     document.getElementById('btn-flip').onclick = async () => {
       if (!localStream) return;
+      
       currentFacingMode = currentFacingMode === "user" ? "environment" : "user";
       
       try {
-        const newStream = await navigator.mediaDevices.getUserMedia({ 
-          video: { facingMode: currentFacingMode }, 
-          audio: true 
+        // 1. MUST stop the current video track first to release Android hardware lock
+        const oldVideoTrack = localStream.getVideoTracks()[0];
+        if (oldVideoTrack) oldVideoTrack.stop();
+
+        // 2. Request a new video stream (keeping the existing audio untouched)
+        const newVideoStream = await navigator.mediaDevices.getUserMedia({ 
+          video: { facingMode: currentFacingMode }
         });
         
-        // Grab new tracks
-        const newVideoTrack = newStream.getVideoTracks()[0];
-        const newAudioTrack = newStream.getAudioTracks()[0];
+        const newVideoTrack = newVideoStream.getVideoTracks()[0];
 
-        // Replace track on all active connections seamlessly
+        // 3. Replace the video track seamlessly on all active peer connections
         Object.values(peer.connections).forEach(peerConns => {
           peerConns.forEach(conn => {
             if (conn.type === 'media' && conn.peerConnection) {
@@ -681,17 +683,15 @@
           });
         });
 
-        // Kill old tracks and update local feed
-        localStream.getTracks().forEach(t => t.stop());
-        localStream = newStream;
-        localVideo.srcObject = localStream;
-        
-        // Reset mute button state
-        document.getElementById('btn-mute').textContent = '🎤';
-        document.getElementById('btn-mute').classList.remove('muted');
+        // 4. Update local stream reference and UI
+        localStream.removeTrack(oldVideoTrack);
+        localStream.addTrack(newVideoTrack);
+        localVideo.srcObject = localStream; 
 
       } catch (err) {
-        logSystem("Failed to flip camera.");
+        logSystem("Failed to flip camera. Hardware locked.");
+        // Revert facing mode state if it fails
+        currentFacingMode = currentFacingMode === "user" ? "environment" : "user";
       }
     };
 
@@ -714,7 +714,9 @@
         localStream = null;
         if (!screenStream) videoContainer.style.display = 'none';
         menuVidBtn.textContent = '📹 Start Camera';
-        videoContainer.querySelectorAll('.remote-vid-wrap').forEach(v => v.remove());
+        
+        // Use the new target-based cleanup
+        document.querySelectorAll('.remote-vid-wrap').forEach(v => v.remove());
         logSystem("Camera disabled.");
         return;
       }
@@ -766,19 +768,30 @@
       } catch (err) {}
     };
 
-    // Render Remote Video
+    // FIX: Render Remote Video strictly keyed by Peer ID to prevent duplicates
     function handleCallStream(call) {
       call.on('stream', (remoteStream) => {
-        if (document.getElementById(`vid-${remoteStream.id}`)) return;
+        
+        // Check if we already have a container for this exact peer
+        let wrap = document.getElementById(`wrap-${call.peer}`);
+        let remoteVid = document.getElementById(`vid-${call.peer}`);
+
+        // If it exists, just update the feed to prevent double-stacking videos
+        if (wrap && remoteVid) {
+          if (remoteVid.srcObject !== remoteStream) {
+             remoteVid.srcObject = remoteStream;
+          }
+          return;
+        }
 
         videoContainer.style.display = 'flex';
         
-        const wrap = document.createElement('div');
+        wrap = document.createElement('div');
         wrap.className = 'video-wrapper remote-vid-wrap';
-        wrap.id = `wrap-${remoteStream.id}`;
+        wrap.id = `wrap-${call.peer}`;
 
-        const remoteVid = document.createElement('video');
-        remoteVid.id = `vid-${remoteStream.id}`;
+        remoteVid = document.createElement('video');
+        remoteVid.id = `vid-${call.peer}`;
         remoteVid.srcObject = remoteStream;
         remoteVid.autoplay = true;
         remoteVid.playsInline = true;
@@ -792,13 +805,20 @@
         videoContainer.appendChild(wrap);
       });
 
-      call.on('close', cleanDeadVideos);
-      peer.on('connection', (conn) => conn.on('close', cleanDeadVideos));
+      // Tie cleanup directly to the specific peer leaving or closing the call
+      call.on('close', () => removeSpecificVideo(call.peer));
+      peer.on('connection', (conn) => conn.on('close', () => removeSpecificVideo(conn.peer)));
     }
 
-    function cleanDeadVideos() {
-      videoContainer.querySelectorAll('.remote-vid-wrap').forEach(v => v.remove());
-      if (!localStream && !screenStream) videoContainer.style.display = 'none';
+    // Safely remove only the disconnected peer's video
+    function removeSpecificVideo(peerId) {
+      const wrap = document.getElementById(`wrap-${peerId}`);
+      if (wrap) wrap.remove();
+      
+      const hasRemote = document.querySelectorAll('.remote-vid-wrap').length > 0;
+      if (!hasRemote && !localStream && !screenStream) {
+         videoContainer.style.display = 'none';
+      }
     }
 
     // --- Chat & File Handlers ---
