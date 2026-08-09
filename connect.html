@@ -84,14 +84,8 @@
       width: 8px;
       height: 8px;
       border-radius: 50%;
-      background-color: #34c759;
-      animation: pulse 2s infinite;
-    }
-
-    @keyframes pulse {
-      0% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.4; transform: scale(0.85); }
-      100% { opacity: 1; transform: scale(1); }
+      background-color: #ff3b30; /* Defaults to red (offline) */
+      transition: background-color 0.3s;
     }
 
     /* Scrollable Content Body */
@@ -123,7 +117,6 @@
       gap: 8px;
     }
 
-    /* iOS 16px font-size to prevent automatic Safari zoom */
     input[type="text"] {
       width: 100%;
       height: 44px;
@@ -167,45 +160,6 @@
       height: 36px;
       padding: 0 12px;
       font-size: 13px;
-    }
-
-    /* LAN Devices Section */
-    .lan-section {
-      background: #f0f7ff;
-      border: 1px solid #cce5ff;
-    }
-
-    .lan-header {
-      font-size: 13px;
-      font-weight: 600;
-      color: #004085;
-      display: flex;
-      justify-content: space-between;
-    }
-
-    .peer-chip {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background: #ffffff;
-      padding: 10px 12px;
-      border-radius: 10px;
-      border: 1px solid #d0e2ff;
-    }
-
-    .peer-chip-info {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 14px;
-    }
-
-    .btn-connect {
-      background-color: #34c759;
-      height: 32px;
-      padding: 0 12px;
-      font-size: 13px;
-      border-radius: 8px;
     }
 
     /* Chat Area & Bubbles */
@@ -331,8 +285,8 @@
     <header class="app-header">
       <div class="app-title">⚡ Local Share</div>
       <div class="status-badge">
-        <div class="status-dot"></div>
-        <span id="lan-status">Scanning...</span>
+        <div id="status-dot" class="status-dot"></div>
+        <span id="conn-status">Initializing...</span>
       </div>
     </header>
 
@@ -350,14 +304,6 @@
           </span>
           <button id="share-btn" class="btn btn-secondary" disabled>Copy Link</button>
         </div>
-      </div>
-
-      <!-- LAN Local Discovery Card -->
-      <div class="card lan-section">
-        <div class="lan-header">
-          <span>NEARBY DEVICES</span>
-        </div>
-        <div id="lan-peer-list" style="font-size: 13px; color: var(--subtext);">Searching network...</div>
       </div>
 
       <!-- Manual Connection Card -->
@@ -386,27 +332,9 @@
   <script>
     const CHUNK_SIZE = 16384;
     let myPeerId = null;
-    let currentLanTopic = null;
     
     const connections = new Map();
-    const discoveredPeers = new Map();
     const incomingTransfers = new Map();
-
-    // Securely hash the IP so it isn't leaked to the public ntfy server
-    async function hashTopic(ip) {
-      const msgBuffer = new TextEncoder().encode(ip + 'p2p-salt');
-      const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-      const hashArray = Array.from(new Uint8Array(hashBuffer));
-      return hashArray.map(b => b.toString(16).padStart(2, '0')).join('').substring(0, 16);
-    }
-
-    // Instantly clean up LAN list for others when tab is closed
-    window.addEventListener('beforeunload', () => {
-      if (myPeerId && currentLanTopic) {
-        const payload = JSON.stringify({ peerId: myPeerId, offline: true });
-        navigator.sendBeacon(`https://ntfy.sh/${currentLanTopic}`, payload);
-      }
-    });
 
     // 1. Vanity Name Generator & Persistence
     const ADJ = ['Swift', 'Neon', 'Solar', 'Brave', 'Clever', 'Cosmic', 'Turbo', 'Shadow', 'Crystal'];
@@ -446,7 +374,7 @@
       };
 
       renderShareQR(shareUrl);
-      initLanDiscovery(id);
+      updateUI(); // Set initial status to 0 Connected
 
       const targetId = new URLSearchParams(window.location.search).get('id');
       if (targetId) connectToPeer(targetId);
@@ -469,17 +397,18 @@
       conn.on('open', () => {
         connections.set(conn.peer, conn);
         updateUI();
-        logSystem(`Connected to peer`);
         conn.send({ type: 'identity', name: nameInput.value.trim() });
       });
 
       conn.on('data', (data) => processData(data, conn.peer));
       
       const cleanup = () => {
+        if (!connections.has(conn.peer)) return;
+        const peerName = connections.get(conn.peer).name || conn.peer;
         connections.delete(conn.peer);
         incomingTransfers.delete(conn.peer);
         updateUI();
-        logSystem(`Peer disconnected`);
+        logSystem(`${peerName} left`);
       };
       conn.on('close', cleanup);
       conn.on('error', cleanup);
@@ -498,89 +427,19 @@
       if (fileBtn.textContent === '📎') {
         fileBtn.disabled = !active;
       }
-    }
 
-    // 4. LAN Auto-Discovery (Public IP Matching via SSE)
-    async function initLanDiscovery(peerId) {
-      const statusEl = document.getElementById('lan-status');
-      try {
-        const res = await fetch('https://api4.ipify.org?format=json');
-        const data = await res.json();
-        
-        const ipHash = await hashTopic(data.ip);
-        currentLanTopic = 'p2plan-' + ipHash;
-        statusEl.textContent = 'Active';
-
-        const sse = new EventSource(`https://ntfy.sh/${currentLanTopic}/sse`);
-        sse.onmessage = (e) => {
-          try {
-            const rawEvent = JSON.parse(e.data);
-            if (!rawEvent.message) return;
-
-            const payload = JSON.parse(rawEvent.message);
-            
-            if (payload.offline && payload.peerId) {
-              discoveredPeers.delete(payload.peerId);
-              renderLanList();
-              return;
-            }
-
-            if (payload.peerId && payload.peerId !== myPeerId) {
-              discoveredPeers.set(payload.peerId, { name: payload.name, lastSeen: Date.now() });
-              renderLanList();
-            }
-          } catch(err) {}
-        };
-
-        const ping = () => {
-          fetch(`https://ntfy.sh/${currentLanTopic}`, {
-            method: 'POST',
-            body: JSON.stringify({ peerId: peerId, name: nameInput.value.trim() })
-          }).catch(() => {});
-        };
-        ping();
-        setInterval(ping, 6000);
-
-        setInterval(() => {
-          const now = Date.now();
-          discoveredPeers.forEach((p, id) => { if (now - p.lastSeen > 18000) discoveredPeers.delete(id); });
-          renderLanList();
-        }, 4000);
-
-      } catch (err) {
-        statusEl.textContent = 'Offline';
+      // Update Header Status Indicator
+      const statusText = document.getElementById('conn-status');
+      const statusDot = document.getElementById('status-dot');
+      
+      if (myPeerId) {
+        statusText.textContent = `${connections.size} Connected`;
+        // Orange if waiting alone, Green if actively connected to peers
+        statusDot.style.backgroundColor = connections.size === 0 ? '#ff9500' : '#34c759';
       }
     }
 
-    function renderLanList() {
-      const list = document.getElementById('lan-peer-list');
-      if (discoveredPeers.size === 0) {
-        list.textContent = 'No other devices detected on this network.';
-        return;
-      }
-      list.innerHTML = '';
-      discoveredPeers.forEach((p, id) => {
-        const div = document.createElement('div');
-        div.className = 'peer-chip';
-        div.innerHTML = `
-          <div class="peer-chip-info">
-            <span>📱</span>
-            <strong>${escapeHTML(p.name)}</strong>
-          </div>
-        `;
-        
-        const btn = document.createElement('button');
-        btn.className = 'btn btn-connect';
-        btn.textContent = connections.has(id) ? 'Connected' : 'Connect';
-        btn.disabled = connections.has(id);
-        btn.onclick = () => connectToPeer(id);
-        
-        div.appendChild(btn);
-        list.appendChild(div);
-      });
-    }
-
-    // 5. Data & File Transfer Protocol
+    // 4. Data & File Transfer Protocol
     function processData(data, senderId) {
       const conn = connections.get(senderId);
       const senderName = conn?.name || senderId;
@@ -588,8 +447,10 @@
       if (typeof data === 'string') return logBubble(senderName, data, false);
 
       if (data.type === 'identity') {
-        if (conn) conn.name = data.name;
-        renderLanList();
+        if (conn && conn.name !== data.name) {
+          conn.name = data.name;
+          logSystem(`${data.name} joined`);
+        }
         return;
       }
 
@@ -607,7 +468,7 @@
       }
     }
 
-    // 6. User Action Handlers
+    // 5. User Action Handlers
     const msgInput = document.getElementById('msg-input');
     const sendBtn = document.getElementById('send-btn');
     const fileInput = document.getElementById('file-input');
@@ -653,6 +514,7 @@
 
       let offset = 0;
       while (offset < file.size) {
+        
         let maxBuffer = 0;
         connections.forEach(c => {
           if (c.dataChannel && c.dataChannel.bufferedAmount > maxBuffer) {
@@ -677,7 +539,7 @@
       updateUI(); 
     };
 
-    // 7. Display & Log Utilities
+    // 6. Display & Log Utilities
     function scrollToBottom() {
       const scrollBody = document.querySelector('.scroll-body');
       if (scrollBody) {
