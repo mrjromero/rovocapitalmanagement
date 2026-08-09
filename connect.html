@@ -232,13 +232,32 @@
     let scanStream = null;
     let nativePc = null;
 
+    // Persisted Session ID for Secure Auto-reconnect Validation
+    let mySessionId = sessionStorage.getItem('p2p_session_id');
+    if (!mySessionId) {
+      mySessionId = 'sess-' + Math.random().toString(36).substring(2, 9);
+      sessionStorage.setItem('p2p_session_id', mySessionId);
+    }
+    const knownConnectedSessions = new Set();
+
+    // Deduplication Set for Mesh Forwarding
+    const seenMsgIds = new Set();
+    function markMsgSeen(id) {
+      if (!id) return;
+      seenMsgIds.add(id);
+      if (seenMsgIds.size > 500) {
+        const first = seenMsgIds.values().next().value;
+        seenMsgIds.delete(first);
+      }
+    }
+
     // Multi-Peer Mesh Map
     const connections = new Map();
     const incomingTransfers = new Map();
 
-    // Reconnection tracking
-    const knownConnectedNames = new Set();
+    // Reconnection & Pruning Intervals
     const reconnectAttempts = new Map();
+    let pruneInterval = null;
 
     // LAN Auto-discovery variables
     let discoveredPeers = new Map();
@@ -271,7 +290,7 @@
     nameInput.addEventListener('change', (e) => {
       const newName = e.target.value.trim() || 'Anonymous';
       localStorage.setItem('p2p_user_name', newName);
-      broadcastData({ type: 'identity', name: newName });
+      broadcastData({ type: 'identity', name: newName, sessionId: mySessionId });
     });
 
     const qrGen = new QRious({ element: document.getElementById('qr-canvas'), size: 280, level: 'L' });
@@ -348,9 +367,10 @@
       }
     });
 
-    function handlePeerJSConnect(remoteId) {
-      if (remoteId === myPeerId) return;
-      if (connections.has(remoteId)) return;
+    function handlePeerJSConnect(remoteId, isAuto = false) {
+      if (remoteId === myPeerId || connections.has(remoteId)) return;
+      // Race Condition Tie-Breaker: lower ID initiates auto-dials
+      if (isAuto && myPeerId > remoteId && discoveredPeers.has(remoteId)) return;
       const conn = peer.connect(remoteId);
       setupPeerJSConnection(conn);
     }
@@ -366,7 +386,7 @@
       updateConnectedPeersBar();
 
       const myName = nameInput.value.trim() || 'Anonymous';
-      connWrapper.send({ type: 'identity', name: myName });
+      connWrapper.send({ type: 'identity', name: myName, sessionId: mySessionId });
     }
 
     function removeConnection(peerId) {
@@ -374,6 +394,7 @@
         const conn = connections.get(peerId);
         const name = conn.name || peerId;
         connections.delete(peerId);
+        incomingTransfers.delete(peerId); // Memory Leak Fix: Clean partial transfers
         logSystem(`${name} disconnected.`);
         updateControlsState();
         updateConnectedPeersBar();
@@ -400,12 +421,14 @@
       }
     }
 
-    function broadcastData(data) {
-      connections.forEach((conn) => {
-        try {
-          conn.send(data);
-        } catch(err) {
-          console.error("Broadcast failed for peer", conn.id, err);
+    function broadcastData(data, excludePeerId = null) {
+      connections.forEach((conn, pid) => {
+        if (pid !== excludePeerId) {
+          try {
+            conn.send(data);
+          } catch(err) {
+            console.error("Broadcast failed for peer", pid, err);
+          }
         }
       });
     }
@@ -465,7 +488,7 @@
         broadcastChan.onmessage = (event) => {
           const payload = event.data;
           if (payload && payload.peerId && payload.peerId !== myPeerId) {
-            handleDiscoveredPeer(payload.peerId, payload.name || payload.peerId);
+            handleDiscoveredPeer(payload.peerId, payload.name || payload.peerId, payload.sessionId);
           }
         };
       } catch (e) {
@@ -476,12 +499,12 @@
     function announceLocalBroadcast() {
       if (broadcastChan && myPeerId) {
         const myName = nameInput.value.trim() || 'Anonymous';
-        broadcastChan.postMessage({ peerId: myPeerId, name: myName, timestamp: Date.now() });
+        broadcastChan.postMessage({ peerId: myPeerId, name: myName, sessionId: mySessionId, timestamp: Date.now() });
       }
     }
 
     // ==========================================
-    // PUBLIC IP & ROOM DISCOVERY (BULLETPROOF FALLBACK)
+    // PUBLIC IP & ROOM DISCOVERY
     // ==========================================
     async function getPublicIp() {
       const services = [
@@ -508,7 +531,6 @@
       
       initLocalBroadcastChannel();
 
-      // Ensure default room fallback
       let userRoom = roomInput.value.trim();
       const sanitizedRoom = userRoom.replace(/[^a-zA-Z0-9]/g, '');
       if (!sanitizedRoom) {
@@ -548,7 +570,6 @@
       };
       lanEventSource.onmessage = handleSSEMessage;
 
-      // Subscribe to fallback room if using IP matching to catch peers with blocked IP lookups
       if (lanTopic !== fallbackTopic) {
         fallbackEventSource = new EventSource(`https://ntfy.sh/${fallbackTopic}/sse`);
         fallbackEventSource.onmessage = handleSSEMessage;
@@ -561,7 +582,7 @@
           const payload = JSON.parse(msgData.message);
 
           if (payload.peerId && payload.peerId !== myPeerId) {
-            handleDiscoveredPeer(payload.peerId, payload.name || payload.peerId);
+            handleDiscoveredPeer(payload.peerId, payload.name || payload.peerId, payload.sessionId);
           }
         } catch (err) {}
       }
@@ -570,12 +591,11 @@
         announceLocalBroadcast();
 
         const myName = nameInput.value.trim() || 'Anonymous';
-        const bodyStr = JSON.stringify({ peerId: peerId, name: myName, timestamp: Date.now() });
+        const bodyStr = JSON.stringify({ peerId: peerId, name: myName, sessionId: mySessionId, timestamp: Date.now() });
 
         try {
           const resp = await fetch(`https://ntfy.sh/${lanTopic}`, { method: 'POST', body: bodyStr });
 
-          // Dual-announce to lobby fallback if using auto IP mode
           if (lanTopic !== fallbackTopic) {
             fetch(`https://ntfy.sh/${fallbackTopic}`, { method: 'POST', body: bodyStr }).catch(() => {});
           }
@@ -600,7 +620,8 @@
       if (announceInterval) clearInterval(announceInterval);
       announceInterval = setInterval(sendAnnounceGlobal, 8000);
 
-      setInterval(() => {
+      if (pruneInterval) clearInterval(pruneInterval);
+      pruneInterval = setInterval(() => {
         const now = Date.now();
         let changed = false;
         discoveredPeers.forEach((data, pid) => {
@@ -613,18 +634,19 @@
       }, 4000);
     }
 
-    function handleDiscoveredPeer(peerId, name) {
+    function handleDiscoveredPeer(peerId, name, sessionId) {
       discoveredPeers.set(peerId, {
         name: name,
+        sessionId: sessionId,
         lastSeen: Date.now()
       });
 
       const isConnected = connections.has(peerId);
-      const isKnownPeer = knownConnectedNames.has(name);
+      const isKnownSession = sessionId && knownConnectedSessions.has(sessionId);
 
-      if (!isConnected && isKnownPeer) {
+      if (!isConnected && isKnownSession) {
         logSystem(`Peer "${name}" refreshed. Auto-reconnecting...`);
-        handlePeerJSConnect(peerId);
+        handlePeerJSConnect(peerId, true);
       }
 
       renderLanPeers();
@@ -701,7 +723,9 @@
     // Toggle QR Fallback Section
     document.getElementById('qr-toggle-btn').addEventListener('click', () => {
       const sec = document.getElementById('qr-section');
-      sec.style.display = sec.style.display === 'none' ? 'block' : 'none';
+      const isHiding = sec.style.display !== 'none';
+      sec.style.display = isHiding ? 'none' : 'block';
+      if (isHiding) stopScanner(); // Resource leak fix
     });
 
     document.getElementById('qr-host-btn').addEventListener('click', startAsHost);
@@ -711,6 +735,8 @@
     // SERVERLESS QR WEBRTC HANDSHAKE
     // ==========================================
     function setupNativeDataChannel(channel, peerId) {
+      channel.binaryType = 'arraybuffer'; // CPU thrashing fix
+      
       const connWrapper = {
         id: peerId,
         name: peerId,
@@ -718,17 +744,7 @@
         rawConn: channel,
         send: (data) => {
           if (data && typeof data === 'object' && !(data instanceof ArrayBuffer) && !(data instanceof Blob)) {
-            // Flag internal system protocol payloads cleanly
-            const payload = { __p2p_proto: true, ...data };
-            if (data.type === 'file-chunk' && data.chunk instanceof ArrayBuffer) {
-              const bytes = new Uint8Array(data.chunk);
-              let binary = '';
-              for (let i = 0; i < bytes.byteLength; i++) {
-                binary += String.fromCharCode(bytes[i]);
-              }
-              payload.chunk = btoa(binary);
-            }
-            channel.send(JSON.stringify(payload));
+            channel.send(JSON.stringify({ __p2p_proto: true, ...data }));
           } else {
             channel.send(data);
           }
@@ -742,6 +758,7 @@
         logSystem(`Connected via QR Handshake! (${peerId})`);
         addConnection(peerId, connWrapper);
         document.getElementById('qr-section').style.display = 'none';
+        stopScanner();
       };
 
       channel.onmessage = (e) => {
@@ -750,14 +767,6 @@
           try {
             const parsed = JSON.parse(data);
             if (parsed && typeof parsed === 'object' && parsed.__p2p_proto) {
-              if (parsed.type === 'file-chunk' && typeof parsed.chunk === 'string') {
-                const binary = atob(parsed.chunk);
-                const bytes = new Uint8Array(binary.length);
-                for (let i = 0; i < binary.length; i++) {
-                  bytes[i] = binary.charCodeAt(i);
-                }
-                parsed.chunk = bytes.buffer;
-              }
               processIncomingData(parsed, peerId);
               return;
             }
@@ -846,7 +855,7 @@
     }
 
     // ==========================================
-    // INCOMING DATA PROCESSING
+    // INCOMING DATA & MESH RELAY PROCESSING
     // ==========================================
     function processIncomingData(data, senderPeerId) {
       const conn = connections.get(senderPeerId);
@@ -857,10 +866,20 @@
         return;
       }
 
+      if (data.type === 'chat') {
+        if (data.msgId) {
+          if (seenMsgIds.has(data.msgId)) return; // Prevent loops
+          markMsgSeen(data.msgId);
+        }
+        logMessage(data.senderName || senderName, data.text);
+        broadcastData(data, senderPeerId); // Relay to other peers in mesh
+        return;
+      }
+
       if (data.type === 'identity') {
         if (conn) {
           conn.name = data.name;
-          knownConnectedNames.add(data.name);
+          if (data.sessionId) knownConnectedSessions.add(data.sessionId);
           updateConnectedPeersBar();
           logSystem(`${senderPeerId} updated name to "${data.name}"`);
         }
@@ -985,7 +1004,14 @@
       const input = document.getElementById('msg-input');
       const val = input.value.trim();
       if (val && connections.size > 0) {
-        broadcastData(val);
+        const msgObj = {
+          type: 'chat',
+          msgId: myPeerId + '-' + Date.now() + '-' + Math.random().toString(36).substring(2, 6),
+          senderName: nameInput.value.trim() || 'Anonymous',
+          text: val
+        };
+        markMsgSeen(msgObj.msgId);
+        broadcastData(msgObj);
         logMessage('You', val);
         input.value = '';
       }
