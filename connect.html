@@ -481,9 +481,9 @@
 
         const sendAnnounce = () => {
           const myName = nameInput.value.trim() || 'Anonymous';
+          // Raw string body so ntfy doesn't treat JSON keys as HTTP headers/configs
           fetch(`https://ntfy.sh/${lanTopic}`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ peerId: peerId, name: myName, timestamp: Date.now() })
           }).catch(() => {});
         };
