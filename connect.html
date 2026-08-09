@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>P2P File Transfer & Chat</title>
+  <title>P2P Group File Transfer & Chat</title>
   <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.5/dist/peerjs.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
@@ -123,6 +123,13 @@
       background-color: #28a745;
     }
 
+    #connected-peers-bar {
+      font-size: 0.85em;
+      font-weight: bold;
+      color: #6c757d;
+      margin-bottom: 8px;
+    }
+
     #webcam { width: 100%; border-radius: 8px; margin-top: 8px; background: #000; }
     #qr-canvas { display: block; margin: 10px auto; max-width: 100%; height: auto; border-radius: 8px; background: #fff; padding: 8px; }
     
@@ -153,7 +160,15 @@
 </head>
 <body>
   <div class="app-container">
-    <h2>P2P Transfer</h2>
+    <h2>P2P Group Transfer</h2>
+
+    <!-- Display Name Control -->
+    <div class="controls" style="margin-bottom: 12px;">
+      <label style="font-weight: bold; font-size: 14px; display: flex; align-items: center; width: 100%; gap: 8px;">
+        Your Name:
+        <input type="text" id="display-name" style="padding: 8px; font-size: 14px;" placeholder="Your Name">
+      </label>
+    </div>
     
     <div class="id-container">
       <span><strong>Your ID:</strong> <span id="my-id">Generating...</span></span>
@@ -192,6 +207,8 @@
       <button id="qr-action-btn" style="display:none; margin-top: 8px; width: 100%;"></button>
     </div>
     
+    <div id="connected-peers-bar">Connected Peers (0): None</div>
+    
     <div id="chat-box"></div>
     
     <div class="controls">
@@ -207,16 +224,43 @@
 
   <script>
     const CHUNK_SIZE = 16384; // 16 KB safe chunk size
-    let activeConnection = null;
-    let incomingTransfer = null;
-    let nativePc = null;
-    let scanStream = null;
     let myPeerId = null;
+    let scanStream = null;
+    let nativePc = null;
+
+    // Multi-Peer Mesh Map: Map<peerId, { id, name, isPeerJS, send: fn, bufferedAmount: getter }>
+    const connections = new Map();
+    const incomingTransfers = new Map();
 
     // LAN Auto-discovery variables
     let discoveredPeers = new Map();
     let lanTopic = null;
     let announceInterval = null;
+
+    // --- VANITY NAME GENERATOR & LOCALSTORAGE PERSISTENCE ---
+    const ADJECTIVES = ['Swift', 'Neon', 'Solar', 'Cozy', 'Brave', 'Silent', 'Clever', 'Cosmic', 'Turbo', 'Shadow', 'Electric', 'Lunar', 'Velvet', 'Crystal'];
+    const ANIMALS = ['Otter', 'Falcon', 'Panda', 'Fox', 'Dolphin', 'Eagle', 'Badger', 'Lynx', 'Panther', 'Raven', 'Tiger', 'Koala', 'Hawk', 'Wolf'];
+
+    function getInitialDisplayName() {
+      const savedName = localStorage.getItem('p2p_user_name');
+      if (savedName && savedName.trim()) return savedName.trim();
+
+      const adj = ADJECTIVES[Math.floor(Math.random() * ADJECTIVES.length)];
+      const animal = ANIMALS[Math.floor(Math.random() * ANIMALS.length)];
+      const vanityName = `${adj} ${animal}`;
+
+      localStorage.setItem('p2p_user_name', vanityName);
+      return vanityName;
+    }
+
+    const nameInput = document.getElementById('display-name');
+    nameInput.value = getInitialDisplayName();
+
+    nameInput.addEventListener('change', (e) => {
+      const newName = e.target.value.trim() || 'Anonymous';
+      localStorage.setItem('p2p_user_name', newName);
+      broadcastData({ type: 'identity', name: newName });
+    });
 
     const qrGen = new QRious({ element: document.getElementById('qr-canvas'), size: 280, level: 'L' });
 
@@ -260,26 +304,113 @@
         }
       });
 
-      // Start Public IP Matching (Same-LAN Auto-Discovery)
       initLanDiscovery(id);
 
       if (targetPeerId) {
         document.getElementById('remote-id').value = targetPeerId;
         logSystem('Auto-connecting to link...');
-        setTimeout(() => { handleConnection(peer.connect(targetPeerId)); }, 500);
+        setTimeout(() => { handlePeerJSConnect(targetPeerId); }, 500);
         window.history.replaceState({}, document.title, window.location.pathname);
       }
     });
 
     peer.on('connection', (conn) => {
-      handleConnection(conn);
+      setupPeerJSConnection(conn);
     });
 
     document.getElementById('connect-btn').addEventListener('click', () => {
       const remoteId = document.getElementById('remote-id').value.trim();
       if (!remoteId) return;
-      handleConnection(peer.connect(remoteId));
+      handlePeerJSConnect(remoteId);
     });
+
+    function handlePeerJSConnect(remoteId) {
+      if (remoteId === myPeerId) return alert("You cannot connect to your own Peer ID.");
+      if (connections.has(remoteId)) return alert("Already connected to this peer.");
+      const conn = peer.connect(remoteId);
+      setupPeerJSConnection(conn);
+    }
+
+    // ==========================================
+    // MULTI-PEER MESH ENGINE
+    // ==========================================
+    function addConnection(peerId, connWrapper) {
+      if (connections.has(peerId)) return;
+      connections.set(peerId, connWrapper);
+
+      updateControlsState();
+      updateConnectedPeersBar();
+
+      // Send identity packet on open
+      const myName = nameInput.value.trim() || 'Anonymous';
+      connWrapper.send({ type: 'identity', name: myName });
+    }
+
+    function removeConnection(peerId) {
+      if (connections.has(peerId)) {
+        const conn = connections.get(peerId);
+        const name = conn.name || peerId;
+        connections.delete(peerId);
+        logSystem(`${name} disconnected.`);
+        updateControlsState();
+        updateConnectedPeersBar();
+      }
+    }
+
+    function updateControlsState() {
+      const hasPeers = connections.size > 0;
+      document.getElementById('msg-input').disabled = !hasPeers;
+      document.getElementById('send-btn').disabled = !hasPeers;
+      document.getElementById('file-input').disabled = !hasPeers;
+      document.getElementById('send-file-btn').disabled = !hasPeers;
+    }
+
+    function updateConnectedPeersBar() {
+      const bar = document.getElementById('connected-peers-bar');
+      if (connections.size === 0) {
+        bar.textContent = "Connected Peers (0): None";
+        bar.style.color = "#6c757d";
+      } else {
+        const peerNames = Array.from(connections.values()).map(c => c.name || c.id).join(', ');
+        bar.textContent = `Connected Peers (${connections.size}): ${peerNames}`;
+        bar.style.color = "#28a745";
+      }
+    }
+
+    function broadcastData(data) {
+      connections.forEach((conn) => {
+        try {
+          conn.send(data);
+        } catch(err) {
+          console.error("Broadcast failed for peer", conn.id, err);
+        }
+      });
+    }
+
+    function setupPeerJSConnection(conn) {
+      const connWrapper = {
+        id: conn.peer,
+        name: conn.peer,
+        isPeerJS: true,
+        rawConn: conn,
+        send: (data) => conn.send(data),
+        get bufferedAmount() {
+          return conn.dataChannel ? conn.dataChannel.bufferedAmount : 0;
+        }
+      };
+
+      conn.on('open', () => {
+        addConnection(conn.peer, connWrapper);
+        logSystem(`Connected to ${conn.peer}`);
+      });
+
+      conn.on('data', (data) => {
+        processIncomingData(data, conn.peer);
+      });
+
+      conn.on('close', () => removeConnection(conn.peer));
+      conn.on('error', () => removeConnection(conn.peer));
+    }
 
     // ==========================================
     // PUBLIC IP MATCHING (SAME-LAN AUTO-DISCOVERY)
@@ -287,16 +418,13 @@
     async function initLanDiscovery(peerId) {
       const statusEl = document.getElementById('lan-status');
       try {
-        // Step 1: Force IPv4 lookup to prevent IPv4 vs IPv6 room mismatches
         const res = await fetch('https://api4.ipify.org?format=json');
         const data = await res.json();
         const publicIp = data.ip;
 
-        // Step 2: Derive room topic name
         lanTopic = 'p2plan-' + publicIp.replace(/[^a-zA-Z0-9]/g, '');
         statusEl.textContent = `IP: ${publicIp}`;
 
-        // Step 3: Connect to /sse endpoint for native browser EventSource compatibility
         const eventSource = new EventSource(`https://ntfy.sh/${lanTopic}/sse`);
 
         eventSource.onmessage = (event) => {
@@ -307,36 +435,32 @@
             const payload = JSON.parse(msgData.message);
 
             if (payload.peerId && payload.peerId !== myPeerId) {
-              discoveredPeers.set(payload.peerId, Date.now());
+              discoveredPeers.set(payload.peerId, {
+                name: payload.name || payload.peerId,
+                lastSeen: Date.now()
+              });
               renderLanPeers();
             }
-          } catch (err) {
-            // Ignore non-JSON or heartbeat pings
-          }
+          } catch (err) {}
         };
 
-        eventSource.onerror = (err) => {
-          console.warn("LAN discovery stream reconnecting...", err);
-        };
-
-        // Step 4: Periodically announce presence (every 5s for fast discovery)
         const sendAnnounce = () => {
+          const myName = nameInput.value.trim() || 'Anonymous';
           fetch(`https://ntfy.sh/${lanTopic}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ peerId: peerId, timestamp: Date.now() })
+            body: JSON.stringify({ peerId: peerId, name: myName, timestamp: Date.now() })
           }).catch(() => {});
         };
 
         sendAnnounce();
         announceInterval = setInterval(sendAnnounce, 5000);
 
-        // Prune stale peers inactive for >15 seconds
         setInterval(() => {
           const now = Date.now();
           let changed = false;
-          discoveredPeers.forEach((lastSeen, pid) => {
-            if (now - lastSeen > 15000) {
+          discoveredPeers.forEach((data, pid) => {
+            if (now - data.lastSeen > 15000) {
               discoveredPeers.delete(pid);
               changed = true;
             }
@@ -358,19 +482,20 @@
       }
 
       listEl.innerHTML = '';
-      discoveredPeers.forEach((_, pid) => {
+      discoveredPeers.forEach((data, pid) => {
         const chip = document.createElement('div');
         chip.className = 'peer-chip';
         
         const idSpan = document.createElement('span');
-        idSpan.innerHTML = `📱 <strong>${escapeHTML(pid)}</strong>`;
+        idSpan.innerHTML = `📱 <strong>${escapeHTML(data.name)}</strong> <small style="color:#6c757d;">(${escapeHTML(pid)})</small>`;
         
         const connBtn = document.createElement('button');
         connBtn.className = 'connect-sm-btn';
-        connBtn.textContent = 'Connect';
+        connBtn.textContent = connections.has(pid) ? 'Connected' : 'Connect';
+        connBtn.disabled = connections.has(pid);
         connBtn.onclick = () => {
           document.getElementById('remote-id').value = pid;
-          handleConnection(peer.connect(pid));
+          handlePeerJSConnect(pid);
         };
 
         chip.appendChild(idSpan);
@@ -379,7 +504,6 @@
       });
     }
 
-    // Render Share Link QR Code into chat box
     function showShareQR(url) {
       const chatBox = document.getElementById('chat-box');
       const container = document.createElement('div');
@@ -408,12 +532,7 @@
       canvas.style.display = 'block';
       canvas.style.margin = '0 auto';
 
-      new QRious({
-        element: canvas,
-        value: url,
-        size: 180,
-        level: 'L'
-      });
+      new QRious({ element: canvas, value: url, size: 180, level: 'L' });
 
       container.appendChild(title);
       container.appendChild(subtitle);
@@ -433,146 +552,73 @@
     document.getElementById('qr-join-btn').addEventListener('click', startAsJoiner);
 
     // ==========================================
-    // UNIFIED CONNECTION & MESSAGING ENGINE
+    // SERVERLESS QR WEBRTC HANDSHAKE
     // ==========================================
-    function setActiveConnection(channel, isPeerJS, remoteName = "Friend") {
-      activeConnection = {
-        isPeerJS: isPeerJS,
+    function setupNativeDataChannel(channel, peerId) {
+      const connWrapper = {
+        id: peerId,
+        name: peerId,
+        isPeerJS: false,
+        rawConn: channel,
         send: (data) => {
-          if (isPeerJS) {
-            channel.send(data);
-          } else {
-            if (data && typeof data === 'object' && !(data instanceof ArrayBuffer) && !(data instanceof Blob)) {
-              if (data.type === 'file-chunk' && data.chunk instanceof ArrayBuffer) {
-                const bytes = new Uint8Array(data.chunk);
-                let binary = '';
-                for (let i = 0; i < bytes.byteLength; i++) {
-                  binary += String.fromCharCode(bytes[i]);
-                }
-                const base64Chunk = btoa(binary);
-                channel.send(JSON.stringify({
-                  type: 'file-chunk',
-                  chunk: base64Chunk,
-                  chunkIndex: data.chunkIndex
-                }));
-              } else {
-                channel.send(JSON.stringify(data));
+          if (data && typeof data === 'object' && !(data instanceof ArrayBuffer) && !(data instanceof Blob)) {
+            if (data.type === 'file-chunk' && data.chunk instanceof ArrayBuffer) {
+              const bytes = new Uint8Array(data.chunk);
+              let binary = '';
+              for (let i = 0; i < bytes.byteLength; i++) {
+                binary += String.fromCharCode(bytes[i]);
               }
+              const base64Chunk = btoa(binary);
+              channel.send(JSON.stringify({
+                type: 'file-chunk',
+                chunk: base64Chunk,
+                chunkIndex: data.chunkIndex
+              }));
             } else {
-              channel.send(data);
+              channel.send(JSON.stringify(data));
             }
+          } else {
+            channel.send(data);
           }
         },
         get bufferedAmount() {
-          if (isPeerJS) {
-            return channel.dataChannel ? channel.dataChannel.bufferedAmount : 0;
-          }
           return channel.bufferedAmount || 0;
         }
       };
 
-      document.getElementById('msg-input').disabled = false;
-      document.getElementById('send-btn').disabled = false;
-      document.getElementById('file-input').disabled = false;
-      document.getElementById('send-file-btn').disabled = false;
-    }
+      channel.onopen = () => {
+        logSystem(`Connected via QR Handshake! (${peerId})`);
+        addConnection(peerId, connWrapper);
+        document.getElementById('qr-section').style.display = 'none';
+      };
 
-    function handleConnection(conn) {
-      setActiveConnection(conn, true, "Friend");
-      
-      const pollPc = setInterval(() => {
-        if (conn.peerConnection) {
-          clearInterval(pollPc);
-          const pc = conn.peerConnection;
-          logDebug('Network negotiation started...');
-
-          pc.addEventListener('iceconnectionstatechange', () => {
-            logDebug(`Status updated: ${pc.iceConnectionState.toUpperCase()}`);
-          });
-
-          pc.addEventListener('icecandidate', (event) => {
-            if (event.candidate) {
-              const candidateStr = event.candidate.candidate;
-              let routeType = "Unknown Route";
-              
-              if (candidateStr.includes('typ host')) routeType = "Local Network (Host)";
-              else if (candidateStr.includes('typ srflx')) routeType = "Public IP (STUN)";
-              else if (candidateStr.includes('typ relay')) routeType = "Cloud Relay (TURN)";
-              
-              logDebug(`Found potential path: ${routeType}`);
+      channel.onmessage = (e) => {
+        let data = e.data;
+        if (typeof data === 'string') {
+          try {
+            const parsed = JSON.parse(data);
+            if (parsed.type === 'file-chunk' && typeof parsed.chunk === 'string') {
+              const binary = atob(parsed.chunk);
+              const bytes = new Uint8Array(binary.length);
+              for (let i = 0; i < binary.length; i++) {
+                bytes[i] = binary.charCodeAt(i);
+              }
+              parsed.chunk = bytes.buffer;
             }
-          });
-        }
-      }, 50);
-
-      conn.on('open', () => {
-        logSystem(`Connected to ${conn.peer}`);
-      });
-
-      conn.on('data', (data) => {
-        processDataObj(data, 'Friend');
-      });
-    }
-
-    function processDataObj(data, sender) {
-      if (typeof data === 'string') {
-        logMessage(sender, data);
-        return;
-      }
-
-      if (data.type === 'file-header') {
-        incomingTransfer = {
-          filename: data.filename,
-          filetype: data.filetype,
-          filesize: data.filesize,
-          totalChunks: data.totalChunks,
-          chunks: [],
-          receivedBytes: 0
-        };
-        logDebug(`Receiving file: ${data.filename} (${Math.round(data.filesize / 1024)} KB)`);
-      } else if (data.type === 'file-chunk' && incomingTransfer) {
-        incomingTransfer.chunks.push(data.chunk);
-        incomingTransfer.receivedBytes += (data.chunk.byteLength || data.chunk.size || 0);
-        const percent = Math.round((incomingTransfer.receivedBytes / incomingTransfer.filesize) * 100);
-        
-        if (percent % 25 === 0 || percent === 100) {
-          logDebug(`Downloading ${incomingTransfer.filename}: ${percent}%`);
-        }
-      } else if (data.type === 'file-complete' && incomingTransfer) {
-        const blob = new Blob(incomingTransfer.chunks, { type: incomingTransfer.filetype });
-        const downloadUrl = URL.createObjectURL(blob);
-        
-        logDownloadLink(sender, downloadUrl, incomingTransfer.filename);
-        incomingTransfer = null;
-      }
-    }
-
-    function handleNativeMessage(e) {
-      let data = e.data;
-      if (typeof data === 'string') {
-        try {
-          const parsed = JSON.parse(data);
-          if (parsed.type === 'file-chunk' && typeof parsed.chunk === 'string') {
-            const binary = atob(parsed.chunk);
-            const bytes = new Uint8Array(binary.length);
-            for (let i = 0; i < binary.length; i++) {
-              bytes[i] = binary.charCodeAt(i);
-            }
-            parsed.chunk = bytes.buffer;
+            processIncomingData(parsed, peerId);
+            return;
+          } catch(err) {
+            processIncomingData(data, peerId);
+            return;
           }
-          processDataObj(parsed, "Friend");
-          return;
-        } catch(err) {
-          logMessage("Friend", data);
-          return;
         }
-      }
-      processDataObj(data, "Friend");
+        processIncomingData(data, peerId);
+      };
+
+      channel.onclose = () => removeConnection(peerId);
+      channel.onerror = () => removeConnection(peerId);
     }
 
-    // ==========================================
-    // SERVERLESS QR WEBRTC HANDSHAKE
-    // ==========================================
     async function startAsHost() {
       hideQR();
       stopScanner();
@@ -580,14 +626,9 @@
 
       nativePc = new RTCPeerConnection(rtcConfig);
       const channel = nativePc.createDataChannel("chat");
-      
-      channel.onopen = () => {
-        logSystem("Connected via QR Handshake!");
-        setActiveConnection(channel, false, "Friend");
-        document.getElementById('qr-section').style.display = 'none';
-      };
+      const hostPeerId = "QR-Peer-" + Math.random().toString(36).substring(2, 6);
 
-      channel.onmessage = (e) => handleNativeMessage(e);
+      setupNativeDataChannel(channel, hostPeerId);
 
       const offer = await nativePc.createOffer();
       await nativePc.setLocalDescription(offer);
@@ -627,15 +668,10 @@
 
         try {
           nativePc = new RTCPeerConnection(rtcConfig);
+          const joinerPeerId = "QR-Peer-" + Math.random().toString(36).substring(2, 6);
 
           nativePc.ondatachannel = (e) => {
-            const channel = e.channel;
-            channel.onopen = () => {
-              logSystem("Connected via QR Handshake!");
-              setActiveConnection(channel, false, "Friend");
-              document.getElementById('qr-section').style.display = 'none';
-            };
-            channel.onmessage = (evt) => handleNativeMessage(evt);
+            setupNativeDataChannel(e.channel, joinerPeerId);
           };
 
           const offerSDP = JSON.parse(scannedOffer);
@@ -654,6 +690,60 @@
           alert("Invalid Offer QR code.");
         }
       });
+    }
+
+    // ==========================================
+    // INCOMING DATA PROCESSING
+    // ==========================================
+    function processIncomingData(data, senderPeerId) {
+      const conn = connections.get(senderPeerId);
+      const senderName = (conn && conn.name) ? conn.name : senderPeerId;
+
+      if (typeof data === 'string') {
+        logMessage(senderName, data);
+        return;
+      }
+
+      if (data.type === 'identity') {
+        if (conn) {
+          conn.name = data.name;
+          updateConnectedPeersBar();
+          logSystem(`${senderPeerId} updated name to "${data.name}"`);
+        }
+        return;
+      }
+
+      if (data.type === 'file-header') {
+        incomingTransfers.set(senderPeerId, {
+          filename: data.filename,
+          filetype: data.filetype,
+          filesize: data.filesize,
+          totalChunks: data.totalChunks,
+          chunks: [],
+          receivedBytes: 0
+        });
+        logDebug(`Receiving file from ${senderName}: ${data.filename} (${Math.round(data.filesize / 1024)} KB)`);
+      } else if (data.type === 'file-chunk') {
+        const transfer = incomingTransfers.get(senderPeerId);
+        if (transfer) {
+          transfer.chunks.push(data.chunk);
+          transfer.receivedBytes += (data.chunk.byteLength || data.chunk.size || 0);
+          const percent = Math.round((transfer.receivedBytes / transfer.filesize) * 100);
+          
+          if (percent % 25 === 0 || percent === 100) {
+            logDebug(`Downloading from ${senderName} (${transfer.filename}): ${percent}%`);
+          }
+        }
+      } else if (data.type === 'file-complete') {
+        const transfer = incomingTransfers.get(senderPeerId);
+        if (transfer) {
+          const blob = new Blob(transfer.chunks, { type: transfer.filetype });
+          const downloadUrl = URL.createObjectURL(blob);
+          
+          logDownloadLink(senderName, downloadUrl, transfer.filename);
+          incomingTransfers.delete(senderPeerId);
+        }
+      }
     }
 
     // ==========================================
@@ -740,8 +830,8 @@
     document.getElementById('send-btn').addEventListener('click', () => {
       const input = document.getElementById('msg-input');
       const val = input.value.trim();
-      if (val && activeConnection) {
-        activeConnection.send(val);
+      if (val && connections.size > 0) {
+        broadcastData(val);
         logMessage('You', val);
         input.value = '';
       }
@@ -751,12 +841,12 @@
       const fileInput = document.getElementById('file-input');
       const file = fileInput.files[0];
       
-      if (file && activeConnection) {
+      if (file && connections.size > 0) {
         const sendBtn = document.getElementById('send-file-btn');
         sendBtn.disabled = true;
-        logSystem(`Sending file: ${file.name} (${Math.round(file.size / 1024)} KB)...`);
+        logSystem(`Sending file: ${file.name} (${Math.round(file.size / 1024)} KB) to all peers...`);
 
-        await sendFileInChunks(file, activeConnection);
+        await sendFileInChunks(file);
         
         logSystem(`Finished sending ${file.name}`);
         fileInput.value = '';
@@ -764,10 +854,10 @@
       }
     });
 
-    async function sendFileInChunks(file, conn) {
+    async function sendFileInChunks(file) {
       const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
 
-      conn.send({
+      broadcastData({
         type: 'file-header',
         filename: file.name,
         filetype: file.type,
@@ -779,7 +869,13 @@
       let chunkIndex = 0;
 
       while (offset < file.size) {
-        if (conn.bufferedAmount > 1024 * 1024) {
+        // Evaluate backpressure across all connected peers
+        let maxBuffer = 0;
+        connections.forEach(c => {
+          if (c.bufferedAmount > maxBuffer) maxBuffer = c.bufferedAmount;
+        });
+
+        if (maxBuffer > 1024 * 1024) {
           await new Promise((resolve) => setTimeout(resolve, 50));
           continue;
         }
@@ -787,7 +883,7 @@
         const chunkBlob = file.slice(offset, offset + CHUNK_SIZE);
         const buffer = await chunkBlob.arrayBuffer();
 
-        conn.send({
+        broadcastData({
           type: 'file-chunk',
           chunk: buffer,
           chunkIndex: chunkIndex
@@ -797,7 +893,7 @@
         chunkIndex++;
       }
 
-      conn.send({ type: 'file-complete' });
+      broadcastData({ type: 'file-complete' });
     }
 
     function escapeHTML(str) {
