@@ -178,14 +178,14 @@
     <!-- LAN Auto-Discovery Panel -->
     <div class="lan-section">
       <div class="lan-title">
-        <span>🌐 Local Network Peers</span>
+        <span>🌐 Network & Room Discovery</span>
         <span id="lan-status" style="font-weight: normal; font-size: 11px; color: #6c757d;">Scanning...</span>
       </div>
       <div style="display: flex; gap: 6px; margin-bottom: 8px;">
-        <input type="text" id="room-name-input" placeholder="Custom Room (Optional)" style="padding: 6px 10px; font-size: 12px; flex: 1; border: 1px solid var(--border); border-radius: 6px;">
-        <button id="join-room-btn" style="padding: 6px 12px; font-size: 12px; background: #17a2b8;">Join Room</button>
+        <input type="text" id="room-name-input" value="Lobby" placeholder="Room Name (e.g. Lobby)" style="padding: 6px 10px; font-size: 12px; flex: 1; border: 1px solid var(--border); border-radius: 6px;">
+        <button id="join-room-btn" style="padding: 6px 12px; font-size: 12px; background: #17a2b8;">Switch Room</button>
       </div>
-      <div id="lan-peer-list" class="debug-log">Searching for devices on your network...</div>
+      <div id="lan-peer-list" class="debug-log">Searching for devices in room...</div>
     </div>
     
     <div class="controls">
@@ -471,7 +471,7 @@
     }
 
     // ==========================================
-    // PUBLIC IP MATCHING (AUTO-DISCOVERY)
+    // PUBLIC IP & ROOM DISCOVERY (BULLETPROOF FALLBACK)
     // ==========================================
     async function getPublicIp() {
       const services = [
@@ -492,84 +492,112 @@
     async function initLanDiscovery(peerId) {
       const statusEl = document.getElementById('lan-status');
       const listEl = document.getElementById('lan-peer-list');
+      const roomInput = document.getElementById('room-name-input');
       
       initLocalBroadcastChannel();
 
+      // Ensure default room is set if field is empty
+      if (!roomInput.value.trim()) {
+        roomInput.value = 'Lobby';
+      }
+
+      let userRoom = roomInput.value.trim();
+      let publicIp = null;
+
+      // Try fetching public IP for automatic local subnet isolation
       try {
         statusEl.textContent = 'Fetching IP...';
-        const publicIp = await getPublicIp();
-        
-        const customRoom = document.getElementById('room-name-input').value.trim();
-        lanTopic = customRoom ? ('p2proom-' + customRoom.replace(/[^a-zA-Z0-9]/g, '')) : ('p2plan-' + publicIp.replace(/[^a-zA-Z0-9]/g, ''));
-        
-        statusEl.textContent = customRoom ? `Room: ${customRoom}` : `IP: ${publicIp}`;
-
-        if (lanEventSource) lanEventSource.close();
-        lanEventSource = new EventSource(`https://ntfy.sh/${lanTopic}/sse`);
-
-        lanEventSource.onopen = () => {
-          if (discoveredPeers.size === 0) listEl.textContent = 'Searching for peers...';
-        };
-
-        lanEventSource.onmessage = (event) => {
-          try {
-            const msgData = JSON.parse(event.data);
-            if (!msgData.message) return;
-            
-            const payload = JSON.parse(msgData.message);
-
-            if (payload.peerId && payload.peerId !== myPeerId) {
-              handleDiscoveredPeer(payload.peerId, payload.name || payload.peerId);
-            }
-          } catch (err) {}
-        };
-
-        lanEventSource.onerror = () => {
-          statusEl.textContent = 'Reconnecting...';
-        };
-
-        const sendAnnounce = async () => {
-          announceLocalBroadcast();
-
-          const myName = nameInput.value.trim() || 'Anonymous';
-          try {
-            const resp = await fetch(`https://ntfy.sh/${lanTopic}`, {
-              method: 'POST',
-              body: JSON.stringify({ peerId: peerId, name: myName, timestamp: Date.now() })
-            });
-
-            if (resp.status === 429) {
-              statusEl.textContent = 'Rate limited (throttled)';
-            } else if (!resp.ok) {
-              statusEl.textContent = `Relay err ${resp.status}`;
-            } else {
-              statusEl.textContent = customRoom ? `Room: ${customRoom}` : `Active (${publicIp})`;
-            }
-          } catch (err) {
-            statusEl.textContent = 'Network Blocked';
-          }
-        };
-
-        sendAnnounce();
-        if (announceInterval) clearInterval(announceInterval);
-        announceInterval = setInterval(sendAnnounce, 8000);
-
-        setInterval(() => {
-          const now = Date.now();
-          let changed = false;
-          discoveredPeers.forEach((data, pid) => {
-            if (now - data.lastSeen > 20000) {
-              discoveredPeers.delete(pid);
-              changed = true;
-            }
-          });
-          if (changed) renderLanPeers();
-        }, 4000);
-
-      } catch (err) {
-        statusEl.textContent = 'IP Fetch Failed';
-        listEl.innerHTML = `Auto-discovery blocked by network/adblocker.<br><small>Tip: Type a custom Room Name above and click "Join Room".</small>`;
+        publicIp = await getPublicIp();
+      } catch (e) {
+        console.warn("IP lookup failed. Falling back to default room.");
       }
+
+      // Determine topic room priority:
+      // 1. Explicit user room (other than 'Lobby')
+      // 2. Local Public IP hash (if IP lookup succeeded)
+      // 3. Default Fallback Room ('Lobby')
+      if (userRoom && userRoom.toLowerCase() !== 'lobby') {
+        lanTopic = 'p2proom-' + userRoom.replace(/[^a-zA-Z0-9]/g, '');
+        statusEl.textContent = `Room: ${userRoom}`;
+      } else if (publicIp) {
+        lanTopic = 'p2plan-' + publicIp.replace(/[^a-zA-Z0-9]/g, '');
+        statusEl.textContent = `IP: ${publicIp}`;
+      } else {
+        lanTopic = 'p2proom-Lobby';
+        statusEl.textContent = 'Room: Lobby (Fallback)';
+      }
+
+      // Clear existing connections & peers when changing rooms
+      discoveredPeers.clear();
+      renderLanPeers();
+
+      if (lanEventSource) lanEventSource.close();
+      lanEventSource = new EventSource(`https://ntfy.sh/${lanTopic}/sse`);
+
+      lanEventSource.onopen = () => {
+        if (discoveredPeers.size === 0) listEl.textContent = 'Searching for peers...';
+      };
+
+      lanEventSource.onmessage = (event) => {
+        try {
+          const msgData = JSON.parse(event.data);
+          if (!msgData.message) return;
+          
+          const payload = JSON.parse(msgData.message);
+
+          if (payload.peerId && payload.peerId !== myPeerId) {
+            handleDiscoveredPeer(payload.peerId, payload.name || payload.peerId);
+          }
+        } catch (err) {}
+      };
+
+      lanEventSource.onerror = () => {
+        statusEl.textContent = 'Reconnecting...';
+      };
+
+      const sendAnnounce = async () => {
+        announceLocalBroadcast();
+
+        const myName = nameInput.value.trim() || 'Anonymous';
+        try {
+          const resp = await fetch(`https://ntfy.sh/${lanTopic}`, {
+            method: 'POST',
+            body: JSON.stringify({ peerId: peerId, name: myName, timestamp: Date.now() })
+          });
+
+          if (resp.status === 429) {
+            statusEl.textContent = 'Throttled (Rate Limit)';
+          } else if (!resp.ok) {
+            statusEl.textContent = `Relay err ${resp.status}`;
+          } else {
+            if (userRoom && userRoom.toLowerCase() !== 'lobby') {
+              statusEl.textContent = `Room: ${userRoom}`;
+            } else if (publicIp) {
+              statusEl.textContent = `Active (${publicIp})`;
+            } else {
+              statusEl.textContent = `Room: Lobby`;
+            }
+          }
+        } catch (err) {
+          statusEl.textContent = 'Network Blocked';
+        }
+      };
+
+      sendAnnounce();
+      if (announceInterval) clearInterval(announceInterval);
+      announceInterval = setInterval(sendAnnounce, 8000);
+
+      setInterval(() => {
+        const now = Date.now();
+        let changed = false;
+        discoveredPeers.forEach((data, pid) => {
+          if (now - data.lastSeen > 20000) {
+            discoveredPeers.delete(pid);
+            changed = true;
+          }
+        });
+        if (changed) renderLanPeers();
+      }, 4000);
     }
 
     function handleDiscoveredPeer(peerId, name) {
@@ -592,7 +620,7 @@
     function renderLanPeers() {
       const listEl = document.getElementById('lan-peer-list');
       if (discoveredPeers.size === 0) {
-        listEl.textContent = 'No other peers found on this network yet.';
+        listEl.textContent = 'No other peers found in this room or network yet.';
         return;
       }
 
