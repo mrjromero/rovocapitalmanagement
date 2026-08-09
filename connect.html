@@ -103,6 +103,7 @@
       flex-direction: column;
       gap: 12px;
       -webkit-overflow-scrolling: touch;
+      scroll-behavior: smooth;
     }
 
     /* Mobile Cards */
@@ -385,9 +386,27 @@
   <script>
     const CHUNK_SIZE = 16384;
     let myPeerId = null;
+    let currentLanTopic = null;
+    
     const connections = new Map();
     const discoveredPeers = new Map();
     const incomingTransfers = new Map();
+
+    // Securely hash the IP so it isn't leaked to the public ntfy server
+    async function hashTopic(ip) {
+      const msgBuffer = new TextEncoder().encode(ip + 'p2p-salt');
+      const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      return hashArray.map(b => b.toString(16).padStart(2, '0')).join('').substring(0, 16);
+    }
+
+    // Instantly clean up LAN list for others when tab is closed
+    window.addEventListener('beforeunload', () => {
+      if (myPeerId && currentLanTopic) {
+        const payload = JSON.stringify({ peerId: myPeerId, offline: true });
+        navigator.sendBeacon(`https://ntfy.sh/${currentLanTopic}`, payload);
+      }
+    });
 
     // 1. Vanity Name Generator & Persistence
     const ADJ = ['Swift', 'Neon', 'Solar', 'Brave', 'Clever', 'Cosmic', 'Turbo', 'Shadow', 'Crystal'];
@@ -474,7 +493,11 @@
       const active = connections.size > 0;
       document.getElementById('msg-input').disabled = !active;
       document.getElementById('send-btn').disabled = !active;
-      document.getElementById('file-btn').disabled = !active;
+      
+      const fileBtn = document.getElementById('file-btn');
+      if (fileBtn.textContent === '📎') {
+        fileBtn.disabled = !active;
+      }
     }
 
     // 4. LAN Auto-Discovery (Public IP Matching via SSE)
@@ -483,13 +506,25 @@
       try {
         const res = await fetch('https://api4.ipify.org?format=json');
         const data = await res.json();
-        const topic = 'p2plan-' + data.ip.replace(/[^a-zA-Z0-9]/g, '');
+        
+        const ipHash = await hashTopic(data.ip);
+        currentLanTopic = 'p2plan-' + ipHash;
         statusEl.textContent = 'Active';
 
-        const sse = new EventSource(`https://ntfy.sh/${topic}/sse`);
+        const sse = new EventSource(`https://ntfy.sh/${currentLanTopic}/sse`);
         sse.onmessage = (e) => {
           try {
-            const payload = JSON.parse(JSON.parse(e.data).message);
+            const rawEvent = JSON.parse(e.data);
+            if (!rawEvent.message) return;
+
+            const payload = JSON.parse(rawEvent.message);
+            
+            if (payload.offline && payload.peerId) {
+              discoveredPeers.delete(payload.peerId);
+              renderLanList();
+              return;
+            }
+
             if (payload.peerId && payload.peerId !== myPeerId) {
               discoveredPeers.set(payload.peerId, { name: payload.name, lastSeen: Date.now() });
               renderLanList();
@@ -498,7 +533,7 @@
         };
 
         const ping = () => {
-          fetch(`https://ntfy.sh/${topic}`, {
+          fetch(`https://ntfy.sh/${currentLanTopic}`, {
             method: 'POST',
             body: JSON.stringify({ peerId: peerId, name: nameInput.value.trim() })
           }).catch(() => {});
@@ -578,7 +613,11 @@
     const fileInput = document.getElementById('file-input');
     const fileBtn = document.getElementById('file-btn');
 
-    // UX Fix: Enter key sends message
+    // Scroll down when mobile software keyboard opens
+    msgInput.addEventListener('focus', () => {
+      setTimeout(scrollToBottom, 300);
+    });
+
     msgInput.addEventListener('keypress', (e) => {
       if (e.key === 'Enter') sendBtn.click();
     });
@@ -597,17 +636,23 @@
     fileInput.onchange = async () => {
       const file = fileInput.files[0];
       if (!file) return;
+
+      const MAX_FILE_SIZE = 250 * 1024 * 1024; // 250MB
+      if (file.size > MAX_FILE_SIZE) {
+        alert(`File is too large (${Math.round(file.size / 1024 / 1024)}MB). Mobile browsers may crash if transfers exceed 250MB.`);
+        fileInput.value = '';
+        return;
+      }
       
-      // UX Fix: Reset early so the same file can be selected again if aborted
       fileInput.value = '';
+      fileBtn.disabled = true;
+      fileBtn.textContent = '⏳';
 
       logSystem(`Sending ${file.name}...`);
       broadcast({ type: 'file-header', name: file.name, filetype: file.type });
 
       let offset = 0;
       while (offset < file.size) {
-        
-        // Stability Fix: Apply Backpressure across all connections to prevent WebRTC crash
         let maxBuffer = 0;
         connections.forEach(c => {
           if (c.dataChannel && c.dataChannel.bufferedAmount > maxBuffer) {
@@ -627,9 +672,22 @@
 
       broadcast({ type: 'file-complete' });
       logSystem(`Sent ${file.name}`);
+      
+      fileBtn.textContent = '📎';
+      updateUI(); 
     };
 
     // 7. Display & Log Utilities
+    function scrollToBottom() {
+      const scrollBody = document.querySelector('.scroll-body');
+      if (scrollBody) {
+        scrollBody.scrollTo({
+          top: scrollBody.scrollHeight,
+          behavior: 'smooth'
+        });
+      }
+    }
+
     function renderShareQR(url) {
       const chat = document.getElementById('chat-box');
       const card = document.createElement('div');
@@ -640,6 +698,7 @@
       new QRious({ element: canvas, value: url, size: 160 });
       card.appendChild(canvas);
       chat.appendChild(card);
+      scrollToBottom();
     }
 
     function escapeHTML(str) {
@@ -655,7 +714,7 @@
         <div>${escapeHTML(text)}</div>
       `;
       chat.appendChild(div);
-      chat.scrollTop = chat.scrollHeight;
+      scrollToBottom();
     }
 
     function logSystem(text) {
@@ -664,7 +723,7 @@
       div.className = 'system-pill';
       div.textContent = text;
       chat.appendChild(div);
-      chat.scrollTop = chat.scrollHeight;
+      scrollToBottom();
     }
 
     function logDownload(sender, url, filename) {
@@ -682,7 +741,6 @@
       link.download = filename;
       link.innerHTML = `📄 Download ${escapeHTML(filename)}`;
       
-      // Stability Fix: Prevent Blob memory leak
       link.addEventListener('click', () => {
         setTimeout(() => URL.revokeObjectURL(url), 10000);
       });
@@ -690,7 +748,7 @@
       div.appendChild(author);
       div.appendChild(link);
       chat.appendChild(div);
-      chat.scrollTop = chat.scrollHeight;
+      scrollToBottom();
     }
   </script>
 </body>
