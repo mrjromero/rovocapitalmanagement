@@ -2,56 +2,248 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>In-Browser LLM</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Mobile WebGPU Chat</title>
   <style>
-    body { font-family: sans-serif; max-width: 600px; margin: 2rem auto; padding: 0 1rem; }
-    textarea { width: 100%; height: 80px; }
-    #output { white-space: pre-wrap; background: #f4f4f4; padding: 1rem; border-radius: 6px; min-height: 100px; margin-top: 1rem; }
+    :root {
+      --bg-color: #f5f5f7;
+      --card-bg: #ffffff;
+      --user-msg: #007aff;
+      --ai-msg: #e9e9eb;
+      --text-main: #000000;
+      --text-muted: #8e8e93;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+    body { background-color: var(--bg-color); display: flex; justify-content: center; height: 100vh; width: 100vw; overflow: hidden; }
+
+    /* Mobile Container Wrapper */
+    .app-container {
+      width: 100%;
+      max-width: 480px;
+      height: 100%;
+      background: var(--card-bg);
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 0 20px rgba(0,0,0,0.05);
+    }
+
+    /* Top Bar Header */
+    header {
+      padding: 1rem;
+      border-bottom: 1px solid #e5e5e5;
+      text-align: center;
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(10px);
+    }
+    header h1 { font-size: 1.1rem; font-weight: 600; color: var(--text-main); }
+    
+    /* Model Progress Section */
+    .status-box {
+      margin-top: 0.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      align-items: center;
+    }
+    .status-text { font-size: 0.75rem; color: var(--text-muted); }
+    progress { width: 80%; height: 6px; border-radius: 3px; overflow: hidden; appearance: none; }
+    progress::-webkit-progress-bar { background-color: #e5e5e5; }
+    progress::-webkit-progress-value { background-color: var(--user-msg); transition: width 0.2s ease; }
+
+    /* Chat Area */
+    .chat-history {
+      flex: 1;
+      padding: 1rem;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    
+    .message {
+      max-width: 80%;
+      padding: 0.6rem 1rem;
+      border-radius: 18px;
+      font-size: 0.95rem;
+      line-height: 1.4;
+      word-wrap: break-word;
+      white-space: pre-wrap;
+    }
+    .message.user {
+      align-self: flex-end;
+      background-color: var(--user-msg);
+      color: white;
+      border-bottom-right-radius: 4px;
+    }
+    .message.assistant {
+      align-self: flex-start;
+      background-color: var(--ai-msg);
+      color: var(--text-main);
+      border-bottom-left-radius: 4px;
+    }
+
+    /* Controls & Input Area */
+    .input-container {
+      padding: 0.75rem 1rem;
+      border-top: 1px solid #e5e5e5;
+      background: white;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .load-btn {
+      width: 100%;
+      padding: 0.6rem;
+      background: #34c759;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+    .load-btn:disabled { background: #d1d1d6; cursor: not-allowed; }
+
+    .message-form { display: flex; gap: 0.5rem; }
+    .message-form input {
+      flex: 1;
+      padding: 0.6rem 1rem;
+      border: 1px solid #d1d1d6;
+      border-radius: 20px;
+      outline: none;
+      font-size: 0.95rem;
+    }
+    .message-form button {
+      background: var(--user-msg);
+      color: white;
+      border: none;
+      padding: 0.6rem 1.2rem;
+      border-radius: 20px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .message-form button:disabled { background: #d1d1d6; cursor: not-allowed; }
   </style>
 </head>
 <body>
 
-  <h2>Browser-Based LLM</h2>
-  <button id="load-btn" onclick="initModel()">1. Load Model (~1.5GB)</button>
-  <p id="status"></p>
+  <div class="app-container">
+    <header>
+      <h1>Local AI Assistant</h1>
+      <div class="status-box">
+        <span id="status-text" class="status-text">Model not loaded</span>
+        <progress id="download-progress" value="0" max="100" style="display: none;"></progress>
+      </div>
+    </header>
 
-  <textarea id="prompt" placeholder="Type your prompt here..." disabled></textarea><br>
-  <button id="send-btn" onclick="generate()" disabled>2. Generate</button>
+    <div id="chat-history" class="chat-history">
+      <div class="message assistant">Hello! Click "Initialize Model" below to start downloading the engine directly into your browser.</div>
+    </div>
 
-  <div id="output"></div>
+    <div class="input-container">
+      <button id="load-btn" class="load-btn" onclick="initModel()">Initialize Model (~360MB)</button>
+      
+      <form class="message-form" onsubmit="handleSend(event)">
+        <input type="text" id="user-input" placeholder="Type a message..." disabled autocomplete="off" />
+        <button type="submit" id="send-btn" disabled>Send</button>
+      </form>
+    </div>
+  </div>
 
-  <!-- Load WebLLM directly via CDN -->
   <script type="module">
     import * as webllm from "https://esm.run/@mlc-ai/web-llm";
 
+    // Fast, compact model designed for in-browser execution
+    const selectedModel = "SmolLM-360M-Instruct-q4f16_1-MLC";
     let engine;
-    const selectedModel = "SmolLM-360M-Instruct-q4f16_1-MLC"; // Ultra-light model for quick testing
+    const chatHistoryElement = document.getElementById("chat-history");
+
+    function appendMessage(role, text) {
+      const msgDiv = document.createElement("div");
+      msgDiv.classList.add("message", role);
+      msgDiv.innerText = text;
+      chatHistoryElement.appendChild(msgDiv);
+      chatHistoryElement.scrollTop = chatHistoryElement.scrollHeight;
+      return msgDiv;
+    }
 
     window.initModel = async () => {
-      const status = document.getElementById("status");
-      status.innerText = "Loading model into browser cache/GPU... (Check console)";
-      
-      engine = await webllm.CreateMLCEngine(
-        selectedModel,
-        { initProgressCallback: (report) => { status.innerText = report.text; } }
-      );
+      const loadBtn = document.getElementById("load-btn");
+      const statusText = document.getElementById("status-text");
+      const progressBar = document.getElementById("download-progress");
 
-      status.innerText = "Model loaded and ready!";
-      document.getElementById("prompt").disabled = false;
-      document.getElementById("send-btn").disabled = false;
+      loadBtn.disabled = true;
+      progressBar.style.display = "block";
+
+      try {
+        engine = await webllm.CreateMLCEngine(
+          selectedModel,
+          {
+            initProgressCallback: (report) => {
+              statusText.innerText = report.text;
+              
+              // Extract percentage string matching format: "Loading model... 45%"
+              const match = report.text.match(/(\d+)%/);
+              if (match) {
+                const percent = parseInt(match[1], 10);
+                progressBar.value = percent;
+                statusText.innerText = `Downloading & Loading: ${percent}%`;
+              }
+            }
+          }
+        );
+
+        statusText.innerText = "Model Ready (WebGPU)";
+        progressBar.style.display = "none";
+        loadBtn.style.display = "none";
+        
+        document.getElementById("user-input").disabled = false;
+        document.getElementById("send-btn").disabled = false;
+        appendMessage("assistant", "Model successfully loaded into browser cache! How can I help you today?");
+      } catch (err) {
+        statusText.innerText = "Failed to load model. Ensure WebGPU is supported.";
+        console.error(err);
+        loadBtn.disabled = false;
+      }
     };
 
-    window.generate = async () => {
-      const promptText = document.getElementById("prompt").value;
-      const outputDiv = document.getElementById("output");
-      outputDiv.innerText = "";
+    window.handleSend = async (e) => {
+      e.preventDefault();
+      const input = document.getElementById("user-input");
+      const sendBtn = document.getElementById("send-btn");
+      const prompt = input.value.trim();
 
-      const messages = [{ role: "user", content: promptText }];
-      const chunks = await engine.chat.completions.create({ messages, stream: true });
+      if (!prompt) return;
 
-      for await (const chunk of chunks) {
-        outputDiv.innerText += chunk.choices[0]?.delta?.content || "";
+      appendMessage("user", prompt);
+      input.value = "";
+      input.disabled = true;
+      sendBtn.disabled = true;
+
+      // Create placeholder element for stream response
+      const aiResponseElement = appendMessage("assistant", "...");
+      
+      try {
+        const messages = [{ role: "user", content: prompt }];
+        const chunks = await engine.chat.completions.create({ messages, stream: true });
+        
+        let fullResponse = "";
+        for await (const chunk of chunks) {
+          const content = chunk.choices[0]?.delta?.content || "";
+          fullResponse += content;
+          aiResponseElement.innerText = fullResponse;
+          chatHistoryElement.scrollTop = chatHistoryElement.scrollHeight;
+        }
+      } catch (err) {
+        aiResponseElement.innerText = "Error generating response.";
+        console.error(err);
       }
+
+      input.disabled = false;
+      sendBtn.disabled = false;
+      input.focus();
     };
   </script>
 </body>
