@@ -49,7 +49,9 @@
     .app-container {
       background: var(--bg);
       width: 100%;
-      max-width: 500px;
+      /* UPDATED: Allowed to expand to desktop widths */
+      max-width: 1400px; 
+      margin: 0 auto;
       height: 100dvh;
       display: flex;
       flex-direction: column;
@@ -115,10 +117,23 @@
       align-items: center;
       border-bottom: 2px solid var(--border);
       z-index: 5;
+      position: relative;
+    }
+
+    /* NEW: Sticky Toolbar for Video actions */
+    #video-toolbar {
+      position: sticky;
+      left: 0;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      background: #000;
+      padding-right: 8px;
     }
 
     #local-vid-wrap {
-      display: none; /* Keeps it hidden until stream is live */
+      display: none; 
       position: relative;
       flex-shrink: 0;
     }
@@ -182,6 +197,36 @@
     }
     .vid-btn.muted { color: var(--primary); }
 
+    /* NEW: Theater Mode Classes (Hides UI) */
+    body.hide-ui .app-header, 
+    body.hide-ui .scroll-body, 
+    body.hide-ui .input-bar {
+      display: none !important;
+    }
+    
+    body.hide-ui #video-container {
+      flex: 1;
+      height: 100dvh;
+      border: none;
+      flex-wrap: wrap; /* Let videos grid out on desktop */
+      justify-content: center;
+      align-content: center;
+    }
+
+    body.hide-ui #video-container video {
+      height: auto;
+      max-height: 80vh;
+      max-width: 90vw;
+      object-fit: contain;
+    }
+
+    body.hide-ui #video-toolbar {
+      position: absolute;
+      top: 15px;
+      left: 15px;
+      background: transparent;
+    }
+
     /* Scrollable Content Body */
     .scroll-body {
       flex: 1;
@@ -228,7 +273,9 @@
 
     /* Chat Area */
     #chat-box { flex: 1; display: flex; flex-direction: column; gap: 10px; min-height: 180px; padding-bottom: 20px; }
-    .bubble { max-width: 80%; padding: 10px 14px; border-radius: 8px; font-size: 15px; line-height: 1.4; word-break: break-word; }
+    
+    /* UPDATED: Bubble max-width updated for Desktop widths */
+    .bubble { max-width: 75%; padding: 10px 14px; border-radius: 8px; font-size: 15px; line-height: 1.4; word-break: break-word; }
     .bubble-out { align-self: flex-end; background-color: var(--bubble-out); color: var(--bubble-out-text); border-bottom-right-radius: 2px; font-weight: 500; }
     .bubble-in { align-self: flex-start; background-color: var(--bubble-in); color: var(--bubble-in-text); border-bottom-left-radius: 2px; border: 1px solid var(--border); }
     .bubble-author { font-size: 11px; font-weight: bold; margin-bottom: 4px; opacity: 0.8; font-family: 'Share Tech Mono', monospace; }
@@ -295,6 +342,11 @@
     </header>
 
     <div id="video-container">
+      <!-- NEW: Sticky UI Toolbar inside the video box -->
+      <div id="video-toolbar">
+         <button id="toggle-ui-btn" class="icon-btn" style="width:36px; height:36px; font-size:14px;" title="Theater Mode">↕️</button>
+      </div>
+
       <div id="local-vid-wrap">
         <video id="local-video" autoplay playsinline muted></video>
         <div class="vid-ctrls">
@@ -460,7 +512,19 @@
     const localVideo = document.getElementById('local-video');
     const menuVidBtn = document.getElementById('menu-video');
 
-    // Centralized Media Cleanup (The "One Stream" Enforcer)
+    // UI Toggle (Theater Mode)
+    document.getElementById('toggle-ui-btn').onclick = () => {
+      document.body.classList.toggle('hide-ui');
+      const btn = document.getElementById('toggle-ui-btn');
+      if (document.body.classList.contains('hide-ui')) {
+        btn.textContent = '✖️';
+        btn.title = 'Show Chat';
+      } else {
+        btn.textContent = '↕️';
+        btn.title = 'Theater Mode';
+      }
+    };
+
     function stopAllMedia() {
       let stoppedSomething = false;
 
@@ -475,7 +539,6 @@
         stoppedSomething = true;
       }
 
-      // If we turned anything off, tell peers via data channel to remove our video box securely
       if (stoppedSomething) {
          broadcast({ type: 'media-stopped', id: myPeerId });
       }
@@ -484,9 +547,13 @@
       document.getElementById('menu-video').textContent = '📹 Start Camera';
       document.getElementById('menu-screen').textContent = '🖥️ Share Screen';
 
-      // Cleanly hide container if empty
       const hasRemote = document.querySelectorAll('.remote-vid-wrap').length > 0;
-      if (!hasRemote) videoContainer.style.display = 'none';
+      if (!hasRemote) {
+        videoContainer.style.display = 'none';
+        // Auto-close theater mode if all videos stop
+        document.body.classList.remove('hide-ui');
+        document.getElementById('toggle-ui-btn').textContent = '↕️';
+      }
     }
 
     function processData(data, senderId) {
@@ -498,7 +565,6 @@
         if (conn && conn.name !== data.name) { conn.name = data.name; logSystem(`${data.name} entered the unit`); }
         return;
       }
-      // NEW: Securely remove peer video box if they stop broadcasting
       if (data.type === 'media-stopped') {
         removeSpecificVideo(senderId);
         return;
@@ -586,7 +652,6 @@
            localStream.removeTrack(oldVideoTrack); localStream.addTrack(newVideoTrack);
            localVideo.srcObject = localStream;
         } else {
-           // Enforce 1-Stream logic
            stopAllMedia();
            const newStream = await navigator.mediaDevices.getUserMedia({ video: deviceId ? { deviceId: { exact: deviceId } } : true, audio: true });
            
@@ -611,7 +676,6 @@
       else { openCamModal(); }
     };
 
-    // Answer calls safely
     peer.on('call', (call) => {
       const callerName = connections.get(call.peer)?.name || call.peer;
       logSystem(`Receiving visual feed from ${callerName}...`);
@@ -626,9 +690,15 @@
       if (screenStream) { stopAllMedia(); logSystem("Screen sharing stopped."); return; }
 
       try {
-        stopAllMedia(); // Kill camera feed to free hardware
-        screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+        stopAllMedia(); 
+        
+        // SMART AUDIO CHECK: Request audio only if not on a mobile device
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        const displayOptions = isMobile ? { video: true } : { video: true, audio: true };
+
+        screenStream = await navigator.mediaDevices.getDisplayMedia(displayOptions);
         document.getElementById('menu-screen').textContent = '⏹️ Stop Screen Share';
+        videoContainer.style.display = 'flex';
         logSystem("Broadcasting screen...");
         
         screenStream.getVideoTracks()[0].onended = () => {
@@ -663,7 +733,6 @@
         wrap.appendChild(remoteVid); videoContainer.appendChild(wrap);
       });
 
-      // Cleanup logic
       call.on('close', () => removeSpecificVideo(call.peer));
       peer.on('connection', (conn) => conn.on('close', () => removeSpecificVideo(conn.peer)));
     }
@@ -673,7 +742,10 @@
       if (wrap) wrap.remove();
       
       const hasRemote = document.querySelectorAll('.remote-vid-wrap').length > 0;
-      if (!hasRemote && !localStream && !screenStream) { videoContainer.style.display = 'none'; }
+      if (!hasRemote && !localStream && !screenStream) { 
+        videoContainer.style.display = 'none'; 
+        document.body.classList.remove('hide-ui'); // Turn off theater mode if last person drops
+      }
     }
 
     const msgInput = document.getElementById('msg-input');
