@@ -376,11 +376,13 @@
         <button class="action-item" id="menu-file" disabled>📎 Transmit File</button>
         <button class="action-item" id="menu-video" disabled>📹 Start Camera</button>
         <button class="action-item" id="menu-screen" disabled>🖥️ Share Screen</button>
+        <!-- SOUND NOTIFICATION TOGGLE BUTTON -->
+        <button class="action-item" id="menu-sound">🔊 Sound On</button>
       </div>
       <button id="add-btn" class="icon-btn" title="Actions">+</button>
       
-      <!-- NEW GHOSTGRAM PLACEHOLDER -->
-      <input type="text" id="msg-input" placeholder="What you gonna say?" disabled>
+      <!-- UPDATED PLACEHOLDER -->
+      <input type="text" id="msg-input" placeholder="What you gonna say?..." disabled>
       
       <button id="send-btn" class="btn send-btn" disabled>➔</button>
     </footer>
@@ -400,7 +402,10 @@
     const connections = new Map();
     const incomingTransfers = new Map();
 
+    // --- Audio setup & State ---
     let audioCtx = null;
+    let soundEnabled = true;
+
     const unlockAudio = () => {
       if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
       if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -409,7 +414,7 @@
     document.addEventListener('click', unlockAudio); document.addEventListener('touchstart', unlockAudio);
 
     function playNotificationSound() {
-      if (!audioCtx) return;
+      if (!soundEnabled || !audioCtx) return;
       if (audioCtx.state === 'suspended') audioCtx.resume();
       try {
         const t = audioCtx.currentTime;
@@ -590,6 +595,16 @@
     document.addEventListener('click', (e) => {
       if (!actionMenu.contains(e.target) && e.target !== addBtn) { actionMenu.classList.remove('active'); addBtn.style.transform = 'rotate(0deg)'; }
     });
+
+    // Sound Toggle Action Menu Listener
+    const menuSoundBtn = document.getElementById('menu-sound');
+    menuSoundBtn.onclick = () => {
+      soundEnabled = !soundEnabled;
+      menuSoundBtn.textContent = soundEnabled ? '🔊 Sound On' : '🔇 Sound Muted';
+      actionMenu.classList.remove('active');
+      addBtn.style.transform = 'rotate(0deg)';
+      logSystem(soundEnabled ? "Audio notifications enabled" : "Audio notifications muted");
+    };
 
     document.getElementById('btn-mute').onclick = () => {
       if (!localStream) return;
