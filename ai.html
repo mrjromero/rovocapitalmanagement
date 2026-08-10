@@ -15,7 +15,21 @@
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
-    body { background-color: var(--bg-color); display: flex; justify-content: center; height: 100vh; width: 100vw; overflow: hidden; }
+    
+    /* Mobile Viewport Fix */
+    html, body {
+      height: 100%;
+      height: 100dvh; /* Dynamic viewport height adjusts for mobile browser UI */
+      width: 100%;
+      overflow: hidden;
+      position: fixed; /* Locks the body to prevent iOS scroll bounce */
+    }
+
+    body { 
+      background-color: var(--bg-color); 
+      display: flex; 
+      justify-content: center; 
+    }
 
     /* Mobile Container Wrapper */
     .app-container {
@@ -91,6 +105,8 @@
       display: flex;
       flex-direction: column;
       gap: 0.5rem;
+      /* Ensures padding exists at the very bottom on modern iOS devices */
+      padding-bottom: calc(0.75rem + env(safe-area-inset-bottom));
     }
 
     /* Dropdown Styling */
@@ -160,7 +176,7 @@
 
     <div class="input-container">
       
-      <!-- New Model Selection Dropdown (All 32-bit f32 for hardware compatibility) -->
+      <!-- Model Selection Dropdown (All 32-bit f32 for hardware compatibility) -->
       <select id="model-select" class="model-select">
         <option value="TinyLlama-1.1B-Chat-v1.0-q4f32_1-MLC">TinyLlama 1.1B (Fastest, ~670MB)</option>
         <option value="Llama-3-8B-Instruct-q4f32_1-MLC">Llama 3 8B (High Quality, ~5GB)</option>
