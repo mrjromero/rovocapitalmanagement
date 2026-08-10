@@ -139,7 +139,7 @@
     </header>
 
     <div id="chat-history" class="chat-history">
-      <div class="message assistant">Hello! Click "Initialize WebGPU Engine" below to download the lightweight model (~670MB) directly into your browser's persistent cache.</div>
+      <div class="message assistant">Hello! Click "Initialize WebGPU Engine" below to download the lightweight model directly into your browser's persistent cache.</div>
     </div>
 
     <div class="input-container">
@@ -155,8 +155,8 @@
   <script type="module">
     import { CreateMLCEngine } from "https://esm.run/@mlc-ai/web-llm";
 
-    // Switching to a robust, highly compatible 1.1B parameter model verified in the MLC registry
-    const selectedModel = "TinyLlama-1.1B-Chat-v1.0-q4f16_1-MLC";
+    // Switched from f16 to f32 precision to resolve ShaderF16SupportError
+    const selectedModel = "TinyLlama-1.1B-Chat-v1.0-q4f32_1-MLC";
     let engine;
     const chatHistoryElement = document.getElementById("chat-history");
 
