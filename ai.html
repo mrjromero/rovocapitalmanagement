@@ -181,23 +181,23 @@
 
       loadBtn.style.display = "none";
       progressBar.style.display = "block";
-      progressBar.removeAttribute("value"); // Indeterminate progress while reading to RAM
-      statusText.innerText = `Reading ${file.name} into memory...`;
+      progressBar.removeAttribute("value"); // Indeterminate progress
+      statusText.innerText = `Initializing Wllama Engine...`;
 
       try {
-        // 1. Read the local file into an ArrayBuffer
-        const buffer = await file.arrayBuffer();
-
-        // 2. Initialize the Wllama WASM execution environment
-        statusText.innerText = "Initializing Wllama Engine...";
+        // 1. Initialize the Wllama WASM execution environment FIRST
         engine = new Wllama({
           "single-thread/wllama.wasm": "https://unpkg.com/@wllama/wllama/esm/single-thread/wllama.wasm",
           "multi-thread/wllama.wasm": "https://unpkg.com/@wllama/wllama/esm/multi-thread/wllama.wasm"
         });
 
-        // 3. Load the raw buffer into the engine
-        statusText.innerText = "Loading model tensors...";
-        await engine.loadModel(new Uint8Array(buffer));
+        statusText.innerText = "Loading model safely...";
+
+        // 2. Pass the File object directly inside an array (No ArrayBuffer!)
+        // 3. Restrict n_ctx (memory window) so it doesn't crash allocating the KV Cache
+        await engine.loadModel([file], {
+           n_ctx: 1024 // Restrict conversation memory to a safe size (1024 tokens)
+        });
 
         // Update UI state on success
         statusText.innerText = "Model Ready (WebAssembly)";
