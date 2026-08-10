@@ -118,7 +118,7 @@
     }
 
     #local-vid-wrap {
-      display: none; /* FIX: Hidden by default so no black box appears */
+      display: none; /* Keeps it hidden until stream is live */
       position: relative;
       flex-shrink: 0;
     }
@@ -147,7 +147,6 @@
       cursor: pointer;
     }
 
-    /* Fullscreen Video Class */
     .video-fullscreen {
       position: fixed !important;
       top: 0;
@@ -161,7 +160,6 @@
       object-fit: contain !important;
     }
 
-    /* Local Video Overlay Controls */
     .vid-ctrls {
       position: absolute;
       bottom: 6px;
@@ -196,7 +194,6 @@
       scroll-behavior: smooth;
     }
 
-    /* Mobile Cards */
     .card {
       background: var(--card-bg);
       border-radius: 8px;
@@ -207,231 +204,88 @@
       gap: 10px;
     }
 
-    .row {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
+    .row { display: flex; align-items: center; gap: 8px; }
 
     input[type="text"] {
-      width: 100%;
-      height: 44px;
-      padding: 0 12px;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      font-size: 16px;
-      background: #111;
-      color: var(--text);
-      outline: none;
-      transition: border-color 0.2s;
+      width: 100%; height: 44px; padding: 0 12px;
+      border: 1px solid var(--border); border-radius: 6px;
+      font-size: 16px; background: #111; color: var(--text); outline: none;
     }
-
-    input[type="text"]:focus {
-      border-color: var(--slime);
-      box-shadow: 0 0 5px rgba(57, 255, 20, 0.2);
-    }
+    input[type="text"]:focus { border-color: var(--slime); box-shadow: 0 0 5px rgba(57, 255, 20, 0.2); }
 
     .btn {
-      height: 44px;
-      padding: 0 16px;
-      background-color: var(--primary);
-      color: white;
-      border: none;
-      border-radius: 6px;
-      font-size: 15px;
-      font-weight: 600;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
+      height: 44px; padding: 0 16px; background-color: var(--primary); color: white;
+      border: none; border-radius: 6px; font-size: 15px; font-weight: 600; cursor: pointer;
+      display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
       font-family: 'Share Tech Mono', monospace;
     }
-
     .btn:active { background-color: var(--primary-active); }
     .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn-secondary { background-color: #444; height: 36px; padding: 0 12px; font-size: 13px; }
 
-    .btn-secondary {
-      background-color: #444;
-      height: 36px;
-      padding: 0 12px;
-      font-size: 13px;
-    }
-
-    /* Collapsible QR Section */
-    #qr-container {
-      display: none;
-      text-align: center;
-      padding-top: 10px;
-      border-top: 1px solid var(--border);
-      margin-top: 5px;
-    }
-    #qr-container canvas {
-      border: 4px solid #fff;
-      border-radius: 6px;
-    }
+    #qr-container { display: none; text-align: center; padding-top: 10px; border-top: 1px solid var(--border); margin-top: 5px; }
+    #qr-container canvas { border: 4px solid #fff; border-radius: 6px; }
 
     /* Chat Area */
-    #chat-box {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      min-height: 180px;
-      padding-bottom: 20px;
-    }
-
-    .bubble {
-      max-width: 80%;
-      padding: 10px 14px;
-      border-radius: 8px;
-      font-size: 15px;
-      line-height: 1.4;
-      word-break: break-word;
-    }
+    #chat-box { flex: 1; display: flex; flex-direction: column; gap: 10px; min-height: 180px; padding-bottom: 20px; }
+    .bubble { max-width: 80%; padding: 10px 14px; border-radius: 8px; font-size: 15px; line-height: 1.4; word-break: break-word; }
     .bubble-out { align-self: flex-end; background-color: var(--bubble-out); color: var(--bubble-out-text); border-bottom-right-radius: 2px; font-weight: 500; }
     .bubble-in { align-self: flex-start; background-color: var(--bubble-in); color: var(--bubble-in-text); border-bottom-left-radius: 2px; border: 1px solid var(--border); }
-    
     .bubble-author { font-size: 11px; font-weight: bold; margin-bottom: 4px; opacity: 0.8; font-family: 'Share Tech Mono', monospace; }
     .system-pill { align-self: center; background: rgba(255, 204, 0, 0.15); color: var(--caution); border: 1px solid rgba(255, 204, 0, 0.3); font-family: 'Share Tech Mono', monospace; font-size: 11px; padding: 4px 12px; border-radius: 4px; margin: 4px 0; text-align: center; }
 
     /* Floating Action Menu */
     .action-menu {
-      position: absolute;
-      bottom: calc(100% + 10px);
-      left: 12px;
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 8px;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.8);
-      opacity: 0;
-      pointer-events: none;
-      transform: translateY(10px);
-      transition: all 0.2s ease;
-      z-index: 20;
+      position: absolute; bottom: calc(100% + 10px); left: 12px;
+      background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px;
+      padding: 8px; display: flex; flex-direction: column; gap: 6px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.8); opacity: 0; pointer-events: none;
+      transform: translateY(10px); transition: all 0.2s ease; z-index: 20;
     }
-    
-    .action-menu.active {
-      opacity: 1;
-      pointer-events: auto;
-      transform: translateY(0);
-    }
-
+    .action-menu.active { opacity: 1; pointer-events: auto; transform: translateY(0); }
     .action-item {
-      background: transparent;
-      border: none;
-      color: var(--text);
-      font-family: 'Share Tech Mono', monospace;
-      font-size: 14px;
-      padding: 10px 16px;
-      text-align: left;
-      border-radius: 6px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      cursor: pointer;
+      background: transparent; border: none; color: var(--text); font-family: 'Share Tech Mono', monospace;
+      font-size: 14px; padding: 10px 16px; text-align: left; border-radius: 6px; display: flex; align-items: center; gap: 10px; cursor: pointer;
     }
     .action-item:active { background: #333; }
     .action-item:disabled { opacity: 0.4; cursor: not-allowed; }
 
     /* Bottom Input Bar */
     .input-bar {
-      background: #111111;
-      padding: 10px 12px calc(10px + var(--safe-bottom)) 12px;
-      border-top: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      z-index: 10;
-      position: relative;
+      background: #111111; padding: 10px 12px calc(10px + var(--safe-bottom)) 12px;
+      border-top: 1px solid var(--border); display: flex; align-items: center; gap: 8px; z-index: 10; position: relative;
     }
-
     .icon-btn {
-      width: 44px;
-      height: 44px;
-      border-radius: 50%;
-      background: #333;
-      color: #fff;
-      border: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 20px;
-      cursor: pointer;
-      flex-shrink: 0;
+      width: 44px; height: 44px; border-radius: 50%; background: #333; color: #fff;
+      border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 20px; cursor: pointer; flex-shrink: 0;
     }
     .icon-btn:active { background: #444; }
-    
     .send-btn { width: 44px; height: 44px; border-radius: 50%; padding: 0; background: var(--slime); color: #000; }
     .send-btn:active { background: #2ebd10; }
-    
     a.download-card { display: flex; align-items: center; gap: 10px; color: var(--slime); text-decoration: none; background: rgba(0,0,0,0.4); padding: 8px 12px; border-radius: 6px; margin-top: 6px; font-family: 'Share Tech Mono', monospace; font-size: 14px; border: 1px solid #444; }
 
-    /* Camera Selection Modal */
+    /* Camera Modal */
     .modal-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      background: rgba(0, 0, 0, 0.85);
-      z-index: 9999;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      backdrop-filter: blur(5px);
+      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.85);
+      z-index: 9999; display: none; align-items: center; justify-content: center; backdrop-filter: blur(5px);
     }
     .modal-card {
-      background: var(--card-bg);
-      border: 2px solid var(--caution);
-      border-radius: 12px;
-      padding: 24px;
-      width: 85%;
-      max-width: 320px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+      background: var(--card-bg); border: 2px solid var(--caution); border-radius: 12px;
+      padding: 24px; width: 85%; max-width: 320px; display: flex; flex-direction: column; gap: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.8);
     }
-    .modal-title {
-      color: var(--caution);
-      font-family: 'Share Tech Mono', monospace;
-      text-align: center;
-      margin-bottom: 8px;
-      font-size: 1.1rem;
-    }
+    .modal-title { color: var(--caution); font-family: 'Share Tech Mono', monospace; text-align: center; margin-bottom: 8px; font-size: 1.1rem; }
     .cam-btn {
-      background: #111;
-      color: white;
-      border: 1px solid var(--border);
-      padding: 14px;
-      border-radius: 8px;
-      font-size: 15px;
-      cursor: pointer;
-      text-align: left;
-      font-weight: 500;
-      display: flex;
-      align-items: center;
-      gap: 10px;
+      background: #111; color: white; border: 1px solid var(--border); padding: 14px; border-radius: 8px; font-size: 15px;
+      cursor: pointer; text-align: left; font-weight: 500; display: flex; align-items: center; gap: 10px;
     }
     .cam-btn::before { content: '📹'; }
     .cam-btn:active { background: var(--slime); color: black; border-color: var(--slime); }
-    .modal-close {
-      background: transparent;
-      color: var(--subtext);
-      margin-top: 10px;
-      border: 1px solid var(--border);
-    }
+    .modal-close { background: transparent; color: var(--subtext); margin-top: 10px; border: 1px solid var(--border); }
     .modal-close:active { background: #333; }
   </style>
 </head>
 <body>
   <div class="app-container">
-    
     <header class="app-header">
       <div class="app-title">👻 GHOSTCHAT 🚫</div>
       <div class="status-badge">
@@ -451,7 +305,6 @@
     </div>
 
     <div class="scroll-body">
-      <!-- Setup Card -->
       <div class="card" id="setup-card">
         <div class="row">
           <input type="text" id="display-name" placeholder="Agent Designation (Name)">
@@ -465,32 +318,22 @@
           <div style="font-size:11px; margin-top:8px; color:var(--caution); font-family:monospace;">SCAN TO CONNECT</div>
         </div>
       </div>
-
       <div id="chat-box"></div>
     </div>
 
-    <!-- Bottom Input Area -->
     <footer class="input-bar">
-      <!-- Hidden File Input -->
       <input type="file" id="file-input" hidden>
-      
-      <!-- The Pop-up Action Menu -->
       <div id="action-menu" class="action-menu">
         <button class="action-item" id="menu-file" disabled>📎 Transmit File</button>
         <button class="action-item" id="menu-video" disabled>📹 Start Camera</button>
         <button class="action-item" id="menu-screen" disabled>🖥️ Share Screen</button>
       </div>
-
-      <!-- Add Button -->
       <button id="add-btn" class="icon-btn" title="Actions">+</button>
-      
       <input type="text" id="msg-input" placeholder="Transmit signal..." disabled>
       <button id="send-btn" class="btn send-btn" disabled>➔</button>
     </footer>
-
   </div>
 
-  <!-- Camera Selection Modal -->
   <div id="cam-modal" class="modal-overlay">
     <div class="modal-card">
       <div class="modal-title">SELECT OPTICAL SENSOR</div>
@@ -505,16 +348,13 @@
     const connections = new Map();
     const incomingTransfers = new Map();
 
-    // --- Audio setup ---
     let audioCtx = null;
     const unlockAudio = () => {
       if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
       if (audioCtx.state === 'suspended') audioCtx.resume();
-      document.removeEventListener('click', unlockAudio);
-      document.removeEventListener('touchstart', unlockAudio);
+      document.removeEventListener('click', unlockAudio); document.removeEventListener('touchstart', unlockAudio);
     };
-    document.addEventListener('click', unlockAudio);
-    document.addEventListener('touchstart', unlockAudio);
+    document.addEventListener('click', unlockAudio); document.addEventListener('touchstart', unlockAudio);
 
     function playNotificationSound() {
       if (!audioCtx) return;
@@ -522,43 +362,27 @@
       try {
         const t = audioCtx.currentTime;
         const playTone = (freq, startTime) => {
-          const osc = audioCtx.createOscillator();
-          const gain = audioCtx.createGain();
-          osc.type = 'square'; 
-          osc.frequency.setValueAtTime(freq, startTime);
-          gain.gain.setValueAtTime(0, startTime);
-          gain.gain.linearRampToValueAtTime(0.05, startTime + 0.02);
+          const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+          osc.type = 'square'; osc.frequency.setValueAtTime(freq, startTime);
+          gain.gain.setValueAtTime(0, startTime); gain.gain.linearRampToValueAtTime(0.05, startTime + 0.02);
           gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.15);
-          osc.connect(gain);
-          gain.connect(audioCtx.destination);
-          osc.start(startTime);
-          osc.stop(startTime + 0.15);
+          osc.connect(gain); gain.connect(audioCtx.destination);
+          osc.start(startTime); osc.stop(startTime + 0.15);
         };
-        playTone(600, t);        
-        playTone(1200, t + 0.1); 
+        playTone(600, t); playTone(1200, t + 0.1); 
       } catch (e) {}
     }
 
-    // --- Name Setup ---
     const ADJ = ['Spooky', 'Ecto', 'Spectral', 'Phantom', 'Slime', 'Proton', 'Ghost', 'Venkman', 'Stantz'];
     const ANI = ['Agent', 'Buster', 'Trap', 'Pack', 'Meter', 'Entity', 'Specter', 'Ghoul', 'Spirit'];
     const nameInput = document.getElementById('display-name');
     nameInput.value = localStorage.getItem('ghost_name') || `${ADJ[Math.floor(Math.random()*ADJ.length)]} ${ANI[Math.floor(Math.random()*ANI.length)]}`;
-    
     nameInput.addEventListener('change', () => {
       localStorage.setItem('ghost_name', nameInput.value.trim());
       broadcast({ type: 'identity', name: nameInput.value.trim() });
     });
 
-    // --- Peer Setup ---
-    const peer = new Peer({ 
-      config: { 
-        iceServers: [
-          { urls: 'stun:stun.l.google.com:19302' },
-          { urls: 'stun:stun1.l.google.com:19302' }
-        ] 
-      } 
-    });
+    const peer = new Peer({ config: { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:stun1.l.google.com:19302' }] } });
 
     peer.on('open', (id) => {
       myPeerId = id;
@@ -566,36 +390,23 @@
       
       const shareBtn = document.getElementById('share-btn');
       const toggleQrBtn = document.getElementById('toggle-qr-btn');
-      shareBtn.disabled = false;
-      toggleQrBtn.disabled = false;
+      shareBtn.disabled = false; toggleQrBtn.disabled = false;
       
       shareBtn.onclick = async () => {
-        if (navigator.share) {
-          try { await navigator.share({ title: 'GhostChat', url: shareUrl }); } catch(e){}
-        } else if (navigator.clipboard) {
-          navigator.clipboard.writeText(shareUrl);
-          shareBtn.innerText = 'COPIED!';
-          setTimeout(() => shareBtn.innerText = 'COPY LINK', 2000);
-        }
+        if (navigator.share) { try { await navigator.share({ title: 'GhostChat', url: shareUrl }); } catch(e){} } 
+        else if (navigator.clipboard) { navigator.clipboard.writeText(shareUrl); shareBtn.innerText = 'COPIED!'; setTimeout(() => shareBtn.innerText = 'COPY LINK', 2000); }
       };
 
-      // Generate QR
       const qrCanvas = document.getElementById('qr-canvas');
       new QRious({ element: qrCanvas, value: shareUrl, size: 180 });
       
       toggleQrBtn.onclick = () => {
         const qrCont = document.getElementById('qr-container');
-        if (qrCont.style.display === 'block') {
-          qrCont.style.display = 'none';
-          toggleQrBtn.innerText = 'SHOW QR';
-        } else {
-          qrCont.style.display = 'block';
-          toggleQrBtn.innerText = 'HIDE QR';
-        }
+        if (qrCont.style.display === 'block') { qrCont.style.display = 'none'; toggleQrBtn.innerText = 'SHOW QR'; } 
+        else { qrCont.style.display = 'block'; toggleQrBtn.innerText = 'HIDE QR'; }
       };
 
       updateUI();
-
       const targetId = new URLSearchParams(window.location.search).get('id');
       if (targetId) connectToPeer(targetId);
     });
@@ -609,128 +420,126 @@
 
     function setupConnection(conn) {
       conn.on('open', () => {
-        connections.set(conn.peer, conn);
-        updateUI();
+        connections.set(conn.peer, conn); updateUI();
         conn.send({ type: 'identity', name: nameInput.value.trim() });
       });
       conn.on('data', (data) => processData(data, conn.peer));
       const cleanup = () => {
         if (!connections.has(conn.peer)) return;
         const peerName = connections.get(conn.peer).name || conn.peer;
-        connections.delete(conn.peer);
-        updateUI();
-        logSystem(`Agent ${peerName} disconnected`);
+        connections.delete(conn.peer); updateUI(); logSystem(`Agent ${peerName} disconnected`);
       };
-      conn.on('close', cleanup);
-      conn.on('error', cleanup);
+      conn.on('close', cleanup); conn.on('error', cleanup);
     }
 
-    function broadcast(data) {
-      connections.forEach(conn => { if (conn.open) conn.send(data); });
-    }
+    function broadcast(data) { connections.forEach(conn => { if (conn.open) conn.send(data); }); }
 
     function updateUI() {
       const active = connections.size > 0;
       document.getElementById('msg-input').disabled = !active;
       document.getElementById('send-btn').disabled = !active;
       
-      // Enable Menu items
       document.getElementById('menu-file').disabled = !active;
       document.getElementById('menu-video').disabled = !active;
       document.getElementById('menu-screen').disabled = !active;
       
-      // Status dot
       if (myPeerId) {
         document.getElementById('conn-status').textContent = `${connections.size} AGENT${connections.size === 1 ? '' : 'S'} ONLINE`;
         const dot = document.getElementById('status-dot');
         dot.style.backgroundColor = connections.size === 0 ? '#ff0000' : '#39ff14';
         dot.style.boxShadow = `0 0 8px ${connections.size === 0 ? '#ff0000' : '#39ff14'}`;
       }
+      if (active) { document.getElementById('qr-container').style.display = 'none'; document.getElementById('toggle-qr-btn').innerText = 'SHOW QR'; }
+    }
 
-      // Auto-hide QR when someone joins
-      if (active) {
-        document.getElementById('qr-container').style.display = 'none';
-        document.getElementById('toggle-qr-btn').innerText = 'SHOW QR';
+    // --- Media Core Architecture ---
+    let localStream = null;
+    let screenStream = null;
+    const videoContainer = document.getElementById('video-container');
+    const localVidWrap = document.getElementById('local-vid-wrap');
+    const localVideo = document.getElementById('local-video');
+    const menuVidBtn = document.getElementById('menu-video');
+
+    // Centralized Media Cleanup (The "One Stream" Enforcer)
+    function stopAllMedia() {
+      let stoppedSomething = false;
+
+      if (localStream) {
+        localStream.getTracks().forEach(track => track.stop());
+        localStream = null;
+        stoppedSomething = true;
       }
+      if (screenStream) {
+        screenStream.getTracks().forEach(track => track.stop());
+        screenStream = null;
+        stoppedSomething = true;
+      }
+
+      // If we turned anything off, tell peers via data channel to remove our video box securely
+      if (stoppedSomething) {
+         broadcast({ type: 'media-stopped', id: myPeerId });
+      }
+
+      localVidWrap.style.display = 'none';
+      document.getElementById('menu-video').textContent = '📹 Start Camera';
+      document.getElementById('menu-screen').textContent = '🖥️ Share Screen';
+
+      // Cleanly hide container if empty
+      const hasRemote = document.querySelectorAll('.remote-vid-wrap').length > 0;
+      if (!hasRemote) videoContainer.style.display = 'none';
     }
 
     function processData(data, senderId) {
       const conn = connections.get(senderId);
       const senderName = conn?.name || senderId;
 
-      if (typeof data === 'string') {
-        playNotificationSound();
-        return logBubble(senderName, data, false);
-      }
+      if (typeof data === 'string') { playNotificationSound(); return logBubble(senderName, data, false); }
       if (data.type === 'identity') {
-        if (conn && conn.name !== data.name) {
-          conn.name = data.name;
-          logSystem(`${data.name} entered the unit`);
-        }
+        if (conn && conn.name !== data.name) { conn.name = data.name; logSystem(`${data.name} entered the unit`); }
         return;
       }
-      if (data.type === 'file-header') {
-        incomingTransfers.set(senderId, { name: data.name, type: data.filetype, chunks: [] });
-      } else if (data.type === 'file-chunk') {
-        incomingTransfers.get(senderId)?.chunks.push(data.chunk);
-      } else if (data.type === 'file-complete') {
+      // NEW: Securely remove peer video box if they stop broadcasting
+      if (data.type === 'media-stopped') {
+        removeSpecificVideo(senderId);
+        return;
+      }
+      if (data.type === 'file-header') { incomingTransfers.set(senderId, { name: data.name, type: data.filetype, chunks: [] }); } 
+      else if (data.type === 'file-chunk') { incomingTransfers.get(senderId)?.chunks.push(data.chunk); } 
+      else if (data.type === 'file-complete') {
         const transfer = incomingTransfers.get(senderId);
         if (transfer) {
           const blob = new Blob(transfer.chunks, { type: transfer.type });
-          playNotificationSound();
-          logDownload(senderName, URL.createObjectURL(blob), transfer.name);
+          playNotificationSound(); logDownload(senderName, URL.createObjectURL(blob), transfer.name);
           incomingTransfers.delete(senderId);
         }
       }
     }
 
-    // --- Action Menu Logic ---
     const addBtn = document.getElementById('add-btn');
     const actionMenu = document.getElementById('action-menu');
-    
     addBtn.onclick = (e) => {
-      e.stopPropagation();
-      const isActive = actionMenu.classList.contains('active');
+      e.stopPropagation(); const isActive = actionMenu.classList.contains('active');
       actionMenu.classList.toggle('active', !isActive);
-      addBtn.style.transform = !isActive ? 'rotate(45deg)' : 'rotate(0deg)';
-      addBtn.style.transition = 'transform 0.2s';
+      addBtn.style.transform = !isActive ? 'rotate(45deg)' : 'rotate(0deg)'; addBtn.style.transition = 'transform 0.2s';
     };
-
     document.addEventListener('click', (e) => {
-      if (!actionMenu.contains(e.target) && e.target !== addBtn) {
-        actionMenu.classList.remove('active');
-        addBtn.style.transform = 'rotate(0deg)';
-      }
+      if (!actionMenu.contains(e.target) && e.target !== addBtn) { actionMenu.classList.remove('active'); addBtn.style.transform = 'rotate(0deg)'; }
     });
 
-    // --- MEDIA SYSTEM ---
-    let localStream = null;
-    let screenStream = null;
-    
-    const videoContainer = document.getElementById('video-container');
-    const localVidWrap = document.getElementById('local-vid-wrap');
-    const localVideo = document.getElementById('local-video');
-    const menuVidBtn = document.getElementById('menu-video');
-    
-    // Mute/Unmute
     document.getElementById('btn-mute').onclick = () => {
       if (!localStream) return;
       const audioTrack = localStream.getAudioTracks()[0];
       if (audioTrack) {
         audioTrack.enabled = !audioTrack.enabled;
         const btn = document.getElementById('btn-mute');
-        btn.textContent = audioTrack.enabled ? '🎤' : '🔇';
-        btn.classList.toggle('muted', !audioTrack.enabled);
+        btn.textContent = audioTrack.enabled ? '🎤' : '🔇'; btn.classList.toggle('muted', !audioTrack.enabled);
       }
     };
 
-    // --- Camera Selection Logic ---
     async function getCameras() {
       try {
         let devices = await navigator.mediaDevices.enumerateDevices();
         let videoInputs = devices.filter(d => d.kind === 'videoinput');
-        
-        // If labels are empty (due to permissions), request a dummy stream to unlock labels
         if (videoInputs.length > 0 && videoInputs[0].label === '') {
            const tempStream = await navigator.mediaDevices.getUserMedia({ video: true });
            devices = await navigator.mediaDevices.enumerateDevices();
@@ -738,83 +547,33 @@
            tempStream.getTracks().forEach(t => t.stop());
         }
         return videoInputs;
-      } catch (err) {
-        return [];
-      }
+      } catch (err) { return []; }
     }
 
     async function openCamModal() {
-      // Hide Action Menu
-      actionMenu.classList.remove('active');
-      addBtn.style.transform = 'rotate(0deg)';
-
+      actionMenu.classList.remove('active'); addBtn.style.transform = 'rotate(0deg)';
       const list = document.getElementById('cam-list');
       list.innerHTML = '<div style="color:var(--subtext); text-align:center;">Scanning hardware...</div>';
       document.getElementById('cam-modal').style.display = 'flex';
-
-      const cams = await getCameras();
-      list.innerHTML = '';
-      
-      if(cams.length === 0) {
-        list.innerHTML = '<div style="color:#ff0000;text-align:center;">No camera hardware found.</div>';
-      } else {
-        cams.forEach((cam, index) => {
-           const btn = document.createElement('button');
-           btn.className = 'cam-btn';
-           btn.textContent = cam.label || `Optical Sensor ${index + 1}`;
-           btn.onclick = () => startCamera(cam.deviceId);
-           list.appendChild(btn);
-        });
-      }
+      const cams = await getCameras(); list.innerHTML = '';
+      if(cams.length === 0) { list.innerHTML = '<div style="color:#ff0000;text-align:center;">No camera hardware found.</div>'; } 
+      else { cams.forEach((cam, index) => { const btn = document.createElement('button'); btn.className = 'cam-btn'; btn.textContent = cam.label || `Optical Sensor ${index + 1}`; btn.onclick = () => startCamera(cam.deviceId); list.appendChild(btn); }); }
     }
 
-    function closeCamModal() {
-      document.getElementById('cam-modal').style.display = 'none';
-    }
-
-    // Now Flip just opens the Modal to let the user pick exactly which lens to use
+    function closeCamModal() { document.getElementById('cam-modal').style.display = 'none'; }
     document.getElementById('btn-flip').onclick = openCamModal;
 
-    // Start or Switch Camera
     async function startCamera(deviceId) {
       closeCamModal();
-      
       try {
-        const isSwitching = !!localStream;
-        const oldVideoTrack = isSwitching ? localStream.getVideoTracks()[0] : null;
+        const isSwitchingLenses = !!localStream;
         
-        // Release hardware lock on current video track before requesting the new one
-        if (oldVideoTrack) oldVideoTrack.stop();
-
-        const newStream = await navigator.mediaDevices.getUserMedia({ 
-          video: deviceId ? { deviceId: { exact: deviceId } } : true,
-          audio: !isSwitching // Only ask for audio if it's the first time starting
-        });
-        
-        const newVideoTrack = newStream.getVideoTracks()[0];
-
-        if (!isSwitching) {
-           // Starting Fresh
-           localStream = newStream;
-           localVideo.srcObject = localStream;
+        if (isSwitchingLenses) {
+           const oldVideoTrack = localStream.getVideoTracks()[0];
+           if (oldVideoTrack) oldVideoTrack.stop();
+           const newStream = await navigator.mediaDevices.getUserMedia({ video: deviceId ? { deviceId: { exact: deviceId } } : true });
+           const newVideoTrack = newStream.getVideoTracks()[0];
            
-           // FIX: Show the local video box only when feed is actually live
-           localVidWrap.style.display = 'block'; 
-           videoContainer.style.display = 'flex';
-           menuVidBtn.textContent = '⏹️ Stop Camera';
-           
-           // Reset mute button UI
-           document.getElementById('btn-mute').textContent = '🎤';
-           document.getElementById('btn-mute').classList.remove('muted');
-
-           logSystem("Broadcasting camera feed...");
-           connections.forEach((conn) => {
-             const call = peer.call(conn.peer, localStream);
-             handleCallStream(call);
-           });
-
-        } else {
-           // Seamlessly Switching Camera Tracks
            Object.values(peer.connections).forEach(peerConns => {
              peerConns.forEach(conn => {
                if (conn.type === 'media' && conn.peerConnection) {
@@ -824,43 +583,35 @@
                }
              });
            });
-           
-           localStream.removeTrack(oldVideoTrack);
-           localStream.addTrack(newVideoTrack);
+           localStream.removeTrack(oldVideoTrack); localStream.addTrack(newVideoTrack);
            localVideo.srcObject = localStream;
+        } else {
+           // Enforce 1-Stream logic
+           stopAllMedia();
+           const newStream = await navigator.mediaDevices.getUserMedia({ video: deviceId ? { deviceId: { exact: deviceId } } : true, audio: true });
+           
+           localStream = newStream;
+           localVideo.srcObject = localStream;
+           localVidWrap.style.display = 'block'; 
+           videoContainer.style.display = 'flex';
+           menuVidBtn.textContent = '⏹️ Stop Camera';
+           document.getElementById('btn-mute').textContent = '🎤'; document.getElementById('btn-mute').classList.remove('muted');
+
+           logSystem("Broadcasting camera feed...");
+           connections.forEach((conn) => {
+             const call = peer.call(conn.peer, localStream);
+             handleCallStream(call);
+           });
         }
-      } catch (err) {
-        logSystem("Failed to access camera.");
-      }
+      } catch (err) { logSystem("Failed to access camera."); }
     }
 
-    // Start or Stop Camera Logic from Action Menu
     menuVidBtn.onclick = () => {
-      if (localStream) {
-        // STOP LOGIC
-        localStream.getTracks().forEach(track => track.stop()); 
-        localStream = null;
-        
-        // Hide the local box completely
-        localVidWrap.style.display = 'none';
-        
-        // Clean up remote views
-        document.querySelectorAll('.remote-vid-wrap').forEach(v => v.remove());
-        
-        // If nothing else is broadcasting, hide the entire container strip
-        if (!screenStream) videoContainer.style.display = 'none';
-        
-        menuVidBtn.textContent = '📹 Start Camera';
-        actionMenu.classList.remove('active');
-        addBtn.style.transform = 'rotate(0deg)';
-        logSystem("Camera disabled.");
-      } else {
-        // START LOGIC
-        openCamModal();
-      }
+      if (localStream) { stopAllMedia(); logSystem("Camera disabled."); actionMenu.classList.remove('active'); addBtn.style.transform = 'rotate(0deg)'; } 
+      else { openCamModal(); }
     };
 
-    // Answer calls silently
+    // Answer calls safely
     peer.on('call', (call) => {
       const callerName = connections.get(call.peer)?.name || call.peer;
       logSystem(`Receiving visual feed from ${callerName}...`);
@@ -869,77 +620,50 @@
       handleCallStream(call);
     });
 
-    // Start/Stop Screen
     document.getElementById('menu-screen').onclick = async () => {
-      actionMenu.classList.remove('active');
-      addBtn.style.transform = 'rotate(0deg)';
-      const screenBtn = document.getElementById('menu-screen');
-
-      if (screenStream) {
-        screenStream.getTracks().forEach(track => track.stop());
-        screenStream = null;
-        
-        const hasRemote = document.querySelectorAll('.remote-vid-wrap').length > 0;
-        if (!hasRemote && !localStream) videoContainer.style.display = 'none';
-        
-        screenBtn.textContent = '🖥️ Share Screen';
-        logSystem("Screen sharing stopped.");
-        return;
-      }
+      actionMenu.classList.remove('active'); addBtn.style.transform = 'rotate(0deg)';
+      
+      if (screenStream) { stopAllMedia(); logSystem("Screen sharing stopped."); return; }
 
       try {
+        stopAllMedia(); // Kill camera feed to free hardware
         screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
-        screenBtn.textContent = '⏹️ Stop Screen Share';
-        videoContainer.style.display = 'flex';
+        document.getElementById('menu-screen').textContent = '⏹️ Stop Screen Share';
         logSystem("Broadcasting screen...");
         
         screenStream.getVideoTracks()[0].onended = () => {
-          screenStream = null;
-          screenBtn.textContent = '🖥️ Share Screen';
-          const hasRemote = document.querySelectorAll('.remote-vid-wrap').length > 0;
-          if (!hasRemote && !localStream) videoContainer.style.display = 'none';
+          stopAllMedia();
+          logSystem("Screen sharing stopped.");
         };
 
         connections.forEach((conn) => {
           const call = peer.call(conn.peer, screenStream);
           handleCallStream(call);
         });
-      } catch (err) {}
+      } catch (err) { logSystem("Screen share cancelled or unsupported by OS."); }
     };
 
     function handleCallStream(call) {
       call.on('stream', (remoteStream) => {
-        
         let wrap = document.getElementById(`wrap-${call.peer}`);
         let remoteVid = document.getElementById(`vid-${call.peer}`);
 
         if (wrap && remoteVid) {
-          if (remoteVid.srcObject !== remoteStream) {
-             remoteVid.srcObject = remoteStream;
-          }
+          if (remoteVid.srcObject !== remoteStream) { remoteVid.srcObject = remoteStream; }
           return;
         }
 
         videoContainer.style.display = 'flex';
+        wrap = document.createElement('div'); wrap.className = 'remote-vid-wrap'; wrap.id = `wrap-${call.peer}`;
+        remoteVid = document.createElement('video'); remoteVid.id = `vid-${call.peer}`;
+        remoteVid.srcObject = remoteStream; remoteVid.autoplay = true; remoteVid.playsInline = true;
         
-        wrap = document.createElement('div');
-        wrap.className = 'remote-vid-wrap';
-        wrap.id = `wrap-${call.peer}`;
+        remoteVid.addEventListener('click', () => { remoteVid.classList.toggle('video-fullscreen'); });
 
-        remoteVid = document.createElement('video');
-        remoteVid.id = `vid-${call.peer}`;
-        remoteVid.srcObject = remoteStream;
-        remoteVid.autoplay = true;
-        remoteVid.playsInline = true;
-        
-        remoteVid.addEventListener('click', () => {
-          remoteVid.classList.toggle('video-fullscreen');
-        });
-
-        wrap.appendChild(remoteVid);
-        videoContainer.appendChild(wrap);
+        wrap.appendChild(remoteVid); videoContainer.appendChild(wrap);
       });
 
+      // Cleanup logic
       call.on('close', () => removeSpecificVideo(call.peer));
       peer.on('connection', (conn) => conn.on('close', () => removeSpecificVideo(conn.peer)));
     }
@@ -949,95 +673,40 @@
       if (wrap) wrap.remove();
       
       const hasRemote = document.querySelectorAll('.remote-vid-wrap').length > 0;
-      if (!hasRemote && !localStream && !screenStream) {
-         videoContainer.style.display = 'none';
-      }
+      if (!hasRemote && !localStream && !screenStream) { videoContainer.style.display = 'none'; }
     }
 
-    // --- Chat & File Handlers ---
     const msgInput = document.getElementById('msg-input');
     const sendBtn = document.getElementById('send-btn');
     const fileInput = document.getElementById('file-input');
     
     msgInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendBtn.click(); });
     msgInput.addEventListener('focus', () => setTimeout(scrollToBottom, 300));
+    sendBtn.onclick = () => { const text = msgInput.value.trim(); if (text) { broadcast(text); logBubble('You', text, true); msgInput.value = ''; } };
 
-    sendBtn.onclick = () => {
-      const text = msgInput.value.trim();
-      if (text) {
-        broadcast(text);
-        logBubble('You', text, true);
-        msgInput.value = '';
-      }
-    };
-
-    document.getElementById('menu-file').onclick = () => {
-      actionMenu.classList.remove('active');
-      addBtn.style.transform = 'rotate(0deg)';
-      fileInput.click();
-    };
+    document.getElementById('menu-file').onclick = () => { actionMenu.classList.remove('active'); addBtn.style.transform = 'rotate(0deg)'; fileInput.click(); };
 
     fileInput.onchange = async () => {
-      const file = fileInput.files[0];
-      if (!file) return;
+      const file = fileInput.files[0]; if (!file) return;
       if (file.size > 250 * 1024 * 1024) return alert(`File too large (${Math.round(file.size/1024/1024)}MB).`);
       
-      fileInput.value = '';
-      logSystem(`Transmitting ${file.name}...`);
-      broadcast({ type: 'file-header', name: file.name, filetype: file.type });
+      fileInput.value = ''; logSystem(`Transmitting ${file.name}...`); broadcast({ type: 'file-header', name: file.name, filetype: file.type });
 
       let offset = 0;
       while (offset < file.size) {
         let maxBuffer = 0;
-        connections.forEach(c => {
-          if (c.dataChannel && c.dataChannel.bufferedAmount > maxBuffer) maxBuffer = c.dataChannel.bufferedAmount;
-        });
+        connections.forEach(c => { if (c.dataChannel && c.dataChannel.bufferedAmount > maxBuffer) maxBuffer = c.dataChannel.bufferedAmount; });
         if (maxBuffer > 1024 * 1024) { await new Promise(r => setTimeout(r, 50)); continue; }
-        
-        const buffer = await file.slice(offset, offset + CHUNK_SIZE).arrayBuffer();
-        broadcast({ type: 'file-chunk', chunk: buffer });
-        offset += CHUNK_SIZE;
+        const buffer = await file.slice(offset, offset + CHUNK_SIZE).arrayBuffer(); broadcast({ type: 'file-chunk', chunk: buffer }); offset += CHUNK_SIZE;
       }
-      broadcast({ type: 'file-complete' });
-      logSystem(`Sent ${file.name}`);
+      broadcast({ type: 'file-complete' }); logSystem(`Sent ${file.name}`);
     };
 
-    // --- Utilities ---
-    function scrollToBottom() {
-      const sb = document.querySelector('.scroll-body');
-      if (sb) sb.scrollTo({ top: sb.scrollHeight, behavior: 'smooth' });
-    }
-
-    function escapeHTML(str) {
-      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-    }
-
-    function logBubble(sender, text, isOut) {
-      const chat = document.getElementById('chat-box');
-      const div = document.createElement('div');
-      div.className = `bubble ${isOut ? 'bubble-out' : 'bubble-in'}`;
-      div.innerHTML = `<div class="bubble-author">${escapeHTML(sender)}</div><div>${escapeHTML(text)}</div>`;
-      chat.appendChild(div);
-      scrollToBottom();
-    }
-
-    function logSystem(text) {
-      const chat = document.getElementById('chat-box');
-      const div = document.createElement('div');
-      div.className = 'system-pill'; div.textContent = text;
-      chat.appendChild(div); scrollToBottom();
-    }
-
-    function logDownload(sender, url, filename) {
-      const chat = document.getElementById('chat-box');
-      const div = document.createElement('div');
-      div.className = 'bubble bubble-in';
-      div.innerHTML = `<div class="bubble-author">${escapeHTML(sender)}</div>
-                       <a class="download-card" href="${url}" download="${escapeHTML(filename)}">⬇️ DOWNLOAD ${escapeHTML(filename).toUpperCase()}</a>`;
-      div.querySelector('a').onclick = () => setTimeout(() => URL.revokeObjectURL(url), 10000);
-      chat.appendChild(div);
-      scrollToBottom();
-    }
+    function scrollToBottom() { const sb = document.querySelector('.scroll-body'); if (sb) sb.scrollTo({ top: sb.scrollHeight, behavior: 'smooth' }); }
+    function escapeHTML(str) { return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+    function logBubble(sender, text, isOut) { const chat = document.getElementById('chat-box'); const div = document.createElement('div'); div.className = `bubble ${isOut ? 'bubble-out' : 'bubble-in'}`; div.innerHTML = `<div class="bubble-author">${escapeHTML(sender)}</div><div>${escapeHTML(text)}</div>`; chat.appendChild(div); scrollToBottom(); }
+    function logSystem(text) { const chat = document.getElementById('chat-box'); const div = document.createElement('div'); div.className = 'system-pill'; div.textContent = text; chat.appendChild(div); scrollToBottom(); }
+    function logDownload(sender, url, filename) { const chat = document.getElementById('chat-box'); const div = document.createElement('div'); div.className = 'bubble bubble-in'; div.innerHTML = `<div class="bubble-author">${escapeHTML(sender)}</div><a class="download-card" href="${url}" download="${escapeHTML(filename)}">⬇️ DOWNLOAD ${escapeHTML(filename).toUpperCase()}</a>`; div.querySelector('a').onclick = () => setTimeout(() => URL.revokeObjectURL(url), 10000); chat.appendChild(div); scrollToBottom(); }
   </script>
 </body>
 </html>
