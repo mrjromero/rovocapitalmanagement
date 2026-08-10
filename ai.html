@@ -93,6 +93,22 @@
       gap: 0.5rem;
     }
 
+    /* Dropdown Styling */
+    .model-select {
+      width: 100%;
+      padding: 0.6rem;
+      border: 1px solid #d1d1d6;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      outline: none;
+      background: #f5f5f7;
+      cursor: pointer;
+    }
+    .model-select:disabled {
+      background: #e9e9eb;
+      cursor: not-allowed;
+    }
+
     .load-btn {
       width: 100%;
       padding: 0.6rem;
@@ -139,10 +155,19 @@
     </header>
 
     <div id="chat-history" class="chat-history">
-      <div class="message assistant">Hello! Click "Initialize WebGPU Engine" below to download the lightweight model directly into your browser's persistent cache.</div>
+      <div class="message assistant">Hello! Select a model from the dropdown below and click "Initialize" to download the weights directly into your browser's persistent cache.</div>
     </div>
 
     <div class="input-container">
+      
+      <!-- New Model Selection Dropdown (All 32-bit f32 for hardware compatibility) -->
+      <select id="model-select" class="model-select">
+        <option value="TinyLlama-1.1B-Chat-v1.0-q4f32_1-MLC">TinyLlama 1.1B (Fastest, ~670MB)</option>
+        <option value="Llama-3-8B-Instruct-q4f32_1-MLC">Llama 3 8B (High Quality, ~5GB)</option>
+        <option value="Phi-3-mini-4k-instruct-q4f32_1-MLC">Phi-3 Mini 4K (Balanced, ~2.2GB)</option>
+        <option value="gemma-2b-it-q4f32_1-MLC">Gemma 2B (Google, ~1.7GB)</option>
+      </select>
+
       <button id="load-btn" class="load-btn" onclick="initModel()">Initialize WebGPU Engine</button>
       
       <form class="message-form" onsubmit="handleSend(event)">
@@ -155,8 +180,6 @@
   <script type="module">
     import { CreateMLCEngine } from "https://esm.run/@mlc-ai/web-llm";
 
-    // Switched from f16 to f32 precision to resolve ShaderF16SupportError
-    const selectedModel = "TinyLlama-1.1B-Chat-v1.0-q4f32_1-MLC";
     let engine;
     const chatHistoryElement = document.getElementById("chat-history");
 
@@ -171,10 +194,15 @@
 
     window.initModel = async () => {
       const loadBtn = document.getElementById("load-btn");
+      const modelSelect = document.getElementById("model-select");
       const statusText = document.getElementById("status-text");
       const progressBar = document.getElementById("download-progress");
 
+      // Grab the user's selected model from the dropdown
+      const selectedModel = modelSelect.value;
+
       loadBtn.disabled = true;
+      modelSelect.disabled = true;
       progressBar.style.display = "block";
 
       try {
@@ -182,7 +210,6 @@
           selectedModel,
           {
             initProgressCallback: (report) => {
-              // The WebLLM progress object returns a float between 0 and 1
               if (report.progress !== undefined) {
                 const percent = Math.round(report.progress * 100);
                 progressBar.value = percent;
@@ -196,15 +223,22 @@
 
         statusText.innerText = "Model Ready (WebGPU)";
         progressBar.style.display = "none";
+        
+        // Hide the loading controls for a cleaner chat interface
         loadBtn.style.display = "none";
+        modelSelect.style.display = "none";
         
         document.getElementById("user-input").disabled = false;
         document.getElementById("send-btn").disabled = false;
-        appendMessage("assistant", "Hardware acceleration initialized successfully! Data will not leave your browser. How can I help you?");
+        
+        // Extract a friendly name for the welcome message
+        const friendlyName = modelSelect.options[modelSelect.selectedIndex].text.split('(')[0].trim();
+        appendMessage("assistant", `${friendlyName} initialized successfully! Data will not leave your browser. How can I help you?`);
       } catch (err) {
         statusText.innerText = "Failed to load model. Check console for details.";
         console.error("WebGPU Initialization Error:", err);
         loadBtn.disabled = false;
+        modelSelect.disabled = false;
         progressBar.style.display = "none";
       }
     };
@@ -222,7 +256,6 @@
       input.disabled = true;
       sendBtn.disabled = true;
 
-      // Create placeholder element for stream response
       const aiResponseElement = appendMessage("assistant", "...");
       
       try {
