@@ -3,11 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  
-  <!-- Explicit Content Security Policy to authorize WebAssembly compilation and Web Workers -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' 'unsafe-eval' https://unpkg.com; style-src 'self' 'unsafe-inline'; worker-src 'self' blob: https://unpkg.com; connect-src 'self' https://unpkg.com blob: data:;">
-  
-  <title>Local WebAssembly Chat</title>
+  <title>Local WebGPU Chat</title>
   <style>
     :root {
       --bg-color: #f5f5f7;
@@ -137,20 +133,17 @@
     <header>
       <h1>Local AI Assistant</h1>
       <div class="status-box">
-        <span id="status-text" class="status-text">Awaiting .gguf file</span>
+        <span id="status-text" class="status-text">Engine Standby</span>
         <progress id="download-progress" value="0" max="100" style="display: none;"></progress>
       </div>
     </header>
 
     <div id="chat-history" class="chat-history">
-      <div class="message assistant">Hello! Click "Select Local Model" to choose a .gguf file directly from your device storage.</div>
+      <div class="message assistant">Hello! Click "Initialize WebGPU Engine" below to download the lightweight model (~670MB) directly into your browser's persistent cache.</div>
     </div>
 
     <div class="input-container">
-      <!-- Hidden file input triggered by the button -->
-      <input type="file" id="model-file-input" accept=".gguf" style="display: none;" onchange="handleFileSelect(event)" />
-      
-      <button id="load-btn" class="load-btn" onclick="document.getElementById('model-file-input').click()">Select Local Model (.gguf)</button>
+      <button id="load-btn" class="load-btn" onclick="initModel()">Initialize WebGPU Engine</button>
       
       <form class="message-form" onsubmit="handleSend(event)">
         <input type="text" id="user-input" placeholder="Type a message..." disabled autocomplete="off" />
@@ -160,8 +153,10 @@
   </div>
 
   <script type="module">
-    import { Wllama } from "https://unpkg.com/@wllama/wllama/esm/index.js";
+    import { CreateMLCEngine } from "https://esm.run/@mlc-ai/web-llm";
 
+    // Switching to a robust, highly compatible 1.1B parameter model verified in the MLC registry
+    const selectedModel = "TinyLlama-1.1B-Chat-v1.0-q4f16_1-MLC";
     let engine;
     const chatHistoryElement = document.getElementById("chat-history");
 
@@ -174,51 +169,46 @@
       return msgDiv;
     }
 
-    // Handles the file selection from the user's device
-    window.handleFileSelect = async (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-
+    window.initModel = async () => {
       const loadBtn = document.getElementById("load-btn");
       const statusText = document.getElementById("status-text");
       const progressBar = document.getElementById("download-progress");
 
-      loadBtn.style.display = "none";
+      loadBtn.disabled = true;
       progressBar.style.display = "block";
-      progressBar.removeAttribute("value"); // Indeterminate progress
-      statusText.innerText = `Initializing Wllama Engine...`;
 
       try {
-        // 1. Initialize the Wllama WASM execution environment FIRST
-        engine = new Wllama({
-          "single-thread/wllama.wasm": "https://unpkg.com/@wllama/wllama/esm/single-thread/wllama.wasm",
-          "multi-thread/wllama.wasm": "https://unpkg.com/@wllama/wllama/esm/multi-thread/wllama.wasm"
-        });
+        engine = await CreateMLCEngine(
+          selectedModel,
+          {
+            initProgressCallback: (report) => {
+              // The WebLLM progress object returns a float between 0 and 1
+              if (report.progress !== undefined) {
+                const percent = Math.round(report.progress * 100);
+                progressBar.value = percent;
+                statusText.innerText = `Caching Tensors: ${percent}%`;
+              } else {
+                statusText.innerText = report.text;
+              }
+            }
+          }
+        );
 
-        statusText.innerText = "Loading model safely...";
-
-        // 2. Pass the File object directly inside an array (No ArrayBuffer!)
-        // 3. Restrict n_ctx (memory window) so it doesn't crash allocating the KV Cache
-        await engine.loadModel([file], {
-           n_ctx: 1024 // Restrict conversation memory to a safe size (1024 tokens)
-        });
-
-        // Update UI state on success
-        statusText.innerText = "Model Ready (WebAssembly)";
+        statusText.innerText = "Model Ready (WebGPU)";
         progressBar.style.display = "none";
+        loadBtn.style.display = "none";
+        
         document.getElementById("user-input").disabled = false;
         document.getElementById("send-btn").disabled = false;
-        
-        appendMessage("assistant", `Successfully loaded ${file.name} from your device! How can I help you?`);
+        appendMessage("assistant", "Hardware acceleration initialized successfully! Data will not leave your browser. How can I help you?");
       } catch (err) {
-        statusText.innerText = "Error loading model. Check console for details.";
-        console.error("Initialization error:", err);
-        loadBtn.style.display = "block";
+        statusText.innerText = "Failed to load model. Check console for details.";
+        console.error("WebGPU Initialization Error:", err);
+        loadBtn.disabled = false;
         progressBar.style.display = "none";
       }
     };
 
-    // Handles the chat generation logic
     window.handleSend = async (e) => {
       e.preventDefault();
       const input = document.getElementById("user-input");
@@ -232,21 +222,20 @@
       input.disabled = true;
       sendBtn.disabled = true;
 
+      // Create placeholder element for stream response
       const aiResponseElement = appendMessage("assistant", "...");
       
       try {
-        let fullResponse = "";
+        const messages = [{ role: "user", content: prompt }];
+        const chunks = await engine.chat.completions.create({ messages, stream: true });
         
-        // Wllama's completion API
-        await engine.createCompletion(prompt, {
-          nPredict: 500,
-          sampling: { temp: 0.7, top_k: 40, top_p: 0.9 },
-          onNewToken: (token, piece, currentText) => {
-            fullResponse += piece;
-            aiResponseElement.innerText = fullResponse;
-            chatHistoryElement.scrollTop = chatHistoryElement.scrollHeight;
-          }
-        });
+        let fullResponse = "";
+        for await (const chunk of chunks) {
+          const content = chunk.choices[0]?.delta?.content || "";
+          fullResponse += content;
+          aiResponseElement.innerText = fullResponse;
+          chatHistoryElement.scrollTop = chatHistoryElement.scrollHeight;
+        }
       } catch (err) {
         aiResponseElement.innerText = "Error generating response.";
         console.error("Inference error:", err);
