@@ -22,23 +22,19 @@
     }
     
     html, body {
-      /* Use dvh for mobile UI shifts, fallback to 100vh for older browsers */
       height: 100vh;
       height: 100dvh; 
       width: 100%;
       background-color: var(--bg-color);
-      /* Prevent the whole page from rubber-banding, but allow children to scroll */
       overflow: hidden; 
     }
 
-    /* Wrap everything in a flex container that perfectly fills the screen */
     body {
       display: flex; 
       justify-content: center; 
       align-items: center;
     }
 
-    /* Mobile Container Wrapper */
     .app-container {
       width: 100%;
       max-width: 480px;
@@ -49,7 +45,6 @@
       box-shadow: 0 0 20px rgba(0,0,0,0.05);
     }
 
-    /* Top Bar Header */
     header {
       padding: 1rem;
       border-bottom: 1px solid #e5e5e5;
@@ -59,7 +54,6 @@
     }
     header h1 { font-size: 1.1rem; font-weight: 600; color: var(--text-main); }
     
-    /* Model Progress Section */
     .status-box {
       margin-top: 0.5rem;
       display: flex;
@@ -72,7 +66,6 @@
     progress::-webkit-progress-bar { background-color: #e5e5e5; }
     progress::-webkit-progress-value { background-color: var(--user-msg); transition: width 0.2s ease; }
 
-    /* Chat Area */
     .chat-history {
       flex: 1;
       padding: 1rem;
@@ -104,7 +97,6 @@
       border-bottom-left-radius: 4px;
     }
 
-    /* Controls & Input Area */
     .input-container {
       padding: 0.75rem 1rem;
       border-top: 1px solid #e5e5e5;
@@ -112,11 +104,9 @@
       display: flex;
       flex-direction: column;
       gap: 0.5rem;
-      /* Ensures padding exists at the very bottom on modern iOS devices */
       padding-bottom: calc(0.75rem + env(safe-area-inset-bottom));
     }
 
-    /* Dropdown Styling */
     .model-select {
       width: 100%;
       padding: 0.6rem;
@@ -130,6 +120,16 @@
     .model-select:disabled {
       background: #e9e9eb;
       cursor: not-allowed;
+    }
+
+    /* Style for optgroup to make it readable */
+    optgroup {
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+    option {
+      color: var(--text-main);
+      font-weight: normal;
     }
 
     .load-btn {
@@ -178,17 +178,23 @@
     </header>
 
     <div id="chat-history" class="chat-history">
-      <div class="message assistant">Hello! Select a model from the dropdown below and click "Initialize" to download the weights directly into your browser's persistent cache.</div>
+      <div class="message assistant">Hello! Select a model from the dropdown below. Use an "f16" model for mobile devices, and an "f32" model for older desktops.</div>
     </div>
 
     <div class="input-container">
       
-      <!-- Model Selection Dropdown (All 32-bit f32 for hardware compatibility) -->
+      <!-- Grouped Model Selection Dropdown -->
       <select id="model-select" class="model-select">
-        <option value="TinyLlama-1.1B-Chat-v1.0-q4f32_1-MLC">TinyLlama 1.1B (Fastest, ~670MB)</option>
-        <option value="Llama-3-8B-Instruct-q4f32_1-MLC">Llama 3 8B (High Quality, ~5GB)</option>
-        <option value="Phi-3-mini-4k-instruct-q4f32_1-MLC">Phi-3 Mini 4K (Balanced, ~2.2GB)</option>
-        <option value="gemma-2b-it-q4f32_1-MLC">Gemma 2B (Google, ~1.7GB)</option>
+        <optgroup label="Mobile / Modern GPU (f16 - Lower Memory)">
+          <option value="TinyLlama-1.1B-Chat-v1.0-q4f16_1-MLC">TinyLlama 1.1B (f16) - Fastest</option>
+          <option value="Llama-3-8B-Instruct-q4f16_1-MLC">Llama 3 8B (f16) - High Quality</option>
+          <option value="Phi-3-mini-4k-instruct-q4f16_1-MLC">Phi-3 Mini 4K (f16) - Balanced</option>
+        </optgroup>
+        <optgroup label="Older Desktop Fallback (f32 - High Memory)">
+          <option value="TinyLlama-1.1B-Chat-v1.0-q4f32_1-MLC">TinyLlama 1.1B (f32)</option>
+          <option value="Llama-3-8B-Instruct-q4f32_1-MLC">Llama 3 8B (f32)</option>
+          <option value="Phi-3-mini-4k-instruct-q4f32_1-MLC">Phi-3 Mini (f32)</option>
+        </optgroup>
       </select>
 
       <button id="load-btn" class="load-btn" onclick="initModel()">Initialize WebGPU Engine</button>
@@ -221,7 +227,6 @@
       const statusText = document.getElementById("status-text");
       const progressBar = document.getElementById("download-progress");
 
-      // Grab the user's selected model from the dropdown
       const selectedModel = modelSelect.value;
 
       loadBtn.disabled = true;
@@ -247,14 +252,12 @@
         statusText.innerText = "Model Ready (WebGPU)";
         progressBar.style.display = "none";
         
-        // Hide the loading controls for a cleaner chat interface
         loadBtn.style.display = "none";
         modelSelect.style.display = "none";
         
         document.getElementById("user-input").disabled = false;
         document.getElementById("send-btn").disabled = false;
         
-        // Extract a friendly name for the welcome message
         const friendlyName = modelSelect.options[modelSelect.selectedIndex].text.split('(')[0].trim();
         appendMessage("assistant", `${friendlyName} initialized successfully! Data will not leave your browser. How can I help you?`);
       } catch (err) {
@@ -283,6 +286,8 @@
       
       try {
         const messages = [{ role: "user", content: prompt }];
+        
+        // We catch inference errors specifically to detect silent GPU crashes 
         const chunks = await engine.chat.completions.create({ messages, stream: true });
         
         let fullResponse = "";
@@ -293,7 +298,7 @@
           chatHistoryElement.scrollTop = chatHistoryElement.scrollHeight;
         }
       } catch (err) {
-        aiResponseElement.innerText = "Error generating response.";
+        aiResponseElement.innerText = "Error: The graphics process crashed, likely due to mobile memory limits. Please reload the page and ensure you are using an 'f16' model.";
         console.error("Inference error:", err);
       }
 
