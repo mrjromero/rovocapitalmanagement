@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Technical Reference Manual: Freedom Date Calculator Engine</title>
+    <!-- MathJax Configuration for Google Docs import compatibility -->
+    <script>
+        MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']]
+            },
+            svg: {
+                fontCache: 'global'
+            }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            color: #333333;
+            line-height: 1.6;
+            margin: 40px;
+            max-width: 900px;
+        }
+        h1 {
+            color: #1e3a8a;
+            border-bottom: 2px solid #1e3a8a;
+            padding-bottom: 8px;
+            font-size: 24pt;
+        }
+        h2 {
+            color: #0f172a;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 6px;
+            margin-top: 28px;
+            font-size: 16pt;
+        }
+        h3 {
+            color: #1e3a8a;
+            margin-top: 20px;
+            font-size: 13pt;
+        }
+        ul {
+            margin-top: 6px;
+            margin-bottom: 16px;
+        }
+        li {
+            margin-bottom: 4px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 10.5pt;
+        }
+        th, td {
+            border: 1px solid #cbd5e1;
+            padding: 10px 12px;
+            text-align: left;
+        }
+        th {
+            background-color: #f1f5f9;
+            color: #0f172a;
+            font-weight: bold;
+        }
+        tr:nth-child(even) {
+            background-color: #f8fafc;
+        }
+        .math-block {
+            background-color: #f8fafc;
+            border-left: 4px solid #1e3a8a;
+            padding: 12px 16px;
+            margin: 16px 0;
+            overflow-x: auto;
+        }
+        .pipeline-box {
+            background-color: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            border-radius: 6px;
+            padding: 16px;
+            margin: 20px 0;
+            font-size: 10pt;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Technical Reference Manual: Freedom Date Calculator Engine</h1>
+
+    <h2>1. Core Financial Architecture & Parameter Definitions</h2>
+    <p>The application projects wealth accumulation, portfolio leverage, and net cash flow under two distinct operational paradigms: <strong>Traditional (Linear Savings & Drawdown)</strong> and <strong>Stacking (Positive Carry Capital Amplifier)</strong>.</p>
+
+    <h3>System Parameters & Inputs</h3>
+    <ul>
+        <li><strong>$I$</strong>: Total Monthly Gross Income ($/mo)</li>
+        <li><strong>$E_0$</strong>: Baseline Monthly Living Expenses ($/mo)</li>
+        <li><strong>$E_m$</strong>: Inflated Monthly Living Expenses at Month $m$</li>
+        <li><strong>$E_{target}$</strong>: Target Annualized Living Expenses ($/yr)</li>
+        <li><strong>$Q_0$</strong>: Starting Portfolio Net Equity ($)</li>
+        <li><strong>$i_{inf}$</strong>: Annual Inflation Rate (%)</li>
+        <li><strong>$r_a$</strong>: Expected Annual Capital Appreciation Rate (%)</li>
+        <li><strong>$y$</strong>: Target Annual Cash Distribution Yield Rate (%)</li>
+        <li><strong>$r_m$</strong>: Annual Margin Borrowing Rate (%)</li>
+        <li><strong>$L_{DTA}$</strong>: Strategic Target Debt-to-Asset Ratio ($DTA = \frac{\text{Debt}}{\text{Assets}}$)</li>
+        <li><strong>$L_{max}$</strong>: Maximum Credit Line Borrowing Limit (%)</li>
+        <li><strong>$M_{maint}$</strong>: Maintenance Margin Threshold (%)</li>
+        <li><strong>$\sigma_{ann}$</strong>: Annualized Price Volatility / Standard Deviation (%)</li>
+    </ul>
+
+    <h2>2. Time-Step & Rates Conversion Engine</h2>
+    <p>All annual rates are converted to monthly discrete steps within the simulation engine:</p>
+    
+    <div class="math-block">
+        $$\begin{aligned}
+        r_{inf, m} &= (1 + i_{inf})^{1/12} - 1 \quad \text{(Compounded monthly inflation rate)} \\
+        \mu_{app, m} &= \frac{r_a}{12} \quad \text{(Monthly mean capital appreciation rate)} \\
+        y_m &= \frac{y}{12} \quad \text{(Monthly distribution yield rate)} \\
+        r_{margin, m} &= \frac{r_m}{12} \quad \text{(Monthly margin interest rate)} \\
+        \sigma_m &= \frac{\sigma_{ann}}{\sqrt{12}} \quad \text{(Monthly volatility standard deviation)}
+        \end{aligned}$$
+    </div>
+
+    <h3>Stochastic Appreciation Factor</h3>
+    <p>When volatility is enabled ($\sigma_{ann} > 0$), price appreciation for month $m$ and simulation run $s$ is drawn via Box-Muller transformation:</p>
+    <div class="math-block">
+        $$R_{app, m, s} = \mu_{app, m} + \left( Z_{m, s} \cdot \sigma_m \right) \quad \text{where } Z_{m,s} \sim \mathcal{N}(0,1)$$
+    </div>
+    <p>When volatility is toggled off ($\sigma_{ann} = 0$), $R_{app, m, s} = \mu_{app, m}$.</p>
+
+    <h2>3. Freedom Target Calculations</h2>
+    <p>The Freedom Target represents the required liquid net equity ($Q_{target}$) needed to produce sufficient net income to cover living expenses without selling assets.</p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Mode</th>
+                <th>Required Net Equity Formula</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Traditional Mode</strong></td>
+                <td>$$Q_{target} = \frac{E_{target}}{y}$$</td>
+            </tr>
+            <tr>
+                <td><strong>Stacking Mode (Positive Carry)</strong></td>
+                <td>$$Q_{target} = \frac{E_{target} \cdot (1 - L_{DTA})}{y_{net\_eff}}$$</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3>Traditional Mode Target</h3>
+    <p>Traditional mode assumes an unleveraged portfolio ($L_{DTA} = 0$). Net portfolio yield equals the cash distribution rate $y$:</p>
+    <div class="math-block">
+        $$Q_{target, trad}(m) = \frac{E_{target}(m)}{y} = \frac{E_m \cdot 12}{y}$$
+    </div>
+
+    <h3>Stacking Mode Target</h3>
+    <p>Stacking utilizes strategic leverage ($L_{DTA} > 0$) to control a larger gross asset base ($A$). The effective net yield ($y_{net\_eff}$) accounts for the cost of margin debt:</p>
+    <div class="math-block">
+        $$y_{net\_eff} = \max\left(0.001, \, y - (L_{DTA} \cdot r_m)\right)$$
+        $$Q_{target, stack}(m) = \frac{E_{target}(m) \cdot (1 - L_{DTA})}{y_{net\_eff}} = \frac{(E_m \cdot 12) \cdot (1 - L_{DTA})}{y - (L_{DTA} \cdot r_m)}$$
+    </div>
+
+    <h2>4. Monthly Iteration Engines</h2>
+
+    <h3>Mode 1: Traditional Engine (Unleveraged Grind)</h3>
+    <p>Traditional mode pools all external cash leftovers into un-levered liquid equity. If expenses exceed income, capital is withdrawn from net equity.</p>
+    <p>For each month $m$ and simulation iteration $s$:</p>
+    <ol>
+        <li><strong>Calculate Inflated Expenses:</strong>
+            $$E_m = E_0 \cdot (1 + r_{inf, m})^m$$
+        </li>
+        <li><strong>Calculate Net Monthly Cash Surplus/Deficit:</strong>
+            $$\Delta C_m = I - E_m$$
+        </li>
+        <li><strong>Update Net Portfolio Equity ($Q_{m, s}$):</strong>
+            $$Q_{m, s} = \max\left(0, \; Q_{m-1, s} + \left(Q_{m-1, s} \cdot R_{app, m, s}\right) + \left(Q_{m-1, s} \cdot y_m\right) + \Delta C_m\right)$$
+        </li>
+    </ol>
+
+    <h3>Mode 2: Stacking Engine (Positive Carry Amplifier)</h3>
+    <p>Stacking models gross assets ($A$), margin debt ($D$), and net equity ($Q = A - D$). High-yield cash flow and active income are 100% swept against debt, while margin absorbs any expense deficits.</p>
+
+    <div class="pipeline-box">
+        <strong>Stacking State Pipeline Flow:</strong><br>
+        1. <code>[Initial Equity Q]</code> &rarr; <code>[Gross Assets A = Q / (1 - L_DTA)]</code> &rarr; <code>[Margin Debt D = A - Q]</code><br>
+        2. <code>[Monthly Asset Evolution]</code> &rarr; Apply $R_{app}$ to $A$<br>
+        3. <code>[Debt Sweep]</code> &rarr; Update $D$ with distributions, active income, expenses, and interest charges<br>
+        4. <code>[Rebalancing Engine]</code> &rarr; Recouple leverage back to target $L_{DTA}$ if required
+    </div>
+
+    <p>For each month $m$ and simulation iteration $s$:</p>
+    <ol>
+        <li><strong>Asset Price Evolution:</strong>
+            $$A_{curr} = A_{m-1, s} \cdot (1 + R_{app, m, s})$$
+        </li>
+        <li><strong>Income & Cost Sweeps on Debt Balance:</strong>
+            <div class="math-block">
+                $$\begin{aligned}
+                \text{Distribution Yield Income} &= A_{m-1, s} \cdot y_m \\
+                \text{Margin Interest Charge} &= D_{m-1, s} \cdot r_{margin, m} \\
+                \text{Float Juice Adjustment} &= I \cdot (\mu_{app, m} + y_m)
+                \end{aligned}$$
+
+                $$\Delta D_m = E_m + \text{Margin Interest Charge} - I - \text{Distribution Yield Income} - \text{Float Juice Adjustment}$$
+                $$D_{curr} = D_{m-1, s} + \Delta D_m$$
+            </div>
+        </li>
+        <li><strong>Calculate Unadjusted Net Equity:</strong>
+            $$Q_{curr} = A_{curr} - D_{curr}$$
+        </li>
+        <li><strong>Equity Rebalancing & Leveraged Recoupling:</strong><br>
+            If $Q_{curr} \le 0$, the portfolio suffers total liquidation ($A_{m, s} = 0$, $D_{m, s} = 0$, $Q_{m, s} = 0$).<br><br>
+            If $Q_{curr} > 0$, compare actual leverage ($L_{curr} = \frac{D_{curr}}{A_{curr}}$) to $L_{DTA}$:
+            <div class="math-block">
+                $$\text{If } L_{curr} < L_{DTA}: \quad \begin{cases} 
+                A_{target} = \dfrac{Q_{curr}}{1 - L_{DTA}} \\[8pt]
+                \Delta D_{borrow} = A_{target} - A_{curr} \\[4pt]
+                A_{m, s} = A_{curr} + \Delta D_{borrow} \\[4pt]
+                D_{m, s} = D_{curr} + \Delta D_{borrow}
+                \end{cases}$$
+
+                $$\text{If } L_{curr} \ge L_{DTA}: \quad \begin{cases} 
+                A_{m, s} = A_{curr} \\[4pt]
+                D_{m, s} = D_{curr}
+                \end{cases}$$
+            </div>
+        </li>
+        <li><strong>Final Net Equity:</strong>
+            $$Q_{m, s} = A_{m, s} - D_{m, s}$$
+        </li>
+    </ol>
+
+    <h2>5. Risk Guardrails & Liquidity Metrics</h2>
+
+    <h3>Credit Line Utilization</h3>
+    <p>Given maximum allowable leverage factor $L_{max}$:</p>
+    <div class="math-block">
+        $$\begin{aligned}
+        \text{Total Credit Line} &= A \cdot L_{max} \\
+        \text{Credit Utilization (\%)} &= \begin{cases}
+        \left(\frac{D}{A \cdot L_{max}}\right) \cdot 100 & \text{if } A > 0 \\
+        0 & \text{if } A = 0
+        \end{cases}
+        \end{aligned}$$
+    </div>
+
+    <h3>Downside Drop to Margin Call</h3>
+    <p>Given maintenance margin requirement $M_{maint}$ (minimum equity percentage $\frac{Q}{A} \ge M_{maint}$):</p>
+    <div class="math-block">
+        $$\begin{aligned}
+        A_{call} &= \frac{D}{1 - M_{maint}} \quad \text{(Asset value triggering a margin call)} \\
+        \text{Drop to Margin Call (\%)} &= \begin{cases}
+        \left(\frac{A - A_{call}}{A}\right) \cdot 100 & \text{if } D > 0 \text{ and } M_{maint} < 1 \\
+        100\% & \text{if } D = 0
+        \end{cases}
+        \end{aligned}$$
+    </div>
+
+    <h2>6. Optimization Engine (<code>optimizeArchitecture</code>)</h2>
+    <p>Executes a bounded grid search over parameter spaces to identify configurations yielding the fastest time-to-freedom ($m_{freedom}$) while satisfying safety guardrails.</p>
+
+    <h3>Bounded Search Domain</h3>
+    <ul>
+        <li>$L_{DTA} \in [15\%, 35\%]$, step $= 2.5\%$</li>
+        <li>$y \in [8\%, 15\%]$, step $= 0.5\%$</li>
+    </ul>
+
+    <h3>Evaluation Constraints & Guardrail Rules</h3>
+    <ol>
+        <li><strong>Positive Carry Constraint:</strong> Annual spread must be strictly positive:
+            $$(A_0 \cdot y) - (D_0 \cdot r_m) > 0 \quad \text{where } A_0 = \frac{Q_0}{1 - L_{DTA}}, \; D_0 = A_0 - Q_0$$
+        </li>
+        <li><strong>Credit Utilization Guardrail:</strong> $\text{Utilization} \le 70\%$</li>
+        <li><strong>Margin Call Cushion Guardrail:</strong> $\text{Drop to Margin Call} \ge 25\%$</li>
+        <li><strong>Monthly Net Cash Flow Constraint:</strong>
+            $$\left(I - E_0\right) + \frac{(A_0 \cdot y) - (D_0 \cdot r_m)}{12} > 0$$
+        </li>
+    </ol>
+
+    <h3>Objective Function</h3>
+    <p>Minimize estimated months to target ($m_{est}$):</p>
+    <div class="math-block">
+        $$m_{est} = \frac{Q_{target, stack} - Q_0}{(I - E_0) + \frac{(A_0 \cdot y) - (D_0 \cdot r_m)}{12}}$$
+    </div>
+    <p>Capital appreciation ($r_a$) scales dynamically based on yield aggression:</p>
+    <div class="math-block">
+        $$r_a = \begin{cases}
+        2.5\% & \text{if } y \ge 12\% \\
+        3.5\% & \text{if } 10\% \le y < 12\% \\
+        4.5\% & \text{if } y < 10\%
+        \end{cases}$$
+    </div>
+
+    <h2>7. Stochastic Monte Carlo Engine</h2>
+    <ul>
+        <li><strong>Sample Size:</strong> $N = 500$ trajectories.</li>
+        <li><strong>Duration:</strong> $M = 360$ months (30 years).</li>
+        <li><strong>Percentile Aggregations:</strong> Array values at month $m$ across all $N$ runs are sorted ascendingly to derive distribution boundaries:
+            <ul>
+                <li><strong>$P_{10}$ (Conservative):</strong> Value at index $\lfloor 0.10 \times N \rfloor$</li>
+                <li><strong>$P_{50}$ (Expected / Median):** Value at index $\lfloor 0.50 \times N \rfloor$</li>
+                <li><strong>$P_{90}$ (Optimistic):</strong> Value at index $\lfloor 0.90 \times N \rfloor$</li>
+            </ul>
+        </li>
+    </ul>
+
+</body>
+</html>
