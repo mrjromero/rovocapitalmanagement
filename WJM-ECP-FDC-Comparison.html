@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Technical Document: Financial Architecture Alignment & Validation</title>
+  <!-- MathJax Configuration & Script for Math Rendering -->
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']]
+      }
+    };
+  </script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <style>
+    :root {
+      --text-main: #1e293b;
+      --text-muted: #64748b;
+      --bg-page: #f8fafc;
+      --bg-card: #ffffff;
+      --border: #e2e8f0;
+      --accent: #2563eb;
+      --accent-light: #eff6ff;
+      --pass-bg: #ecfdf5;
+      --pass-text: #065f46;
+      --fail-bg: #fef2f2;
+      --fail-text: #991b1b;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg-page);
+      color: var(--text-main);
+      line-height: 1.6;
+      margin: 0;
+      padding: 32px 16px;
+    }
+    .container {
+      max-width: 920px;
+      margin: 0 auto;
+      background: var(--bg-card);
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+      border: 1px solid var(--border);
+    }
+    h1 {
+      font-size: 1.85rem;
+      font-weight: 700;
+      color: #0f172a;
+      margin-top: 0;
+      padding-bottom: 12px;
+      border-bottom: 2px solid var(--border);
+    }
+    h2 {
+      font-size: 1.35rem;
+      font-weight: 600;
+      color: #1e293b;
+      margin-top: 36px;
+      margin-bottom: 16px;
+    }
+    h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #334155;
+      margin-top: 24px;
+      margin-bottom: 8px;
+    }
+    p {
+      margin: 12px 0;
+    }
+    ul, ol {
+      margin: 8px 0 16px 20px;
+      padding-left: 8px;
+    }
+    li {
+      margin-bottom: 6px;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 32px 0;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+      font-size: 0.92rem;
+    }
+    th, td {
+      border: 1px solid var(--border);
+      padding: 10px 14px;
+      text-align: left;
+    }
+    th {
+      background-color: #f1f5f9;
+      font-weight: 600;
+      color: #334155;
+    }
+    tr:nth-child(even) td {
+      background-color: #f8fafc;
+    }
+    .math-block {
+      background-color: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px 20px;
+      margin: 14px 0;
+      overflow-x: auto;
+    }
+    .badge-pass {
+      display: inline-block;
+      background: var(--pass-bg);
+      color: var(--pass-text);
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.85rem;
+    }
+    .badge-fail {
+      display: inline-block;
+      background: var(--fail-bg);
+      color: var(--fail-text);
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.85rem;
+    }
+    .callout {
+      background-color: var(--accent-light);
+      border-left: 4px solid var(--accent);
+      padding: 14px 18px;
+      margin: 18px 0;
+      border-radius: 0 8px 8px 0;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+
+  <h1>Technical Document: Financial Architecture Alignment & Validation</h1>
+
+  <h2>Overview & Benchmarking Objective</h2>
+  <p>
+    This document details the comparative benchmarking and mathematical validation across three core financial modeling tools: 
+    <strong>Freedom Date Calculator</strong>, <strong>Wealth Journey Map</strong>, and <strong>Expense Coverage Planner</strong>.
+  </p>
+  <p>
+    The objective is to align all three applications to a standardized set of financial parameters, verify the internal mathematical 
+    consistency of each engine, and analyze how their differing cash flow mechanics and endpoint definitions impact long-term portfolio modeling.
+  </p>
+
+  <hr>
+
+  <h2>Harmonized Parameter Baseline</h2>
+  <p>To ensure an exact apples-to-apples comparison, economic variables were mapped across all three platforms:</p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Economic Parameter</th>
+        <th>Freedom Date Calculator</th>
+        <th>Expense Coverage Planner</th>
+        <th>Wealth Journey Map</th>
+        <th>Normalized Value</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Starting Net Equity</strong></td>
+        <td>Current Portfolio Equity</td>
+        <td>Implied ($100k Assets − $25k Debt)</td>
+        <td>Implied ($100k Assets − $25k Debt)</td>
+        <td><strong>$75,000</strong></td>
+      </tr>
+      <tr>
+        <td><strong>Starting Gross Assets</strong></td>
+        <td>Implied via DTA ($115,385 at 35%)</td>
+        <td>Portfolio Value</td>
+        <td>Total Assets Today</td>
+        <td><strong>$100,000</strong> <em>(Explicit)</em></td>
+      </tr>
+      <tr>
+        <td><strong>Starting Debt</strong></td>
+        <td>Implied via DTA ($40,385 at 35%)</td>
+        <td>Margin Debt</td>
+        <td>Total Debt Today</td>
+        <td><strong>$25,000</strong> <em>(25% initial)</em></td>
+      </tr>
+      <tr>
+        <td><strong>Living Expenses (Today)</strong></td>
+        <td>Monthly Living Expenses</td>
+        <td>Monthly Living Expenses</td>
+        <td>Current Monthly Living Expenses</td>
+        <td><strong>$5,000 / month</strong></td>
+      </tr>
+      <tr>
+        <td><strong>Monthly Active Surplus</strong></td>
+        <td>$10,000 Gross − $5,000 Expenses</td>
+        <td>Monthly Contribution</td>
+        <td>Implicit in timeline growth</td>
+        <td><strong>$5,000 / month</strong></td>
+      </tr>
+      <tr>
+        <td><strong>Annual Inflation Rate</strong></td>
+        <td>Annual Inflation Rate</td>
+        <td>Annual Inflation Rate</td>
+        <td>Expected Inflation Rate</td>
+        <td><strong>5.00%</strong></td>
+      </tr>
+      <tr>
+        <td><strong>Asset Appreciation Rate</strong></td>
+        <td>Expected Annual Return</td>
+        <td>Portfolio Growth Rate (Annual)</td>
+        <td>Asset Growth Rate</td>
+        <td><strong>4.00%</strong></td>
+      </tr>
+      <tr>
+        <td><strong>Portfolio Cash Yield</strong></td>
+        <td>Target Cash Yield</td>
+        <td>Yield (Paid in Cash)</td>
+        <td>Target Portfolio Yield</td>
+        <td><strong>15.00%</strong></td>
+      </tr>
+      <tr>
+        <td><strong>Borrowing Cost</strong></td>
+        <td>Margin Interest Rate</td>
+        <td>Interest Rate on Margin</td>
+        <td>Expected Borrowing Rate</td>
+        <td><strong>5.15%</strong></td>
+      </tr>
+      <tr>
+        <td><strong>Growth Phase Leverage</strong></td>
+        <td>Strategic Leverage (DTA)</td>
+        <td>Maximum DTA Guardrail</td>
+        <td>Target DTA During Grow Phase</td>
+        <td><strong>35.00%</strong></td>
+      </tr>
+      <tr>
+        <td><strong>Exit Phase Leverage</strong></td>
+        <td>35.00% <em>(Constant)</em></td>
+        <td>35.00% <em>(Constraint limit)</em></td>
+        <td>Target DTA at Financial Freedom</td>
+        <td><strong>25.00%</strong></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <hr>
+
+  <h2>Individual Application Analysis & Mathematical Validation</h2>
+
+  <h3>1. Freedom Date Calculator (Velocity & Milestone Architecture)</h3>
+  <ul>
+    <li><strong>Core Function:</strong> Calculates the exact date when net portfolio cash distributions permanently cover inflation-adjusted baseline living expenses using a leveraged cash flow stacking model.</li>
+    <li><strong>Key Outputs:</strong>
+      <ul>
+        <li><strong>Expected Freedom Date:</strong> <strong>January 2029 (2.4 Years / 29 Months)</strong></li>
+        <li><strong>Inflated Target Living Expenses:</strong> <strong>$5,626 / month</strong></li>
+        <li><strong>Required Net Portfolio Equity:</strong> <strong>$332,491</strong></li>
+        <li><strong>Drop to Margin Call Buffer:</strong> <strong>50.00%</strong></li>
+        <li><strong>Credit Line Utilization:</strong> <strong>70.00%</strong> (35% DTA relative to 50% max allowable credit line)</li>
+      </ul>
+    </li>
+  </ul>
+
+  <div class="math-block">
+    <p><strong>Mathematical Proof:</strong></p>
+    <p>1. Expense Inflation over $t = 2.4\text{ years}$ at $i = 5.0\%/year$:</p>
+    $$\text{Target Monthly Expenses} = \$5,000 \times (1 + 0.05)^{2.4} = \mathbf{\$5,626.05 / \text{month}}$$
+    
+    <p>2. Net Yield on Equity ($R_e$) at 35% DTA ($1.5385 gross assets, $0.5385 debt per $1.00 equity):</p>
+    $$R_e = \frac{(0.15 \times 1.5385) - (0.0515 \times 0.5385)}{1.0} = 23.077\% - 2.773\% = \mathbf{20.304\%}$$
+
+    <p>3. Required Net Portfolio Equity ($E_{\text{req}}$):</p>
+    $$E_{\text{req}} = \frac{\$5,626.05 \times 12}{0.20304} = \mathbf{\$332,491.43}$$
+
+    <p>4. Margin Call Buffer with 30% Maintenance Margin Requirement:</p>
+    $$\text{Allowable Asset Drop} = 1 - \frac{35\%}{100\% - 30\%} = 1 - \frac{0.35}{0.70} = \mathbf{50.00\%}$$
+  </div>
+
+  <h3>2. Wealth Journey Map (Macro Target & Structural Deleveraging)</h3>
+  <ul>
+    <li><strong>Core Function:</strong> Establishes the macro-level capital requirements and structural debt paydown architecture needed to support an aspirational $10,000/month lifestyle (plus a 10% safety coverage buffer).</li>
+    <li><strong>Key Outputs:</strong>
+      <ul>
+        <li><strong>Inflated Freedom Target (5 Years):</strong> <strong>$14,039 / month</strong> ($168,469 / year)</li>
+        <li><strong>Standard Path Target:</strong> Minimum Income Assets = <strong>$1,228,599</strong> | Maximum Debt = <strong>$430,010</strong> (35% DTA)</li>
+        <li><strong>Freedom Portfolio Terminal Debt:</strong> <strong>$307,150</strong> (25% DTA)</li>
+        <li><strong>Accelerated Path Target:</strong> Overshoot Assets = <strong>$1,417,614</strong> | Peak Debt = <strong>$496,165</strong> | Surplus Asset Sale = <strong>$189,015</strong></li>
+      </ul>
+    </li>
+  </ul>
+
+  <div class="math-block">
+    <p><strong>Mathematical Proof:</strong></p>
+    <p>1. Target Monthly Cash Flow Requirement:</p>
+    $$\text{Target Monthly Cash Flow} = \$10,000 \times (1 + 0.05)^5 \times 1.10 = \mathbf{\$14,039.10 / \text{month}}$$
+
+    <p>2. Terminal Freedom Assets ($A_{\text{terminal}}$) at 25% Exit DTA:</p>
+    $$A_{\text{terminal}} = \frac{\$168,469.20}{0.15 - (0.25 \times 0.0515)} = \frac{\$168,469.20}{0.137125} = \mathbf{\$1,228,599.45}$$
+
+    <p>3. Terminal Target Debt Load:</p>
+    $$\text{Terminal Debt} = \$1,228,599.45 \times 0.25 = \mathbf{\$307,149.86}$$
+
+    <p>4. Accelerated Path Asset Overshoot ($S$):</p>
+    $$S = \frac{(0.35 \times \$1,228,599.45) - \$307,149.86}{1 - 0.35} = \frac{\$122,859.95}{0.65} = \mathbf{\$189,015.30}$$
+    $$\text{Peak Overshoot Assets} = \$1,228,599.45 + \$189,015.30 = \mathbf{\$1,417,614.75}$$
+    $$\text{Peak Overshoot Debt} = \$1,417,614.75 \times 0.35 = \mathbf{\$496,165.16}$$
+  </div>
+
+  <h3>3. Expense Coverage Planner (Operational Cash Flow Simulation)</h3>
+  <ul>
+    <li><strong>Core Function:</strong> Runs a month-by-month tactical stress test over a 60-month horizon to verify whether active contributions and dividend sweeps maintain guardrail compliance.</li>
+    <li><strong>Key Outputs:</strong>
+      <ul>
+        <li><strong>Final Portfolio Value:</strong> <strong>$454,703</strong> (354.70% total growth)</li>
+        <li><strong>Cumulative Cash Distributions:</strong> <strong>$201,373</strong> generated</li>
+        <li><strong>Cumulative Margin Interest:</strong> <strong>$30,741</strong> paid</li>
+        <li><strong>Minimum DSCR:</strong> <strong>6.18</strong> <span class="badge-pass">PASS</span> (Well above the 1.50 minimum floor)</li>
+        <li><strong>Peak DTA:</strong> <strong>47.15%</strong> <span class="badge-fail">FAIL</span> (Breaches the 35.00% maximum ceiling)</li>
+        <li><strong>Overall Status:</strong> <strong>🔴 No Pass – Plan exceeds one or more guardrails</strong></li>
+      </ul>
+    </li>
+  </ul>
+
+  <hr>
+
+  <h2>Cross-Model Comparison Matrix</h2>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Dimension</th>
+        <th>Freedom Date Calculator</th>
+        <th>Wealth Journey Map</th>
+        <th>Expense Coverage Planner</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Primary Strategic Role</strong></td>
+        <td>Timeline & Velocity Optimizer</td>
+        <td>Macro Capital Target Architecture</td>
+        <td>Tactical Solvency Stress-Tester</td>
+      </tr>
+      <tr>
+        <td><strong>Target Solved For</strong></td>
+        <td>$5,626/mo (Baseline Expenses)</td>
+        <td>$14,039/mo (Target + 10% Buffer)</td>
+        <td>60-Month Static Run Rate</td>
+      </tr>
+      <tr>
+        <td><strong>Time Horizon</strong></td>
+        <td>2.4 Years (Dynamic Exit)</td>
+        <td>5.0 Years (Fixed Macro Milestone)</td>
+        <td>5.0 Years (Month-by-Month)</td>
+      </tr>
+      <tr>
+        <td><strong>Asset Milestone</strong></td>
+        <td>$511,525 Gross ($332k Equity)</td>
+        <td>$1,228,599 Gross ($921k Equity)</td>
+        <td>$454,703 Projected Accumulation</td>
+      </tr>
+      <tr>
+        <td><strong>Cash Flow Dynamics</strong></td>
+        <td>Frictionless continuous sweep</td>
+        <td>Macro phase-based deleveraging</td>
+        <td>Granular monthly cash ledger</td>
+      </tr>
+      <tr>
+        <td><strong>Guardrail Compliance</strong></td>
+        <td><span class="badge-pass">Pass</span> (50% Drop Cushion)</td>
+        <td><span class="badge-pass">Pass</span> (Structural Roadmap)</td>
+        <td><span class="badge-fail">Fail</span> (DTA Spikes to 47.15%)</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout">
+    <strong>Key Analytical Takeaways:</strong>
+    <ul>
+      <li><strong>Target Definition Difference:</strong> The Freedom Date Calculator identifies the earliest exit for <em>baseline survival</em> ($332k equity), whereas the Wealth Journey Map calculates capital for a <em>fully expanded lifestyle</em> ($921k equity / $1.23M assets).</li>
+      <li><strong>Operational Leverage Drag:</strong> The Expense Coverage Planner flags a failure because living expenses inflate each year while active contributions remain flat at $5,000/month. The accumulating cash deficit expands margin borrowing to 47.15% DTA.</li>
+    </ul>
+  </div>
+
+  <hr>
+
+  <h2>Strategic Execution Recommendations</h2>
+  <ol>
+    <li>
+      <strong>Index Active Contributions to Inflation:</strong>
+      To prevent the leverage creep identified in the Expense Coverage Planner, monthly savings contributions should be stepped up alongside annual inflation (scaling from $5,000/month to ~$6,080/month over 5 years).
+    </li>
+    <li>
+      <strong>Two-Stage Milestone Implementation:</strong>
+      <ul>
+        <li><strong>Stage 1 (Baseline Escape Velocity):</strong> Reach the Freedom Date Calculator milestone of <strong>$332k Net Equity ($512k Total Assets)</strong> at Month 29 to achieve complete baseline expense independence.</li>
+        <li><strong>Stage 2 (Capital Expansion):</strong> Continue compounding toward the Wealth Journey Map Accelerated Path milestone of <strong>$1.42M Total Assets</strong>, liquidating <strong>$189k in surplus assets</strong> at Year 5 to permanently de-risk to 25% DTA ($307k debt) producing $14,039/month.</li>
+      </ul>
+    </li>
+  </ol>
+
+</div>
+
+</body>
+</html>
