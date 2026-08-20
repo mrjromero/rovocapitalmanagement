@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YieldCanary Framework: User Manual &amp; Metric Guide</title>
+  <style>
+    :root {
+      --primary: #1e293b;
+      --accent: #0284c7;
+      --success: #16a34a;
+      --warning: #ca8a04;
+      --danger: #dc2626;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --text: #334155;
+      --heading: #0f172a;
+      --border: #e2e8f0;
+      --code-bg: #f1f5f9;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.6;
+      color: var(--text);
+      background-color: var(--bg);
+      padding: 2rem 1rem;
+    }
+    .container { max-width: 960px; margin: 0 auto; }
+    header {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+    }
+    header h1 { color: var(--heading); font-size: 1.8rem; margin-bottom: 0.5rem; }
+    header p { color: #64748b; font-size: 1rem; }
+    .section {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.75rem;
+      margin-bottom: 1.75rem;
+    }
+    h2 { color: var(--heading); font-size: 1.35rem; border-bottom: 2px solid var(--border); padding-bottom: 0.5rem; margin-bottom: 1rem; }
+    h3 { color: var(--heading); font-size: 1.1rem; margin: 1.25rem 0 0.4rem 0; }
+    p { margin-bottom: 0.75rem; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; margin: 1rem 0; }
+    .card { border: 1px solid var(--border); border-radius: 8px; padding: 1.25rem; background: #fafafa; }
+    .card.primary { border-left: 4px solid var(--accent); }
+    .card.success { border-left: 4px solid var(--success); }
+    .card.warning { border-left: 4px solid var(--warning); }
+    .card.danger { border-left: 4px solid var(--danger); }
+    .formula-box {
+      background: var(--code-bg);
+      border: 1px dashed #cbd5e1;
+      border-radius: 6px;
+      padding: 0.75rem 1rem;
+      font-family: monospace;
+      font-size: 0.9rem;
+      color: var(--heading);
+      margin: 0.5rem 0 1rem 0;
+    }
+    table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.95rem; }
+    th, td { border: 1px solid var(--border); padding: 0.75rem; text-align: left; }
+    th { background-color: var(--code-bg); color: var(--heading); font-weight: 600; }
+    tr:nth-child(even) { background-color: #fdfdfd; }
+    .badge { display: inline-block; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.85rem; font-weight: 600; }
+    .badge-approved { background: #dcfce7; color: #166534; }
+    .badge-rejected { background: #fee2e2; color: #991b1b; }
+    .footer { text-align: center; font-size: 0.85rem; color: #94a3b8; margin-top: 2rem; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🐤 YieldCanary Metric Guide &amp; User Manual</h1>
+      <p>A structured guide to the metrics, calculations, resilience grading, and gatekeeper logic in the /YieldCanary financial engine.</p>
+    </header>
+
+    <!-- SECTION 1: CORE PHILOSOPHY -->
+    <div class="section">
+      <h2>1. The 36-Month Amortizing Note Architecture</h2>
+      <p>YieldCanary evaluates derivative income ETFs, option strategies, and closed-end funds (CEFs) not as permanent equity positions, but as <strong>36-month amortizing notes</strong> designed to capture a positive carry spread against a <strong>4.15% cost of debt</strong>.</p>
+      <div class="grid">
+        <div class="card primary">
+          <strong>The Strategy Objective:</strong>
+          <p>Extract 12% to 40%+ cash flows to pay down debt and recover principal within a 3-year timeline.</p>
+        </div>
+        <div class="card danger">
+          <strong>The Threat (NAV Decay):</strong>
+          <p>Many option-income funds sell upside while bearing full downside risk, eroding their underlying Net Asset Value (NAV).</p>
+        </div>
+        <div class="card success">
+          <strong>The Gatekeeper:</strong>
+          <p>YieldCanary strips away promotional headline yields to verify that actual fund earnings survive past 36 months.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 2: YIELD METRICS -->
+    <div class="section">
+      <h2>2. Core Yield &amp; Income Metrics</h2>
+      
+      <h3>A. Headline Yield (TTM)</h3>
+      <p>The backward-looking trailing 12-month distribution yield delivered per share relative to the current share price.</p>
+      <div class="formula-box">Headline Yield (%) = (Sum of 12M Payouts / Current Share Price) * 100</div>
+
+      <h3>B. Advertised Yield (Forward Rate)</h3>
+      <p>The forward-projected annual distribution rate quoted by fund managers, annualizing the most recent payout.</p>
+      <div class="formula-box">Advertised Yield (%) = (Latest Payout * Payout Frequency [12 or 52] / Current Share Price) * 100</div>
+
+      <h3>C. Return of Capital (ROC %) &amp; True Income Yield</h3>
+      <p>YieldCanary classifies Return of Capital into two categories based on underlying strategy mechanics:</p>
+      <div class="grid">
+        <div class="card success">
+          <strong>🏅 Constructive ROC (Tax-Efficient Badge):</strong>
+          <p>Applies to funds (e.g., SPYI, QQQI) using Section 1256 index option spreads that generate real economic income but classify payouts as ROC to defer taxes for investors without NAV decay.</p>
+          <div class="formula-box">True Income Yield = Headline Yield</div>
+        </div>
+        <div class="card danger">
+          <strong>Destructive ROC (Principal Erosion):</strong>
+          <p>Applies when payouts exceed fund total returns, forcing the fund to liquidate principal and causing structural NAV loss.</p>
+          <div class="formula-box">True Income Yield = Headline Yield * (1 - Destructive ROC %)</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 3: TOTAL RETURN & CASH FLOW -->
+    <div class="section">
+      <h2>3. Total Return &amp; Cash Flow Metrics</h2>
+
+      <h3>A. 1-Year Price Return</h3>
+      <p>Measures pure capital preservation over the preceding 12 months, excluding distributions.</p>
+      <div class="formula-box">1Y Price Return (%) = ((Current Price - Price 1Y Ago) / Price 1Y Ago) * 100</div>
+
+      <h3>B. Monthly Spendable Cash Yield</h3>
+      <p>The net after-tax spendable cash generated per dollar invested ($t = 20\%$).</p>
+      <div class="formula-box">Monthly Spendable Yield (%) = (Last Month Payout * (1 - 0.20) / Current Price) * 100</div>
+
+      <h3>C. Take-Home Cash Return (Net Total Return)</h3>
+      <p>The true 1-year net investor return, combining capital price change and after-tax distributions.</p>
+      <div class="formula-box">Take-Home Cash Return (%) = 1Y Price Return + ((Sum of 12M Payouts * (1 - 0.20)) / Price 1Y Ago) * 100</div>
+    </div>
+
+    <!-- SECTION 4: RISK & LONGEVITY -->
+    <div class="section">
+      <h2>4. Risk &amp; Longevity Metrics</h2>
+
+      <h3>A. Death Clock (NAV Halving Horizon)</h3>
+      <p>The projected years required for share price/NAV to decline by 50% based on annual capital decay. Returns <strong>N/A</strong> if NAV is stable/growing or if the Tax-Efficient Badge applies.</p>
+      <div class="formula-box">Death Clock (Years) = 0.50 / Annualized NAV Decay Rate</div>
+
+      <h3>B. Canary Health Tiers</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Status</th>
+            <th>Health Tier</th>
+            <th>Operational Meaning</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>🟢</td>
+            <td><strong>Healthy</strong></td>
+            <td>Fully earned income from dividends, interest, or trading gains with stable NAV.</td>
+          </tr>
+          <tr>
+            <td>🏅</td>
+            <td><strong>Tax-Efficient Badge</strong></td>
+            <td>Constructive Section 1256 option deferral; NAV preserved.</td>
+          </tr>
+          <tr>
+            <td>🟡</td>
+            <td><strong>Watch</strong></td>
+            <td>Moderate unearned ROC or slight NAV drag; requires regular monitoring.</td>
+          </tr>
+          <tr>
+            <td>🟠</td>
+            <td><strong>High Risk</strong></td>
+            <td>Noticeable destructive ROC; share price in clear downward trend (-10% to -15% 1Y).</td>
+          </tr>
+          <tr>
+            <td>🔴</td>
+            <td><strong>Severe Risk</strong></td>
+            <td>Terminal NAV decay (<-15% 1Y); rapid principal liquidation.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- SECTION 5: 100-POINT RESILIENCE GRADE -->
+    <div class="section">
+      <h2>5. 100-Point Payout Resilience Scoring Model</h2>
+      <p>A quantitative framework evaluating whether a fund expands wealth or destroys principal:</p>
+      <table>
+        <thead>
+          <tr>
+            <th>Pillar</th>
+            <th>Max Points</th>
+            <th>Scoring Tiers</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>1. Take-Home Cash Return</strong></td>
+            <td>35 Pts</td>
+            <td>&gt;+15% (35 pts) | +10% to +15% (28 pts) | +5% to +10% (20 pts) | 0% to +5% (10 pts) | &lt;0% (0 pts)</td>
+          </tr>
+          <tr>
+            <td><strong>2. NAV Preservation</strong></td>
+            <td>30 Pts</td>
+            <td>&gt;+5% (30 pts) | 0% to +5% (25 pts) | -5% to 0% (15 pts) | -15% to -5% (5 pts) | &lt;-15% (0 pts)</td>
+          </tr>
+          <tr>
+            <td><strong>3. Earned Coverage Ratio</strong></td>
+            <td>20 Pts</td>
+            <td>100% Coverage / Badge (20 pts) | 85%-99% (15 pts) | 70%-84% (10 pts) | &lt;70% (0 pts)</td>
+          </tr>
+          <tr>
+            <td><strong>4. Death Clock Longevity</strong></td>
+            <td>15 Pts</td>
+            <td>N/A (15 pts) | &gt;10 Years (12 pts) | 5 to 10 Years (8 pts) | &lt;5 Years (0 pts)</td>
+          </tr>
+        </tbody>
+      </table>
+      
+      <div class="grid">
+        <div class="card success"><strong>Grade A+ / A (90–100 Pts):</strong> Superior resilience; NAV expands alongside payouts.</div>
+        <div class="card primary"><strong>Grade B+ / B (75–89 Pts):</strong> Strong resilience; solid total return with minor drag.</div>
+        <div class="card warning"><strong>Grade C+ / C (60–74 Pts):</strong> Moderate resilience; positive return with noticeable NAV drag.</div>
+        <div class="card danger"><strong>Grade D / F (&lt;60 Pts):</strong> Severe capital erosion; high yields offset by continuous decay.</div>
+      </div>
+    </div>
+
+    <!-- SECTION 6: GATEKEEPER DECISION -->
+    <div class="section">
+      <h2>6. The 36-Month Amortizing Note Gatekeeper Rule</h2>
+      <div class="grid">
+        <div class="card success">
+          <h3><span class="badge badge-approved">✅ APPROVED: 36-Mo Note Equivalent</span></h3>
+          <p><strong>Required Conditions:</strong></p>
+          <ul style="margin-left: 1.25rem;">
+            <li>True Income Yield &gt; 4.15% (Positive Carry Spread)</li>
+            <li>Death Clock &gt; 3.0 Years or N/A (Survives 36-Month Window)</li>
+            <li>Resilience Grade &ge; C (Score &ge; 60 Pts)</li>
+          </ul>
+        </div>
+        <div class="card danger">
+          <h3><span class="badge badge-rejected">❌ REJECTED: Terminal NAV Decay</span></h3>
+          <p><strong>Failure Triggers:</strong></p>
+          <ul style="margin-left: 1.25rem;">
+            <li>Death Clock &le; 3.0 Years (Decays before principal recovery)</li>
+            <li>True Income Yield &le; 4.15% (Fails debt hurdle)</li>
+            <li>Resilience Grade D or F (Capital destruction)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      YieldCanary Portfolio Engine &copy; 2026.
+    </div>
+  </div>
+</body>
+</html>
