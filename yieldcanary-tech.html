@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YieldCanary Framework: Technical Specification &amp; Mathematical Manual</title>
+  <!-- MathJax Configuration & Script -->
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']],
+        processEscapes: true
+      },
+      options: {
+        skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+      }
+    };
+  </script>
+  <script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <style>
+    :root {
+      --primary: #0f172a;
+      --secondary: #1e293b;
+      --accent: #0284c7;
+      --accent-light: #f0f9ff;
+      --success: #16a34a;
+      --warning: #ca8a04;
+      --danger: #dc2626;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --text: #334155;
+      --heading: #0f172a;
+      --border: #e2e8f0;
+      --code-bg: #f1f5f9;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      line-height: 1.65;
+      color: var(--text);
+      background-color: var(--bg);
+      padding: 2.5rem 1rem;
+    }
+    .container { max-width: 1000px; margin: 0 auto; }
+    header {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 2.5rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    header h1 { color: var(--heading); font-size: 2.1rem; margin-bottom: 0.5rem; font-weight: 700; }
+    header p { color: #64748b; font-size: 1.1rem; }
+    .meta-box {
+      display: inline-flex;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+      margin-top: 1rem;
+      font-size: 0.9rem;
+      color: #475569;
+      background: var(--code-bg);
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+    }
+    .section {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 2.25rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    h2 {
+      color: var(--heading);
+      font-size: 1.5rem;
+      border-bottom: 2px solid var(--border);
+      padding-bottom: 0.5rem;
+      margin-bottom: 1.5rem;
+      font-weight: 600;
+    }
+    h3 {
+      color: var(--heading);
+      font-size: 1.2rem;
+      margin: 1.75rem 0 0.5rem 0;
+      font-weight: 600;
+    }
+    p { margin-bottom: 1rem; }
+    .formula-card {
+      background: var(--accent-light);
+      border: 1px solid #bae6fd;
+      border-left: 5px solid var(--accent);
+      border-radius: 8px;
+      padding: 1.25rem 1.5rem;
+      margin: 1.25rem 0;
+    }
+    .formula-title {
+      font-weight: 700;
+      color: #0369a1;
+      font-size: 0.95rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.5rem;
+    }
+    .formula-display {
+      font-size: 1.15rem;
+      margin: 0.75rem 0;
+      overflow-x: auto;
+    }
+    table { width: 100%; border-collapse: collapse; margin: 1.25rem 0; font-size: 0.95rem; }
+    th, td { border: 1px solid var(--border); padding: 0.85rem 1rem; text-align: left; vertical-align: top; }
+    th { background-color: var(--code-bg); color: var(--heading); font-weight: 600; }
+    tr:nth-child(even) { background-color: #fafafa; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem; margin: 1.25rem 0; }
+    .card { border: 1px solid var(--border); border-radius: 8px; padding: 1.25rem; background: #ffffff; }
+    .callout {
+      border-left: 4px solid #64748b;
+      background: #f8fafc;
+      padding: 1rem 1.25rem;
+      border-radius: 0 8px 8px 0;
+      margin: 1rem 0;
+      font-size: 0.95rem;
+    }
+    .footer { text-align: center; font-size: 0.85rem; color: #94a3b8; margin-top: 2rem; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>📐 YieldCanary Mathematical &amp; Technical Manual</h1>
+      <p>A mathematical specification of all analytical formulas, boundary behaviors, resilience scoring algorithms, and gatekeeper optimization functions.</p>
+      <div class="meta-box">
+        <span><strong>Engine:</strong> /YieldCanary</span>
+        <span><strong>Cost of Debt Hurdle ($r_{\text{debt}}$):</strong> 4.15%</span>
+        <span><strong>Tax Rate ($t$):</strong> 20.0% ($0.20$)</span>
+        <span><strong>Amortization Window ($T_{\text{amort}}$):</strong> 3.0 Years</span>
+      </div>
+    </header>
+
+    <!-- SECTION 1: VARIABLE NOTATION TABLE -->
+    <div class="section">
+      <h2>1. Primary Variables &amp; Notational Definitions</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Variable</th>
+            <th>Dimension / Unit</th>
+            <th>Formal Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>$P_{\text{current}}$</td>
+            <td>USD (\$)</td>
+            <td>Current market closing share price of the target fund at evaluation date $t_0$.</td>
+          </tr>
+          <tr>
+            <td>$P_{1\text{Y ago}}$</td>
+            <td>USD (\$)</td>
+            <td>Historical market closing share price exactly 1 year (365 calendar days) prior to $t_0$.</td>
+          </tr>
+          <tr>
+            <td>$\sum D_{12\text{M}}$</td>
+            <td>USD (\$)</td>
+            <td>Sum of all cash distributions declared and paid per share over the preceding 12 months.</td>
+          </tr>
+          <tr>
+            <td>$D_{\text{latest}}$</td>
+            <td>USD (\$)</td>
+            <td>Dollar value of the single most recent per-share distribution payment.</td>
+          </tr>
+          <tr>
+            <td>$D_{\text{last month}}$</td>
+            <td>USD (\$)</td>
+            <td>Total per-share distributions paid within the most recent full calendar month.</td>
+          </tr>
+          <tr>
+            <td>$N$</td>
+            <td>Integer</td>
+            <td>Annual distribution frequency: Weekly ($N=52$), Monthly ($N=12$), or Quarterly ($N=4$).</td>
+          </tr>
+          <tr>
+            <td>$t$</td>
+            <td>Decimal</td>
+            <td>Marginal tax rate applicable to distributions (default: $t = 0.20$).</td>
+          </tr>
+          <tr>
+            <td>$\text{ROC}_{\text{dest}}$</td>
+            <td>Decimal $[0, 1]$</td>
+            <td>Proportion of distributions classified as destructive Return of Capital (unearned principal).</td>
+          </tr>
+          <tr>
+            <td>$r_{\text{debt}}$</td>
+            <td>Decimal / %</td>
+            <td>Baseline cost of leverage / debt hurdle rate ($r_{\text{debt}} = 4.15\%$).</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- SECTION 2: YIELD & DISTRIBUTION METRICS -->
+    <div class="section">
+      <h2>2. Yield &amp; Cash Flow Formulas</h2>
+
+      <h3>A. Headline Yield (Trailing 12-Month / TTM)</h3>
+      <p>Measures the backward-looking cash flow delivered relative to current purchasing price.</p>
+      <div class="formula-card">
+        <div class="formula-title">Equation 1: Headline Yield</div>
+        <div class="formula-display">
+          $$\text{Headline Yield} = \left( \frac{\sum_{i=1}^{k} D_i}{P_{\text{current}}} \right) \times 100$$
+        </div>
+      </div>
+
+      <h3>B. Advertised Yield (Forward Annualized Run-Rate)</h3>
+      <p>Projects the annualized forward distribution rate quoted by fund sponsors.</p>
+      <div class="formula-card">
+        <div class="formula-title">Equation 2: Advertised Yield</div>
+        <div class="formula-display">
+          $$\text{Advertised Yield} = \left( \frac{D_{\text{latest}} \times N}{P_{\text{current}}} \right) \times 100$$
+        </div>
+      </div>
+
+      <h3>C. True Income Yield &amp; ROC Factorization</h3>
+      <p>Isolates real economic income from capital liquidation by filtering out unearned Return of Capital.</p>
+      <div class="formula-card">
+        <div class="formula-title">Equation 3: True Income Yield</div>
+        <div class="formula-display">
+          $$\text{True Income Yield} = \begin{cases} 
+          \text{Headline Yield}, & \text{if fund holds } \text{🏅 Tax-Efficient ROC Badge} \\ 
+          \text{Headline Yield} \times (1 - \text{ROC}_{\text{dest}}), & \text{for standard / destructive ROC funds} 
+          \end{cases}$$
+        </div>
+      </div>
+      <div class="callout">
+        <strong>Mathematical Justification:</strong> For Section 1256 index option overlay funds (e.g., SPYI, QQQI), accounting ROC represents tax-deferral mechanics without NAV erosion. For single-stock or capped-upside funds (e.g., TSLY, NVDY), destructive ROC directly cannibalizes the share base.
+      </div>
+    </div>
+
+    <!-- SECTION 3: TOTAL RETURN & AFTER-TAX PERFORMANCE -->
+    <div class="section">
+      <h2>3. Total Net Return &amp; After-Tax Performance Formulas</h2>
+
+      <h3>A. 1-Year Price Return ($\Delta P_{1\text{Y}}$)</h3>
+      <p>Measures pure capital preservation or decay over a 12-month trailing horizon.</p>
+      <div class="formula-card">
+        <div class="formula-title">Equation 4: 1-Year Price Return</div>
+        <div class="formula-display">
+          $$\text{Price Return}_{1\text{Y}} = \left( \frac{P_{\text{current}} - P_{1\text{Y ago}}}{P_{1\text{Y ago}}} \right) \times 100$$
+        </div>
+      </div>
+
+      <h3>B. Monthly Spendable Cash Yield ($Y_{\text{spendable}}$)</h3>
+      <p>Computes the actual monthly cash in pocket delivered after paying income taxes.</p>
+      <div class="formula-card">
+        <div class="formula-title">Equation 5: Monthly Spendable Cash Yield</div>
+        <div class="formula-display">
+          $$Y_{\text{spendable}} = \left( \frac{D_{\text{last month}} \times (1 - t)}{P_{\text{current}}} \right) \times 100$$
+        </div>
+      </div>
+
+      <h3>C. Take-Home Cash Return ($R_{\text{net}}$ / Net Total Return)</h3>
+      <p>The core wealth-expansion metric. Combines pure share price return with total after-tax cash distributions relative to the initial 1-year investment base.</p>
+      <div class="formula-card">
+        <div class="formula-title">Equation 6: Take-Home Cash Return</div>
+        <div class="formula-display">
+          $$R_{\text{net}} = \text{Price Return}_{1\text{Y}} + \left( \frac{\sum D_{12\text{M}} \times (1 - t)}{P_{1\text{Y ago}}} \right) \times 100$$
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 4: RISK & LONGEVITY (DEATH CLOCK) -->
+    <div class="section">
+      <h2>4. Capital Longevity &amp; Death Clock Dynamics</h2>
+
+      <h3>A. Annualized Destructive Decay Velocity ($\delta_{\text{NAV}}$)</h3>
+      <p>When a fund experiences negative price return driven by unearned distributions, its decay velocity is:</p>
+      <div class="formula-card">
+        <div class="formula-title">Equation 7: Decay Rate</div>
+        <div class="formula-display">
+          $$\delta_{\text{NAV}} = \max\left(0, \; -\frac{\text{Price Return}_{1\text{Y}}}{100}\right)$$
+        </div>
+      </div>
+
+      <h3>B. Death Clock ($T_{\text{death}}$ / NAV Halving Horizon)</h3>
+      <p>Calculates the exact projected time in years required for the asset's principal base to decline by 50% ($0.50$):</p>
+      <div class="formula-card">
+        <div class="formula-title">Equation 8: Death Clock (Years)</div>
+        <div class="formula-display">
+          $$T_{\text{death}} = \begin{cases} 
+          \text{N/A}, & \text{if } \text{Price Return}_{1\text{Y}} \ge 0 \lor \text{Badge} \\ 
+          \frac{0.50}{\delta_{\text{NAV}}}, & \text{if } \text{Price Return}_{1\text{Y}} < 0 
+          \end{cases}$$
+        </div>
+      </div>
+      <div class="callout">
+        <strong>Strategic Significance:</strong> Because our positive-carry debt arbitrage is modeled as a <strong>36-month amortizing note</strong> ($3.0 \text{ Years}$), any fund with $T_{\text{death}} \le 3.0 \text{ Years}$ will halve before returning debt capital, triggering automatic gatekeeper rejection.
+      </div>
+    </div>
+
+    <!-- SECTION 5: 100-POINT SCORING MODEL -->
+    <div class="section">
+      <h2>5. Payout Resilience Grading Model (100-Point Function)</h2>
+      <p>The total resilience score $S_{\text{total}}$ is a composite piecewise function of 4 orthogonal pillars:</p>
+      <div class="formula-card">
+        <div class="formula-title">Equation 9: Composite Resilience Score</div>
+        <div class="formula-display">
+          $$S_{\text{total}} = S_1(R_{\text{net}}) + S_2(\text{Price Return}_{1\text{Y}}) + S_3(\text{Coverage}) + S_4(T_{\text{death}}) \quad \in [0, 100]$$
+        </div>
+      </div>
+
+      <h3>Scoring Sub-Functions ($S_1, S_2, S_3, S_4$)</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Pillar</th>
+            <th>Weight</th>
+            <th>Piecewise Threshold Function</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>$S_1$: Take-Home Return</strong></td>
+            <td>35 Pts</td>
+            <td>
+              $$S_1 = \begin{cases} 35, & R_{\text{net}} > 15\% \\ 28, & 10\% < R_{\text{net}} \le 15\% \\ 20, & 5\% < R_{\text{net}} \le 10\% \\ 10, & 0\% \le R_{\text{net}} \le 5\% \\ 0, & R_{\text{net}} < 0\% \end{cases}$$
+            </td>
+          </tr>
+          <tr>
+            <td><strong>$S_2$: NAV Preservation</strong></td>
+            <td>30 Pts</td>
+            <td>
+              $$S_2 = \begin{cases} 30, & \Delta P > 5\% \\ 25, & 0\% \le \Delta P \le 5\% \\ 15, & -5\% \le \Delta P < 0\% \\ 5, & -15\% \le \Delta P < -5\% \\ 0, & \Delta P < -15\% \end{cases}$$
+            </td>
+          </tr>
+          <tr>
+            <td><strong>$S_3$: Earned Coverage</strong></td>
+            <td>20 Pts</td>
+            <td>
+              $$S_3 = \begin{cases} 20, & \text{Coverage} = 100\% \lor \text{Badge} \\ 15, & 85\% \le \text{Coverage} < 100\% \\ 10, & 70\% \le \text{Coverage} < 85\% \\ 0, & \text{Coverage} < 70\% \end{cases}$$
+            </td>
+          </tr>
+          <tr>
+            <td><strong>$S_4$: Death Clock</strong></td>
+            <td>15 Pts</td>
+            <td>
+              $$S_4 = \begin{cases} 15, & T_{\text{death}} = \text{N/A} \\ 12, & T_{\text{death}} > 10.0 \text{ Yrs} \\ 8, & 5.0 \le T_{\text{death}} \le 10.0 \text{ Yrs} \\ 0, & T_{\text{death}} < 5.0 \text{ Yrs} \end{cases}$$
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>Grade Transformation Function</h3>
+      <div class="formula-card">
+        <div class="formula-title">Equation 10: Letter Grade Mapping</div>
+        <div class="formula-display">
+          $$\text{Grade}(S_{\text{total}}) = \begin{cases} 
+          \mathbf{A+} / \mathbf{A}, & 90 \le S_{\text{total}} \le 100 \\ 
+          \mathbf{B+} / \mathbf{B}, & 75 \le S_{\text{total}} < 90 \\ 
+          \mathbf{C+} / \mathbf{C}, & 60 \le S_{\text{total}} < 75 \\ 
+          \mathbf{D}, & 40 \le S_{\text{total}} < 60 \\ 
+          \mathbf{F}, & 0 \le S_{\text{total}} < 40 
+          \end{cases}$$
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 6: GATEKEEPER DECISION FUNCTION -->
+    <div class="section">
+      <h2>6. The 36-Month Note Gatekeeper Decision Function</h2>
+      <p>The gatekeeper decision is evaluated through a strict ternary conjunction (logical AND) optimization rule:</p>
+      
+      <div class="formula-card">
+        <div class="formula-title">Equation 11: Binary Gatekeeper Filter</div>
+        <div class="formula-display">
+          $$\text{Gatekeeper}(X) = \begin{cases} 
+          \mathbf{\text{✅ APPROVED: 36-Mo Note Equivalent}}, & \text{if } \Big( \text{True Income Yield} > 4.15\% \Big) \land \Big( T_{\text{death}} > 3.0 \lor T_{\text{death}} = \text{N/A} \Big) \land \Big( S_{\text{total}} \ge 60 \Big) \\ 
+          \mathbf{\text{❌ REJECTED: Terminal NAV Decay}}, & \text{otherwise} 
+          \end{cases}$$
+        </div>
+      </div>
+
+      <div class="grid">
+        <div class="card">
+          <strong>Positive Carry Spread ($\Delta_{\text{carry}}$):</strong>
+          $$\Delta_{\text{carry}} = \text{True Income Yield} - r_{\text{debt}} = \text{True Income Yield} - 4.15\% > 0$$
+        </div>
+        <div class="card">
+          <strong>Amortization Window Constraint:</strong>
+          $$T_{\text{death}} > T_{\text{amort}} = 3.0 \text{ Years}$$
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      YieldCanary Portfolio Engine &copy; 2026. Built for Precision Financial Engineering &amp; Positive Carry Arbitrage.
+    </div>
+  </div>
+</body>
+</html>
