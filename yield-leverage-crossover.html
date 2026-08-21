@@ -356,29 +356,40 @@
             }
         });
 
+        // Dynamic evaluation for winning/trailing scenarios
+        const isAWinner = latestResults.roeA >= latestResults.roeB;
+        const winningScenario = isAWinner ? "Scenario A" : "Scenario B";
+        const losingScenario = isAWinner ? "Scenario B" : "Scenario A";
+        const winColor = isAWinner ? "var(--accentA)" : "var(--accentB)";
+        const loseColor = isAWinner ? "var(--accentB)" : "var(--accentA)";
+        const winRoe = isAWinner ? latestResults.roeA : latestResults.roeB;
+        const loseRoe = isAWinner ? latestResults.roeB : latestResults.roeA;
+        const winSpread = isAWinner ? latestResults.spreadA : latestResults.spreadB;
+        const loseSpread = isAWinner ? latestResults.spreadB : latestResults.spreadA;
+
         // Update Alert Text
         const alertBox = document.getElementById('crossoverResult');
         if (latestResults.crossoverMonth !== -1) {
-            alertBox.innerHTML = `Crossover Achieved: The trailing scenario overtakes the leader at <strong>Month ${latestResults.crossoverMonth}</strong>.`;
-            alertBox.style.borderLeftColor = '#4ade80';
-            alertBox.style.background = 'rgba(74, 222, 128, 0.1)';
+            alertBox.innerHTML = `Crossover Achieved: <strong style="color: ${winColor}">${winningScenario}</strong> overtakes <span style="color: ${loseColor}">${losingScenario}</span> at <strong>Month ${latestResults.crossoverMonth}</strong>.`;
+            alertBox.style.borderLeftColor = winColor;
+            alertBox.style.background = isAWinner ? 'rgba(74, 222, 128, 0.1)' : 'rgba(96, 165, 250, 0.1)';
         } else {
             alertBox.innerHTML = `No crossover detected within the current ${latestResults.months}-month timeframe.`;
             alertBox.style.borderLeftColor = '#facc15';
             alertBox.style.background = 'rgba(250, 204, 21, 0.1)';
         }
 
-        // Update Explanatory Narrative
+        // Update Explanatory Narrative dynamically
         const narrativeBox = document.getElementById('narrativeBox');
         narrativeBox.innerHTML = `
             <h4 style="margin-top: 0; margin-bottom: 10px; color: #f5f5f6; font-size: 1.1rem;">Why does this happen?</h4>
             <p>You might expect the scenario with higher leverage to maintain its lead because every $${latestResults.monthlyContrib} deposit buys more assets upfront. And initially, it does—this is known as <strong>mechanical leverage</strong>.</p>
-            <p>However, margin leverage is just an amplifier for your <strong>arbitrage spread</strong> (Portfolio Yield minus Margin Rate). To see the true growth engine, we have to look at the <em>Net Yield on Equity (ROE)</em>:</p>
+            <p>However, margin leverage is just an amplifier for your <strong>arbitrage spread</strong> (Portfolio Yield minus Margin Rate). To see the true growth engine, we look at the <em>Net Yield on Equity (ROE)</em>:</p>
             <ul style="color: #a1a1aa; line-height: 1.6; margin-bottom: 15px;">
-                <li><strong style="color: var(--accentA)">Scenario A ROE: ${latestResults.roeA.toFixed(1)}%</strong> <br> (Earns ${latestResults.spreadA.toFixed(2)}% pure profit on its borrowed funds)</li>
-                <li><strong style="color: var(--accentB)">Scenario B ROE: ${latestResults.roeB.toFixed(1)}%</strong> <br> (Earns only ${latestResults.spreadB.toFixed(2)}% pure profit on its borrowed funds)</li>
+                <li><strong style="color: var(--accentA)">Scenario A ROE: ${latestResults.roeA.toFixed(1)}%</strong> <br> (Earns ${latestResults.spreadA.toFixed(2)}% pure spread on borrowed funds)</li>
+                <li><strong style="color: var(--accentB)">Scenario B ROE: ${latestResults.roeB.toFixed(1)}%</strong> <br> (Earns ${latestResults.spreadB.toFixed(2)}% pure spread on borrowed funds)</li>
             </ul>
-            <p style="margin-bottom: 0;"><strong>The Takeaway:</strong> When a portfolio with a massive internal compounding engine (${latestResults.roeA.toFixed(1)}% ROE) competes against one relying solely on high leverage with thin margins, the compounding interest acts like a snowball, eventually overtaking the raw buying power of the higher LTV.</p>
+            <p style="margin-bottom: 0;"><strong>The Takeaway:</strong> <strong style="color: ${winColor}">${winningScenario}</strong> wins out long-term because its higher internal ROE (${winRoe.toFixed(1)}%) creates a stronger compounding snowball. Even if <span style="color: ${loseColor}">${losingScenario}</span> starts stronger due to heavier leverage, a superior arbitrage spread (${winSpread.toFixed(2)}% vs ${loseSpread.toFixed(2)}%) will eventually overtake it.</p>
         `;
     }
 
@@ -399,7 +410,7 @@
         
         const link = document.createElement("a");
         link.setAttribute("href", url);
-        link.setAttribute("download", "AUM_Crossover_Projection.csv");
+        link.setAttribute("download", "Spread_Yield_vs_Leverage_Crossover.csv");
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
