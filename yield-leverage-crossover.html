@@ -71,6 +71,22 @@
             margin-bottom: 12px;
             box-sizing: border-box;
         }
+        .btn-export {
+            width: 100%;
+            background-color: #4ade80;
+            color: #18181b;
+            border: none;
+            padding: 10px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 0.95rem;
+            cursor: pointer;
+            margin-top: 5px;
+            transition: opacity 0.2s;
+        }
+        .btn-export:hover {
+            opacity: 0.85;
+        }
         .crossover-alert {
             background: rgba(74, 222, 128, 0.1);
             border-left: 4px solid var(--accentA);
@@ -109,8 +125,10 @@
             <label>Margin Rate (%)</label>
             <input type="number" id="marginRate" value="5.65" step="0.01">
             
-            <label>Projection Months</label>
-            <input type="number" id="months" value="60" step="12">
+            <label>Timeframe to View (Months)</label>
+            <input type="number" id="months" value="36" step="1" min="1">
+            
+            <button id="downloadCsvBtn" class="btn-export">Download CSV</button>
         </div>
 
         <div class="card" style="border-top: 3px solid var(--accentA);">
@@ -139,6 +157,7 @@
 
 <script>
     let myChart = null;
+    let latestResults = null;
 
     function calculateData() {
         const startCap = parseFloat(document.getElementById('startCap').value);
@@ -158,6 +177,7 @@
         let dataA = [];
         let dataB = [];
         let labels = [];
+        let rawMonths = [];
 
         let crossoverMonth = -1;
         let initialLeaderIsA = false;
@@ -182,6 +202,7 @@
             dataB.push(finalAssetsB);
 
             labels.push('Month ' + m);
+            rawMonths.push(m);
 
             // Determine Crossover
             if (m === 1) {
@@ -194,11 +215,11 @@
             }
         }
 
-        return { labels, dataA, dataB, crossoverMonth, initialLeaderIsA };
+        return { labels, rawMonths, dataA, dataB, crossoverMonth, initialLeaderIsA, months };
     }
 
     function updateChart() {
-        const results = calculateData();
+        latestResults = calculateData();
         const ctx = document.getElementById('aumChart').getContext('2d');
 
         if (myChart) {
@@ -208,11 +229,11 @@
         myChart = new Chart(ctx, {
             type: 'line',
             data: {
-                labels: results.labels,
+                labels: latestResults.labels,
                 datasets: [
                     {
                         label: 'Scenario A AUM',
-                        data: results.dataA,
+                        data: latestResults.dataA,
                         borderColor: '#4ade80',
                         backgroundColor: 'rgba(74, 222, 128, 0.1)',
                         borderWidth: 2,
@@ -222,7 +243,7 @@
                     },
                     {
                         label: 'Scenario B AUM',
-                        data: results.dataB,
+                        data: latestResults.dataB,
                         borderColor: '#60a5fa',
                         backgroundColor: 'rgba(96, 165, 250, 0.1)',
                         borderWidth: 2,
@@ -278,21 +299,47 @@
 
         // Update Alert Text
         const alertBox = document.getElementById('crossoverResult');
-        if (results.crossoverMonth !== -1) {
-            alertBox.innerHTML = `Crossover Achieved: The trailing scenario overtakes the leader at <strong>Month ${results.crossoverMonth}</strong>.`;
+        if (latestResults.crossoverMonth !== -1) {
+            alertBox.innerHTML = `Crossover Achieved: Scenario A overtakes Scenario B at <strong>Month ${latestResults.crossoverMonth}</strong>.`;
             alertBox.style.borderLeftColor = '#4ade80';
             alertBox.style.background = 'rgba(74, 222, 128, 0.1)';
         } else {
-            alertBox.innerHTML = `No crossover detected within the projected timeframe.`;
+            alertBox.innerHTML = `No crossover detected within the current ${latestResults.months}-month timeframe.`;
             alertBox.style.borderLeftColor = '#facc15';
             alertBox.style.background = 'rgba(250, 204, 21, 0.1)';
         }
+    }
+
+    function exportToCSV() {
+        if (!latestResults) return;
+
+        let csvContent = "Month,Scenario A AUM,Scenario B AUM\n";
+        
+        for (let i = 0; i < latestResults.rawMonths.length; i++) {
+            let m = latestResults.rawMonths[i];
+            let valA = latestResults.dataA[i].toFixed(2);
+            let valB = latestResults.dataB[i].toFixed(2);
+            csvContent += `${m},${valA},${valB}\n`;
+        }
+
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        
+        const link = document.createElement("a");
+        link.setAttribute("href", url);
+        link.setAttribute("download", "AUM_Crossover_Projection.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     }
 
     // Attach event listeners to all inputs to auto-update chart on change
     document.querySelectorAll('input').forEach(input => {
         input.addEventListener('input', updateChart);
     });
+
+    // Attach export listener
+    document.getElementById('downloadCsvBtn').addEventListener('click', exportToCSV);
 
     // Initial render
     updateChart();
