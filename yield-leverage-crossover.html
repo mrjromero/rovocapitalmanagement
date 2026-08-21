@@ -92,10 +92,23 @@
             border-left: 4px solid var(--accentA);
             padding: 15px;
             border-radius: 4px;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             font-weight: 600;
             text-align: center;
             font-size: 1.1rem;
+        }
+        .narrative-box {
+            background: rgba(0,0,0,0.15);
+            border: 1px solid var(--border);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+        .narrative-box p {
+            margin-top: 0;
+            color: #d4d4d8;
         }
         .chart-container {
             position: relative;
@@ -111,6 +124,10 @@
     
     <div id="crossoverResult" class="crossover-alert">
         Calculating crossover...
+    </div>
+
+    <div id="narrativeBox" class="narrative-box">
+        <!-- Dynamic explanation injected here -->
     </div>
 
     <div class="grid">
@@ -215,7 +232,17 @@
             }
         }
 
-        return { labels, rawMonths, dataA, dataB, crossoverMonth, initialLeaderIsA, months };
+        // Calculate dynamic ROE and Spread for the narrative
+        let spreadA = (yieldA - marginRate) * 100;
+        let spreadB = (yieldB - marginRate) * 100;
+        
+        let debtToEqA = ltvA / (1 - ltvA);
+        let debtToEqB = ltvB / (1 - ltvB);
+
+        let roeA = (yieldA * 100) + (spreadA * debtToEqA);
+        let roeB = (yieldB * 100) + (spreadB * debtToEqB);
+
+        return { labels, rawMonths, dataA, dataB, crossoverMonth, initialLeaderIsA, months, roeA, roeB, spreadA, spreadB, monthlyContrib };
     }
 
     function updateChart() {
@@ -300,7 +327,7 @@
         // Update Alert Text
         const alertBox = document.getElementById('crossoverResult');
         if (latestResults.crossoverMonth !== -1) {
-            alertBox.innerHTML = `Crossover Achieved: Scenario A overtakes Scenario B at <strong>Month ${latestResults.crossoverMonth}</strong>.`;
+            alertBox.innerHTML = `Crossover Achieved: The trailing scenario overtakes the leader at <strong>Month ${latestResults.crossoverMonth}</strong>.`;
             alertBox.style.borderLeftColor = '#4ade80';
             alertBox.style.background = 'rgba(74, 222, 128, 0.1)';
         } else {
@@ -308,6 +335,19 @@
             alertBox.style.borderLeftColor = '#facc15';
             alertBox.style.background = 'rgba(250, 204, 21, 0.1)';
         }
+
+        // Update Explanatory Narrative
+        const narrativeBox = document.getElementById('narrativeBox');
+        narrativeBox.innerHTML = `
+            <h4 style="margin-top: 0; margin-bottom: 10px; color: #f5f5f6; font-size: 1.1rem;">Why does this happen?</h4>
+            <p>You might expect the scenario with higher leverage to maintain its lead because every $${latestResults.monthlyContrib} deposit buys more assets upfront. And initially, it does—this is known as <strong>mechanical leverage</strong>.</p>
+            <p>However, margin leverage is just an amplifier for your <strong>arbitrage spread</strong> (Portfolio Yield minus Margin Rate). To see the true growth engine, we have to look at the <em>Net Yield on Equity (ROE)</em>:</p>
+            <ul style="color: #a1a1aa; line-height: 1.6; margin-bottom: 15px;">
+                <li><strong style="color: var(--accentA)">Scenario A ROE: ${latestResults.roeA.toFixed(1)}%</strong> <br> (Earns ${latestResults.spreadA.toFixed(2)}% pure profit on its borrowed funds)</li>
+                <li><strong style="color: var(--accentB)">Scenario B ROE: ${latestResults.roeB.toFixed(1)}%</strong> <br> (Earns only ${latestResults.spreadB.toFixed(2)}% pure profit on its borrowed funds)</li>
+            </ul>
+            <p style="margin-bottom: 0;"><strong>The Takeaway:</strong> When a portfolio with a massive internal compounding engine (${latestResults.roeA.toFixed(1)}% ROE) competes against one relying solely on high leverage with thin margins, the compounding interest acts like a snowball, eventually overtaking the raw buying power of the higher LTV.</p>
+        `;
     }
 
     function exportToCSV() {
