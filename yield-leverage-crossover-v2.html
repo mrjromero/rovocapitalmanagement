@@ -1,0 +1,1564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="An educational capital-structure demonstrator for exploring how economic return, financing cost, leverage capacity, and drawdown risk affect modeled return on equity.">
+    <title>Capital Structure &amp; ROE Crossover — Version 2</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <style>
+        :root {
+            color-scheme: dark;
+            --bg: #10131a;
+            --panel: #191e29;
+            --panel-2: #222938;
+            --input: #111620;
+            --text: #f7f9fc;
+            --muted: #aeb8ca;
+            --border: #364155;
+            --accent-a: #50df8a;
+            --accent-b: #69a8ff;
+            --warning: #f6c453;
+            --danger: #ff7272;
+            --good-bg: rgba(80, 223, 138, 0.10);
+            --warning-bg: rgba(246, 196, 83, 0.10);
+            --danger-bg: rgba(255, 114, 114, 0.10);
+            --shadow: 0 14px 45px rgba(0, 0, 0, 0.34);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 24px;
+            background:
+                radial-gradient(circle at top left, rgba(105, 168, 255, 0.10), transparent 34rem),
+                radial-gradient(circle at top right, rgba(80, 223, 138, 0.08), transparent 32rem),
+                var(--bg);
+            color: var(--text);
+            font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            line-height: 1.5;
+        }
+
+        .app {
+            width: min(1220px, 100%);
+            margin: 0 auto;
+        }
+
+        .hero,
+        .panel {
+            background: rgba(25, 30, 41, 0.96);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            box-shadow: var(--shadow);
+        }
+
+        .hero {
+            padding: 28px;
+            margin-bottom: 20px;
+        }
+
+        .eyebrow {
+            margin: 0 0 6px;
+            color: var(--accent-a);
+            font-size: 0.78rem;
+            font-weight: 800;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+
+        h1,
+        h2,
+        h3,
+        p {
+            margin-top: 0;
+        }
+
+        h1 {
+            margin-bottom: 10px;
+            font-size: clamp(1.65rem, 4vw, 2.6rem);
+            line-height: 1.12;
+        }
+
+        h2 {
+            margin-bottom: 6px;
+            font-size: 1.24rem;
+        }
+
+        h3 {
+            margin-bottom: 14px;
+            font-size: 1.02rem;
+        }
+
+        .lede,
+        .section-copy,
+        .muted {
+            color: var(--muted);
+        }
+
+        .lede {
+            max-width: 900px;
+            margin-bottom: 0;
+        }
+
+        .formula-banner {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 18px;
+            align-items: center;
+            margin-top: 20px;
+            padding: 16px 18px;
+            background: rgba(105, 168, 255, 0.08);
+            border: 1px solid rgba(105, 168, 255, 0.28);
+            border-radius: 12px;
+        }
+
+        .formula {
+            margin: 0;
+            color: #dbe9ff;
+            font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+            font-weight: 700;
+        }
+
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 30px;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 0.78rem;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+
+        .pill.good {
+            color: var(--accent-a);
+            background: var(--good-bg);
+            border: 1px solid rgba(80, 223, 138, 0.30);
+        }
+
+        .pill.warning {
+            color: var(--warning);
+            background: var(--warning-bg);
+            border: 1px solid rgba(246, 196, 83, 0.30);
+        }
+
+        .pill.danger {
+            color: var(--danger);
+            background: var(--danger-bg);
+            border: 1px solid rgba(255, 114, 114, 0.30);
+        }
+
+        .panel {
+            padding: 22px;
+            margin-bottom: 20px;
+        }
+
+        .panel-header {
+            display: flex;
+            gap: 16px;
+            align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: 18px;
+        }
+
+        .panel-header p {
+            margin-bottom: 0;
+        }
+
+        .parameter-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 16px;
+        }
+
+        .input-card {
+            padding: 18px;
+            background: var(--panel-2);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+        }
+
+        .input-card.scenario-a {
+            border-top: 3px solid var(--accent-a);
+        }
+
+        .input-card.scenario-b {
+            border-top: 3px solid var(--accent-b);
+        }
+
+        .field {
+            margin-bottom: 13px;
+        }
+
+        .field:last-child {
+            margin-bottom: 0;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #dce3ee;
+            font-size: 0.84rem;
+            font-weight: 650;
+        }
+
+        input,
+        select,
+        button {
+            width: 100%;
+            min-height: 40px;
+            border-radius: 8px;
+            font: inherit;
+        }
+
+        input,
+        select {
+            padding: 8px 10px;
+            color: var(--text);
+            background: var(--input);
+            border: 1px solid var(--border);
+        }
+
+        input:focus,
+        select:focus,
+        button:focus-visible {
+            outline: 3px solid rgba(105, 168, 255, 0.28);
+            outline-offset: 2px;
+        }
+
+        input[aria-invalid="true"] {
+            border-color: var(--danger);
+        }
+
+        .hint {
+            display: block;
+            margin-top: 4px;
+            color: var(--muted);
+            font-size: 0.74rem;
+        }
+
+        .mode-note {
+            margin: 0;
+            padding: 12px 14px;
+            color: #dfe7f5;
+            background: rgba(255, 255, 255, 0.035);
+            border-left: 3px solid var(--accent-b);
+            border-radius: 6px;
+            font-size: 0.86rem;
+        }
+
+        .error-box,
+        .chart-warning {
+            display: none;
+            margin-top: 16px;
+            padding: 12px 14px;
+            color: #ffe0e0;
+            background: var(--danger-bg);
+            border: 1px solid rgba(255, 114, 114, 0.35);
+            border-radius: 8px;
+        }
+
+        .error-box.visible,
+        .chart-warning.visible {
+            display: block;
+        }
+
+        .result-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 14px;
+        }
+
+        .result-card {
+            min-height: 130px;
+            padding: 16px;
+            background: rgba(0, 0, 0, 0.16);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+        }
+
+        .result-card .label {
+            margin-bottom: 7px;
+            color: var(--muted);
+            font-size: 0.76rem;
+            font-weight: 800;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+
+        .result-card .value {
+            margin-bottom: 6px;
+            font-size: clamp(1.15rem, 3vw, 1.65rem);
+            font-weight: 850;
+            line-height: 1.15;
+        }
+
+        .result-card p {
+            margin-bottom: 0;
+            color: var(--muted);
+            font-size: 0.8rem;
+        }
+
+        .chart-wrap {
+            position: relative;
+            width: 100%;
+            height: 410px;
+            margin-top: 18px;
+        }
+
+        .chart-key {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 10px;
+            color: var(--muted);
+            font-size: 0.78rem;
+        }
+
+        .key-line {
+            display: inline-flex;
+            gap: 7px;
+            align-items: center;
+        }
+
+        .line-sample {
+            width: 28px;
+            height: 0;
+            border-top: 3px solid var(--muted);
+        }
+
+        .line-sample.dashed {
+            border-top-style: dashed;
+        }
+
+        .table-wrap {
+            overflow-x: auto;
+            margin-top: 18px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+        }
+
+        table {
+            width: 100%;
+            min-width: 720px;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 11px 13px;
+            border-bottom: 1px solid var(--border);
+            text-align: right;
+            vertical-align: middle;
+        }
+
+        th:first-child,
+        td:first-child {
+            text-align: left;
+        }
+
+        th {
+            color: #dfe7f5;
+            background: rgba(255, 255, 255, 0.035);
+            font-size: 0.8rem;
+        }
+
+        td {
+            color: #d5ddea;
+            font-size: 0.84rem;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        .scenario-a-text {
+            color: var(--accent-a);
+        }
+
+        .scenario-b-text {
+            color: var(--accent-b);
+        }
+
+        .formula-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px;
+            margin-top: 16px;
+        }
+
+        .formula-card {
+            padding: 14px;
+            background: rgba(0, 0, 0, 0.15);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+        }
+
+        .formula-card code {
+            color: #dce8f9;
+            white-space: normal;
+            word-break: break-word;
+        }
+
+        .narrative {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px;
+            margin-top: 18px;
+        }
+
+        .narrative article {
+            padding: 16px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+        }
+
+        .narrative article p:last-child {
+            margin-bottom: 0;
+        }
+
+        .toolbar {
+            display: flex;
+            gap: 12px;
+            align-items: flex-end;
+        }
+
+        .toolbar .field {
+            width: min(340px, 100%);
+            margin-bottom: 0;
+        }
+
+        button {
+            width: auto;
+            padding: 9px 16px;
+            color: #0f1813;
+            background: var(--accent-a);
+            border: 0;
+            font-weight: 850;
+            cursor: pointer;
+        }
+
+        button:hover {
+            filter: brightness(0.95);
+        }
+
+        button:disabled {
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        details {
+            margin-top: 12px;
+            color: var(--muted);
+        }
+
+        summary {
+            color: #dce3ee;
+            font-weight: 750;
+            cursor: pointer;
+        }
+
+        .assumptions {
+            margin: 12px 0 0;
+            padding-left: 20px;
+        }
+
+        .assumptions li {
+            margin-bottom: 7px;
+        }
+
+        footer {
+            padding: 4px 8px 26px;
+            color: var(--muted);
+            font-size: 0.78rem;
+            text-align: center;
+        }
+
+        @media (max-width: 940px) {
+            .parameter-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .result-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 680px) {
+            body {
+                padding: 12px;
+            }
+
+            .hero,
+            .panel {
+                padding: 17px;
+                border-radius: 12px;
+            }
+
+            .formula-banner,
+            .formula-grid,
+            .narrative {
+                grid-template-columns: 1fr;
+            }
+
+            .panel-header,
+            .toolbar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .result-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .chart-wrap {
+                height: 340px;
+            }
+
+            button {
+                width: 100%;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                scroll-behavior: auto !important;
+                transition: none !important;
+            }
+        }
+    </style>
+</head>
+<body>
+<main class="app">
+    <header class="hero">
+        <p class="eyebrow">Educational prototype · Version 2</p>
+        <h1>Capital Structure &amp; ROE Crossover</h1>
+        <p class="lede">Explore when a lower-volatility asset can support enough additional leverage to produce a higher modeled return on equity than a higher-return, higher-volatility alternative—while remaining inside a chosen drawdown and lender-maintenance constraint.</p>
+        <div class="formula-banner">
+            <p class="formula">ROE = ROA + (ROA − debt rate) × [LTV ÷ (1 − LTV)]</p>
+            <span class="pill good">Positive carry when ROA &gt; debt rate</span>
+        </div>
+    </header>
+
+    <section class="panel" aria-labelledby="inputs-heading">
+        <div class="panel-header">
+            <div>
+                <h2 id="inputs-heading">Model inputs</h2>
+                <p class="section-copy">The defaults intentionally compare a lower-return, lower-volatility asset at higher LTV with a higher-return asset at lower LTV.</p>
+            </div>
+        </div>
+
+        <div class="parameter-grid">
+            <div class="input-card">
+                <h3>Global assumptions</h3>
+                <div class="field">
+                    <label for="mode">Borrowing mode</label>
+                    <select id="mode">
+                        <option value="acquisition">Acquisition leverage</option>
+                        <option value="bbd">Buy-borrow-die cash extraction</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label for="startEquity">Starting net equity ($)</label>
+                    <input type="number" id="startEquity" value="100000" min="1" step="1000">
+                </div>
+                <div class="field">
+                    <label for="monthlyContrib">Monthly contribution ($)</label>
+                    <input type="number" id="monthlyContrib" value="2000" min="0" step="100">
+                </div>
+                <div class="field">
+                    <label for="borrowRate">Annual borrowing rate (%)</label>
+                    <input type="number" id="borrowRate" value="4.15" min="0" max="99" step="0.01">
+                </div>
+                <div class="field">
+                    <label for="rateStress">Rate-stress increase (percentage points)</label>
+                    <input type="number" id="rateStress" value="2" min="0" max="50" step="0.25">
+                </div>
+                <div class="field">
+                    <label for="safetyBuffer">Initial-LTV safety buffer (percentage points)</label>
+                    <input type="number" id="safetyBuffer" value="5" min="0" max="50" step="1">
+                </div>
+                <div class="field">
+                    <label for="months">Projection timeframe (months)</label>
+                    <input type="number" id="months" value="60" min="1" max="600" step="1">
+                </div>
+                <p id="modeNote" class="mode-note"></p>
+            </div>
+
+            <div class="input-card scenario-a">
+                <h3 class="scenario-a-text">Scenario A · Lower-volatility asset</h3>
+                <div class="field">
+                    <label for="returnA">Expected economic return / ROA (%)</label>
+                    <input type="number" id="returnA" value="9.5" min="-99" max="100" step="0.1">
+                    <span class="hint">Total economic return, not distribution yield alone.</span>
+                </div>
+                <div class="field">
+                    <label for="distributionA">Cash distribution yield (%)</label>
+                    <input type="number" id="distributionA" value="8.5" min="0" max="100" step="0.1">
+                </div>
+                <div class="field">
+                    <label for="volatilityA">Annualized volatility (%)</label>
+                    <input type="number" id="volatilityA" value="10" min="0" max="200" step="0.5">
+                    <span class="hint">Descriptive only; the stress drawdown controls LTV capacity.</span>
+                </div>
+                <div class="field">
+                    <label for="drawdownA">Design stress drawdown (%)</label>
+                    <input type="number" id="drawdownA" value="20" min="0" max="95" step="1">
+                </div>
+                <div class="field">
+                    <label for="maintenanceA">Lender maintenance-LTV limit (%)</label>
+                    <input type="number" id="maintenanceA" value="75" min="1" max="99" step="1">
+                </div>
+                <div class="field">
+                    <label for="targetA">Target initial LTV (%)</label>
+                    <input type="number" id="targetA" value="54" min="0" max="95" step="1">
+                </div>
+            </div>
+
+            <div class="input-card scenario-b">
+                <h3 class="scenario-b-text">Scenario B · Higher-return asset</h3>
+                <div class="field">
+                    <label for="returnB">Expected economic return / ROA (%)</label>
+                    <input type="number" id="returnB" value="12" min="-99" max="100" step="0.1">
+                    <span class="hint">Total economic return, not distribution yield alone.</span>
+                </div>
+                <div class="field">
+                    <label for="distributionB">Cash distribution yield (%)</label>
+                    <input type="number" id="distributionB" value="10" min="0" max="100" step="0.1">
+                </div>
+                <div class="field">
+                    <label for="volatilityB">Annualized volatility (%)</label>
+                    <input type="number" id="volatilityB" value="25" min="0" max="200" step="0.5">
+                    <span class="hint">Descriptive only; the stress drawdown controls LTV capacity.</span>
+                </div>
+                <div class="field">
+                    <label for="drawdownB">Design stress drawdown (%)</label>
+                    <input type="number" id="drawdownB" value="40" min="0" max="95" step="1">
+                </div>
+                <div class="field">
+                    <label for="maintenanceB">Lender maintenance-LTV limit (%)</label>
+                    <input type="number" id="maintenanceB" value="70" min="1" max="99" step="1">
+                </div>
+                <div class="field">
+                    <label for="targetB">Target initial LTV (%)</label>
+                    <input type="number" id="targetB" value="30" min="0" max="95" step="1">
+                </div>
+            </div>
+        </div>
+        <div id="errorBox" class="error-box" role="alert"></div>
+    </section>
+
+    <section class="panel" aria-labelledby="result-heading">
+        <div class="panel-header">
+            <div>
+                <h2 id="result-heading">Capital-efficiency result</h2>
+                <p class="section-copy">A higher modeled ROE is an arithmetic result under the entered assumptions—not an investment recommendation.</p>
+            </div>
+        </div>
+        <div class="result-grid" aria-live="polite">
+            <article class="result-card">
+                <div class="label">Higher modeled ROE</div>
+                <div id="winnerValue" class="value">—</div>
+                <p id="winnerDetail">—</p>
+            </article>
+            <article class="result-card">
+                <div class="label">Lower-volatility thesis</div>
+                <div id="thesisValue" class="value">—</div>
+                <p id="thesisDetail">—</p>
+            </article>
+            <article class="result-card">
+                <div class="label">Rate-stress result</div>
+                <div id="stressValue" class="value">—</div>
+                <p id="stressDetail">—</p>
+            </article>
+            <article class="result-card">
+                <div class="label">Drawdown constraint</div>
+                <div id="safetyValue" class="value">—</div>
+                <p id="safetyDetail">—</p>
+            </article>
+        </div>
+
+        <div class="formula-grid">
+            <div class="formula-card">
+                <strong class="scenario-a-text">Scenario A substitution</strong>
+                <p><code id="formulaA">—</code></p>
+            </div>
+            <div class="formula-card">
+                <strong class="scenario-b-text">Scenario B substitution</strong>
+                <p><code id="formulaB">—</code></p>
+            </div>
+        </div>
+
+        <div class="narrative">
+            <article>
+                <h3>Why the result occurs</h3>
+                <p id="driverNarrative">—</p>
+            </article>
+            <article>
+                <h3>ROE crossover threshold</h3>
+                <p id="crossoverNarrative">—</p>
+            </article>
+        </div>
+    </section>
+
+    <section class="panel" aria-labelledby="roe-chart-heading">
+        <div class="panel-header">
+            <div>
+                <h2 id="roe-chart-heading">ROE as capital structure changes</h2>
+                <p class="section-copy">Solid curves are within each scenario’s risk-supported initial-LTV limit. Dashed curves extend beyond it for illustration.</p>
+            </div>
+        </div>
+        <div class="chart-wrap">
+            <canvas id="roeChart" role="img" aria-label="Modeled return on equity versus loan-to-value for both scenarios"></canvas>
+        </div>
+        <div class="chart-key" aria-hidden="true">
+            <span class="key-line"><span class="line-sample"></span>Within risk-supported limit</span>
+            <span class="key-line"><span class="line-sample dashed"></span>Beyond risk-supported limit</span>
+        </div>
+        <div id="chartWarning" class="chart-warning" role="status">The chart library did not load. Calculations and tables remain available.</div>
+    </section>
+
+    <section class="panel" aria-labelledby="comparison-heading">
+        <div class="panel-header">
+            <div>
+                <h2 id="comparison-heading">Auditable scenario comparison</h2>
+                <p class="section-copy">The risk-supported LTV is the maintenance limit adjusted for the design drawdown, less the entered initial-LTV safety buffer.</p>
+            </div>
+        </div>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th scope="col">Metric</th>
+                        <th scope="col" class="scenario-a-text">Scenario A</th>
+                        <th scope="col" class="scenario-b-text">Scenario B</th>
+                    </tr>
+                </thead>
+                <tbody id="comparisonBody"></tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="panel" aria-labelledby="projection-heading">
+        <div class="panel-header">
+            <div>
+                <h2 id="projection-heading">Deterministic capital-structure projection</h2>
+                <p class="section-copy">The projection compounds the entered economic return monthly and keeps each scenario at its target LTV.</p>
+            </div>
+            <div class="toolbar">
+                <div class="field">
+                    <label for="projectionMetric">Chart metric</label>
+                    <select id="projectionMetric">
+                        <option value="equity">Net equity</option>
+                        <option value="assets">Gross assets</option>
+                        <option value="debt">Debt</option>
+                        <option value="borrowedCash">Cumulative net cash extracted</option>
+                    </select>
+                </div>
+                <button id="downloadCsvBtn" type="button">Download projection CSV</button>
+            </div>
+        </div>
+        <div class="chart-wrap">
+            <canvas id="projectionChart" role="img" aria-label="Deterministic capital-structure projection for both scenarios"></canvas>
+        </div>
+    </section>
+
+    <section class="panel" aria-labelledby="assumptions-heading">
+        <h2 id="assumptions-heading">Model boundaries</h2>
+        <details open>
+            <summary>Important assumptions and limitations</summary>
+            <ul class="assumptions">
+                <li>Economic return and borrowing rates are constant; actual returns, rates, collateral values, and lender requirements change.</li>
+                <li>Cash distribution yield is used only for interest-coverage analysis. It is not added on top of economic total return.</li>
+                <li>Annualized volatility is descriptive. The entered design drawdown—not volatility alone—determines the modeled leverage limit.</li>
+                <li>The stress test assumes debt is unchanged during an immediate asset-price decline and calculates the resulting LTV before corrective action.</li>
+                <li>Acquisition mode assumes monthly rebalancing and reinvestment to target LTV. Buy-borrow-die mode assumes incremental borrowing or repayment to target LTV and reports net cash extracted.</li>
+                <li>The model excludes taxes, fees, slippage, distribution changes, NAV erosion not captured in economic return, liquidity constraints, sequence risk, and forced-sale costs.</li>
+                <li>This is an educational illustration, not financial, lending, tax, legal, or estate-planning advice.</li>
+            </ul>
+        </details>
+    </section>
+
+    <footer>Capital Structure &amp; ROE Crossover · Version 2</footer>
+</main>
+
+<script>
+    'use strict';
+
+    var roeChartInstance = null;
+    var projectionChartInstance = null;
+    var latestModel = null;
+    var COLORS = {
+        a: '#50df8a',
+        b: '#69a8ff',
+        warning: '#f6c453',
+        danger: '#ff7272',
+        grid: '#364155',
+        text: '#dfe7f5',
+        muted: '#aeb8ca'
+    };
+
+    function byId(id) {
+        return document.getElementById(id);
+    }
+
+    function readNumber(id) {
+        return Number.parseFloat(byId(id).value);
+    }
+
+    function asDecimal(percentValue) {
+        return percentValue / 100;
+    }
+
+    function formatPercent(decimalValue, digits) {
+        var places = typeof digits === 'number' ? digits : 2;
+        return (decimalValue * 100).toFixed(places) + '%';
+    }
+
+    function formatPercentValue(percentValue, digits) {
+        var places = typeof digits === 'number' ? digits : 2;
+        return percentValue.toFixed(places) + '%';
+    }
+
+    function formatMoney(value) {
+        return new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: 'USD',
+            maximumFractionDigits: 0
+        }).format(value);
+    }
+
+    function formatMultiple(value) {
+        if (!Number.isFinite(value)) {
+            return 'Not applicable';
+        }
+        return value.toFixed(2) + '×';
+    }
+
+    function carryStatus(spread) {
+        if (spread > 1e-10) {
+            return 'Positive carry';
+        }
+        if (spread < -1e-10) {
+            return 'Negative carry';
+        }
+        return 'Carry breakeven';
+    }
+
+    function coverageStatus(scenario) {
+        if (scenario.debt <= 0) {
+            return 'No debt';
+        }
+        return scenario.interestCoverage >= 1 ? 'Cash distributions cover interest' : 'Cash distributions do not cover interest';
+    }
+
+    function getInputs() {
+        return {
+            mode: byId('mode').value,
+            startEquity: readNumber('startEquity'),
+            monthlyContrib: readNumber('monthlyContrib'),
+            borrowRate: asDecimal(readNumber('borrowRate')),
+            rateStress: asDecimal(readNumber('rateStress')),
+            safetyBuffer: asDecimal(readNumber('safetyBuffer')),
+            months: readNumber('months'),
+            a: {
+                key: 'a',
+                name: 'Scenario A',
+                descriptor: 'Lower-volatility asset',
+                economicReturn: asDecimal(readNumber('returnA')),
+                distributionYield: asDecimal(readNumber('distributionA')),
+                volatility: asDecimal(readNumber('volatilityA')),
+                drawdown: asDecimal(readNumber('drawdownA')),
+                maintenanceLtv: asDecimal(readNumber('maintenanceA')),
+                targetLtv: asDecimal(readNumber('targetA'))
+            },
+            b: {
+                key: 'b',
+                name: 'Scenario B',
+                descriptor: 'Higher-return asset',
+                economicReturn: asDecimal(readNumber('returnB')),
+                distributionYield: asDecimal(readNumber('distributionB')),
+                volatility: asDecimal(readNumber('volatilityB')),
+                drawdown: asDecimal(readNumber('drawdownB')),
+                maintenanceLtv: asDecimal(readNumber('maintenanceB')),
+                targetLtv: asDecimal(readNumber('targetB'))
+            }
+        };
+    }
+
+    function validateInputs(inputs) {
+        var errors = [];
+        var invalidIds = [];
+
+        function requireRange(id, label, value, min, max, allowMin, allowMax) {
+            var minOkay = allowMin ? value >= min : value > min;
+            var maxOkay = allowMax ? value <= max : value < max;
+            if (!Number.isFinite(value) || !minOkay || !maxOkay) {
+                errors.push(label + ' must be ' + (allowMin ? 'at least ' : 'greater than ') + min + ' and ' + (allowMax ? 'no more than ' : 'less than ') + max + '.');
+                invalidIds.push(id);
+            }
+        }
+
+        requireRange('startEquity', 'Starting net equity', inputs.startEquity, 0, 1000000000000, false, true);
+        requireRange('monthlyContrib', 'Monthly contribution', inputs.monthlyContrib, 0, 1000000000, true, true);
+        requireRange('borrowRate', 'Borrowing rate', inputs.borrowRate * 100, 0, 99, true, true);
+        requireRange('rateStress', 'Rate stress', inputs.rateStress * 100, 0, 50, true, true);
+        requireRange('safetyBuffer', 'Safety buffer', inputs.safetyBuffer * 100, 0, 50, true, true);
+        requireRange('months', 'Projection timeframe', inputs.months, 1, 600, true, true);
+
+        if (!Number.isInteger(inputs.months)) {
+            errors.push('Projection timeframe must be a whole number of months.');
+            invalidIds.push('months');
+        }
+
+        [
+            { suffix: 'A', scenario: inputs.a },
+            { suffix: 'B', scenario: inputs.b }
+        ].forEach(function (entry) {
+            var s = entry.scenario;
+            var suffix = entry.suffix;
+            requireRange('return' + suffix, s.name + ' economic return', s.economicReturn * 100, -100, 100, false, true);
+            requireRange('distribution' + suffix, s.name + ' distribution yield', s.distributionYield * 100, 0, 100, true, true);
+            requireRange('volatility' + suffix, s.name + ' volatility', s.volatility * 100, 0, 200, true, true);
+            requireRange('drawdown' + suffix, s.name + ' stress drawdown', s.drawdown * 100, 0, 95, true, true);
+            requireRange('maintenance' + suffix, s.name + ' maintenance LTV', s.maintenanceLtv * 100, 0, 100, false, false);
+            requireRange('target' + suffix, s.name + ' target LTV', s.targetLtv * 100, 0, 95, true, true);
+        });
+
+        document.querySelectorAll('input').forEach(function (input) {
+            input.setAttribute('aria-invalid', invalidIds.indexOf(input.id) !== -1 ? 'true' : 'false');
+        });
+
+        return errors;
+    }
+
+    function calculateScenario(scenario, inputs) {
+        var ltv = scenario.targetLtv;
+        var debtToEquity = ltv / (1 - ltv);
+        var equityMultiplier = 1 / (1 - ltv);
+        var grossAssets = inputs.startEquity * equityMultiplier;
+        var debt = grossAssets - inputs.startEquity;
+        var economicSpread = scenario.economicReturn - inputs.borrowRate;
+        var cashSpread = scenario.distributionYield - inputs.borrowRate;
+        var roe = scenario.economicReturn + economicSpread * debtToEquity;
+        var stressedRate = inputs.borrowRate + inputs.rateStress;
+        var stressedRateRoe = scenario.economicReturn + (scenario.economicReturn - stressedRate) * debtToEquity;
+        var theoreticalMaxInitialLtv = scenario.maintenanceLtv * (1 - scenario.drawdown);
+        var riskSupportedLtv = Math.max(0, theoreticalMaxInitialLtv - inputs.safetyBuffer);
+        var postDrawdownLtv = ltv / (1 - scenario.drawdown);
+        var interestExpense = debt * inputs.borrowRate;
+        var annualCashDistribution = grossAssets * scenario.distributionYield;
+        var interestCoverage = interestExpense > 0 ? annualCashDistribution / interestExpense : Infinity;
+        var withinRiskLimit = ltv <= riskSupportedLtv + 1e-10;
+
+        return Object.assign({}, scenario, {
+            debtToEquity: debtToEquity,
+            equityMultiplier: equityMultiplier,
+            grossAssets: grossAssets,
+            debt: debt,
+            economicSpread: economicSpread,
+            cashSpread: cashSpread,
+            roe: roe,
+            stressedRateRoe: stressedRateRoe,
+            theoreticalMaxInitialLtv: theoreticalMaxInitialLtv,
+            riskSupportedLtv: riskSupportedLtv,
+            postDrawdownLtv: postDrawdownLtv,
+            annualInterest: interestExpense,
+            annualCashDistribution: annualCashDistribution,
+            interestCoverage: interestCoverage,
+            withinRiskLimit: withinRiskLimit
+        });
+    }
+
+    function roeAtLtv(scenario, borrowRate, ltv) {
+        return scenario.economicReturn + (scenario.economicReturn - borrowRate) * (ltv / (1 - ltv));
+    }
+
+    function requiredLtvForTargetRoe(scenario, borrowRate, targetRoe) {
+        var spread = scenario.economicReturn - borrowRate;
+        if (Math.abs(spread) < 1e-12) {
+            return targetRoe <= scenario.economicReturn ? 0 : null;
+        }
+        if (spread < 0) {
+            return targetRoe <= scenario.economicReturn ? 0 : null;
+        }
+        if (targetRoe <= scenario.economicReturn) {
+            return 0;
+        }
+        var debtToEquityNeeded = (targetRoe - scenario.economicReturn) / spread;
+        var requiredLtv = debtToEquityNeeded / (1 + debtToEquityNeeded);
+        return requiredLtv >= 0 && requiredLtv < 1 ? requiredLtv : null;
+    }
+
+    function simulateScenario(scenario, inputs) {
+        var rows = [];
+        var equity = inputs.startEquity;
+        var assets = equity / (1 - scenario.targetLtv);
+        var debt = assets - equity;
+        var netBorrowedCash = inputs.mode === 'bbd' ? debt : 0;
+
+        function pushRow(month) {
+            rows.push({
+                month: month,
+                equity: equity,
+                assets: assets,
+                debt: debt,
+                borrowedCash: netBorrowedCash,
+                ltv: assets > 0 ? debt / assets : 0
+            });
+        }
+
+        pushRow(0);
+
+        for (var month = 1; month <= inputs.months; month += 1) {
+            var assetGrowth = assets * (scenario.economicReturn / 12);
+            var interest = debt * (inputs.borrowRate / 12);
+
+            if (inputs.mode === 'acquisition') {
+                equity = equity + assetGrowth - interest + inputs.monthlyContrib;
+                assets = equity / (1 - scenario.targetLtv);
+                debt = assets - equity;
+            } else {
+                assets = assets + assetGrowth - interest + inputs.monthlyContrib;
+                var targetDebt = assets * scenario.targetLtv;
+                var debtChange = targetDebt - debt;
+                netBorrowedCash += debtChange;
+                debt = targetDebt;
+                equity = assets - debt;
+            }
+
+            pushRow(month);
+        }
+
+        return rows;
+    }
+
+    function buildModel(inputs) {
+        var a = calculateScenario(inputs.a, inputs);
+        var b = calculateScenario(inputs.b, inputs);
+        return {
+            inputs: inputs,
+            a: a,
+            b: b,
+            thresholdA: requiredLtvForTargetRoe(a, inputs.borrowRate, b.roe),
+            thresholdB: requiredLtvForTargetRoe(b, inputs.borrowRate, a.roe),
+            projectionA: simulateScenario(a, inputs),
+            projectionB: simulateScenario(b, inputs)
+        };
+    }
+
+    function setModeNote(mode) {
+        if (mode === 'acquisition') {
+            byId('modeNote').textContent = 'Acquisition mode assumes borrowed funds purchase additional portfolio assets and monthly rebalancing restores the target LTV.';
+        } else {
+            byId('modeNote').textContent = 'Buy-borrow-die mode assumes debt proceeds are extracted rather than invested. Incremental borrowing or repayment maintains target LTV, and the projection reports cumulative net cash extracted.';
+        }
+    }
+
+    function setPill(element, text, tone) {
+        element.textContent = text;
+        element.className = 'value ' + (tone ? tone : '');
+    }
+
+    function describeDriver(model, winner, loser) {
+        var higherReturn = winner.economicReturn > loser.economicReturn + 1e-10;
+        var higherLtv = winner.targetLtv > loser.targetLtv + 1e-10;
+        var lowerReturn = winner.economicReturn < loser.economicReturn - 1e-10;
+        var widerSpread = winner.economicSpread > loser.economicSpread + 1e-10;
+        var text;
+
+        if (lowerReturn && higherLtv) {
+            text = winner.name + ' has the lower unlevered economic return, but its larger target LTV creates a greater equity multiplier. Under these assumptions, that leverage capacity more than offsets the return disadvantage.';
+        } else if (higherReturn && higherLtv) {
+            text = winner.name + ' combines a higher unlevered economic return with more leverage, so both the asset return and capital structure raise its modeled ROE.';
+        } else if (higherReturn) {
+            text = winner.name + ' wins primarily through its higher unlevered economic return' + (widerSpread ? ' and wider positive-carry spread.' : '.');
+        } else if (higherLtv) {
+            text = winner.name + ' wins primarily through its larger equity multiplier at the entered target LTV.';
+        } else {
+            text = 'The scenarios produce effectively equal modeled ROE under the entered assumptions.';
+        }
+
+        return text;
+    }
+
+    function renderSummary(model) {
+        var a = model.a;
+        var b = model.b;
+        var difference = a.roe - b.roe;
+        var tie = Math.abs(difference) < 0.0000001;
+        var winner = difference >= 0 ? a : b;
+        var loser = difference >= 0 ? b : a;
+
+        if (tie) {
+            setPill(byId('winnerValue'), 'Modeled tie', '');
+            byId('winnerDetail').textContent = 'Both scenarios produce ' + formatPercent(a.roe) + ' modeled ROE.';
+        } else {
+            setPill(byId('winnerValue'), winner.name, winner.key === 'a' ? 'scenario-a-text' : 'scenario-b-text');
+            byId('winnerDetail').textContent = formatPercent(winner.roe) + ' versus ' + formatPercent(loser.roe) + ', a difference of ' + formatPercent(Math.abs(difference)) + '.';
+        }
+
+        var lowerVol = a.volatility <= b.volatility ? a : b;
+        var other = lowerVol === a ? b : a;
+        if (Math.abs(a.volatility - b.volatility) < 1e-10) {
+            setPill(byId('thesisValue'), 'Not differentiated', 'warning');
+            byId('thesisDetail').textContent = 'Both scenarios use the same annualized volatility.';
+        } else if (lowerVol.targetLtv > other.targetLtv && lowerVol.roe > other.roe) {
+            setPill(byId('thesisValue'), 'Demonstrated', 'scenario-a-text');
+            byId('thesisDetail').textContent = lowerVol.name + ' uses higher LTV and overcomes its competing ROE.';
+        } else if (lowerVol.targetLtv > other.targetLtv) {
+            setPill(byId('thesisValue'), 'Leverage insufficient', 'warning');
+            byId('thesisDetail').textContent = lowerVol.name + ' uses higher LTV, but not enough to produce the higher modeled ROE.';
+        } else {
+            setPill(byId('thesisValue'), 'Not configured', 'warning');
+            byId('thesisDetail').textContent = 'The lower-volatility scenario is not assigned the higher target LTV.';
+        }
+
+        var stressedDifference = a.stressedRateRoe - b.stressedRateRoe;
+        var stressWinner = stressedDifference >= 0 ? a : b;
+        var rankingFlips = !tie && stressWinner.key !== winner.key;
+        setPill(byId('stressValue'), rankingFlips ? 'Ranking reverses' : stressWinner.name, rankingFlips ? 'warning' : (stressWinner.key === 'a' ? 'scenario-a-text' : 'scenario-b-text'));
+        byId('stressDetail').textContent = 'At a ' + formatPercent(model.inputs.borrowRate + model.inputs.rateStress) + ' debt rate: A ' + formatPercent(a.stressedRateRoe) + ' · B ' + formatPercent(b.stressedRateRoe) + '.';
+
+        var bothSafe = a.withinRiskLimit && b.withinRiskLimit;
+        var neitherSafe = !a.withinRiskLimit && !b.withinRiskLimit;
+        if (bothSafe) {
+            setPill(byId('safetyValue'), 'Both inside limit', 'scenario-a-text');
+            byId('safetyDetail').textContent = 'A max ' + formatPercent(a.riskSupportedLtv) + ' · B max ' + formatPercent(b.riskSupportedLtv) + '.';
+        } else if (neitherSafe) {
+            setPill(byId('safetyValue'), 'Both exceed limit', 'danger');
+            byId('safetyDetail').textContent = 'Reduce target LTV or revise the drawdown and lender assumptions.';
+        } else {
+            var unsafe = a.withinRiskLimit ? b : a;
+            setPill(byId('safetyValue'), unsafe.name + ' exceeds limit', 'danger');
+            byId('safetyDetail').textContent = unsafe.name + ' target ' + formatPercent(unsafe.targetLtv) + ' exceeds its modeled maximum of ' + formatPercent(unsafe.riskSupportedLtv) + '.';
+        }
+
+        byId('formulaA').textContent = formatPercent(a.economicReturn) + ' + (' + formatPercent(a.economicReturn) + ' − ' + formatPercent(model.inputs.borrowRate) + ') × [' + formatPercent(a.targetLtv) + ' ÷ (1 − ' + formatPercent(a.targetLtv) + ')] = ' + formatPercent(a.roe);
+        byId('formulaB').textContent = formatPercent(b.economicReturn) + ' + (' + formatPercent(b.economicReturn) + ' − ' + formatPercent(model.inputs.borrowRate) + ') × [' + formatPercent(b.targetLtv) + ' ÷ (1 − ' + formatPercent(b.targetLtv) + ')] = ' + formatPercent(b.roe);
+
+        byId('driverNarrative').textContent = describeDriver(model, winner, loser);
+        byId('crossoverNarrative').textContent = buildCrossoverNarrative(model);
+    }
+
+    function thresholdSentence(subject, threshold, competitor, riskLimit) {
+        if (threshold === null) {
+            return subject.name + ' cannot reach ' + competitor.name + ' target ROE through additional positive-carry leverage under the entered return and debt-rate assumptions.';
+        }
+        if (threshold <= riskLimit + 1e-10) {
+            return subject.name + ' needs approximately ' + formatPercent(threshold) + ' LTV to match ' + competitor.name + ' at its current target. That threshold is within ' + subject.name + ' modeled risk-supported limit of ' + formatPercent(riskLimit) + '.';
+        }
+        return subject.name + ' needs approximately ' + formatPercent(threshold) + ' LTV to match ' + competitor.name + ' at its current target, exceeding ' + subject.name + ' modeled risk-supported limit of ' + formatPercent(riskLimit) + '.';
+    }
+
+    function buildCrossoverNarrative(model) {
+        if (model.a.economicReturn <= model.b.economicReturn) {
+            return thresholdSentence(model.a, model.thresholdA, model.b, model.a.riskSupportedLtv);
+        }
+        return thresholdSentence(model.b, model.thresholdB, model.a, model.b.riskSupportedLtv);
+    }
+
+    function renderTable(model) {
+        var body = byId('comparisonBody');
+        body.textContent = '';
+
+        var rows = [
+            ['Expected economic return / ROA', formatPercent(model.a.economicReturn), formatPercent(model.b.economicReturn)],
+            ['Cash distribution yield', formatPercent(model.a.distributionYield), formatPercent(model.b.distributionYield)],
+            ['Annualized volatility', formatPercent(model.a.volatility), formatPercent(model.b.volatility)],
+            ['Design stress drawdown', formatPercent(model.a.drawdown), formatPercent(model.b.drawdown)],
+            ['Target initial LTV', formatPercent(model.a.targetLtv), formatPercent(model.b.targetLtv)],
+            ['Lender maintenance-LTV limit', formatPercent(model.a.maintenanceLtv), formatPercent(model.b.maintenanceLtv)],
+            ['Risk-supported max initial LTV', formatPercent(model.a.riskSupportedLtv), formatPercent(model.b.riskSupportedLtv)],
+            ['Post-stress LTV', formatPercent(model.a.postDrawdownLtv), formatPercent(model.b.postDrawdownLtv)],
+            ['Starting gross assets', formatMoney(model.a.grossAssets), formatMoney(model.b.grossAssets)],
+            ['Starting debt', formatMoney(model.a.debt), formatMoney(model.b.debt)],
+            ['Debt-to-equity ratio', formatMultiple(model.a.debtToEquity), formatMultiple(model.b.debtToEquity)],
+            ['Equity multiplier', formatMultiple(model.a.equityMultiplier), formatMultiple(model.b.equityMultiplier)],
+            ['Economic positive-carry spread', formatPercent(model.a.economicSpread), formatPercent(model.b.economicSpread)],
+            ['Economic carry status', carryStatus(model.a.economicSpread), carryStatus(model.b.economicSpread)],
+            ['Cash-yield spread on borrowed capital', formatPercent(model.a.cashSpread), formatPercent(model.b.cashSpread)],
+            ['Annual interest coverage', formatMultiple(model.a.interestCoverage), formatMultiple(model.b.interestCoverage)],
+            ['Cash interest-coverage status', coverageStatus(model.a), coverageStatus(model.b)],
+            ['Modeled ROE', formatPercent(model.a.roe), formatPercent(model.b.roe)],
+            ['ROE under rate stress', formatPercent(model.a.stressedRateRoe), formatPercent(model.b.stressedRateRoe)],
+            ['Drawdown-limit status', model.a.withinRiskLimit ? 'Inside modeled limit' : 'Exceeds modeled limit', model.b.withinRiskLimit ? 'Inside modeled limit' : 'Exceeds modeled limit']
+        ];
+
+        rows.forEach(function (row) {
+            var tr = document.createElement('tr');
+            row.forEach(function (value, index) {
+                var cell = document.createElement(index === 0 ? 'th' : 'td');
+                if (index === 0) {
+                    cell.setAttribute('scope', 'row');
+                }
+                cell.textContent = value;
+                tr.appendChild(cell);
+            });
+            body.appendChild(tr);
+        });
+    }
+
+    function curvePoints(scenario, borrowRate, minLtv, maxLtv) {
+        var points = [];
+        var start = Math.max(0, Math.round(minLtv * 100));
+        var end = Math.min(90, Math.round(maxLtv * 100));
+        for (var pct = start; pct <= end; pct += 1) {
+            var ltv = pct / 100;
+            points.push({ x: pct, y: roeAtLtv(scenario, borrowRate, ltv) * 100 });
+        }
+        return points;
+    }
+
+    var limitLinePlugin = {
+        id: 'limitLinePlugin',
+        afterDatasetsDraw: function (chart, args, options) {
+            if (!options || !options.lines || !chart.scales.x) {
+                return;
+            }
+            var ctx = chart.ctx;
+            var area = chart.chartArea;
+            ctx.save();
+            options.lines.forEach(function (line, index) {
+                var x = chart.scales.x.getPixelForValue(line.value);
+                if (x < area.left || x > area.right) {
+                    return;
+                }
+                ctx.beginPath();
+                ctx.setLineDash([5, 4]);
+                ctx.strokeStyle = line.color;
+                ctx.lineWidth = 1.5;
+                ctx.moveTo(x, area.top);
+                ctx.lineTo(x, area.bottom);
+                ctx.stroke();
+                ctx.setLineDash([]);
+                ctx.fillStyle = line.color;
+                ctx.font = '11px sans-serif';
+                ctx.textAlign = x > area.right - 115 ? 'right' : 'left';
+                ctx.fillText(line.label, x + (ctx.textAlign === 'right' ? -5 : 5), area.top + 13 + index * 14);
+            });
+            ctx.restore();
+        }
+    };
+
+    function renderRoeChart(model) {
+        var warning = byId('chartWarning');
+        if (typeof Chart === 'undefined') {
+            warning.classList.add('visible');
+            return;
+        }
+        warning.classList.remove('visible');
+
+        if (roeChartInstance) {
+            roeChartInstance.destroy();
+        }
+
+        var maxX = 90;
+        var safeA = Math.min(model.a.riskSupportedLtv, 0.90);
+        var safeB = Math.min(model.b.riskSupportedLtv, 0.90);
+        var datasets = [
+            {
+                label: 'Scenario A · within risk limit',
+                data: curvePoints(model.a, model.inputs.borrowRate, 0, safeA),
+                parsing: false,
+                borderColor: COLORS.a,
+                backgroundColor: 'transparent',
+                borderWidth: 3,
+                pointRadius: 0,
+                tension: 0.12
+            },
+            {
+                label: 'Scenario A · beyond risk limit',
+                data: curvePoints(model.a, model.inputs.borrowRate, safeA, 0.90),
+                parsing: false,
+                borderColor: 'rgba(80, 223, 138, 0.55)',
+                backgroundColor: 'transparent',
+                borderWidth: 2,
+                borderDash: [7, 5],
+                pointRadius: 0,
+                tension: 0.12
+            },
+            {
+                label: 'Scenario B · within risk limit',
+                data: curvePoints(model.b, model.inputs.borrowRate, 0, safeB),
+                parsing: false,
+                borderColor: COLORS.b,
+                backgroundColor: 'transparent',
+                borderWidth: 3,
+                pointRadius: 0,
+                tension: 0.12
+            },
+            {
+                label: 'Scenario B · beyond risk limit',
+                data: curvePoints(model.b, model.inputs.borrowRate, safeB, 0.90),
+                parsing: false,
+                borderColor: 'rgba(105, 168, 255, 0.55)',
+                backgroundColor: 'transparent',
+                borderWidth: 2,
+                borderDash: [7, 5],
+                pointRadius: 0,
+                tension: 0.12
+            },
+            {
+                type: 'scatter',
+                label: 'Scenario A target',
+                data: [{ x: model.a.targetLtv * 100, y: model.a.roe * 100 }],
+                parsing: false,
+                backgroundColor: COLORS.a,
+                borderColor: '#ffffff',
+                borderWidth: 2,
+                pointRadius: 7,
+                pointHoverRadius: 9
+            },
+            {
+                type: 'scatter',
+                label: 'Scenario B target',
+                data: [{ x: model.b.targetLtv * 100, y: model.b.roe * 100 }],
+                parsing: false,
+                backgroundColor: COLORS.b,
+                borderColor: '#ffffff',
+                borderWidth: 2,
+                pointRadius: 7,
+                pointHoverRadius: 9
+            }
+        ];
+
+        roeChartInstance = new Chart(byId('roeChart').getContext('2d'), {
+            type: 'line',
+            data: { datasets: datasets },
+            plugins: [limitLinePlugin],
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: false,
+                interaction: { mode: 'nearest', intersect: false },
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: COLORS.text,
+                            filter: function (item) {
+                                return item.text.indexOf('beyond risk limit') === -1;
+                            }
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            title: function (items) {
+                                return items.length ? 'LTV ' + Number(items[0].parsed.x).toFixed(0) + '%' : '';
+                            },
+                            label: function (context) {
+                                return context.dataset.label + ': ' + Number(context.parsed.y).toFixed(2) + '% ROE';
+                            }
+                        }
+                    },
+                    limitLinePlugin: {
+                        lines: [
+                            { value: model.a.riskSupportedLtv * 100, color: COLORS.a, label: 'A risk limit ' + formatPercent(model.a.riskSupportedLtv, 0) },
+                            { value: model.b.riskSupportedLtv * 100, color: COLORS.b, label: 'B risk limit ' + formatPercent(model.b.riskSupportedLtv, 0) }
+                        ]
+                    }
+                },
+                scales: {
+                    x: {
+                        type: 'linear',
+                        min: 0,
+                        max: maxX,
+                        title: { display: true, text: 'Loan-to-value (LTV)', color: COLORS.text },
+                        ticks: { color: COLORS.muted, callback: function (value) { return value + '%'; } },
+                        grid: { color: COLORS.grid }
+                    },
+                    y: {
+                        title: { display: true, text: 'Modeled annual ROE', color: COLORS.text },
+                        ticks: { color: COLORS.muted, callback: function (value) { return value + '%'; } },
+                        grid: { color: COLORS.grid }
+                    }
+                }
+            }
+        });
+    }
+
+    function projectionLabel(metric, mode) {
+        var labels = {
+            equity: 'Net equity',
+            assets: 'Gross assets',
+            debt: 'Debt',
+            borrowedCash: mode === 'bbd' ? 'Cumulative net cash extracted' : 'Cumulative net cash extracted (not used in acquisition mode)'
+        };
+        return labels[metric];
+    }
+
+    function renderProjectionChart(model) {
+        if (typeof Chart === 'undefined') {
+            return;
+        }
+        if (projectionChartInstance) {
+            projectionChartInstance.destroy();
+        }
+
+        var metric = byId('projectionMetric').value;
+        var metricLabel = projectionLabel(metric, model.inputs.mode);
+        var labels = model.projectionA.map(function (row) { return 'Month ' + row.month; });
+        var valuesA = model.projectionA.map(function (row) { return row[metric]; });
+        var valuesB = model.projectionB.map(function (row) { return row[metric]; });
+
+        projectionChartInstance = new Chart(byId('projectionChart').getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Scenario A · ' + metricLabel,
+                        data: valuesA,
+                        borderColor: COLORS.a,
+                        backgroundColor: 'rgba(80, 223, 138, 0.08)',
+                        borderWidth: 2.5,
+                        fill: false,
+                        pointRadius: 0,
+                        pointHitRadius: 10
+                    },
+                    {
+                        label: 'Scenario B · ' + metricLabel,
+                        data: valuesB,
+                        borderColor: COLORS.b,
+                        backgroundColor: 'rgba(105, 168, 255, 0.08)',
+                        borderWidth: 2.5,
+                        fill: false,
+                        pointRadius: 0,
+                        pointHitRadius: 10
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: false,
+                interaction: { mode: 'index', intersect: false },
+                plugins: {
+                    legend: { labels: { color: COLORS.text } },
+                    tooltip: {
+                        callbacks: {
+                            label: function (context) {
+                                return context.dataset.label + ': ' + formatMoney(context.parsed.y);
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { color: COLORS.grid },
+                        ticks: { color: COLORS.muted, maxTicksLimit: 12 }
+                    },
+                    y: {
+                        title: { display: true, text: metricLabel, color: COLORS.text },
+                        grid: { color: COLORS.grid },
+                        ticks: {
+                            color: COLORS.muted,
+                            callback: function (value) {
+                                return new Intl.NumberFormat('en-US', {
+                                    notation: 'compact',
+                                    style: 'currency',
+                                    currency: 'USD',
+                                    maximumFractionDigits: 1
+                                }).format(value);
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    function csvNumber(value) {
+        return Number.isFinite(value) ? value.toFixed(2) : '';
+    }
+
+    function downloadCsv() {
+        if (!latestModel) {
+            return;
+        }
+        var lines = [
+            'Month,Scenario A Net Equity,Scenario A Gross Assets,Scenario A Debt,Scenario A Cumulative Net Cash Extracted,Scenario A LTV,Scenario B Net Equity,Scenario B Gross Assets,Scenario B Debt,Scenario B Cumulative Net Cash Extracted,Scenario B LTV'
+        ];
+
+        for (var i = 0; i < latestModel.projectionA.length; i += 1) {
+            var a = latestModel.projectionA[i];
+            var b = latestModel.projectionB[i];
+            lines.push([
+                a.month,
+                csvNumber(a.equity),
+                csvNumber(a.assets),
+                csvNumber(a.debt),
+                csvNumber(a.borrowedCash),
+                csvNumber(a.ltv * 100),
+                csvNumber(b.equity),
+                csvNumber(b.assets),
+                csvNumber(b.debt),
+                csvNumber(b.borrowedCash),
+                csvNumber(b.ltv * 100)
+            ].join(','));
+        }
+
+        var blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8' });
+        var url = URL.createObjectURL(blob);
+        var link = document.createElement('a');
+        link.href = url;
+        link.download = 'Capital_Structure_ROE_Crossover_V2.csv';
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.setTimeout(function () {
+            URL.revokeObjectURL(url);
+        }, 0);
+    }
+
+    function render() {
+        var inputs = getInputs();
+        setModeNote(inputs.mode);
+        var errors = validateInputs(inputs);
+        var errorBox = byId('errorBox');
+        var exportButton = byId('downloadCsvBtn');
+
+        if (errors.length) {
+            errorBox.textContent = errors.join(' ');
+            errorBox.classList.add('visible');
+            exportButton.disabled = true;
+            latestModel = null;
+            return;
+        }
+
+        errorBox.textContent = '';
+        errorBox.classList.remove('visible');
+        exportButton.disabled = false;
+
+        latestModel = buildModel(inputs);
+        renderSummary(latestModel);
+        renderTable(latestModel);
+        renderRoeChart(latestModel);
+        renderProjectionChart(latestModel);
+    }
+
+    document.querySelectorAll('input').forEach(function (control) {
+        control.addEventListener('input', render);
+    });
+
+    byId('mode').addEventListener('change', render);
+
+    byId('projectionMetric').addEventListener('change', function () {
+        if (latestModel) {
+            renderProjectionChart(latestModel);
+        }
+    });
+
+    byId('downloadCsvBtn').addEventListener('click', downloadCsv);
+
+    render();
+</script>
+</body>
+</html>
