@@ -145,6 +145,8 @@
     .btn:hover:not(:disabled), .btn:active:not(:disabled) { color: #000; background: var(--primary); box-shadow: 0 0 12px var(--primary); }
     .btn:disabled { opacity: .35; cursor: not-allowed; }
     .btn-secondary { flex: 1; min-height: 38px; border-color: var(--border); color: var(--subtext); font-size: 12px; }
+    .btn-danger { width: 100%; min-height: 38px; border-color: #7b2323; color: var(--danger); font-size: 12px; }
+    .btn-danger:hover:not(:disabled), .btn-danger:active:not(:disabled) { color: #fff; background: #a21e1e; box-shadow: 0 0 12px rgba(255,69,69,.65); }
 
     #qr-container { display: none; padding-top: 10px; border-top: 1px solid var(--border); text-align: center; }
     #qr-container canvas { max-width: 100%; border: 4px solid var(--primary); box-shadow: 0 0 10px rgba(0,255,65,.3); }
@@ -159,6 +161,12 @@
     .system-pill.warning { color: var(--warning); border-color: #725f19; }
     .system-pill.error { color: var(--danger); border-color: #7b2323; }
     .download-card { margin-top: 7px; padding: 8px 10px; border: 1px solid var(--border); display: flex; align-items: center; gap: 8px; color: var(--primary); background: #000; text-decoration: none; }
+    .transfer-offer { align-self: flex-start; width: min(92%, 520px); padding: 12px; border: 1px solid var(--border); display: grid; gap: 9px; color: #b5ffb5; background: #051405; }
+    .transfer-title { color: var(--primary); font-weight: 700; overflow-wrap: anywhere; }
+    .transfer-meta, .transfer-status { color: var(--subtext); font-size: 11px; }
+    .transfer-actions { display: flex; gap: 8px; }
+    .transfer-actions .btn { flex: 1; min-height: 38px; padding-inline: 10px; font-size: 11px; }
+    .transfer-progress { width: 100%; height: 10px; accent-color: var(--primary); }
 
     .input-bar { padding: 10px 12px calc(10px + var(--safe-bottom)); border-top: 1px solid var(--border); display: flex; align-items: center; gap: 8px; position: relative; z-index: 10; background: #000; }
     .icon-btn, .send-btn { width: 44px; height: 44px; flex: 0 0 auto; border: 1px solid var(--border); color: var(--primary); background: #000; font-size: 18px; cursor: pointer; }
@@ -226,12 +234,13 @@
         </div>
         <div class="room-meta">
           <span id="room-role">ESTABLISHING ROOM...</span>
-          <span>DIRECT MODE · MAX 6 OPERATORS</span>
+          <span>DIRECT MODE · MAX 6 · FILES UP TO 2 GB</span>
         </div>
         <div class="row">
           <button id="share-btn" class="btn btn-secondary" type="button" disabled>COPY INVITE</button>
           <button id="toggle-qr-btn" class="btn btn-secondary" type="button" disabled>SHOW QR</button>
         </div>
+        <button id="leave-room-btn" class="btn btn-danger" type="button" disabled>LEAVE ROOM</button>
         <div id="qr-container">
           <canvas id="qr-canvas" role="img" aria-label="Room invitation QR code"></canvas>
           <div class="qr-caption">SCAN TO ENTER ENCRYPTED ROOM</div>
@@ -268,11 +277,13 @@
 
     const PROTOCOL = 'matrixcom-v3';
     const MAX_ROOM_SIZE = 6;
-    const MAX_FILE_SIZE = 100 * 1024 * 1024;
+    const MAX_FILE_SIZE = 2 * 1024 * 1024 * 1024;
+    const MEMORY_FILE_SIZE = 100 * 1024 * 1024;
     const MAX_INCOMING_TRANSFERS = 2;
     const CHUNK_SIZE = 32 * 1024;
+    const FILE_WINDOW_CHUNKS = 256;
     const AUTH_TIMEOUT_MS = 10_000;
-    const TRANSFER_TIMEOUT_MS = 60_000;
+    const TRANSFER_TIMEOUT_MS = 120_000;
     const $ = (id) => document.getElementById(id);
 
     const connections = new Map();
@@ -282,6 +293,7 @@
     const incomingCalls = new Map();
     const incomingTransfers = new Map();
     const outgoingTransfers = new Map();
+    const pendingFileOffers = new Map();
 
     let myPeerId = null;
     let currentHostId = null;
@@ -294,6 +306,7 @@
     let soundEnabled = true;
     let reconnectTimer = null;
     let lastFocusedElement = null;
+    let leavingRoom = false;
 
     const hashParams = new URLSearchParams(window.location.hash.slice(1));
     const invitedHostId = hashParams.get('room');
@@ -415,7 +428,13 @@
 
     function updateUI() {
       const active = connections.size > 0;
-      ['msg-input', 'send-btn', 'menu-file', 'menu-video', 'menu-screen'].forEach((id) => { $(id).disabled = !active; });
+      ['msg-input', 'send-btn', 'menu-file', 'menu-video', 'menu-screen'].forEach((id) => { $(id).disabled = !active || leavingRoom; });
+      $('leave-room-btn').disabled = !myPeerId || leavingRoom;
+      if (leavingRoom) {
+        $('room-role').textContent = 'ROOM DEPARTED · INVITATION REMOVED';
+        setStatus('LEFT ROOM', 'error');
+        return;
+      }
       $('room-role').textContent = currentHostId === myPeerId ? 'ROOM HOST · INVITE ROTATES AFTER HOST EXIT' : 'ROOM MEMBER · INVITE AUTHENTICATED';
       if (!myPeerId) return;
       const count = Math.min(knownMembers.size, MAX_ROOM_SIZE);
@@ -611,6 +630,7 @@
       connections.delete(conn.peer);
       closeOutgoingCall(conn.peer);
       closeIncomingCall(conn.peer);
+      if (leavingRoom) return;
 
       if (currentHostId === myPeerId) {
         knownMembers.delete(conn.peer);
@@ -678,9 +698,18 @@
             updateUI();
           }
           break;
+        case 'member-leaving':
+          if (data.peerId === senderId) {
+            knownMembers.delete(senderId);
+            if (currentHostId === myPeerId) broadcast({ type: 'member-left', protocol: PROTOCOL, peerId: senderId }, senderId);
+            connections.get(senderId)?.close();
+            updateUI();
+          }
+          break;
         case 'host-changed': {
           const elected = electNewHost();
           if (isPeerId(data.hostId) && data.hostId === elected) {
+            if (data.departingHostId === senderId) knownMembers.delete(senderId);
             currentHostId = data.hostId;
             updateInvitation();
             updateUI();
@@ -696,8 +725,11 @@
         case 'file-accept':
           handleFileAccept(data, senderId);
           break;
+        case 'file-ack':
+          handleFileAck(data, senderId);
+          break;
         case 'file-reject':
-          logSystem(`${peerName(senderId)} declined ${String(data.name || 'the file').slice(0, 120)}`, 'warning');
+          handleFileReject(data, senderId);
           break;
         case 'file-chunk':
           handleFileChunk(data, senderId);
@@ -706,7 +738,8 @@
           handleFileComplete(data, senderId);
           break;
         case 'file-cancel':
-          cancelIncomingTransfer(senderId, data.transferId, 'Transfer cancelled');
+          if (outgoingTransfers.has(data.transferId)) cancelOutgoingTransfer(data, senderId);
+          else cancelIncomingTransfer(senderId, data.transferId, 'Transfer cancelled', false);
           break;
         default:
           break;
@@ -722,12 +755,22 @@
         Number.isSafeInteger(data.totalChunks) && data.totalChunks === Math.ceil(data.size / CHUNK_SIZE);
     }
 
+    function formatBytes(bytes) {
+      if (bytes >= 1024 ** 3) return `${(bytes / 1024 ** 3).toFixed(2)} GB`;
+      if (bytes >= 1024 ** 2) return `${(bytes / 1024 ** 2).toFixed(1)} MB`;
+      if (bytes >= 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+      return `${bytes} bytes`;
+    }
+
+    function safeFilename(value) {
+      return String(value || 'MatrixCom-download').replace(/[\\/:*?"<>|\u0000-\u001f]/g, '_').slice(0, 180) || 'MatrixCom-download';
+    }
+
     function handleFileOffer(data, senderId) {
       if (!validTransferMetadata(data)) {
         sendTo(senderId, { type: 'file-reject', protocol: PROTOCOL, transferId: data.transferId, name: 'invalid transfer' });
         return;
       }
-
       if (incomingTransfers.size >= MAX_INCOMING_TRANSFERS) {
         sendTo(senderId, { type: 'file-reject', protocol: PROTOCOL, transferId: data.transferId, name: data.name });
         logSystem('Incoming transfer declined because the receiver is busy.', 'warning');
@@ -735,28 +778,108 @@
       }
 
       const key = transferKey(senderId, data.transferId);
-      if (incomingTransfers.has(key)) return;
-      const sizeMB = (data.size / 1024 / 1024).toFixed(1);
-      const accepted = window.confirm(`${peerName(senderId)} wants to send “${data.name}” (${sizeMB} MB). Accept?`);
-      if (!accepted) {
-        sendTo(senderId, { type: 'file-reject', protocol: PROTOCOL, transferId: data.transferId, name: data.name });
+      if (incomingTransfers.has(key) || pendingFileOffers.has(key)) return;
+
+      const card = document.createElement('div');
+      card.className = 'transfer-offer';
+      const title = document.createElement('div');
+      title.className = 'transfer-title';
+      title.textContent = `📦 ${data.name}`;
+      const meta = document.createElement('div');
+      meta.className = 'transfer-meta';
+      meta.textContent = `${peerName(senderId)} · ${formatBytes(data.size)}`;
+      const status = document.createElement('div');
+      status.className = 'transfer-status';
+      const canStream = typeof window.showSaveFilePicker === 'function';
+      status.textContent = canStream
+        ? 'Stream directly to a location you choose.'
+        : data.size <= MEMORY_FILE_SIZE
+          ? 'Direct-to-disk is unavailable; this file can use the 100 MB memory fallback.'
+          : 'This browser cannot stream large files. Use a browser with Save File Picker support.';
+      const actions = document.createElement('div');
+      actions.className = 'transfer-actions';
+      const accept = document.createElement('button');
+      accept.type = 'button';
+      accept.className = 'btn';
+      accept.textContent = canStream ? 'ACCEPT & CHOOSE LOCATION' : 'ACCEPT';
+      accept.disabled = !canStream && data.size > MEMORY_FILE_SIZE;
+      const reject = document.createElement('button');
+      reject.type = 'button';
+      reject.className = 'btn btn-danger';
+      reject.textContent = 'DECLINE';
+      actions.append(accept, reject);
+      card.append(title, meta, status, actions);
+      $('chat-box').appendChild(card);
+      pendingFileOffers.set(key, card);
+      scrollToBottom();
+
+      accept.addEventListener('click', () => acceptIncomingFile(data, senderId, card));
+      reject.addEventListener('click', () => rejectIncomingFile(data, senderId, card, 'Transfer declined'));
+    }
+
+    async function acceptIncomingFile(data, senderId, card) {
+      const key = transferKey(senderId, data.transferId);
+      if (!pendingFileOffers.has(key) || incomingTransfers.size >= MAX_INCOMING_TRANSFERS) return;
+      const status = card.querySelector('.transfer-status');
+      const actions = card.querySelector('.transfer-actions');
+      let mode = 'memory';
+      let writable = null;
+
+      try {
+        if (typeof window.showSaveFilePicker === 'function') {
+          const handle = await window.showSaveFilePicker({ suggestedName: safeFilename(data.name), id: 'matrixcom-receive' });
+          writable = await handle.createWritable();
+          mode = 'stream';
+        } else if (data.size > MEMORY_FILE_SIZE) {
+          throw new Error('This browser supports in-memory transfers only up to 100 MB');
+        }
+      } catch (error) {
+        const message = error?.name === 'AbortError' ? 'Save location selection cancelled' : error.message;
+        rejectIncomingFile(data, senderId, card, message);
         return;
       }
+
+      pendingFileOffers.delete(key);
+      actions.remove();
+      const progress = document.createElement('progress');
+      progress.className = 'transfer-progress';
+      progress.max = data.size || 1;
+      progress.value = 0;
+      card.appendChild(progress);
+      status.textContent = mode === 'stream' ? 'Receiving directly to disk…' : 'Receiving into browser memory…';
 
       const transfer = {
         name: data.name,
         mime: typeof data.mime === 'string' ? data.mime.slice(0, 120) : '',
         size: data.size,
         totalChunks: data.totalChunks,
-        chunks: new Array(data.totalChunks),
+        mode,
+        writable,
+        chunks: mode === 'memory' ? new Array(data.totalChunks) : null,
         nextIndex: 0,
         receivedBytes: 0,
-        timer: null
+        writtenBytes: 0,
+        completeReceived: false,
+        queue: Promise.resolve(),
+        timer: null,
+        card,
+        progress,
+        status
       };
       incomingTransfers.set(key, transfer);
       resetTransferTimer(key, senderId, data.transferId);
-      sendTo(senderId, { type: 'file-accept', protocol: PROTOCOL, transferId: data.transferId });
-      logSystem(`Receiving ${data.name} from ${peerName(senderId)}...`);
+      sendTo(senderId, { type: 'file-accept', protocol: PROTOCOL, transferId: data.transferId, mode });
+      logSystem(`Receiving ${data.name} from ${peerName(senderId)} via ${mode === 'stream' ? 'direct-to-disk streaming' : 'memory fallback'}…`);
+    }
+
+    function rejectIncomingFile(data, senderId, card, reason) {
+      const key = transferKey(senderId, data.transferId);
+      pendingFileOffers.delete(key);
+      const actions = card.querySelector('.transfer-actions');
+      if (actions) actions.remove();
+      const status = card.querySelector('.transfer-status');
+      if (status) status.textContent = reason;
+      sendTo(senderId, { type: 'file-reject', protocol: PROTOCOL, transferId: data.transferId, name: data.name, reason });
     }
 
     function resetTransferTimer(key, senderId, transferId) {
@@ -765,7 +888,6 @@
       clearTimeout(transfer.timer);
       transfer.timer = setTimeout(() => {
         cancelIncomingTransfer(senderId, transferId, 'Transfer timed out');
-        sendTo(senderId, { type: 'file-cancel', protocol: PROTOCOL, transferId });
       }, TRANSFER_TIMEOUT_MS);
     }
 
@@ -773,10 +895,70 @@
       const transfer = outgoingTransfers.get(data.transferId);
       if (!transfer || transfer.sendingTo.has(senderId) || !transfer.offeredTo.has(senderId)) return;
       transfer.sendingTo.add(senderId);
+      transfer.peerStates.set(senderId, { ackedChunks: 0, waiters: [], lastLoggedPercent: 0 });
       sendFileToPeer(transfer, senderId).catch((error) => {
         logSystem(`File transmission to ${peerName(senderId)} failed: ${error.message}`, 'error');
         sendTo(senderId, { type: 'file-cancel', protocol: PROTOCOL, transferId: transfer.id });
+        transfer.settled.add(senderId);
       });
+    }
+
+    function handleFileReject(data, senderId) {
+      const transfer = outgoingTransfers.get(data.transferId);
+      if (transfer) {
+        transfer.settled.add(senderId);
+        if (transfer.settled.size === transfer.offeredTo.size) outgoingTransfers.delete(transfer.id);
+      }
+      const reason = String(data.reason || 'Transfer declined').slice(0, 180);
+      logSystem(`${peerName(senderId)} declined ${String(data.name || 'the file').slice(0, 120)}: ${reason}`, 'warning');
+    }
+
+    function handleFileAck(data, senderId) {
+      const transfer = outgoingTransfers.get(data.transferId);
+      const state = transfer?.peerStates.get(senderId);
+      if (!state || !Number.isSafeInteger(data.nextIndex) || data.nextIndex < state.ackedChunks || data.nextIndex > transfer.totalChunks) return;
+      state.ackedChunks = data.nextIndex;
+      state.waiters = state.waiters.filter((waiter) => {
+        if (state.ackedChunks >= waiter.target) { waiter.resolve(); return false; }
+        return true;
+      });
+      const percent = transfer.totalChunks ? Math.floor((state.ackedChunks / transfer.totalChunks) * 100) : 100;
+      const milestone = Math.min(100, Math.floor(percent / 25) * 25);
+      if (milestone > state.lastLoggedPercent) {
+        state.lastLoggedPercent = milestone;
+        logSystem(`Sending ${transfer.file.name} to ${peerName(senderId)}: ${milestone}%`);
+      }
+    }
+
+    function waitForFileAck(transfer, peerId, target) {
+      const state = transfer.peerStates.get(peerId);
+      if (!state) return Promise.reject(new Error('transfer state unavailable'));
+      if (state.ackedChunks >= target) return Promise.resolve();
+      return new Promise((resolve, reject) => {
+        const timeout = setTimeout(() => {
+          state.waiters = state.waiters.filter((waiter) => waiter.target !== target);
+          reject(new Error('receiver acknowledgement timed out'));
+        }, TRANSFER_TIMEOUT_MS);
+        state.waiters.push({
+          target,
+          resolve: () => { clearTimeout(timeout); resolve(); },
+          reject: (error) => { clearTimeout(timeout); reject(error); }
+        });
+      });
+    }
+
+    function cancelOutgoingTransfer(data, senderId) {
+      const transfer = outgoingTransfers.get(data.transferId);
+      const state = transfer?.peerStates.get(senderId);
+      if (!transfer) return;
+      const reason = String(data.reason || 'Receiver cancelled the transfer').slice(0, 180);
+      if (state) {
+        state.waiters.forEach((waiter) => waiter.reject(new Error(reason)));
+        state.waiters = [];
+      }
+      transfer.settled.add(senderId);
+      if (transfer.settled.size === transfer.offeredTo.size) outgoingTransfers.delete(transfer.id);
+      logSystem(`${peerName(senderId)} cancelled ${transfer.file.name}: ${reason}`, 'warning');
     }
 
     async function sendFileToPeer(transfer, peerId) {
@@ -787,11 +969,16 @@
         if (!conn.open) throw new Error('connection closed');
         const chunk = new Uint8Array(await transfer.file.slice(offset, offset + CHUNK_SIZE).arrayBuffer());
         conn.send({ type: 'file-chunk', protocol: PROTOCOL, transferId: transfer.id, index, chunk });
+        const sentChunks = index + 1;
+        if (sentChunks % FILE_WINDOW_CHUNKS === 0 || sentChunks === transfer.totalChunks) {
+          await waitForFileAck(transfer, peerId, sentChunks);
+        }
       }
       conn.send({ type: 'file-complete', protocol: PROTOCOL, transferId: transfer.id });
       logSystem(`Transmitted ${transfer.file.name} to ${peerName(peerId)}`);
       transfer.completed.add(peerId);
-      if (transfer.completed.size === transfer.offeredTo.size) outgoingTransfers.delete(transfer.id);
+      transfer.settled.add(peerId);
+      if (transfer.settled.size === transfer.offeredTo.size) outgoingTransfers.delete(transfer.id);
     }
 
     function normalizeBinaryChunk(value) {
@@ -828,54 +1015,91 @@
         cancelIncomingTransfer(senderId, data.transferId, 'File exceeded declared size');
         return;
       }
-      transfer.chunks[data.index] = chunk;
+      const chunkIndex = data.index;
       transfer.nextIndex += 1;
       transfer.receivedBytes = projected;
       resetTransferTimer(key, senderId, data.transferId);
+
+      transfer.queue = transfer.queue.then(async () => {
+        if (transfer.cancelled) return;
+        if (transfer.mode === 'stream') await transfer.writable.write(new Uint8Array(chunk));
+        else transfer.chunks[chunkIndex] = chunk;
+        transfer.writtenBytes += chunk.byteLength;
+        transfer.progress.value = transfer.writtenBytes;
+        const percent = transfer.size ? Math.floor((transfer.writtenBytes / transfer.size) * 100) : 100;
+        transfer.status.textContent = `Receiving ${formatBytes(transfer.writtenBytes)} of ${formatBytes(transfer.size)} · ${percent}%`;
+        const writtenChunks = chunkIndex + 1;
+        if (writtenChunks % FILE_WINDOW_CHUNKS === 0 || writtenChunks === transfer.totalChunks) {
+          sendTo(senderId, { type: 'file-ack', protocol: PROTOCOL, transferId: data.transferId, nextIndex: writtenChunks });
+        }
+        if (transfer.completeReceived) await finalizeIncomingTransfer(senderId, data.transferId);
+      }).catch((error) => {
+        cancelIncomingTransfer(senderId, data.transferId, `Disk or memory write failed: ${error.message}`);
+      });
     }
 
     function handleFileComplete(data, senderId) {
       const key = transferKey(senderId, data.transferId);
       const transfer = incomingTransfers.get(key);
       if (!transfer) return;
-      clearTimeout(transfer.timer);
-      if (transfer.receivedBytes !== transfer.size || transfer.nextIndex !== transfer.totalChunks) {
-        cancelIncomingTransfer(senderId, data.transferId, 'Incomplete file rejected');
-        return;
-      }
-      const blob = new Blob(transfer.chunks, { type: transfer.mime || 'application/octet-stream' });
-      incomingTransfers.delete(key);
-      playNotificationSound();
-      logDownload(peerName(senderId), URL.createObjectURL(blob), transfer.name);
+      transfer.completeReceived = true;
+      transfer.queue.then(() => finalizeIncomingTransfer(senderId, data.transferId)).catch(() => { /* queue reports its own failure */ });
     }
 
-    function cancelIncomingTransfer(senderId, transferId, reason) {
+    async function finalizeIncomingTransfer(senderId, transferId) {
+      const key = transferKey(senderId, transferId);
+      const transfer = incomingTransfers.get(key);
+      if (!transfer) return;
+      if (!transfer.completeReceived || transfer.writtenBytes !== transfer.size || transfer.nextIndex !== transfer.totalChunks) return;
+      clearTimeout(transfer.timer);
+      incomingTransfers.delete(key);
+      if (transfer.mode === 'stream') {
+        await transfer.writable.close();
+        transfer.status.textContent = `Saved ${formatBytes(transfer.size)} directly to disk.`;
+        logSystem(`Saved ${transfer.name} directly to disk`);
+      } else {
+        const blob = new Blob(transfer.chunks, { type: transfer.mime || 'application/octet-stream' });
+        transfer.status.textContent = 'Transfer complete. Use the download link below.';
+        logDownload(peerName(senderId), URL.createObjectURL(blob), transfer.name);
+      }
+      transfer.progress.value = transfer.size || 1;
+      playNotificationSound();
+    }
+
+    function cancelIncomingTransfer(senderId, transferId, reason, notifySender = true) {
       const key = transferKey(senderId, transferId);
       const transfer = incomingTransfers.get(key);
       if (!transfer) return;
       clearTimeout(transfer.timer);
       incomingTransfers.delete(key);
+      if (transfer.mode === 'stream') Promise.resolve(transfer.writable.abort()).catch(() => {});
+      transfer.cancelled = true;
+      if (transfer.status) transfer.status.textContent = reason;
+      if (notifySender) sendTo(senderId, { type: 'file-cancel', protocol: PROTOCOL, transferId, reason });
       logSystem(`${reason}: ${transfer.name}`, 'error');
     }
 
     async function offerFile(file) {
       if (!file || file.size > MAX_FILE_SIZE) {
-        logSystem(`Files are limited to ${MAX_FILE_SIZE / 1024 / 1024} MB in direct mode.`, 'warning');
+        logSystem('Files are limited to 2 GB in direct mode.', 'warning');
         return;
       }
       const recipients = [...connections.keys()];
       if (!recipients.length) return;
       const id = randomToken(12);
-      const transfer = { id, file, offeredTo: new Set(recipients), sendingTo: new Set(), completed: new Set() };
+      const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
+      const transfer = {
+        id, file, totalChunks,
+        offeredTo: new Set(recipients), sendingTo: new Set(), completed: new Set(), settled: new Set(), peerStates: new Map()
+      };
       outgoingTransfers.set(id, transfer);
       const offer = {
         type: 'file-offer', protocol: PROTOCOL, transferId: id,
         name: file.name.slice(0, 180), mime: file.type.slice(0, 120), size: file.size,
-        totalChunks: Math.ceil(file.size / CHUNK_SIZE)
+        totalChunks
       };
       recipients.forEach((peerId) => sendTo(peerId, offer));
-      logSystem(`Offered ${file.name} to ${recipients.length} operator${recipients.length === 1 ? '' : 's'}`);
-      setTimeout(() => outgoingTransfers.delete(id), 10 * 60_000);
+      logSystem(`Offered ${file.name} (${formatBytes(file.size)}) to ${recipients.length} operator${recipients.length === 1 ? '' : 's'}`);
     }
 
     function callPeerWithLocalMedia(peerId) {
@@ -983,6 +1207,63 @@
       $('btn-mute').classList.remove('muted');
       if (announce) broadcast({ type: 'media-stopped', protocol: PROTOCOL });
       updateVideoVisibility();
+    }
+
+    async function leaveRoom() {
+      if (leavingRoom) return;
+      leavingRoom = true;
+      closeActionMenu();
+
+      const successor = currentHostId === myPeerId
+        ? [...knownMembers].filter((peerId) => peerId !== myPeerId).sort()[0]
+        : null;
+      if (successor) {
+        broadcast({
+          type: 'host-changed', protocol: PROTOCOL,
+          hostId: successor, departingHostId: myPeerId
+        });
+      }
+      broadcast({ type: 'member-leaving', protocol: PROTOCOL, peerId: myPeerId });
+
+      outgoingTransfers.forEach((transfer) => {
+        transfer.offeredTo.forEach((peerId) => sendTo(peerId, { type: 'file-cancel', protocol: PROTOCOL, transferId: transfer.id }));
+      });
+      incomingTransfers.forEach((transfer, key) => {
+        clearTimeout(transfer.timer);
+        transfer.cancelled = true;
+        if (transfer.mode === 'stream') Promise.resolve(transfer.writable.abort()).catch(() => {});
+        const separator = key.indexOf(':');
+        const senderId = key.slice(0, separator);
+        const transferId = key.slice(separator + 1);
+        sendTo(senderId, { type: 'file-cancel', protocol: PROTOCOL, transferId });
+        if (transfer.status) transfer.status.textContent = 'Transfer cancelled because you left the room.';
+      });
+      pendingFileOffers.forEach((card) => {
+        card.querySelector('.transfer-actions')?.remove();
+        const status = card.querySelector('.transfer-status');
+        if (status) status.textContent = 'Offer expired because you left the room.';
+      });
+
+      await stopLocalMedia(false);
+      await new Promise((resolve) => setTimeout(resolve, 120));
+      connections.forEach((conn) => { try { conn.close(); } catch (_) { /* no-op */ } });
+      pendingConnections.forEach((conn) => { try { conn.close(); } catch (_) { /* no-op */ } });
+      connections.clear();
+      pendingConnections.clear();
+      knownMembers.clear();
+      incomingTransfers.clear();
+      outgoingTransfers.clear();
+      pendingFileOffers.clear();
+      try { peer.destroy(); } catch (_) { /* no-op */ }
+
+      shareUrl = '';
+      history.replaceState(null, '', `${window.location.origin}${window.location.pathname}`);
+      $('share-btn').disabled = true;
+      $('toggle-qr-btn').disabled = true;
+      $('qr-container').style.display = 'none';
+      $('toggle-qr-btn').textContent = 'SHOW QR';
+      logSystem('You left the room. The invitation secret was removed from this address.');
+      updateUI();
     }
 
     async function getCameras() {
@@ -1121,14 +1402,16 @@
 
     peer.on('connection', (conn) => setupConnection(conn));
     peer.on('disconnected', () => {
+      if (leavingRoom) return;
       setStatus('SIGNALING INTERRUPTED', 'error');
       clearTimeout(reconnectTimer);
       reconnectTimer = setTimeout(() => {
         try { if (!peer.destroyed) peer.reconnect(); } catch (_) { /* error event reports failure */ }
       }, 1800);
     });
-    peer.on('close', () => setStatus('ROOM CLOSED', 'error'));
+    peer.on('close', () => setStatus(leavingRoom ? 'LEFT ROOM' : 'ROOM CLOSED', 'error'));
     peer.on('error', (error) => {
+      if (leavingRoom) return;
       const messages = {
         'peer-unavailable': 'Room host is unavailable or the invitation expired.',
         network: 'Signaling network unavailable. Retrying...',
@@ -1150,6 +1433,12 @@
       const visible = $('qr-container').style.display === 'block';
       $('qr-container').style.display = visible ? 'none' : 'block';
       $('toggle-qr-btn').textContent = visible ? 'SHOW QR' : 'HIDE QR';
+    });
+    $('leave-room-btn').addEventListener('click', () => {
+      const prompt = currentHostId === myPeerId && connections.size
+        ? 'Leave this room? Another operator will become host and active transfers will stop.'
+        : 'Leave this room? Active transfers will stop.';
+      if (window.confirm(prompt)) leaveRoom();
     });
 
     $('add-btn').addEventListener('click', (event) => {
