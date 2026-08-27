@@ -1,0 +1,1264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline'; connect-src 'self' https: wss:; img-src 'self' data: blob:; media-src 'self' blob:; object-src 'none'; base-uri 'none'">
+  <title>MatrixCom v3</title>
+  <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.5/dist/peerjs.min.js" integrity="sha384-x0YgkOr/3UOZP2CRDxGW9e0Q+2Qjyr3uJrm4xU32Y7ZCNAo7Cc7bjhrZMi/dwczu" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js" integrity="sha384-Dr98ddmUw2QkdCarNQ+OL7xLty7cSxgR0T7v1tq4UErS/qLV0132sBYTolRAFuOV" crossorigin="anonymous"></script>
+  <style>
+    :root {
+      --primary: #00ff41;
+      --primary-active: #00cc33;
+      --bg: #030703;
+      --card-bg: rgba(8, 18, 8, 0.9);
+      --border: #005511;
+      --text: #00ff41;
+      --subtext: #58b96d;
+      --danger: #ff4545;
+      --warning: #ffd447;
+      --safe-bottom: env(safe-area-inset-bottom, 12px);
+    }
+
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      color: var(--text);
+      background: var(--bg);
+      font-family: "Share Tech Mono", "Cascadia Mono", "Courier New", monospace;
+      text-shadow: 0 0 3px rgba(0, 255, 65, 0.35);
+    }
+
+    button, input { font: inherit; }
+    button:focus-visible, input:focus-visible, a:focus-visible {
+      outline: 2px solid #fff;
+      outline-offset: 2px;
+    }
+
+    #matrix-bg {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 0;
+      opacity: 0.22;
+      pointer-events: none;
+    }
+
+    .app-container {
+      width: 100%;
+      max-width: 1400px;
+      height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      z-index: 1;
+      background: rgba(3, 7, 3, 0.86);
+      backdrop-filter: blur(4px);
+    }
+
+    .app-container::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: 99;
+      opacity: 0.45;
+      pointer-events: none;
+      background: linear-gradient(transparent 50%, rgba(0, 0, 0, 0.22) 50%);
+      background-size: 100% 4px;
+    }
+
+    .app-header {
+      min-height: 62px;
+      padding: 10px 16px;
+      border-bottom: 2px solid var(--primary);
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 10;
+      background: #000 repeating-linear-gradient(45deg, rgba(0,255,65,.08) 0 10px, transparent 10px 20px);
+      box-shadow: 0 0 12px rgba(0, 255, 65, 0.3);
+    }
+
+    .app-title { font-size: 1.2rem; font-weight: 700; letter-spacing: 2px; white-space: nowrap; }
+    .status-badge {
+      min-height: 30px;
+      padding: 5px 9px;
+      border: 1px solid var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      background: #001b07;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .5px;
+      text-align: right;
+    }
+
+    .status-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--warning); box-shadow: 0 0 8px var(--warning); flex: 0 0 auto; }
+    .status-dot.connected { background: var(--primary); box-shadow: 0 0 8px var(--primary); }
+    .status-dot.error { background: var(--danger); box-shadow: 0 0 8px var(--danger); }
+
+    #video-container {
+      display: none;
+      min-height: 146px;
+      padding: 12px;
+      gap: 10px;
+      overflow-x: auto;
+      align-items: center;
+      border-bottom: 2px solid var(--border);
+      z-index: 5;
+      background: #000;
+    }
+
+    #video-toolbar { position: sticky; left: 0; z-index: 10; align-self: flex-start; }
+    .video-wrap { position: relative; flex: 0 0 auto; }
+    #local-vid-wrap { display: none; }
+    #video-container video { display: block; height: 120px; max-width: 220px; object-fit: cover; background: #051005; border: 2px solid var(--border); }
+    #local-video { border-color: var(--primary) !important; box-shadow: 0 0 10px rgba(0,255,65,.45); }
+    .remote-video { cursor: pointer; }
+    .video-label { position: absolute; top: 5px; left: 5px; max-width: 90%; overflow: hidden; text-overflow: ellipsis; padding: 2px 5px; color: #fff; background: rgba(0,0,0,.78); font-size: 10px; white-space: nowrap; }
+    .vid-controls { position: absolute; bottom: 5px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px; padding: 3px 6px; background: rgba(0,0,0,.82); }
+    .vid-btn { width: 34px; height: 34px; border: 1px solid var(--border); color: var(--primary); background: #000; cursor: pointer; }
+    .vid-btn.muted { color: var(--danger); }
+
+    .video-fullscreen { position: fixed !important; inset: 0; width: 100vw !important; height: 100vh !important; max-width: none !important; z-index: 9999; border: 0 !important; object-fit: contain !important; background: #000; }
+    body.hide-ui .app-header, body.hide-ui .scroll-body, body.hide-ui .input-bar { display: none !important; }
+    body.hide-ui #video-container { flex: 1; height: 100dvh; flex-wrap: wrap; justify-content: center; align-content: center; border: 0; }
+    body.hide-ui #video-container video { height: auto; max-height: 80vh; max-width: 90vw; object-fit: contain; }
+    body.hide-ui #video-toolbar { position: absolute; top: 15px; left: 15px; }
+
+    .scroll-body { flex: 1; overflow-y: auto; padding: 12px 16px; display: flex; flex-direction: column; gap: 12px; scroll-behavior: smooth; -webkit-overflow-scrolling: touch; }
+    .card { padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; border: 1px solid var(--border); background: var(--card-bg); box-shadow: 0 0 10px rgba(0,0,0,.8); }
+    .row { display: flex; align-items: center; gap: 8px; }
+    .room-meta { display: flex; justify-content: space-between; gap: 10px; color: var(--subtext); font-size: 11px; }
+
+    input[type="text"] { width: 100%; height: 44px; padding: 0 12px; border: 1px solid var(--border); border-radius: 0; color: var(--text); background: #000; outline: none; }
+    input[type="text"]:focus { border-color: var(--primary); box-shadow: 0 0 8px rgba(0,255,65,.35); }
+    .btn { min-height: 44px; padding: 0 16px; border: 1px solid var(--primary); color: var(--primary); background: #000; font-size: 13px; font-weight: 700; letter-spacing: 1px; cursor: pointer; }
+    .btn:hover:not(:disabled), .btn:active:not(:disabled) { color: #000; background: var(--primary); box-shadow: 0 0 12px var(--primary); }
+    .btn:disabled { opacity: .35; cursor: not-allowed; }
+    .btn-secondary { flex: 1; min-height: 38px; border-color: var(--border); color: var(--subtext); font-size: 12px; }
+
+    #qr-container { display: none; padding-top: 10px; border-top: 1px solid var(--border); text-align: center; }
+    #qr-container canvas { max-width: 100%; border: 4px solid var(--primary); box-shadow: 0 0 10px rgba(0,255,65,.3); }
+    .qr-caption { margin-top: 8px; color: var(--primary); font-size: 11px; letter-spacing: 1px; }
+
+    #chat-box { flex: 1; min-height: 180px; padding-bottom: 20px; display: flex; flex-direction: column; gap: 10px; }
+    .bubble { max-width: 82%; padding: 10px 14px; border: 1px solid var(--border); line-height: 1.4; overflow-wrap: anywhere; }
+    .bubble-out { align-self: flex-end; color: var(--text); background: #002b00; border-color: var(--primary); }
+    .bubble-in { align-self: flex-start; color: #b5ffb5; background: #051405; }
+    .bubble-author { margin-bottom: 4px; color: var(--subtext); font-size: 11px; font-weight: 700; letter-spacing: 1px; }
+    .system-pill { align-self: center; max-width: 92%; padding: 5px 12px; border: 1px solid var(--border); color: var(--primary); background: rgba(0,255,65,.08); font-size: 11px; letter-spacing: .5px; text-align: center; overflow-wrap: anywhere; }
+    .system-pill.warning { color: var(--warning); border-color: #725f19; }
+    .system-pill.error { color: var(--danger); border-color: #7b2323; }
+    .download-card { margin-top: 7px; padding: 8px 10px; border: 1px solid var(--border); display: flex; align-items: center; gap: 8px; color: var(--primary); background: #000; text-decoration: none; }
+
+    .input-bar { padding: 10px 12px calc(10px + var(--safe-bottom)); border-top: 1px solid var(--border); display: flex; align-items: center; gap: 8px; position: relative; z-index: 10; background: #000; }
+    .icon-btn, .send-btn { width: 44px; height: 44px; flex: 0 0 auto; border: 1px solid var(--border); color: var(--primary); background: #000; font-size: 18px; cursor: pointer; }
+    .send-btn { border-color: var(--primary); }
+    .icon-btn:hover, .send-btn:hover { border-color: var(--primary); box-shadow: 0 0 8px rgba(0,255,65,.4); }
+
+    .action-menu { position: absolute; bottom: calc(100% + 10px); left: 12px; z-index: 20; padding: 8px; border: 1px solid var(--primary); display: flex; flex-direction: column; gap: 5px; opacity: 0; pointer-events: none; transform: translateY(10px); transition: .2s; background: #000; box-shadow: 0 0 15px rgba(0,255,65,.3); }
+    .action-menu.active { opacity: 1; pointer-events: auto; transform: translateY(0); }
+    .action-item { min-height: 40px; padding: 8px 12px; border: 1px solid transparent; color: var(--text); background: transparent; text-align: left; cursor: pointer; }
+    .action-item:hover:not(:disabled) { border-color: var(--primary); background: #002200; }
+    .action-item:disabled { opacity: .35; cursor: not-allowed; }
+
+    .modal-overlay { position: fixed; inset: 0; z-index: 10000; display: none; align-items: center; justify-content: center; padding: 18px; background: rgba(0,0,0,.9); backdrop-filter: blur(5px); }
+    .modal-overlay.open { display: flex; }
+    .modal-card { width: 100%; max-width: 380px; max-height: 85vh; overflow-y: auto; padding: 22px; border: 2px solid var(--primary); display: flex; flex-direction: column; gap: 12px; background: #000; box-shadow: 0 0 25px rgba(0,255,65,.4); }
+    .modal-title { color: var(--primary); font-weight: 700; letter-spacing: 1px; text-align: center; }
+    .cam-list { display: flex; flex-direction: column; gap: 8px; }
+    .cam-btn { min-height: 44px; padding: 10px; border: 1px solid var(--border); color: var(--primary); background: #051005; text-align: left; cursor: pointer; }
+    .cam-btn:hover { color: #000; background: var(--primary); }
+
+    @media (max-width: 580px) {
+      .app-title { font-size: 1rem; letter-spacing: 1px; }
+      .status-badge { max-width: 48%; font-size: 9px; }
+      .scroll-body { padding-inline: 10px; }
+      .room-meta { flex-direction: column; gap: 3px; }
+      .bubble { max-width: 90%; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      #matrix-bg { display: none; }
+      *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="matrix-bg" aria-hidden="true"></canvas>
+
+  <div class="app-container">
+    <header class="app-header">
+      <div class="app-title">📟 MATRIXCOM // v3.0</div>
+      <div class="status-badge" role="status" aria-live="polite">
+        <span id="status-dot" class="status-dot"></span>
+        <span id="conn-status">INITIALIZING</span>
+      </div>
+    </header>
+
+    <section id="video-container" aria-label="Active video feeds">
+      <div id="video-toolbar">
+        <button id="toggle-ui-btn" class="icon-btn" type="button" aria-label="Enter theater mode" title="Theater Mode">↕</button>
+      </div>
+      <div id="local-vid-wrap" class="video-wrap">
+        <video id="local-video" playsinline muted></video>
+        <span class="video-label">YOU</span>
+        <div class="vid-controls">
+          <button id="btn-flip" class="vid-btn" type="button" aria-label="Switch camera" title="Switch Camera">🔄</button>
+          <button id="btn-mute" class="vid-btn" type="button" aria-label="Mute microphone" title="Mute Microphone">🎤</button>
+        </div>
+      </div>
+    </section>
+
+    <main class="scroll-body">
+      <section class="card" id="setup-card" aria-label="Room controls">
+        <div class="row">
+          <input type="text" id="display-name" maxlength="32" autocomplete="nickname" aria-label="Operator handle" placeholder="Operator Handle (not verified identity)">
+        </div>
+        <div class="room-meta">
+          <span id="room-role">ESTABLISHING ROOM...</span>
+          <span>DIRECT MODE · MAX 6 OPERATORS</span>
+        </div>
+        <div class="row">
+          <button id="share-btn" class="btn btn-secondary" type="button" disabled>COPY INVITE</button>
+          <button id="toggle-qr-btn" class="btn btn-secondary" type="button" disabled>SHOW QR</button>
+        </div>
+        <div id="qr-container">
+          <canvas id="qr-canvas" role="img" aria-label="Room invitation QR code"></canvas>
+          <div class="qr-caption">SCAN TO ENTER ENCRYPTED ROOM</div>
+        </div>
+      </section>
+      <section id="chat-box" aria-live="polite" aria-label="Room messages"></section>
+    </main>
+
+    <footer class="input-bar">
+      <input type="file" id="file-input" hidden>
+      <div id="action-menu" class="action-menu" role="menu">
+        <button class="action-item" id="menu-file" type="button" role="menuitem" disabled>📎 Transmit Data Packet</button>
+        <button class="action-item" id="menu-video" type="button" role="menuitem" disabled>📹 Optical Feed</button>
+        <button class="action-item" id="menu-screen" type="button" role="menuitem" disabled>🖥️ Broadcast Terminal</button>
+        <button class="action-item" id="menu-sound" type="button" role="menuitem">🔊 Audio Chime: ON</button>
+      </div>
+      <button id="add-btn" class="icon-btn" type="button" aria-label="Open actions" aria-expanded="false">+</button>
+      <input type="text" id="msg-input" maxlength="4000" aria-label="Message" placeholder="Enter signal into the Matrix..." disabled>
+      <button id="send-btn" class="send-btn" type="button" aria-label="Send message" disabled>➜</button>
+    </footer>
+  </div>
+
+  <div id="cam-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="cam-modal-title" inert>
+    <div class="modal-card">
+      <div id="cam-modal-title" class="modal-title">SELECT OPTICAL SENSOR</div>
+      <div id="cam-list" class="cam-list"></div>
+      <button id="cam-close" class="btn" type="button">ABORT</button>
+    </div>
+  </div>
+
+  <script>
+  (() => {
+    'use strict';
+
+    const PROTOCOL = 'matrixcom-v3';
+    const MAX_ROOM_SIZE = 6;
+    const MAX_FILE_SIZE = 100 * 1024 * 1024;
+    const MAX_INCOMING_TRANSFERS = 2;
+    const CHUNK_SIZE = 32 * 1024;
+    const AUTH_TIMEOUT_MS = 10_000;
+    const TRANSFER_TIMEOUT_MS = 60_000;
+    const $ = (id) => document.getElementById(id);
+
+    const connections = new Map();
+    const pendingConnections = new Map();
+    const knownMembers = new Set();
+    const outgoingCalls = new Map();
+    const incomingCalls = new Map();
+    const incomingTransfers = new Map();
+    const outgoingTransfers = new Map();
+
+    let myPeerId = null;
+    let currentHostId = null;
+    let roomKeyBytes = null;
+    let roomKey = null;
+    let shareUrl = '';
+    let localStream = null;
+    let screenStream = null;
+    let audioCtx = null;
+    let soundEnabled = true;
+    let reconnectTimer = null;
+    let lastFocusedElement = null;
+
+    const hashParams = new URLSearchParams(window.location.hash.slice(1));
+    const invitedHostId = hashParams.get('room');
+    const invitedKey = hashParams.get('key');
+    const joiningFromInvite = Boolean(invitedHostId && invitedKey);
+
+    const ADJ = ['Operator', 'Agent', 'Encrypted', 'Glitched', 'RedPill', 'Cyber', 'Construct', 'Subroutine'];
+    const ANI = ['Neo', 'Morpheus', 'Trinity', 'Oracle', 'Keymaker', 'Niobe', 'Sentinel', 'Tank'];
+    const nameInput = $('display-name');
+    $('local-video').autoplay = true;
+    nameInput.value = localStorage.getItem('matrix_operator_name') || `${ADJ[Math.floor(Math.random() * ADJ.length)]}_${ANI[Math.floor(Math.random() * ANI.length)]}`;
+
+    function randomBytes(length) {
+      const bytes = new Uint8Array(length);
+      crypto.getRandomValues(bytes);
+      return bytes;
+    }
+
+    function toBase64Url(bytes) {
+      let binary = '';
+      bytes.forEach((byte) => { binary += String.fromCharCode(byte); });
+      return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+    }
+
+    function fromBase64Url(value) {
+      if (!/^[A-Za-z0-9_-]{40,50}$/.test(value || '')) throw new Error('Invalid room key');
+      const base64 = value.replace(/-/g, '+').replace(/_/g, '/').padEnd(Math.ceil(value.length / 4) * 4, '=');
+      const binary = atob(base64);
+      const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
+      if (bytes.byteLength !== 32) throw new Error('Invalid room key');
+      return bytes;
+    }
+
+    function randomToken(length = 18) { return toBase64Url(randomBytes(length)); }
+
+    async function importRoomKey() {
+      roomKey = await crypto.subtle.importKey('raw', roomKeyBytes, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign', 'verify']);
+    }
+
+    async function makeProof(challenge, challengerId, responderId) {
+      const message = new TextEncoder().encode(`${PROTOCOL}|${challenge}|${challengerId}|${responderId}`);
+      return toBase64Url(new Uint8Array(await crypto.subtle.sign('HMAC', roomKey, message)));
+    }
+
+    async function verifyProof(proof, challenge, challengerId, responderId) {
+      try {
+        const signature = fromProofBase64(proof);
+        const message = new TextEncoder().encode(`${PROTOCOL}|${challenge}|${challengerId}|${responderId}`);
+        return await crypto.subtle.verify('HMAC', roomKey, signature, message);
+      } catch (_) { return false; }
+    }
+
+    function fromProofBase64(value) {
+      if (!/^[A-Za-z0-9_-]{40,50}$/.test(value || '')) throw new Error('Invalid proof');
+      const base64 = value.replace(/-/g, '+').replace(/_/g, '/').padEnd(Math.ceil(value.length / 4) * 4, '=');
+      const bytes = Uint8Array.from(atob(base64), (char) => char.charCodeAt(0));
+      if (bytes.byteLength !== 32) throw new Error('Invalid proof');
+      return bytes;
+    }
+
+    function safeName(value) {
+      const cleaned = String(value || '').replace(/[\u0000-\u001f\u007f]/g, '').trim().slice(0, 32);
+      return cleaned || 'Anonymous_Operator';
+    }
+
+    function isPeerId(value) { return typeof value === 'string' && value.length >= 1 && value.length <= 128; }
+
+    function setStatus(text, state = 'waiting') {
+      $('conn-status').textContent = text;
+      $('status-dot').className = `status-dot${state === 'connected' ? ' connected' : state === 'error' ? ' error' : ''}`;
+    }
+
+    function logSystem(text, tone = '') {
+      const pill = document.createElement('div');
+      pill.className = `system-pill${tone ? ` ${tone}` : ''}`;
+      pill.textContent = text;
+      $('chat-box').appendChild(pill);
+      scrollToBottom();
+    }
+
+    function logBubble(sender, text, outgoing) {
+      const bubble = document.createElement('div');
+      bubble.className = `bubble ${outgoing ? 'bubble-out' : 'bubble-in'}`;
+      const author = document.createElement('div');
+      author.className = 'bubble-author';
+      author.textContent = sender;
+      const message = document.createElement('div');
+      message.textContent = text;
+      bubble.append(author, message);
+      $('chat-box').appendChild(bubble);
+      scrollToBottom();
+    }
+
+    function logDownload(sender, url, filename) {
+      const bubble = document.createElement('div');
+      bubble.className = 'bubble bubble-in';
+      const author = document.createElement('div');
+      author.className = 'bubble-author';
+      author.textContent = sender;
+      const link = document.createElement('a');
+      link.className = 'download-card';
+      link.href = url;
+      link.download = filename;
+      link.textContent = `⬇ DOWNLOAD DATA PACKET: ${filename.toUpperCase()}`;
+      link.addEventListener('click', () => setTimeout(() => URL.revokeObjectURL(url), 30_000), { once: true });
+      bubble.append(author, link);
+      $('chat-box').appendChild(bubble);
+      scrollToBottom();
+    }
+
+    function scrollToBottom() {
+      const body = document.querySelector('.scroll-body');
+      requestAnimationFrame(() => body.scrollTo({ top: body.scrollHeight, behavior: 'smooth' }));
+    }
+
+    function peerName(peerId) { return connections.get(peerId)?.matrixName || peerId; }
+
+    function activeLocalStream() { return screenStream || localStream; }
+
+    function updateUI() {
+      const active = connections.size > 0;
+      ['msg-input', 'send-btn', 'menu-file', 'menu-video', 'menu-screen'].forEach((id) => { $(id).disabled = !active; });
+      $('room-role').textContent = currentHostId === myPeerId ? 'ROOM HOST · INVITE ROTATES AFTER HOST EXIT' : 'ROOM MEMBER · INVITE AUTHENTICATED';
+      if (!myPeerId) return;
+      const count = Math.min(knownMembers.size, MAX_ROOM_SIZE);
+      if (active) setStatus(`ROOM SECURE · ${count}/${MAX_ROOM_SIZE}`, 'connected');
+      else if (currentHostId === myPeerId) setStatus(`ROOM OPEN · 1/${MAX_ROOM_SIZE}`, 'connected');
+      else setStatus('CONNECTING TO ROOM');
+    }
+
+    function closeActionMenu() {
+      $('action-menu').classList.remove('active');
+      $('add-btn').style.transform = 'rotate(0deg)';
+      $('add-btn').setAttribute('aria-expanded', 'false');
+    }
+
+    function broadcast(data, exceptPeerId = null) {
+      connections.forEach((conn, peerId) => {
+        if (peerId !== exceptPeerId && conn.open) {
+          try { conn.send(data); } catch (_) { /* connection cleanup handles failures */ }
+        }
+      });
+    }
+
+    function sendTo(peerId, data) {
+      const conn = connections.get(peerId);
+      if (!conn?.open) return false;
+      try { conn.send(data); return true; } catch (_) { return false; }
+    }
+
+    function updateInvitation() {
+      if (!currentHostId || !roomKeyBytes) return;
+      shareUrl = `${window.location.origin}${window.location.pathname}#room=${encodeURIComponent(currentHostId)}&key=${toBase64Url(roomKeyBytes)}`;
+      $('share-btn').disabled = false;
+      $('toggle-qr-btn').disabled = false;
+      new QRious({ element: $('qr-canvas'), value: shareUrl, size: 190, level: 'M' });
+      if (currentHostId === myPeerId) history.replaceState(null, '', shareUrl);
+    }
+
+    async function copyInvitation() {
+      try {
+        if (navigator.share) {
+          await navigator.share({ title: 'MatrixCom v3 Room', text: 'Join my authenticated MatrixCom room', url: shareUrl });
+        } else if (navigator.clipboard?.writeText) {
+          await navigator.clipboard.writeText(shareUrl);
+        } else {
+          window.prompt('Copy this MatrixCom invitation:', shareUrl);
+        }
+        $('share-btn').textContent = 'INVITE READY';
+        setTimeout(() => { $('share-btn').textContent = 'COPY INVITE'; }, 1800);
+      } catch (error) {
+        if (error?.name !== 'AbortError') logSystem('Could not copy the invitation. Use the QR code instead.', 'warning');
+      }
+    }
+
+    function ensureMesh(memberIds) {
+      memberIds.filter(isPeerId).forEach((peerId) => {
+        if (peerId === myPeerId || connections.has(peerId) || pendingConnections.has(peerId)) return;
+        if (myPeerId.localeCompare(peerId) < 0) setTimeout(() => connectToPeer(peerId), 120 + Math.random() * 250);
+      });
+    }
+
+    function electNewHost() {
+      const candidates = [...knownMembers].filter((id) => id !== currentHostId).concat(myPeerId || []).filter(Boolean);
+      const unique = [...new Set(candidates)].sort();
+      return unique[0] || myPeerId;
+    }
+
+    function becomeHost(previousHostId) {
+      currentHostId = myPeerId;
+      knownMembers.add(myPeerId);
+      updateInvitation();
+      logSystem(`Host ${previousHostId} left. This operator is now room host; share the refreshed invitation.`, 'warning');
+      broadcast({ type: 'host-changed', protocol: PROTOCOL, hostId: myPeerId });
+      broadcastRoomState();
+      updateUI();
+    }
+
+    function broadcastRoomState(targetPeerId = null) {
+      if (currentHostId !== myPeerId) return;
+      const data = { type: 'room-state', protocol: PROTOCOL, hostId: myPeerId, members: [...knownMembers].slice(0, MAX_ROOM_SIZE) };
+      if (targetPeerId) sendTo(targetPeerId, data); else broadcast(data);
+    }
+
+    const roomReadyPromise = initializeRoomKey();
+
+    const peer = new Peer({
+      debug: 1,
+      config: {
+        iceServers: [
+          { urls: 'stun:stun.l.google.com:19302' },
+          { urls: 'stun:stun1.l.google.com:19302' }
+        ]
+      }
+    });
+
+    function connectToPeer(peerId) {
+      if (!isPeerId(peerId) || peerId === myPeerId || connections.has(peerId) || pendingConnections.has(peerId)) return;
+      try {
+        const conn = peer.connect(peerId, { reliable: true, metadata: { protocol: PROTOCOL } });
+        setupConnection(conn);
+      } catch (error) {
+        logSystem(`Connection attempt failed: ${error.message}`, 'error');
+      }
+    }
+
+    function setupConnection(conn) {
+      if (!conn || !isPeerId(conn.peer)) return;
+      if (connections.has(conn.peer) || pendingConnections.has(conn.peer)) {
+        try { conn.close(); } catch (_) { /* no-op */ }
+        return;
+      }
+
+      const auth = { challenge: randomToken(), authorized: false, timeout: null };
+      conn.matrixAuth = auth;
+      pendingConnections.set(conn.peer, conn);
+
+      conn.on('open', () => {
+        auth.timeout = setTimeout(() => rejectConnection(conn, 'Authentication timed out'), AUTH_TIMEOUT_MS);
+        conn.send({ type: 'auth-challenge', protocol: PROTOCOL, challenge: auth.challenge });
+      });
+
+      conn.on('data', (data) => {
+        if (!auth.authorized) handleAuthenticationData(conn, data);
+        else processData(data, conn.peer);
+      });
+
+      conn.on('close', () => handleConnectionClosed(conn));
+      conn.on('error', () => handleConnectionClosed(conn));
+    }
+
+    async function handleAuthenticationData(conn, data) {
+      if (!data || data.protocol !== PROTOCOL || typeof data.type !== 'string') return;
+      if (data.type === 'room-error') {
+        const message = String(data.message || 'Room admission rejected').slice(0, 180);
+        logSystem(message, 'error');
+        setStatus('ROOM ADMISSION REJECTED', 'error');
+        return;
+      }
+      if (data.type === 'auth-challenge' && typeof data.challenge === 'string' && data.challenge.length <= 128) {
+        const proof = await makeProof(data.challenge, conn.peer, myPeerId);
+        if (conn.open) conn.send({ type: 'auth-response', protocol: PROTOCOL, challenge: data.challenge, proof });
+        return;
+      }
+      if (data.type === 'auth-response' && data.challenge === conn.matrixAuth.challenge) {
+        const valid = await verifyProof(data.proof, data.challenge, myPeerId, conn.peer);
+        if (valid) authorizeConnection(conn); else rejectConnection(conn, 'Room authentication failed');
+      }
+    }
+
+    function rejectConnection(conn, reason) {
+      clearTimeout(conn.matrixAuth?.timeout);
+      pendingConnections.delete(conn.peer);
+      try { if (conn.open) conn.send({ type: 'room-error', protocol: PROTOCOL, message: reason }); } catch (_) { /* no-op */ }
+      setTimeout(() => { try { conn.close(); } catch (_) { /* no-op */ } }, 50);
+      logSystem(`${reason}: ${conn.peer}`, 'error');
+    }
+
+    function authorizeConnection(conn) {
+      if (conn.matrixAuth.authorized) return;
+      if (currentHostId === myPeerId && !knownMembers.has(conn.peer) && knownMembers.size >= MAX_ROOM_SIZE) {
+        rejectConnection(conn, 'Room is full');
+        return;
+      }
+      if (connections.has(conn.peer)) {
+        pendingConnections.delete(conn.peer);
+        conn.close();
+        return;
+      }
+
+      clearTimeout(conn.matrixAuth.timeout);
+      conn.matrixAuth.authorized = true;
+      pendingConnections.delete(conn.peer);
+      connections.set(conn.peer, conn);
+      knownMembers.add(conn.peer);
+      conn.send({ type: 'identity', protocol: PROTOCOL, name: safeName(nameInput.value) });
+
+      if (currentHostId === myPeerId) {
+        broadcastRoomState(conn.peer);
+        broadcast({ type: 'member-joined', protocol: PROTOCOL, peerId: conn.peer }, conn.peer);
+      }
+
+      if (activeLocalStream()) callPeerWithLocalMedia(conn.peer);
+      logSystem(`Authenticated operator ${conn.peer} entered the room`);
+      updateUI();
+    }
+
+    function handleConnectionClosed(conn) {
+      clearTimeout(conn.matrixAuth?.timeout);
+      if (pendingConnections.get(conn.peer) === conn) pendingConnections.delete(conn.peer);
+      if (connections.get(conn.peer) !== conn) return;
+
+      connections.delete(conn.peer);
+      closeOutgoingCall(conn.peer);
+      closeIncomingCall(conn.peer);
+
+      if (currentHostId === myPeerId) {
+        knownMembers.delete(conn.peer);
+        broadcast({ type: 'member-left', protocol: PROTOCOL, peerId: conn.peer });
+        logSystem(`Operator ${peerName(conn.peer)} left the room`);
+      } else if (conn.peer === currentHostId) {
+        const formerHost = currentHostId;
+        knownMembers.delete(formerHost);
+        const replacement = electNewHost();
+        currentHostId = replacement;
+        if (replacement === myPeerId) becomeHost(formerHost);
+        else {
+          updateInvitation();
+          logSystem(`Host left. ${replacement} is the new room host.`, 'warning');
+          updateUI();
+        }
+      } else if (knownMembers.has(conn.peer) && myPeerId.localeCompare(conn.peer) < 0) {
+        setTimeout(() => connectToPeer(conn.peer), 1500);
+      }
+      updateUI();
+    }
+
+    function processData(data, senderId) {
+      if (!data || data.protocol !== PROTOCOL || typeof data.type !== 'string') return;
+      const conn = connections.get(senderId);
+
+      switch (data.type) {
+        case 'identity': {
+          const oldName = conn.matrixName;
+          conn.matrixName = safeName(data.name);
+          if (oldName !== conn.matrixName) logSystem(`Operator identified as ${conn.matrixName}`);
+          refreshRemoteVideoLabel(senderId);
+          break;
+        }
+        case 'chat':
+          if (typeof data.text === 'string' && data.text.length <= 4000) {
+            playNotificationSound();
+            logBubble(peerName(senderId), data.text, false);
+          }
+          break;
+        case 'room-state':
+          if (senderId === currentHostId && data.hostId === currentHostId && Array.isArray(data.members)) {
+            const members = data.members.filter(isPeerId).slice(0, MAX_ROOM_SIZE);
+            knownMembers.clear();
+            members.forEach((id) => knownMembers.add(id));
+            knownMembers.add(myPeerId);
+            ensureMesh(members);
+            updateUI();
+          }
+          break;
+        case 'member-joined':
+          if (senderId === currentHostId && isPeerId(data.peerId)) {
+            knownMembers.add(data.peerId);
+            ensureMesh([data.peerId]);
+            updateUI();
+          }
+          break;
+        case 'member-left':
+          if (senderId === currentHostId && isPeerId(data.peerId)) {
+            knownMembers.delete(data.peerId);
+            const memberConn = connections.get(data.peerId);
+            if (memberConn) memberConn.close();
+            closeIncomingCall(data.peerId);
+            logSystem(`Operator ${data.peerId} left the room`);
+            updateUI();
+          }
+          break;
+        case 'host-changed': {
+          const elected = electNewHost();
+          if (isPeerId(data.hostId) && data.hostId === elected) {
+            currentHostId = data.hostId;
+            updateInvitation();
+            updateUI();
+          }
+          break;
+        }
+        case 'media-stopped':
+          closeIncomingCall(senderId);
+          break;
+        case 'file-offer':
+          handleFileOffer(data, senderId);
+          break;
+        case 'file-accept':
+          handleFileAccept(data, senderId);
+          break;
+        case 'file-reject':
+          logSystem(`${peerName(senderId)} declined ${String(data.name || 'the file').slice(0, 120)}`, 'warning');
+          break;
+        case 'file-chunk':
+          handleFileChunk(data, senderId);
+          break;
+        case 'file-complete':
+          handleFileComplete(data, senderId);
+          break;
+        case 'file-cancel':
+          cancelIncomingTransfer(senderId, data.transferId, 'Transfer cancelled');
+          break;
+        default:
+          break;
+      }
+    }
+
+    function transferKey(senderId, transferId) { return `${senderId}:${transferId}`; }
+
+    function validTransferMetadata(data) {
+      return /^[A-Za-z0-9_-]{8,40}$/.test(data.transferId || '') &&
+        typeof data.name === 'string' && data.name.length >= 1 && data.name.length <= 180 &&
+        Number.isSafeInteger(data.size) && data.size >= 0 && data.size <= MAX_FILE_SIZE &&
+        Number.isSafeInteger(data.totalChunks) && data.totalChunks === Math.ceil(data.size / CHUNK_SIZE);
+    }
+
+    function handleFileOffer(data, senderId) {
+      if (!validTransferMetadata(data)) {
+        sendTo(senderId, { type: 'file-reject', protocol: PROTOCOL, transferId: data.transferId, name: 'invalid transfer' });
+        return;
+      }
+
+      if (incomingTransfers.size >= MAX_INCOMING_TRANSFERS) {
+        sendTo(senderId, { type: 'file-reject', protocol: PROTOCOL, transferId: data.transferId, name: data.name });
+        logSystem('Incoming transfer declined because the receiver is busy.', 'warning');
+        return;
+      }
+
+      const key = transferKey(senderId, data.transferId);
+      if (incomingTransfers.has(key)) return;
+      const sizeMB = (data.size / 1024 / 1024).toFixed(1);
+      const accepted = window.confirm(`${peerName(senderId)} wants to send “${data.name}” (${sizeMB} MB). Accept?`);
+      if (!accepted) {
+        sendTo(senderId, { type: 'file-reject', protocol: PROTOCOL, transferId: data.transferId, name: data.name });
+        return;
+      }
+
+      const transfer = {
+        name: data.name,
+        mime: typeof data.mime === 'string' ? data.mime.slice(0, 120) : '',
+        size: data.size,
+        totalChunks: data.totalChunks,
+        chunks: new Array(data.totalChunks),
+        nextIndex: 0,
+        receivedBytes: 0,
+        timer: null
+      };
+      incomingTransfers.set(key, transfer);
+      resetTransferTimer(key, senderId, data.transferId);
+      sendTo(senderId, { type: 'file-accept', protocol: PROTOCOL, transferId: data.transferId });
+      logSystem(`Receiving ${data.name} from ${peerName(senderId)}...`);
+    }
+
+    function resetTransferTimer(key, senderId, transferId) {
+      const transfer = incomingTransfers.get(key);
+      if (!transfer) return;
+      clearTimeout(transfer.timer);
+      transfer.timer = setTimeout(() => {
+        cancelIncomingTransfer(senderId, transferId, 'Transfer timed out');
+        sendTo(senderId, { type: 'file-cancel', protocol: PROTOCOL, transferId });
+      }, TRANSFER_TIMEOUT_MS);
+    }
+
+    function handleFileAccept(data, senderId) {
+      const transfer = outgoingTransfers.get(data.transferId);
+      if (!transfer || transfer.sendingTo.has(senderId) || !transfer.offeredTo.has(senderId)) return;
+      transfer.sendingTo.add(senderId);
+      sendFileToPeer(transfer, senderId).catch((error) => {
+        logSystem(`File transmission to ${peerName(senderId)} failed: ${error.message}`, 'error');
+        sendTo(senderId, { type: 'file-cancel', protocol: PROTOCOL, transferId: transfer.id });
+      });
+    }
+
+    async function sendFileToPeer(transfer, peerId) {
+      const conn = connections.get(peerId);
+      if (!conn?.open) throw new Error('connection closed');
+      for (let index = 0, offset = 0; offset < transfer.file.size; index += 1, offset += CHUNK_SIZE) {
+        while (conn.dataChannel?.bufferedAmount > 1024 * 1024) await new Promise((resolve) => setTimeout(resolve, 40));
+        if (!conn.open) throw new Error('connection closed');
+        const chunk = await transfer.file.slice(offset, offset + CHUNK_SIZE).arrayBuffer();
+        conn.send({ type: 'file-chunk', protocol: PROTOCOL, transferId: transfer.id, index, chunk });
+      }
+      conn.send({ type: 'file-complete', protocol: PROTOCOL, transferId: transfer.id });
+      logSystem(`Transmitted ${transfer.file.name} to ${peerName(peerId)}`);
+      transfer.completed.add(peerId);
+      if (transfer.completed.size === transfer.offeredTo.size) outgoingTransfers.delete(transfer.id);
+    }
+
+    function handleFileChunk(data, senderId) {
+      const key = transferKey(senderId, data.transferId);
+      const transfer = incomingTransfers.get(key);
+      if (!transfer || !(data.chunk instanceof ArrayBuffer) || data.chunk.byteLength > CHUNK_SIZE || data.index !== transfer.nextIndex) {
+        if (transfer) cancelIncomingTransfer(senderId, data.transferId, 'Invalid file sequence');
+        return;
+      }
+
+      const projected = transfer.receivedBytes + data.chunk.byteLength;
+      if (projected > transfer.size || data.index >= transfer.totalChunks) {
+        cancelIncomingTransfer(senderId, data.transferId, 'File exceeded declared size');
+        return;
+      }
+      transfer.chunks[data.index] = data.chunk;
+      transfer.nextIndex += 1;
+      transfer.receivedBytes = projected;
+      resetTransferTimer(key, senderId, data.transferId);
+    }
+
+    function handleFileComplete(data, senderId) {
+      const key = transferKey(senderId, data.transferId);
+      const transfer = incomingTransfers.get(key);
+      if (!transfer) return;
+      clearTimeout(transfer.timer);
+      if (transfer.receivedBytes !== transfer.size || transfer.nextIndex !== transfer.totalChunks) {
+        cancelIncomingTransfer(senderId, data.transferId, 'Incomplete file rejected');
+        return;
+      }
+      const blob = new Blob(transfer.chunks, { type: transfer.mime || 'application/octet-stream' });
+      incomingTransfers.delete(key);
+      playNotificationSound();
+      logDownload(peerName(senderId), URL.createObjectURL(blob), transfer.name);
+    }
+
+    function cancelIncomingTransfer(senderId, transferId, reason) {
+      const key = transferKey(senderId, transferId);
+      const transfer = incomingTransfers.get(key);
+      if (!transfer) return;
+      clearTimeout(transfer.timer);
+      incomingTransfers.delete(key);
+      logSystem(`${reason}: ${transfer.name}`, 'error');
+    }
+
+    async function offerFile(file) {
+      if (!file || file.size > MAX_FILE_SIZE) {
+        logSystem(`Files are limited to ${MAX_FILE_SIZE / 1024 / 1024} MB in direct mode.`, 'warning');
+        return;
+      }
+      const recipients = [...connections.keys()];
+      if (!recipients.length) return;
+      const id = randomToken(12);
+      const transfer = { id, file, offeredTo: new Set(recipients), sendingTo: new Set(), completed: new Set() };
+      outgoingTransfers.set(id, transfer);
+      const offer = {
+        type: 'file-offer', protocol: PROTOCOL, transferId: id,
+        name: file.name.slice(0, 180), mime: file.type.slice(0, 120), size: file.size,
+        totalChunks: Math.ceil(file.size / CHUNK_SIZE)
+      };
+      recipients.forEach((peerId) => sendTo(peerId, offer));
+      logSystem(`Offered ${file.name} to ${recipients.length} operator${recipients.length === 1 ? '' : 's'}`);
+      setTimeout(() => outgoingTransfers.delete(id), 10 * 60_000);
+    }
+
+    function callPeerWithLocalMedia(peerId) {
+      const stream = activeLocalStream();
+      if (!stream || !connections.has(peerId)) return;
+      closeOutgoingCall(peerId);
+      try {
+        const call = peer.call(peerId, stream, { metadata: { protocol: PROTOCOL } });
+        outgoingCalls.set(peerId, call);
+        call.on('close', () => { if (outgoingCalls.get(peerId) === call) outgoingCalls.delete(peerId); });
+        call.on('error', () => { if (outgoingCalls.get(peerId) === call) outgoingCalls.delete(peerId); });
+      } catch (error) {
+        logSystem(`Could not send media to ${peerName(peerId)}: ${error.message}`, 'error');
+      }
+    }
+
+    function callAllPeersWithLocalMedia() { connections.forEach((_, peerId) => callPeerWithLocalMedia(peerId)); }
+
+    function closeOutgoingCall(peerId) {
+      const call = outgoingCalls.get(peerId);
+      outgoingCalls.delete(peerId);
+      try { call?.close(); } catch (_) { /* no-op */ }
+    }
+
+    function closeIncomingCall(peerId) {
+      const call = incomingCalls.get(peerId);
+      incomingCalls.delete(peerId);
+      try { call?.close(); } catch (_) { /* no-op */ }
+      removeRemoteVideo(peerId);
+    }
+
+    async function waitForAuthorized(peerId, timeout = 7000) {
+      const started = Date.now();
+      while (Date.now() - started < timeout) {
+        if (connections.has(peerId)) return true;
+        await new Promise((resolve) => setTimeout(resolve, 100));
+      }
+      return false;
+    }
+
+    peer.on('call', async (call) => {
+      if (call.metadata?.protocol !== PROTOCOL || !(await waitForAuthorized(call.peer))) {
+        call.close();
+        return;
+      }
+      closeIncomingCall(call.peer);
+      incomingCalls.set(call.peer, call);
+      call.answer();
+      call.on('stream', (stream) => showRemoteVideo(call.peer, stream));
+      call.on('close', () => { if (incomingCalls.get(call.peer) === call) closeIncomingCall(call.peer); });
+      call.on('error', () => { if (incomingCalls.get(call.peer) === call) closeIncomingCall(call.peer); });
+      playNotificationSound();
+    });
+
+    function showRemoteVideo(peerId, stream) {
+      removeRemoteVideo(peerId, false);
+      $('video-container').style.display = 'flex';
+      const wrap = document.createElement('div');
+      wrap.className = 'video-wrap remote-wrap';
+      wrap.id = `remote-wrap-${peerId}`;
+      const video = document.createElement('video');
+      video.className = 'remote-video';
+      video.autoplay = true;
+      video.playsInline = true;
+      video.srcObject = stream;
+      video.addEventListener('click', () => video.classList.toggle('video-fullscreen'));
+      const label = document.createElement('span');
+      label.className = 'video-label';
+      label.textContent = peerName(peerId);
+      wrap.append(video, label);
+      $('video-container').appendChild(wrap);
+    }
+
+    function refreshRemoteVideoLabel(peerId) {
+      const wrap = document.getElementById(`remote-wrap-${peerId}`);
+      const label = wrap?.querySelector('.video-label');
+      if (label) label.textContent = peerName(peerId);
+    }
+
+    function removeRemoteVideo(peerId, updateVisibility = true) {
+      document.getElementById(`remote-wrap-${peerId}`)?.remove();
+      if (updateVisibility) updateVideoVisibility();
+    }
+
+    function updateVideoVisibility() {
+      const visible = Boolean(activeLocalStream()) || document.querySelector('.remote-wrap');
+      $('video-container').style.display = visible ? 'flex' : 'none';
+      if (!visible) {
+        document.body.classList.remove('hide-ui');
+        $('toggle-ui-btn').textContent = '↕';
+      }
+    }
+
+    async function stopLocalMedia(announce = true) {
+      const stream = activeLocalStream();
+      if (stream) stream.getTracks().forEach((track) => track.stop());
+      localStream = null;
+      screenStream = null;
+      outgoingCalls.forEach((_, peerId) => closeOutgoingCall(peerId));
+      $('local-video').srcObject = null;
+      $('local-vid-wrap').style.display = 'none';
+      $('menu-video').textContent = '📹 Optical Feed';
+      $('menu-screen').textContent = '🖥️ Broadcast Terminal';
+      $('btn-mute').textContent = '🎤';
+      $('btn-mute').classList.remove('muted');
+      if (announce) broadcast({ type: 'media-stopped', protocol: PROTOCOL });
+      updateVideoVisibility();
+    }
+
+    async function getCameras() {
+      try {
+        let devices = await navigator.mediaDevices.enumerateDevices();
+        let cameras = devices.filter((device) => device.kind === 'videoinput');
+        if (cameras.length && !cameras[0].label) {
+          const temporary = await navigator.mediaDevices.getUserMedia({ video: true });
+          temporary.getTracks().forEach((track) => track.stop());
+          devices = await navigator.mediaDevices.enumerateDevices();
+          cameras = devices.filter((device) => device.kind === 'videoinput');
+        }
+        return cameras;
+      } catch (_) { return []; }
+    }
+
+    async function openCameraModal() {
+      closeActionMenu();
+      lastFocusedElement = document.activeElement;
+      $('cam-modal').classList.add('open');
+      $('cam-modal').removeAttribute('inert');
+      $('cam-list').textContent = 'Scanning optical nodes...';
+      const cameras = await getCameras();
+      $('cam-list').textContent = '';
+      if (!cameras.length) {
+        const empty = document.createElement('div');
+        empty.textContent = 'No optical hardware detected.';
+        $('cam-list').appendChild(empty);
+      } else {
+        cameras.forEach((camera, index) => {
+          const button = document.createElement('button');
+          button.className = 'cam-btn';
+          button.type = 'button';
+          button.textContent = `📹 ${camera.label || `Optical Sensor ${index + 1}`}`;
+          button.addEventListener('click', () => startCamera(camera.deviceId));
+          $('cam-list').appendChild(button);
+        });
+      }
+      ($('cam-list').querySelector('button') || $('cam-close')).focus();
+    }
+
+    function closeCameraModal() {
+      $('cam-modal').classList.remove('open');
+      $('cam-modal').setAttribute('inert', '');
+      lastFocusedElement?.focus();
+    }
+
+    async function startCamera(deviceId) {
+      closeCameraModal();
+      try {
+        if (localStream) {
+          const oldTrack = localStream.getVideoTracks()[0];
+          const replacementStream = await navigator.mediaDevices.getUserMedia({ video: { deviceId: { exact: deviceId } } });
+          const newTrack = replacementStream.getVideoTracks()[0];
+          const replacements = [];
+          outgoingCalls.forEach((call) => {
+            const sender = call.peerConnection?.getSenders().find((item) => item.track?.kind === 'video');
+            if (sender) replacements.push(sender.replaceTrack(newTrack));
+          });
+          await Promise.allSettled(replacements);
+          if (oldTrack) { oldTrack.stop(); localStream.removeTrack(oldTrack); }
+          localStream.addTrack(newTrack);
+          $('local-video').srcObject = localStream;
+          return;
+        }
+
+        await stopLocalMedia(false);
+        localStream = await navigator.mediaDevices.getUserMedia({
+          video: deviceId ? { deviceId: { exact: deviceId } } : true,
+          audio: true
+        });
+        $('local-video').srcObject = localStream;
+        $('local-vid-wrap').style.display = 'block';
+        $('video-container').style.display = 'flex';
+        $('menu-video').textContent = '⏹ Terminate Feed';
+        callAllPeersWithLocalMedia();
+        logSystem('Optical feed online');
+      } catch (error) {
+        logSystem(`Optical interface unavailable: ${error.message}`, 'error');
+      }
+    }
+
+    async function startScreenShare() {
+      closeActionMenu();
+      if (screenStream) { await stopLocalMedia(); return; }
+      try {
+        await stopLocalMedia(false);
+        const mobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+        screenStream = await navigator.mediaDevices.getDisplayMedia(mobile ? { video: true } : { video: true, audio: true });
+        $('local-video').srcObject = screenStream;
+        $('local-vid-wrap').style.display = 'block';
+        $('video-container').style.display = 'flex';
+        $('menu-screen').textContent = '⏹ Stop Broadcast';
+        screenStream.getVideoTracks()[0].addEventListener('ended', () => stopLocalMedia());
+        callAllPeersWithLocalMedia();
+        logSystem('Terminal broadcast online');
+      } catch (error) {
+        logSystem(`Terminal broadcast unavailable: ${error.message}`, 'error');
+      }
+    }
+
+    function unlockAudio() {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+    }
+
+    function playNotificationSound() {
+      if (!soundEnabled || !audioCtx) return;
+      try {
+        const start = audioCtx.currentTime;
+        [[880, 0], [1760, .06]].forEach(([frequency, delay]) => {
+          const oscillator = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          oscillator.type = 'sawtooth';
+          oscillator.frequency.setValueAtTime(frequency, start + delay);
+          gain.gain.setValueAtTime(.001, start + delay);
+          gain.gain.linearRampToValueAtTime(.04, start + delay + .01);
+          gain.gain.exponentialRampToValueAtTime(.001, start + delay + .09);
+          oscillator.connect(gain).connect(audioCtx.destination);
+          oscillator.start(start + delay);
+          oscillator.stop(start + delay + .1);
+        });
+      } catch (_) { /* audio is nonessential */ }
+    }
+
+    peer.on('open', async (id) => {
+      await roomReadyPromise;
+      myPeerId = id;
+      knownMembers.add(id);
+      if (!currentHostId) currentHostId = id;
+      updateInvitation();
+      updateUI();
+      logSystem(currentHostId === myPeerId ? 'Authenticated room established. Share the invitation to add operators.' : 'Authenticating room invitation...');
+      if (currentHostId !== myPeerId) connectToPeer(currentHostId);
+    });
+
+    peer.on('connection', (conn) => setupConnection(conn));
+    peer.on('disconnected', () => {
+      setStatus('SIGNALING INTERRUPTED', 'error');
+      clearTimeout(reconnectTimer);
+      reconnectTimer = setTimeout(() => {
+        try { if (!peer.destroyed) peer.reconnect(); } catch (_) { /* error event reports failure */ }
+      }, 1800);
+    });
+    peer.on('close', () => setStatus('ROOM CLOSED', 'error'));
+    peer.on('error', (error) => {
+      const messages = {
+        'peer-unavailable': 'Room host is unavailable or the invitation expired.',
+        network: 'Signaling network unavailable. Retrying...',
+        'server-error': 'PeerJS signaling service returned an error.',
+        'webrtc': 'Direct WebRTC negotiation failed. This network may require TURN.'
+      };
+      logSystem(messages[error.type] || `Connection error: ${error.message}`, 'error');
+      setStatus('CONNECTION ERROR', 'error');
+    });
+
+    nameInput.addEventListener('change', () => {
+      nameInput.value = safeName(nameInput.value);
+      localStorage.setItem('matrix_operator_name', nameInput.value);
+      broadcast({ type: 'identity', protocol: PROTOCOL, name: nameInput.value });
+    });
+
+    $('share-btn').addEventListener('click', copyInvitation);
+    $('toggle-qr-btn').addEventListener('click', () => {
+      const visible = $('qr-container').style.display === 'block';
+      $('qr-container').style.display = visible ? 'none' : 'block';
+      $('toggle-qr-btn').textContent = visible ? 'SHOW QR' : 'HIDE QR';
+    });
+
+    $('add-btn').addEventListener('click', (event) => {
+      event.stopPropagation();
+      const opening = !$('action-menu').classList.contains('active');
+      $('action-menu').classList.toggle('active', opening);
+      $('add-btn').style.transform = opening ? 'rotate(45deg)' : 'rotate(0deg)';
+      $('add-btn').setAttribute('aria-expanded', String(opening));
+    });
+    document.addEventListener('click', (event) => {
+      if (!$('action-menu').contains(event.target) && event.target !== $('add-btn')) closeActionMenu();
+    });
+
+    $('send-btn').addEventListener('click', () => {
+      const text = $('msg-input').value.trim();
+      if (!text) return;
+      broadcast({ type: 'chat', protocol: PROTOCOL, id: randomToken(9), text });
+      logBubble('YOU', text, true);
+      $('msg-input').value = '';
+    });
+    $('msg-input').addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); $('send-btn').click(); }
+    });
+
+    $('menu-file').addEventListener('click', () => { closeActionMenu(); $('file-input').click(); });
+    $('file-input').addEventListener('change', async () => {
+      const file = $('file-input').files[0];
+      $('file-input').value = '';
+      await offerFile(file);
+    });
+
+    $('menu-video').addEventListener('click', async () => {
+      if (localStream) { closeActionMenu(); await stopLocalMedia(); logSystem('Optical feed offline'); }
+      else await openCameraModal();
+    });
+    $('menu-screen').addEventListener('click', startScreenShare);
+    $('btn-flip').addEventListener('click', openCameraModal);
+    $('btn-mute').addEventListener('click', () => {
+      const track = localStream?.getAudioTracks()[0];
+      if (!track) return;
+      track.enabled = !track.enabled;
+      $('btn-mute').textContent = track.enabled ? '🎤' : '🔇';
+      $('btn-mute').classList.toggle('muted', !track.enabled);
+      $('btn-mute').setAttribute('aria-label', track.enabled ? 'Mute microphone' : 'Unmute microphone');
+    });
+
+    $('menu-sound').addEventListener('click', () => {
+      soundEnabled = !soundEnabled;
+      $('menu-sound').textContent = soundEnabled ? '🔊 Audio Chime: ON' : '🔇 Audio Chime: MUTED';
+      closeActionMenu();
+      logSystem(soundEnabled ? 'Audio chimes enabled' : 'Audio chimes muted');
+    });
+
+    $('toggle-ui-btn').addEventListener('click', () => {
+      document.body.classList.toggle('hide-ui');
+      const hidden = document.body.classList.contains('hide-ui');
+      $('toggle-ui-btn').textContent = hidden ? '✕' : '↕';
+      $('toggle-ui-btn').setAttribute('aria-label', hidden ? 'Exit theater mode' : 'Enter theater mode');
+    });
+
+    $('cam-close').addEventListener('click', closeCameraModal);
+    $('cam-modal').addEventListener('click', (event) => { if (event.target === $('cam-modal')) closeCameraModal(); });
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') {
+        if ($('cam-modal').classList.contains('open')) closeCameraModal();
+        else if (document.body.classList.contains('hide-ui')) $('toggle-ui-btn').click();
+        else closeActionMenu();
+      }
+    });
+    document.addEventListener('pointerdown', unlockAudio, { once: true });
+    document.addEventListener('keydown', unlockAudio, { once: true });
+
+    async function initializeRoomKey() {
+      try {
+        roomKeyBytes = joiningFromInvite ? fromBase64Url(invitedKey) : randomBytes(32);
+        currentHostId = joiningFromInvite ? invitedHostId : null;
+        await importRoomKey();
+      } catch (_) {
+        roomKeyBytes = randomBytes(32);
+        currentHostId = null;
+        await importRoomKey();
+        logSystem('Invalid invitation. A new room will be created instead.', 'warning');
+      }
+    }
+
+    function initializeMatrixRain() {
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      const canvas = $('matrix-bg');
+      const context = canvas.getContext('2d');
+      const alphabet = 'アカサタナハマヤラワガザダバパ0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+      const fontSize = 16;
+      let drops = [];
+      let lastFrame = 0;
+      function resize() {
+        const ratio = Math.min(window.devicePixelRatio || 1, 2);
+        canvas.width = Math.floor(window.innerWidth * ratio);
+        canvas.height = Math.floor(window.innerHeight * ratio);
+        canvas.style.width = `${window.innerWidth}px`;
+        canvas.style.height = `${window.innerHeight}px`;
+        context.setTransform(ratio, 0, 0, ratio, 0, 0);
+        drops = Array(Math.ceil(window.innerWidth / fontSize)).fill(1);
+      }
+      function draw(timestamp) {
+        if (timestamp - lastFrame > 48 && !document.hidden) {
+          lastFrame = timestamp;
+          context.fillStyle = 'rgba(0,0,0,.08)';
+          context.fillRect(0, 0, window.innerWidth, window.innerHeight);
+          context.fillStyle = '#00ff41';
+          context.font = `${fontSize}px monospace`;
+          drops.forEach((drop, index) => {
+            const character = alphabet[Math.floor(Math.random() * alphabet.length)];
+            context.fillText(character, index * fontSize, drop * fontSize);
+            if (drop * fontSize > window.innerHeight && Math.random() > .975) drops[index] = 0;
+            drops[index] += 1;
+          });
+        }
+        requestAnimationFrame(draw);
+      }
+      resize();
+      window.addEventListener('resize', resize, { passive: true });
+      requestAnimationFrame(draw);
+    }
+
+    roomReadyPromise.then(() => {
+      initializeMatrixRain();
+      logSystem('Direct encrypted transport enabled. PeerJS signaling and public STUN remain external dependencies.');
+    }).catch((error) => {
+      setStatus('CRYPTOGRAPHY UNAVAILABLE', 'error');
+      logSystem(`Cannot initialize room security: ${error.message}`, 'error');
+      peer.destroy();
+    });
+  })();
+  </script>
+</body>
+</html>
