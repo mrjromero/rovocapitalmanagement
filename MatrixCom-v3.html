@@ -530,8 +530,10 @@
       const auth = { challenge: randomToken(), authorized: false, timeout: null };
       conn.matrixAuth = auth;
       pendingConnections.set(conn.peer, conn);
+      auth.timeout = setTimeout(() => rejectConnection(conn, 'Direct connection timed out; this network may require TURN'), 15_000);
 
       conn.on('open', () => {
+        clearTimeout(auth.timeout);
         auth.timeout = setTimeout(() => rejectConnection(conn, 'Authentication timed out'), AUTH_TIMEOUT_MS);
         conn.send({ type: 'auth-challenge', protocol: PROTOCOL, challenge: auth.challenge });
       });
