@@ -123,6 +123,13 @@
         .action-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
         .action-help { grid-column: 1 / -1; color: var(--text-muted); font-size: 0.78rem; text-align: center; }
         @media (max-width: 600px) { .card-actions { grid-template-columns: 1fr; } .action-help { grid-column: 1; } }
+
+        .disclaimer {
+            margin-top: 8px; padding: 18px 20px; border: 1px solid var(--border-color);
+            border-radius: 8px; background: #f8fafc; color: var(--text-muted);
+            font-size: 0.78rem; line-height: 1.55; text-align: center;
+        }
+        .disclaimer strong { color: var(--text-main); }
     </style>
 </head>
 <body>
@@ -263,6 +270,10 @@
             </div>
         </div>
     </div>
+
+    <footer class="disclaimer">
+        <strong>Important Disclaimer:</strong> This calculator provides hypothetical projections for educational and informational purposes only. It is not financial, investment, tax, or legal advice, and its results are not guarantees of future performance. Investing with leverage or margin involves significant risk, including forced liquidation and losses that may exceed deposited capital. Consult qualified professionals and review your brokerage agreements before making financial decisions.
+    </footer>
 </div>
 
 <script>
