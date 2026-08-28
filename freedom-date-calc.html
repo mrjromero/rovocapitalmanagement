@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Freedom Date Calculator | Buy, Borrow, Die</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-body: #f3f4f6; --bg-card: #ffffff; --navy-header: #1e3a8a;
+            --navy-dark: #0f172a; --text-main: #374151; --text-muted: #6b7280;
+            --border-color: #e5e7eb; --link-color: #0ea5e9; --green-pass: #16a34a;
+            --stack-color: #ecfdf5; --stack-border: #d1fae5; --alert-red: #ef4444;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+        body { background-color: var(--bg-body); color: var(--text-main); padding: 24px; line-height: 1.5; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .back-link { color: var(--link-color); text-decoration: none; font-weight: 500; font-size: 0.95rem; display: inline-flex; align-items: center; margin-bottom: 16px; }
+        .back-link:hover { text-decoration: underline; }
+
+        .main-header {
+            background: linear-gradient(135deg, var(--navy-dark), var(--navy-header));
+            color: white; padding: 32px 24px; border-radius: 8px; text-align: center;
+            margin-bottom: 24px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        .main-header h1 { font-size: 2rem; margin-bottom: 8px; font-weight: 700; }
+        .main-header p { color: #e2e8f0; font-size: 1.05rem; }
+
+        .layout-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; }
+        @media (max-width: 1024px) { .layout-grid { grid-template-columns: 1fr; } }
+
+        .card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05); }
+        .card-header { background-color: var(--navy-header); color: white; padding: 16px 20px; font-weight: 600; font-size: 1.1rem; display: flex; justify-content: space-between; align-items: center; }
+        .card-body { padding: 24px; }
+
+        .optimize-btn {
+            background-color: var(--link-color); color: white; border: none; padding: 6px 12px;
+            border-radius: 6px; font-size: 0.8rem; font-weight: 700; cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s; display: inline-flex; align-items: center; gap: 4px;
+        }
+        .optimize-btn:hover { background-color: #0284c7; transform: translateY(-1px); }
+
+        .input-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+        @media (max-width: 600px) { .input-grid { grid-template-columns: 1fr; } }
+        .input-group { display: flex; flex-direction: column; gap: 8px; }
+        .input-group label { font-weight: 700; color: var(--text-main); font-size: 0.9rem; }
+        .input-group .help-text { font-size: 0.8rem; color: var(--text-muted); line-height: 1.4; margin-top: -4px; }
+        .input-wrapper { display: flex; border: 1px solid var(--border-color); border-radius: 6px; overflow: hidden; background: #f9fafb; transition: border-color 0.2s; }
+        .input-wrapper:focus-within { border-color: var(--navy-header); box-shadow: 0 0 0 1px var(--navy-header); }
+        .prefix { background: #f3f4f6; color: var(--text-muted); padding: 10px 14px; border-right: 1px solid var(--border-color); font-weight: 500; }
+        .input-wrapper input { flex: 1; border: none; padding: 10px 14px; font-size: 1rem; color: var(--text-main); outline: none; width: 100%; }
+
+        /* Tooltip Styling */
+        .tooltip-container { position: relative; display: inline-flex; align-items: center; cursor: pointer; margin-left: 4px; color: var(--link-color); font-weight: normal; }
+        .tooltip-icon { font-size: 0.85rem; }
+        .tooltip-text {
+            visibility: hidden; width: 310px; background-color: var(--navy-dark); color: #ffffff; text-align: left;
+            padding: 12px 14px; border-radius: 8px; position: absolute; z-index: 100; bottom: 125%; left: 50%;
+            transform: translateX(-50%); opacity: 0; transition: opacity 0.2s ease-in-out; font-size: 0.78rem; font-weight: normal; line-height: 1.45;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3); pointer-events: none;
+        }
+        .tooltip-text::after {
+            content: ""; position: absolute; top: 100%; left: 50%; margin-left: -6px; border-width: 6px; border-style: solid; border-color: var(--navy-dark) transparent transparent transparent;
+        }
+        .tooltip-container:hover .tooltip-text { visibility: visible; opacity: 1; }
+        .tooltip-text p { margin-bottom: 8px; }
+        .tooltip-text p:last-child { margin-bottom: 0; }
+        .tooltip-text strong { color: #38bdf8; }
+
+        .strategy-toggle { display: flex; background: #e5e7eb; border-radius: 8px; padding: 4px; margin-bottom: 24px; }
+        .toggle-btn { flex: 1; text-align: center; padding: 10px; font-weight: 600; font-size: 0.9rem; cursor: pointer; border-radius: 6px; transition: all 0.2s; color: var(--text-muted); }
+        .toggle-btn.active { background: var(--navy-header); color: white; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+
+        .results-box { border: 1px solid var(--border-color); border-radius: 8px; padding: 20px; text-align: center; margin-bottom: 24px; transition: all 0.3s; }
+        .results-box.stacking-active { background-color: var(--stack-color); border-color: var(--stack-border); }
+        .results-box.traditional-active { background-color: #f8fafc; border-color: #e2e8f0; }
+        
+        .pass-indicator { font-weight: 700; font-size: 1.05rem; margin-bottom: 12px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .stacking-active .pass-indicator { color: var(--green-pass); }
+        .traditional-active .pass-indicator { color: var(--text-muted); }
+
+        .freedom-value { font-size: 2.25rem; font-weight: 800; color: var(--navy-header); margin-bottom: 4px; }
+        .freedom-sub { color: var(--text-muted); font-size: 0.95rem; font-weight: 500; }
+
+        .summary-list { list-style: none; text-align: left; margin-top: 16px; margin-bottom: 24px; }
+        .summary-list li { padding: 12px 0; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; font-size: 0.95rem; }
+        .summary-list li:last-child { border-bottom: none; }
+        .summary-list .label { color: var(--text-muted); }
+        .summary-list .value { font-weight: 600; color: var(--text-main); }
+        .summary-list .value.risk-alert { color: var(--alert-red); }
+
+        .narrative-box { background: #f0f9ff; border-left: 4px solid var(--link-color); padding: 16px; border-radius: 0 8px 8px 0; font-size: 0.9rem; color: var(--navy-dark); line-height: 1.6; margin-bottom: 24px;}
+        .narrative-box strong { color: var(--navy-header); }
+        
+        .rules-matrix { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 0.85rem; border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden; }
+        .rules-matrix th { background-color: #f8fafc; padding: 12px 8px; text-align: center; font-weight: 700; color: var(--navy-dark); border-bottom: 1px solid var(--border-color); }
+        .rules-matrix th:first-child { text-align: left; width: 30%; }
+        .rules-matrix td { padding: 12px 8px; text-align: center; border-bottom: 1px solid var(--border-color); color: var(--text-main); transition: background-color 0.3s; }
+        .rules-matrix td:first-child { text-align: left; font-weight: 600; color: var(--text-muted); background-color: #f8fafc; }
+        .rules-matrix tr:last-child td { border-bottom: none; }
+        
+        .rules-matrix th.col-trad, .rules-matrix td.col-trad { border-left: 1px solid var(--border-color); border-right: 1px solid var(--border-color); }
+        .rules-matrix.active-stacking th.col-stack, .rules-matrix.active-stacking td.col-stack { background-color: var(--stack-color); color: var(--navy-dark); font-weight: 600;}
+        .rules-matrix.active-traditional th.col-trad, .rules-matrix.active-traditional td.col-trad { background-color: #f1f5f9; color: var(--navy-dark); font-weight: 600;}
+        
+        .chart-container { position: relative; height: 380px; width: 100%; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <a href="toolbox" class="back-link">Back to Toolbox</a>
+
+    <div class="main-header">
+        <h1>Freedom Date Calculator</h1>
+        <p>Calculate when your financial architecture will set you free.</p>
+    </div>
+
+    <div class="layout-grid">
+        <!-- Left Column: Inputs & Chart -->
+        <div class="left-col">
+            <div class="card">
+                <div class="card-header">1. Cash Flow & Baseline</div>
+                <div class="card-body input-grid">
+                    <div class="input-group"><label for="income">Total Monthly Income</label><div class="help-text">Gross cash flow before living expenses.</div><div class="input-wrapper"><span class="prefix">$</span><input type="number" id="income" value="5000" min="0" step="500" required></div></div>
+                    <div class="input-group"><label for="expenses">Monthly Living Expenses</label><div class="help-text">Target lifestyle cost in today's dollars.</div><div class="input-wrapper"><span class="prefix">$</span><input type="number" id="expenses" value="4000" min="0" step="500" required></div></div>
+                    <div class="input-group"><label for="balance">Current Portfolio Equity</label><div class="help-text">Your total starting liquid value.</div><div class="input-wrapper"><span class="prefix">$</span><input type="number" id="balance" value="50000" min="0" step="5000" required></div></div>
+                    <div class="input-group"><label for="age">Current Age</label><div class="help-text">Used to track your age across timeline.</div><div class="input-wrapper"><input type="number" id="age" value="45" min="0" max="120" step="1" required style="padding-left: 14px;"></div></div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span>2. Architecture Assumptions</span>
+                    <button class="optimize-btn" onclick="optimizeArchitecture()">⚡ Auto-Optimize</button>
+                </div>
+                <div class="card-body input-grid">
+                    <div class="input-group"><label for="returnRate">Expected Annual Return</label><div class="help-text">Capital appreciation (price growth).</div><div class="input-wrapper"><input type="number" id="returnRate" value="3.5" min="-100" max="100" step="0.5" required style="padding-left: 14px;"><span class="prefix">%</span></div></div>
+                    <div class="input-group"><label for="leverage">Strategic Leverage (DTA)</label><div class="help-text">Target Debt-to-Asset ratio.</div><div class="input-wrapper"><input type="number" id="leverage" value="25" min="0" max="89" step="1" required style="padding-left: 14px;"><span class="prefix">%</span></div></div>
+                    <div class="input-group"><label for="marginRate">Margin Interest Rate</label><div class="help-text">Cost of capital to engineer the spread.</div><div class="input-wrapper"><input type="number" id="marginRate" value="5.65" min="0" max="100" step="0.1" required style="padding-left: 14px;"><span class="prefix">%</span></div></div>
+                    <div class="input-group"><label for="yieldRate">Target Cash Yield</label><div class="help-text">Passive distribution (dividends).</div><div class="input-wrapper"><input type="number" id="yieldRate" value="10" min="0.1" max="100" step="0.5" required style="padding-left: 14px;"><span class="prefix">%</span></div></div>
+                    <div class="input-group"><label for="inflationRate">Annual Inflation Rate</label><div class="help-text">Yearly decrease in purchasing power.</div><div class="input-wrapper"><input type="number" id="inflationRate" value="4.5" min="-99" max="100" step="0.1" required style="padding-left: 14px;"><span class="prefix">%</span></div></div>
+                    <div class="input-group">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-end;">
+                            <label>
+                                Market Volatility 
+                                <span class="tooltip-container">
+                                    <span class="tooltip-icon">ⓘ</span>
+                                    <span class="tooltip-text">
+                                        <p><strong>0% (Mechanical Baseline):</strong> Isolate structural math without market noise. Test positive carry & monthly income sweep velocity.</p>
+                                        <p><strong>8% – 12% (Realistic Income Architecture):</strong> Muted price volatility typical of high-yield, covered call, or dividend-heavy portfolios.</p>
+                                        <p><strong>15% – 20%+ (Tail-Risk Stress Test):</strong> Broad equity crash parameters to test downside margin safety and credit utilization rules.</p>
+                                    </span>
+                                </span>
+                            </label>
+                            <div class="strategy-toggle" style="margin-bottom: 0; padding: 2px; width: 80px;">
+                                <div class="toggle-btn" id="btn-vol-on" onclick="toggleVolatility(true)" style="padding: 2px 0; font-size: 0.75rem;">On</div>
+                                <div class="toggle-btn active" id="btn-vol-off" onclick="toggleVolatility(false)" style="padding: 2px 0; font-size: 0.75rem;">Off</div>
+                            </div>
+                        </div>
+                        <div class="help-text">Standard deviation (risk).</div>
+                        <div class="input-wrapper" id="volInputWrapper" style="transition: opacity 0.3s; opacity: 0.4; pointer-events: none;">
+                            <input type="number" id="volatility" value="8" min="0" max="300" step="1" required style="padding-left: 14px;"><span class="prefix">%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">3. Brokerage Guardrails</div>
+                <div class="card-body input-grid">
+                    <div class="input-group"><label for="maxMarginLimit">Max Borrowing Limit</label><div class="help-text">Maximum debt as a percentage of gross assets.</div><div class="input-wrapper"><input type="number" id="maxMarginLimit" value="50" min="0" max="100" step="1" required style="padding-left: 14px;"><span class="prefix">%</span></div></div>
+                    <div class="input-group"><label for="maintenanceMargin">Maintenance Margin</label><div class="help-text">Minimum equity percentage required by the brokerage.</div><div class="input-wrapper"><input type="number" id="maintenanceMargin" value="30" min="0" max="99" step="1" required style="padding-left: 14px;"><span class="prefix">%</span></div></div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">Trajectory vs. Target Projection</div>
+                <div class="card-body">
+                    <div class="chart-container"><canvas id="projectionChart"></canvas></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Results & Dashboard -->
+        <div class="right-col">
+            <div class="strategy-toggle">
+                <div class="toggle-btn active" id="btn-trad" onclick="setMode('traditional')">Linear Grind (Traditional)</div>
+                <div class="toggle-btn" id="btn-stack" onclick="setMode('stacking')">Escape Velocity (Stacking)</div>
+            </div>
+
+            <div class="card">
+                <div class="card-header" id="dashTitle">Traditional Budgeting Results</div>
+                <div class="card-body">
+                    <div class="results-box traditional-active" id="resultBox">
+                        <div class="pass-indicator" id="passLabel">⏳ Expected Freedom Date</div>
+                        <div class="freedom-value" id="freedomDate">--</div>
+                        <div class="freedom-sub" id="freedomSubtext">Calculating timeline...</div>
+                    </div>
+                    
+                    <h3 style="font-size: 1.1rem; color: var(--navy-header); border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">Risk & Liquidity Guardrails</h3>
+                    <ul class="summary-list">
+                        <li><span class="label">Current Credit Utilization</span><span class="value" id="creditUtilization">--</span></li>
+                        <li><span class="label">Drop to Margin Call</span><span class="value" id="dropToCall">--</span></li>
+                    </ul>
+
+                    <h3 style="font-size: 1.1rem; color: var(--navy-header); border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">Metrics Overview</h3>
+                    <ul class="summary-list">
+                        <li><span class="label">Inflated Target Expenses</span><span class="value" id="targetExpenses">--</span></li>
+                        <li><span class="label">Required Portfolio Equity</span><span class="value" id="targetPortfolio">--</span></li>
+                        <li><span class="label">Optimistic Date (10th Pct)</span><span class="value" id="optRange">--</span></li>
+                        <li><span class="label">Conservative Date (90th Pct)</span><span class="value" id="conRange">--</span></li>
+                    </ul>
+                    <div class="narrative-box" id="narrativeBox">Loading narrative...</div>
+                    
+                    <h3 style="font-size: 1.1rem; color: var(--navy-header); border-bottom: 1px solid var(--border-color); padding-bottom: 8px; margin-bottom: 16px;">Rules of the Game</h3>
+                    <table class="rules-matrix active-traditional" id="rulesMatrix">
+                        <thead>
+                            <tr>
+                                <th>Structural Mechanic</th>
+                                <th class="col-trad">Traditional</th>
+                                <th class="col-stack">Stacking</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>Role of Portfolio</td><td class="col-trad">Retirement Account</td><td class="col-stack">Capital Amplifier</td></tr>
+                            <tr><td>Income Routing</td><td class="col-trad">Invest "Leftovers"</td><td class="col-stack">100% Sweeps Debt</td></tr>
+                            <tr><td>Use of Debt</td><td class="col-trad">None</td><td class="col-stack">Strategic Margin</td></tr>
+                            <tr><td>Deficit Handling</td><td class="col-trad">Sell Assets to Live</td><td class="col-stack">Margin Absorbs Deficit</td></tr>
+                            <tr><td>Asset Liquidation</td><td class="col-trad">Standard Drawdown</td><td class="col-stack">Held Unless Guardrails Force Sales</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let myChart = null; 
+    let currentMode = 'traditional';
+    let globalSimData = {};
+    let isVolOn = false;
+
+    function randn_bm() {
+        let u = 0, v = 0;
+        while(u === 0) u = Math.random();
+        while(v === 0) v = Math.random();
+        return Math.sqrt( -2.0 * Math.log( u ) ) * Math.cos( 2.0 * Math.PI * v );
+    }
+
+    function toggleVolatility(turnOn) {
+        isVolOn = turnOn;
+        document.getElementById('btn-vol-on').classList.toggle('active', turnOn);
+        document.getElementById('btn-vol-off').classList.toggle('active', !turnOn);
+        document.getElementById('volInputWrapper').style.opacity = turnOn ? '1' : '0.4';
+        document.getElementById('volInputWrapper').style.pointerEvents = turnOn ? 'auto' : 'none';
+        runSimulations();
+    }
+
+    function setMode(mode) {
+        currentMode = mode;
+        document.getElementById('btn-trad').classList.remove('active');
+        document.getElementById('btn-stack').classList.remove('active');
+        const resultBox = document.getElementById('resultBox');
+        resultBox.classList.remove('traditional-active', 'stacking-active');
+        const rulesMatrix = document.getElementById('rulesMatrix');
+        rulesMatrix.classList.remove('active-traditional', 'active-stacking');
+
+        if(mode === 'traditional') {
+            document.getElementById('btn-trad').classList.add('active');
+            document.getElementById('dashTitle').innerText = "Traditional Budgeting Results";
+            document.getElementById('passLabel').innerText = "⏳ Expected Freedom Date";
+            resultBox.classList.add('traditional-active');
+            rulesMatrix.classList.add('active-traditional');
+        } else {
+            document.getElementById('btn-stack').classList.add('active');
+            document.getElementById('dashTitle').innerText = "Cash Flow Stacking Results";
+            document.getElementById('passLabel').innerText = "🚀 Expected Freedom Date";
+            resultBox.classList.add('stacking-active');
+            rulesMatrix.classList.add('active-stacking');
+        }
+        updateDashboardUI();
+    }
+
+    function readInputs() {
+        const read = (id) => parseFloat(document.getElementById(id).value);
+        return {
+            income: read('income'),
+            currentExpenses: read('expenses'),
+            startingEquity: read('balance'),
+            currentAge: read('age'),
+            annualApprec: read('returnRate') / 100,
+            annualVol: isVolOn ? read('volatility') / 100 : 0,
+            targetYield: read('yieldRate') / 100,
+            annualInflation: read('inflationRate') / 100,
+            leverageDTA: read('leverage') / 100,
+            marginRate: read('marginRate') / 100,
+            maxMarginLimit: read('maxMarginLimit') / 100,
+            maintMargin: read('maintenanceMargin') / 100
+        };
+    }
+
+    function validateInputs(p, options = {}) {
+        if (Object.values(p).some(value => !Number.isFinite(value))) return "Every field must contain a valid number.";
+        if (p.income < 0 || p.currentExpenses < 0 || p.startingEquity < 0) return "Income, expenses, and portfolio equity cannot be negative.";
+        if (p.currentAge < 0 || p.currentAge > 120) return "Current age must be between 0 and 120.";
+        if (p.annualApprec < -1 || p.annualApprec > 1) return "Expected annual return must be between -100% and 100%.";
+        if (p.annualVol < 0 || p.annualVol > 3) return "Volatility must be between 0% and 300%.";
+        if (p.annualInflation <= -1 || p.annualInflation > 1) return "Inflation must be greater than -100% and no more than 100%.";
+        if (p.marginRate < 0 || p.marginRate > 1) return "Margin interest must be between 0% and 100%.";
+        if (p.maxMarginLimit < 0 || p.maxMarginLimit > 1) return "Maximum borrowing must be between 0% and 100%.";
+        if (p.maintMargin < 0 || p.maintMargin >= 1) return "Maintenance margin must be between 0% and 99%.";
+
+        if (!options.skipStrategyChecks) {
+            if (p.targetYield <= 0 || p.targetYield > 1) return "Target cash yield must be greater than 0% and no more than 100%.";
+            if (p.leverageDTA < 0 || p.leverageDTA >= 0.9) return "Strategic leverage must be between 0% and 89%.";
+            const maxSafeDTA = Math.min(p.maxMarginLimit, 1 - p.maintMargin);
+            if (p.leverageDTA > maxSafeDTA + Number.EPSILON) return "Strategic leverage exceeds the brokerage borrowing or maintenance-margin limit.";
+            if (p.targetYield - (p.leverageDTA * p.marginRate) <= 0) return "Stacking requires positive net portfolio yield after margin interest.";
+        }
+        return null;
+    }
+
+    function showInputError(message) {
+        globalSimData = {};
+        document.getElementById('freedomDate').innerText = "Check Inputs";
+        document.getElementById('freedomSubtext').innerText = message;
+        document.getElementById('targetExpenses').innerText = "--";
+        document.getElementById('targetPortfolio').innerText = "--";
+        document.getElementById('optRange').innerText = "--";
+        document.getElementById('conRange').innerText = "--";
+        document.getElementById('creditUtilization').innerText = "--";
+        document.getElementById('dropToCall').innerText = "--";
+        document.getElementById('narrativeBox').innerText = message;
+        if (myChart) { myChart.destroy(); myChart = null; }
+    }
+
+    function optimizeArchitecture() {
+        const p = readInputs();
+        const validationError = validateInputs(p, { skipStrategyChecks: true });
+        if (validationError) { showInputError(validationError); return; }
+
+        const maxSafeDTA = Math.min(p.maxMarginLimit, 1 - p.maintMargin);
+        let best = null;
+
+        // Bounded grid search across positive-carry configurations that satisfy all guardrails.
+        for (let l = 15; l <= 35; l += 2.5) {
+            const levDTA = l / 100;
+            if (levDTA > maxSafeDTA + Number.EPSILON) continue;
+
+            for (let y = 8; y <= 15; y += 0.5) {
+                const yieldRate = y / 100;
+                const assets = p.startingEquity / (1 - levDTA);
+                const debt = assets - p.startingEquity;
+                const netSpread = (assets * yieldRate) - (debt * p.marginRate);
+                if (netSpread <= 0) continue;
+
+                const creditLine = assets * p.maxMarginLimit;
+                const utilization = debt > 0 ? (creditLine > 0 ? debt / creditLine : Infinity) : 0;
+                if (!Number.isFinite(utilization) || utilization > 0.70) continue;
+
+                let dropToCall = 1;
+                if (debt > 0) {
+                    const callAssets = debt / (1 - p.maintMargin);
+                    dropToCall = assets > 0 ? (assets - callAssets) / assets : -Infinity;
+                }
+                if (dropToCall < 0.25) continue;
+
+                const effectiveNetYield = yieldRate - (levDTA * p.marginRate);
+                if (effectiveNetYield <= 0) continue;
+                const requiredEquity = (p.currentExpenses * 12 * (1 - levDTA)) / effectiveNetYield;
+                const monthlyNetCashFlow = p.income - p.currentExpenses + (netSpread / 12);
+                if (monthlyNetCashFlow <= 0) continue;
+
+                const estMonths = Math.max(0, (requiredEquity - p.startingEquity) / monthlyNetCashFlow);
+                if (Number.isFinite(estMonths) && (!best || estMonths < best.months)) {
+                    best = {
+                        months: estMonths,
+                        leverage: l,
+                        yieldRate: y,
+                        returnRate: y >= 12 ? 2.5 : y >= 10 ? 3.5 : 4.5
+                    };
+                }
+            }
+        }
+
+        if (!best) {
+            window.alert("No safe positive-carry configuration was found for the current cash flow and brokerage guardrails.");
+            return;
+        }
+
+        document.getElementById('leverage').value = best.leverage;
+        document.getElementById('yieldRate').value = best.yieldRate;
+        document.getElementById('returnRate').value = best.returnRate;
+        setMode('stacking');
+        runSimulations();
+    }
+
+    function updateRiskGuardrails(p = readInputs()) {
+        let assets = p.startingEquity / (1 - p.leverageDTA);
+        let debt = assets - p.startingEquity;
+        if (p.leverageDTA === 0) { assets = p.startingEquity; debt = 0; }
+
+        const creditLine = assets * p.maxMarginLimit;
+        const utilization = debt > 0 ? (creditLine > 0 ? (debt / creditLine) * 100 : Infinity) : 0;
+
+        let dropToCall = 100;
+        if (debt > 0) {
+            const callAssets = debt / (1 - p.maintMargin);
+            dropToCall = assets > 0 ? ((assets - callAssets) / assets) * 100 : -Infinity;
+        }
+
+        const utilEl = document.getElementById('creditUtilization');
+        const dropEl = document.getElementById('dropToCall');
+
+        if (currentMode === 'stacking') {
+            utilEl.innerText = Number.isFinite(utilization) ? utilization.toFixed(2) + "%" : "Unavailable";
+            dropEl.innerText = Number.isFinite(dropToCall) ? dropToCall.toFixed(2) + "%" : "Unavailable";
+            utilEl.className = utilization > 70 ? "value risk-alert" : "value";
+            dropEl.className = dropToCall < 25 ? "value risk-alert" : "value";
+        } else {
+            utilEl.innerText = "0.00%";
+            dropEl.innerText = "N/A";
+            utilEl.className = "value";
+            dropEl.className = "value";
+        }
+    }
+
+    function rebalanceStackState(assets, debt, targetDTA, maxMarginLimit, maintMargin) {
+        if (!Number.isFinite(assets) || !Number.isFinite(debt) || assets < 0) {
+            return { assets: 0, debt: 0, equity: 0, guardrailBreached: true };
+        }
+
+        // Once debt is fully swept, invest excess cash before restoring strategic leverage.
+        if (debt < 0) {
+            assets += Math.abs(debt);
+            debt = 0;
+        }
+
+        if (assets === 0) {
+            return { assets: 0, debt: 0, equity: 0, guardrailBreached: debt > 0 };
+        }
+
+        let equity = assets - debt;
+        if (equity <= 0) {
+            return { assets: 0, debt: 0, equity: 0, guardrailBreached: true };
+        }
+
+        const maxAllowedDTA = Math.min(maxMarginLimit, 1 - maintMargin);
+        let currentDTA = debt / assets;
+        const guardrailBreached = currentDTA > maxAllowedDTA + 1e-12;
+
+        if (guardrailBreached) {
+            // Model a brokerage margin call by selling assets and paying down debt
+            // until the account returns to its strategic target.
+            const recoveryDTA = Math.min(targetDTA, maxAllowedDTA);
+            const saleAmount = (debt - (recoveryDTA * assets)) / (1 - recoveryDTA);
+            if (!Number.isFinite(saleAmount) || saleAmount >= assets) {
+                return { assets: 0, debt: 0, equity: 0, guardrailBreached: true };
+            }
+            assets -= Math.max(0, saleAmount);
+            debt -= Math.max(0, saleAmount);
+        } else if (currentDTA < targetDTA - 1e-12) {
+            // Reuse borrowing capacity only when the resulting position remains
+            // within both the credit-line and maintenance-margin constraints.
+            const targetAssets = equity / (1 - targetDTA);
+            const borrowAmount = Math.max(0, targetAssets - assets);
+            const proposedAssets = assets + borrowAmount;
+            const proposedDebt = debt + borrowAmount;
+            const proposedDTA = proposedAssets > 0 ? proposedDebt / proposedAssets : 0;
+
+            if (proposedDTA <= maxAllowedDTA + 1e-12) {
+                assets = proposedAssets;
+                debt = proposedDebt;
+            }
+        }
+
+        equity = Math.max(0, assets - debt);
+        return { assets, debt, equity, guardrailBreached };
+    }
+
+    function runSimulations() {
+        const p = readInputs();
+        const validationError = validateInputs(p);
+        if (validationError) { showInputError(validationError); return; }
+
+        const monthlyInflationRate = Math.pow(1 + p.annualInflation, 1/12) - 1;
+        const monthlyApprecMean = p.annualApprec / 12;
+        const monthlyYield = p.targetYield / 12;
+        const monthlyVol = p.annualVol / Math.sqrt(12);
+        const monthlyMarginRate = p.marginRate / 12;
+
+        const maxMonths = 360;
+        const simulations = 500;
+        const labels = ["Today"];
+
+        const tradTargetLine = [];
+        const stackTargetLine = [];
+        const tradResults = Array.from({length: maxMonths + 1}, () => []);
+        const stackResults = Array.from({length: maxMonths + 1}, () => []);
+        const stackState = Array.from({length: maxMonths + 1}, () => []);
+        const stackGuardrailEvents = Array(simulations).fill(0);
+
+        let initialStackAssets = p.startingEquity / (1 - p.leverageDTA);
+        let initialStackDebt = initialStackAssets - p.startingEquity;
+        if (p.leverageDTA === 0) {
+            initialStackAssets = p.startingEquity;
+            initialStackDebt = 0;
+        }
+
+        for (let s = 0; s < simulations; s++) {
+            tradResults[0].push(p.startingEquity);
+            stackResults[0].push(p.startingEquity);
+            stackState[0].push({ assets: initialStackAssets, debt: initialStackDebt });
+        }
+
+        const initialAnnualExpenses = p.currentExpenses * 12;
+        const effectiveNetYield = p.targetYield - (p.leverageDTA * p.marginRate);
+        tradTargetLine.push(initialAnnualExpenses / p.targetYield);
+        stackTargetLine.push((initialAnnualExpenses * (1 - p.leverageDTA)) / effectiveNetYield);
+
+        for (let m = 1; m <= maxMonths; m++) {
+            const inflatedExpense = p.currentExpenses * Math.pow(1 + monthlyInflationRate, m);
+            const targetAnnualIncome = inflatedExpense * 12;
+
+            tradTargetLine.push(targetAnnualIncome / p.targetYield);
+            stackTargetLine.push((targetAnnualIncome * (1 - p.leverageDTA)) / effectiveNetYield);
+
+            for (let s = 0; s < simulations; s++) {
+                const randomMonthlyApprec = monthlyApprecMean + (randn_bm() * monthlyVol);
+
+                // TRADITIONAL: income pays expenses and the remainder changes unleveraged equity.
+                const netLeftover = p.income - inflatedExpense;
+                const prevTrad = tradResults[m-1][s];
+                const newTrad = prevTrad
+                    + (prevTrad * randomMonthlyApprec)
+                    + (prevTrad * monthlyYield)
+                    + netLeftover;
+                tradResults[m].push(Math.max(0, newTrad));
+
+                // STACKING: income and distributions sweep debt once; expenses and
+                // margin interest increase debt. Appreciation applies to gross assets.
+                const prevStack = stackState[m-1][s];
+                const appreciatedAssets = prevStack.assets * (1 + randomMonthlyApprec);
+                const stackCashYield = prevStack.assets * monthlyYield;
+                const interestCost = prevStack.debt * monthlyMarginRate;
+                const sweptDebt = prevStack.debt
+                    + inflatedExpense
+                    + interestCost
+                    - p.income
+                    - stackCashYield;
+
+                const nextStack = rebalanceStackState(
+                    appreciatedAssets,
+                    sweptDebt,
+                    p.leverageDTA,
+                    p.maxMarginLimit,
+                    p.maintMargin
+                );
+
+                if (nextStack.guardrailBreached) stackGuardrailEvents[s] += 1;
+                stackState[m].push({ assets: nextStack.assets, debt: nextStack.debt });
+                stackResults[m].push(nextStack.equity);
+            }
+        }
+
+        const processData = (simArray, targetArr) => {
+            const p10 = [], p50 = [], p90 = [];
+
+            // These monthly equity percentiles are retained for the chart only.
+            for (let m = 0; m <= maxMonths; m++) {
+                const sorted = simArray[m].slice().sort((a, b) => a - b);
+                p10.push(sorted[Math.floor((simulations - 1) * 0.10)]);
+                p50.push(sorted[Math.floor((simulations - 1) * 0.50)]);
+                p90.push(sorted[Math.floor((simulations - 1) * 0.90)]);
+            }
+
+            // Calculate a first-passage date for every trajectory, then take
+            // percentiles of those dates. Non-hits remain right-censored at 30+ years.
+            const firstHitMonths = [];
+            for (let s = 0; s < simulations; s++) {
+                let firstHit = -1;
+                for (let m = 0; m <= maxMonths; m++) {
+                    if (simArray[m][s] >= targetArr[m]) {
+                        firstHit = m;
+                        break;
+                    }
+                }
+                firstHitMonths.push(firstHit);
+            }
+
+            const censoredMonth = maxMonths + 1;
+            const sortedHits = firstHitMonths
+                .map(month => month === -1 ? censoredMonth : month)
+                .sort((a, b) => a - b);
+            const hitPercentile = (percentile) => {
+                const value = sortedHits[Math.floor((simulations - 1) * percentile)];
+                return value > maxMonths ? -1 : value;
+            };
+
+            return {
+                p10, p50, p90, firstHitMonths,
+                hitP10: hitPercentile(0.10),
+                hitP50: hitPercentile(0.50),
+                hitP90: hitPercentile(0.90)
+            };
+        };
+
+        const tradData = processData(tradResults, tradTargetLine);
+        const stackData = processData(stackResults, stackTargetLine);
+        const tradRenderHit = tradData.hitP50 === -1 ? maxMonths : tradData.hitP50;
+        const stackRenderHit = stackData.hitP50 === -1 ? maxMonths : stackData.hitP50;
+        const renderMonths = Math.min(maxMonths, Math.max(tradRenderHit, stackRenderHit) + 12);
+
+        for (let m = 1; m <= renderMonths; m++) {
+            labels.push(m % 12 === 0 ? 'Year ' + (m/12) : 'Mo ' + m);
+        }
+
+        globalSimData = {
+            maxMonths,
+            currentAge: p.currentAge,
+            income: p.income,
+            currentExpenses: p.currentExpenses,
+            monthlyInflationRate,
+            labels,
+            guardrailEventRate: stackGuardrailEvents.filter(count => count > 0).length / simulations,
+            tradTargetLine: tradTargetLine.slice(0, renderMonths + 1),
+            stackTargetLine: stackTargetLine.slice(0, renderMonths + 1),
+            trad: {
+                ...tradData,
+                p10: tradData.p10.slice(0, renderMonths + 1),
+                p50: tradData.p50.slice(0, renderMonths + 1),
+                p90: tradData.p90.slice(0, renderMonths + 1)
+            },
+            stack: {
+                ...stackData,
+                p10: stackData.p10.slice(0, renderMonths + 1),
+                p50: stackData.p50.slice(0, renderMonths + 1),
+                p90: stackData.p90.slice(0, renderMonths + 1)
+            }
+        };
+        updateDashboardUI();
+    }
+
+    function updateDashboardUI() {
+        if (!globalSimData.tradTargetLine) return;
+
+        const d = globalSimData;
+        const isStacking = currentMode === 'stacking';
+        const activeData = isStacking ? d.stack : d.trad;
+        const activeTargetLine = isStacking ? d.stackTargetLine : d.tradTargetLine;
+        const reachedMedian = activeData.hitP50 !== -1;
+        const timelineMonths = reachedMedian ? activeData.hitP50 : d.maxMonths;
+
+        updateRiskGuardrails();
+
+        let targetDateString = "30+ Years";
+        if (reachedMedian) {
+            const currentDate = new Date();
+            currentDate.setMonth(currentDate.getMonth() + timelineMonths);
+            targetDateString = currentDate.toLocaleString('default', { month: 'long', year: 'numeric' });
+        }
+
+        const yearsToTarget = (timelineMonths / 12).toFixed(1);
+        const ageAtTarget = (d.currentAge + (timelineMonths / 12)).toFixed(1);
+        const finalInflatedExpense = d.currentExpenses * Math.pow(1 + d.monthlyInflationRate, timelineMonths);
+        const finalRequiredPortfolio = activeTargetLine[timelineMonths];
+        const formatHit = (month) => month === -1 ? ">30 Years" : (month / 12).toFixed(1) + " Years";
+
+        document.getElementById('freedomDate').innerText = targetDateString;
+        document.getElementById('freedomSubtext').innerText = reachedMedian
+            ? yearsToTarget + " Years to Target (Age " + ageAtTarget + ")"
+            : "Median trajectory does not reach the target within 30 years (Age " + ageAtTarget + ")";
+        document.getElementById('targetExpenses').innerText = "$" + Math.round(finalInflatedExpense).toLocaleString('en-US') + "/mo";
+        document.getElementById('targetPortfolio').innerText = "$" + Math.round(finalRequiredPortfolio).toLocaleString('en-US');
+        document.getElementById('optRange').innerText = formatHit(activeData.hitP10);
+        document.getElementById('conRange').innerText = formatHit(activeData.hitP90);
+
+        let deltaText;
+        if (d.trad.hitP50 === -1 && d.stack.hitP50 !== -1) {
+            const diff = ((d.maxMonths - d.stack.hitP50) / 12).toFixed(1);
+            deltaText = "This reaches the target more than <strong>" + diff + " years</strong> before the traditional median trajectory.";
+        } else if (d.trad.hitP50 !== -1 && d.stack.hitP50 !== -1 && d.trad.hitP50 > d.stack.hitP50) {
+            const diff = ((d.trad.hitP50 - d.stack.hitP50) / 12).toFixed(1);
+            deltaText = "This reaches the target <strong>" + diff + " years</strong> before the traditional median trajectory.";
+        } else if (d.stack.hitP50 === -1 && d.trad.hitP50 !== -1) {
+            deltaText = "Under these assumptions, stacking does not reach the target within 30 years while the traditional median trajectory does.";
+        } else {
+            deltaText = "Under these assumptions, stacking does not produce an earlier median Freedom Date.";
+        }
+
+        let narrative;
+        if (currentMode === 'traditional') {
+            narrative = "The Traditional model applies income remaining after expenses to an unleveraged portfolio. If expenses exceed income, the deficit reduces portfolio equity. Freedom is reached when portfolio cash yield can cover inflation-adjusted expenses.";
+        } else {
+            const guardrailPct = Math.round(d.guardrailEventRate * 100);
+            const guardrailText = guardrailPct > 0
+                ? " <strong>" + guardrailPct + "% of simulated paths required forced deleveraging</strong> after breaching a brokerage guardrail."
+                : " No simulated path breached the configured brokerage guardrails.";
+            narrative = "Stacking uses income and portfolio distributions to sweep margin debt while appreciation applies to gross assets. Assets remain invested unless a borrowing or maintenance-margin breach forces a sale. " + deltaText + guardrailText;
+        }
+        document.getElementById('narrativeBox').innerHTML = narrative;
+
+        renderChart(d.labels, activeTargetLine, d.trad.p50, d.stack.p50, activeData.p10, activeData.p90, currentMode);
+    }
+
+    function renderChart(labels, targetLine, tradP50, stackP50, activeP10, activeP90, mode) {
+        const ctx = document.getElementById('projectionChart').getContext('2d');
+        if (myChart) myChart.destroy();
+        const p10Color = mode === 'stacking' ? 'rgba(14, 165, 233, 0.4)' : 'rgba(148, 163, 184, 0.4)';
+        const p90Color = mode === 'stacking' ? 'rgba(14, 165, 233, 0.4)' : 'rgba(148, 163, 184, 0.4)';
+
+        myChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    { label: 'Required Equity Target', data: targetLine, borderColor: '#ef4444', borderWidth: 2, borderDash: [5, 5], pointRadius: 0, fill: false, order: 1 },
+                    { label: 'Optimistic Path', data: activeP90, borderColor: p90Color, borderWidth: 1, pointRadius: 0, fill: false, order: 5 },
+                    { label: 'Traditional (Drawdown)', data: tradP50, borderColor: '#94a3b8', borderWidth: mode === 'traditional' ? 4 : 2, borderDash: mode === 'stacking' ? [4,4] : [], pointRadius: 0, fill: false, order: 3, hidden: mode === 'stacking' },
+                    { label: 'Stacking (Velocity)', data: stackP50, borderColor: '#1e3a8a', borderWidth: mode === 'stacking' ? 4 : 2, borderDash: mode === 'traditional' ? [4,4] : [], pointRadius: 0, fill: false, order: 2, hidden: mode === 'traditional' },
+                    { label: 'Conservative Path', data: activeP10, borderColor: p10Color, borderWidth: 1, pointRadius: 0, fill: false, order: 6 }
+                ]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false, interaction: { intersect: false, mode: 'index' },
+                plugins: {
+                    legend: { labels: { color: '#374151', font: { size: 11 }, filter: function(item) { return !item.text.includes('Path'); } } },
+                    tooltip: { callbacks: { label: function(context) { let lbl = context.dataset.label || ''; if (lbl) lbl += ': '; if (context.parsed.y !== null) { lbl += new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(context.parsed.y); } return lbl; } } }
+                },
+                scales: { x: { grid: { color: 'rgba(0, 0, 0, 0.05)' }, ticks: { color: '#6b7280', maxTicksLimit: 12 } }, y: { grid: { color: 'rgba(0, 0, 0, 0.05)' }, ticks: { color: '#6b7280', callback: function(value) { if(value >= 1000000) return '$' + (value/1000000).toFixed(2) + 'M'; return '$' + (value/1000).toFixed(0) + 'k'; } } } }
+            }
+        });
+    }
+
+    const inputs = document.querySelectorAll('input');
+    inputs.forEach(input => { input.addEventListener('change', runSimulations); });
+    
+    // Initialize in Traditional Mode and run the math engine
+    setMode('traditional');
+    runSimulations();
+</script>
+
+</body>
+</html>
+
