@@ -41,6 +41,7 @@
       color: var(--text);
       background: var(--bg);
       font-family: "Share Tech Mono", "Cascadia Mono", "Courier New", monospace;
+      font-size: 16px;
       text-shadow: 0 0 3px rgba(0, 255, 65, 0.35);
     }
 
@@ -105,7 +106,7 @@
       align-items: center;
       gap: 7px;
       background: #001b07;
-      font-size: 11px;
+      font-size: 13px;
       font-weight: 700;
       letter-spacing: .5px;
       text-align: right;
@@ -134,12 +135,13 @@
     #video-container video { display: block; height: 120px; max-width: 220px; object-fit: cover; background: #051005; border: 2px solid var(--border); }
     #local-video { border-color: var(--primary) !important; box-shadow: 0 0 10px rgba(0,255,65,.45); }
     .remote-video { cursor: pointer; }
-    .video-label { position: absolute; top: 5px; left: 5px; max-width: 90%; overflow: hidden; text-overflow: ellipsis; padding: 2px 5px; color: #fff; background: rgba(0,0,0,.78); font-size: 10px; white-space: nowrap; }
+    .video-label { position: absolute; top: 5px; left: 5px; max-width: 90%; overflow: hidden; text-overflow: ellipsis; padding: 3px 6px; color: #fff; background: rgba(0,0,0,.78); font-size: 12px; white-space: nowrap; }
     .vid-controls { position: absolute; bottom: 5px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px; padding: 3px 6px; background: rgba(0,0,0,.82); }
     .vid-btn { width: 34px; height: 34px; border: 1px solid var(--border); color: var(--primary); background: #000; cursor: pointer; }
     .vid-btn.muted { color: var(--danger); }
 
-    .video-fullscreen { position: fixed !important; inset: 0; width: 100vw !important; height: 100vh !important; max-width: none !important; z-index: 9999; border: 0 !important; object-fit: contain !important; background: #000; }
+    #video-container video:fullscreen { width: 100vw; height: 100vh; max-width: none; object-fit: contain; background: #000; }
+    .video-fullscreen { position: fixed !important; top: 50% !important; left: 50% !important; width: 100vw !important; height: 100vh !important; max-width: none !important; z-index: 9999; border: 0 !important; transform: translate(-50%, -50%); object-fit: contain !important; background: #000; }
     body.hide-ui .app-header, body.hide-ui .scroll-body, body.hide-ui .input-bar { display: none !important; }
     body.hide-ui #video-container { flex: 1; height: 100dvh; flex-wrap: wrap; justify-content: center; align-content: center; border: 0; }
     body.hide-ui #video-container video { height: auto; max-height: 80vh; max-width: 90vw; object-fit: contain; }
@@ -148,35 +150,35 @@
     .scroll-body { flex: 1; overflow-y: auto; padding: 12px 16px; display: flex; flex-direction: column; gap: 12px; scroll-behavior: smooth; -webkit-overflow-scrolling: touch; }
     .card { padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; border: 1px solid var(--border); background: var(--card-bg); box-shadow: 0 0 10px rgba(0,0,0,.8); }
     .row { display: flex; align-items: center; gap: 8px; }
-    .room-meta { display: flex; justify-content: space-between; gap: 10px; color: var(--subtext); font-size: 11px; }
+    .room-meta { display: flex; justify-content: space-between; gap: 10px; color: var(--subtext); font-size: 13px; }
 
     input[type="text"] { width: 100%; height: 44px; padding: 0 12px; border: 1px solid var(--border); border-radius: 0; color: var(--text); background: #000; outline: none; }
     input[type="text"]:focus { border-color: var(--primary); box-shadow: 0 0 8px rgba(0,255,65,.35); }
-    .btn { min-height: 44px; padding: 0 16px; border: 1px solid var(--primary); color: var(--primary); background: #000; font-size: 13px; font-weight: 700; letter-spacing: 1px; cursor: pointer; }
+    .btn { min-height: 44px; padding: 0 16px; border: 1px solid var(--primary); color: var(--primary); background: #000; font-size: 14px; font-weight: 700; letter-spacing: 1px; cursor: pointer; }
     .btn:hover:not(:disabled), .btn:active:not(:disabled) { color: #000; background: var(--primary); box-shadow: 0 0 12px var(--primary); }
     .btn:disabled { opacity: .35; cursor: not-allowed; }
-    .btn-secondary { flex: 1; min-height: 38px; border-color: var(--border); color: var(--subtext); font-size: 12px; }
-    .btn-danger { width: 100%; min-height: 38px; border-color: #7b2323; color: var(--danger); font-size: 12px; }
+    .btn-secondary { flex: 1; min-height: 38px; border-color: var(--border); color: var(--subtext); font-size: 13px; }
+    .btn-danger { width: 100%; min-height: 38px; border-color: #7b2323; color: var(--danger); font-size: 13px; }
     .btn-danger:hover:not(:disabled), .btn-danger:active:not(:disabled) { color: #fff; background: #a21e1e; box-shadow: 0 0 12px rgba(255,69,69,.65); }
 
     #qr-container { display: none; padding-top: 10px; border-top: 1px solid var(--border); text-align: center; }
     #qr-container canvas { max-width: 100%; border: 4px solid var(--primary); box-shadow: 0 0 10px rgba(0,255,65,.3); }
-    .qr-caption { margin-top: 8px; color: var(--primary); font-size: 11px; letter-spacing: 1px; }
+    .qr-caption { margin-top: 8px; color: var(--primary); font-size: 13px; letter-spacing: 1px; }
 
     #chat-box { flex: 1; min-height: 180px; padding-bottom: 20px; display: flex; flex-direction: column; gap: 10px; }
     .bubble { max-width: 82%; padding: 10px 14px; border: 1px solid var(--border); line-height: 1.4; overflow-wrap: anywhere; }
     .bubble-out { align-self: flex-end; color: var(--text); background: #002b00; border-color: var(--primary); }
     .bubble-in { align-self: flex-start; color: #b5ffb5; background: #051405; }
-    .bubble-author { margin-bottom: 4px; color: var(--subtext); font-size: 11px; font-weight: 700; letter-spacing: 1px; }
-    .system-pill { align-self: center; max-width: 92%; padding: 5px 12px; border: 1px solid var(--border); color: var(--primary); background: rgba(0,255,65,.08); font-size: 11px; letter-spacing: .5px; text-align: center; overflow-wrap: anywhere; }
+    .bubble-author { margin-bottom: 4px; color: var(--subtext); font-size: 13px; font-weight: 700; letter-spacing: 1px; }
+    .system-pill { align-self: center; max-width: 92%; padding: 6px 12px; border: 1px solid var(--border); color: var(--primary); background: rgba(0,255,65,.08); font-size: 13px; letter-spacing: .5px; text-align: center; overflow-wrap: anywhere; }
     .system-pill.warning { color: var(--warning); border-color: #725f19; }
     .system-pill.error { color: var(--danger); border-color: #7b2323; }
     .download-card { margin-top: 7px; padding: 8px 10px; border: 1px solid var(--border); display: flex; align-items: center; gap: 8px; color: var(--primary); background: #000; text-decoration: none; }
     .transfer-offer { align-self: flex-start; width: min(92%, 520px); padding: 12px; border: 1px solid var(--border); display: grid; gap: 9px; color: #b5ffb5; background: #051405; }
     .transfer-title { color: var(--primary); font-weight: 700; overflow-wrap: anywhere; }
-    .transfer-meta, .transfer-status { color: var(--subtext); font-size: 11px; }
+    .transfer-meta, .transfer-status { color: var(--subtext); font-size: 13px; }
     .transfer-actions { display: flex; gap: 8px; }
-    .transfer-actions .btn { flex: 1; min-height: 38px; padding-inline: 10px; font-size: 11px; }
+    .transfer-actions .btn { flex: 1; min-height: 38px; padding-inline: 10px; font-size: 12px; }
     .transfer-progress { width: 100%; height: 10px; accent-color: var(--primary); }
 
     .input-bar { padding: 10px 12px calc(10px + var(--safe-bottom)); border-top: 1px solid var(--border); display: flex; align-items: center; gap: 8px; position: relative; z-index: 10; background: #000; }
@@ -200,7 +202,7 @@
 
     @media (max-width: 580px) {
       .app-title { font-size: 1rem; letter-spacing: 1px; }
-      .status-badge { max-width: 48%; font-size: 9px; }
+      .status-badge { max-width: 48%; font-size: 11px; }
       .scroll-body { padding-inline: 10px; }
       .room-meta { flex-direction: column; gap: 3px; }
       .bubble { max-width: 90%; }
@@ -300,6 +302,7 @@
     const connections = new Map();
     const pendingConnections = new Map();
     const knownMembers = new Set();
+    const memberNames = new Map();
     const outgoingCalls = new Map();
     const incomingCalls = new Map();
     const incomingTransfers = new Map();
@@ -433,7 +436,7 @@
       requestAnimationFrame(() => body.scrollTo({ top: body.scrollHeight, behavior: 'smooth' }));
     }
 
-    function peerName(peerId) { return connections.get(peerId)?.matrixName || peerId; }
+    function peerName(peerId) { return connections.get(peerId)?.matrixName || memberNames.get(peerId) || peerId; }
 
     function activeLocalStream() { return screenStream || localStream; }
 
@@ -512,11 +515,11 @@
       return unique[0] || myPeerId;
     }
 
-    function becomeHost(previousHostId) {
+    function becomeHost(previousHostId, previousHostName = peerName(previousHostId)) {
       currentHostId = myPeerId;
       knownMembers.add(myPeerId);
       updateInvitation();
-      logSystem(`Host ${previousHostId} left. This operator is now room host; share the refreshed invitation.`, 'warning');
+      logSystem(`Host ${previousHostName} left. You are now the room host; share the refreshed invitation.`, 'warning');
       broadcast({ type: 'host-changed', protocol: PROTOCOL, hostId: myPeerId });
       broadcastRoomState();
       updateUI();
@@ -629,7 +632,6 @@
       }
 
       if (activeLocalStream()) callPeerWithLocalMedia(conn.peer);
-      logSystem(`Authenticated operator ${conn.peer} entered the room`);
       updateUI();
     }
 
@@ -638,6 +640,7 @@
       if (pendingConnections.get(conn.peer) === conn) pendingConnections.delete(conn.peer);
       if (connections.get(conn.peer) !== conn) return;
 
+      const departingName = peerName(conn.peer);
       connections.delete(conn.peer);
       closeOutgoingCall(conn.peer);
       closeIncomingCall(conn.peer);
@@ -645,17 +648,17 @@
 
       if (currentHostId === myPeerId) {
         knownMembers.delete(conn.peer);
-        broadcast({ type: 'member-left', protocol: PROTOCOL, peerId: conn.peer });
-        logSystem(`Operator ${peerName(conn.peer)} left the room`);
+        broadcast({ type: 'member-left', protocol: PROTOCOL, peerId: conn.peer, name: departingName });
+        logSystem(`${departingName} left the room`);
       } else if (conn.peer === currentHostId) {
         const formerHost = currentHostId;
         knownMembers.delete(formerHost);
         const replacement = electNewHost();
         currentHostId = replacement;
-        if (replacement === myPeerId) becomeHost(formerHost);
+        if (replacement === myPeerId) becomeHost(formerHost, departingName);
         else {
           updateInvitation();
-          logSystem(`Host left. ${replacement} is the new room host.`, 'warning');
+          logSystem(`Host ${departingName} left. ${peerName(replacement)} is the new room host.`, 'warning');
           updateUI();
         }
       } else if (knownMembers.has(conn.peer) && myPeerId.localeCompare(conn.peer) < 0) {
@@ -672,7 +675,9 @@
         case 'identity': {
           const oldName = conn.matrixName;
           conn.matrixName = safeName(data.name);
-          if (oldName !== conn.matrixName) logSystem(`Operator identified as ${conn.matrixName}`);
+          memberNames.set(senderId, conn.matrixName);
+          if (!oldName) logSystem(`${conn.matrixName} entered the room`);
+          else if (oldName !== conn.matrixName) logSystem(`${oldName} is now known as ${conn.matrixName}`);
           refreshRemoteVideoLabel(senderId);
           break;
         }
@@ -701,11 +706,13 @@
           break;
         case 'member-left':
           if (senderId === currentHostId && isPeerId(data.peerId)) {
+            const departingName = typeof data.name === 'string' ? safeName(data.name) : peerName(data.peerId);
+            memberNames.set(data.peerId, departingName);
             knownMembers.delete(data.peerId);
             const memberConn = connections.get(data.peerId);
             if (memberConn) memberConn.close();
             closeIncomingCall(data.peerId);
-            logSystem(`Operator ${data.peerId} left the room`);
+            logSystem(`${departingName} left the room`);
             updateUI();
           }
           break;
@@ -1165,6 +1172,22 @@
       playNotificationSound();
     });
 
+    async function toggleVideoFullscreen(video) {
+      try {
+        if (document.fullscreenElement) {
+          await document.exitFullscreen();
+        } else if (video.requestFullscreen) {
+          await video.requestFullscreen();
+        } else if (video.webkitEnterFullscreen) {
+          video.webkitEnterFullscreen();
+        } else {
+          video.classList.toggle('video-fullscreen');
+        }
+      } catch (error) {
+        logSystem(`Fullscreen video is unavailable: ${error.message}`, 'warning');
+      }
+    }
+
     function showRemoteVideo(peerId, stream) {
       removeRemoteVideo(peerId, false);
       $('video-container').style.display = 'flex';
@@ -1176,7 +1199,7 @@
       video.autoplay = true;
       video.playsInline = true;
       video.srcObject = stream;
-      video.addEventListener('click', () => video.classList.toggle('video-fullscreen'));
+      video.addEventListener('click', () => toggleVideoFullscreen(video));
       const label = document.createElement('span');
       label.className = 'video-label';
       label.textContent = peerName(peerId);
@@ -1262,6 +1285,7 @@
       connections.clear();
       pendingConnections.clear();
       knownMembers.clear();
+      memberNames.clear();
       incomingTransfers.clear();
       outgoingTransfers.clear();
       pendingFileOffers.clear();
