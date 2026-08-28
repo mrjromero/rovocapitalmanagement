@@ -1,49 +1,52 @@
-// Change this version number (e.g., 'v2', 'v3') to force an update
-const CACHE_NAME = 'joses-toolbox-v5'; 
+const CACHE_PREFIX = 'joses-toolbox-';
+const CACHE_NAME = `${CACHE_PREFIX}v6`;
 
 const ASSETS_TO_CACHE = [
-    './',
+    './toolbox',
+    './toolbox.html',
     './manifest.json',
     './icon-192.png',
-    './icon-512.png'
-    // Add new tools here as you build them
+    './icon-512.png',
+    './smart-transfer-workstation',
+    './portfolio-visualizer',
+    './cfa',
+    './ecp',
+    './positive-carry-simulator',
+    './cashflow-stacker',
+    './freedom-date-calc',
+    './freedom-date-calc-doc.html'
 ];
 
-// 1. Install Event: Save the files to the phone
 self.addEventListener('install', (event) => {
-    // Skip the "waiting" lifecycle phase so the new worker takes over immediately
-    self.skipWaiting(); 
-    
+    self.skipWaiting();
+
     event.waitUntil(
-        caches.open(CACHE_NAME).then((cache) => {
-            return cache.addAll(ASSETS_TO_CACHE);
-        })
+        caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS_TO_CACHE))
     );
 });
 
-// 2. Activate Event: Clean up old versions of the cache
 self.addEventListener('activate', (event) => {
     event.waitUntil(
-        caches.keys().then((cacheNames) => {
-            return Promise.all(
-                cacheNames.map((cacheName) => {
-                    // If the cache name doesn't match the current version, delete it
-                    if (cacheName !== CACHE_NAME) {
-                        console.log('Deleting old cache:', cacheName);
-                        return caches.delete(cacheName);
-                    }
-                })
-            );
-        })
+        Promise.all([
+            caches.keys().then((cacheNames) =>
+                Promise.all(
+                    cacheNames
+                        .filter((cacheName) =>
+                            cacheName.startsWith(CACHE_PREFIX) &&
+                            cacheName !== CACHE_NAME
+                        )
+                        .map((cacheName) => caches.delete(cacheName))
+                )
+            ),
+            self.clients.claim()
+        ])
     );
 });
 
-// 3. Fetch Event: Intercept network requests and serve from cache first
 self.addEventListener('fetch', (event) => {
+    if (event.request.method !== 'GET') return;
+
     event.respondWith(
-        caches.match(event.request).then((response) => {
-            // Return the cached version if found, otherwise go to the network
-            return response || fetch(event.request);
-        })
+        caches.match(event.request).then((response) => response || fetch(event.request))
     );
 });
