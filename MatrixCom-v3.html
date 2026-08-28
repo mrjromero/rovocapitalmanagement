@@ -196,6 +196,8 @@
     .modal-overlay.open { display: flex; }
     .modal-card { width: 100%; max-width: 380px; max-height: 85vh; overflow-y: auto; padding: 22px; border: 2px solid var(--primary); display: flex; flex-direction: column; gap: 12px; background: #000; box-shadow: 0 0 25px rgba(0,255,65,.4); }
     .modal-title { color: var(--primary); font-weight: 700; letter-spacing: 1px; text-align: center; }
+    .modal-help { margin: 0; color: var(--subtext); font-size: 13px; line-height: 1.5; text-align: center; }
+    .modal-form { display: flex; flex-direction: column; gap: 12px; }
     .cam-list { display: flex; flex-direction: column; gap: 8px; }
     .cam-btn { min-height: 44px; padding: 10px; border: 1px solid var(--border); color: var(--primary); background: #051005; text-align: left; cursor: pointer; }
     .cam-btn:hover { color: #000; background: var(--primary); }
@@ -276,6 +278,15 @@
     </footer>
   </div>
 
+  <div id="name-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="name-modal-title" inert>
+    <form id="name-form" class="modal-card modal-form">
+      <div id="name-modal-title" class="modal-title">IDENTIFY OPERATOR</div>
+      <p class="modal-help">Enter the name other people in this room should see.</p>
+      <input type="text" id="name-prompt-input" maxlength="32" autocomplete="nickname" aria-label="Your name" placeholder="Your name" required>
+      <button class="btn" type="submit">ENTER ROOM</button>
+    </form>
+  </div>
+
   <div id="cam-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="cam-modal-title" inert>
     <div class="modal-card">
       <div id="cam-modal-title" class="modal-title">SELECT OPTICAL SENSOR</div>
@@ -321,6 +332,7 @@
     let reconnectTimer = null;
     let lastFocusedElement = null;
     let leavingRoom = false;
+    let nameConfirmed = false;
 
     const hashParams = new URLSearchParams(window.location.hash.slice(1));
     const invitedHostId = hashParams.get('room');
@@ -384,6 +396,40 @@
     function safeName(value) {
       const cleaned = String(value || '').replace(/[\u0000-\u001f\u007f]/g, '').trim().slice(0, 32);
       return cleaned || 'Anonymous_Operator';
+    }
+
+    function requestDisplayName() {
+      if (nameConfirmed) return Promise.resolve(nameInput.value);
+      const modal = $('name-modal');
+      const promptInput = $('name-prompt-input');
+      promptInput.value = nameInput.value;
+      modal.inert = false;
+      modal.classList.add('open');
+      setStatus('IDENTIFY OPERATOR');
+
+      return new Promise((resolve) => {
+        $('name-form').addEventListener('submit', (event) => {
+          event.preventDefault();
+          if (!promptInput.value.trim()) {
+            promptInput.setCustomValidity('Enter a name to join the room.');
+            promptInput.reportValidity();
+            promptInput.addEventListener('input', () => promptInput.setCustomValidity(''), { once: true });
+            return;
+          }
+          const confirmedName = safeName(promptInput.value);
+          nameInput.value = confirmedName;
+          localStorage.setItem('matrix_operator_name', confirmedName);
+          nameConfirmed = true;
+          unlockAudio();
+          modal.classList.remove('open');
+          modal.inert = true;
+          resolve(confirmedName);
+        });
+        requestAnimationFrame(() => {
+          promptInput.focus();
+          promptInput.select();
+        });
+      });
     }
 
     function isPeerId(value) { return typeof value === 'string' && value.length >= 1 && value.length <= 128; }
@@ -520,6 +566,7 @@
       knownMembers.add(myPeerId);
       updateInvitation();
       logSystem(`Host ${previousHostName} left. You are now the room host; share the refreshed invitation.`, 'warning');
+      playNotificationSound();
       broadcast({ type: 'host-changed', protocol: PROTOCOL, hostId: myPeerId });
       broadcastRoomState();
       updateUI();
@@ -650,6 +697,7 @@
         knownMembers.delete(conn.peer);
         broadcast({ type: 'member-left', protocol: PROTOCOL, peerId: conn.peer, name: departingName });
         logSystem(`${departingName} left the room`);
+        playNotificationSound();
       } else if (conn.peer === currentHostId) {
         const formerHost = currentHostId;
         knownMembers.delete(formerHost);
@@ -659,6 +707,7 @@
         else {
           updateInvitation();
           logSystem(`Host ${departingName} left. ${peerName(replacement)} is the new room host.`, 'warning');
+          playNotificationSound();
           updateUI();
         }
       } else if (knownMembers.has(conn.peer) && myPeerId.localeCompare(conn.peer) < 0) {
@@ -676,7 +725,10 @@
           const oldName = conn.matrixName;
           conn.matrixName = safeName(data.name);
           memberNames.set(senderId, conn.matrixName);
-          if (!oldName) logSystem(`${conn.matrixName} entered the room`);
+          if (!oldName) {
+            logSystem(`${conn.matrixName} entered the room`);
+            playNotificationSound();
+          }
           else if (oldName !== conn.matrixName) logSystem(`${oldName} is now known as ${conn.matrixName}`);
           refreshRemoteVideoLabel(senderId);
           break;
@@ -713,6 +765,7 @@
             if (memberConn) memberConn.close();
             closeIncomingCall(data.peerId);
             logSystem(`${departingName} left the room`);
+            playNotificationSound();
             updateUI();
           }
           break;
@@ -1426,6 +1479,7 @@
 
     peer.on('open', async (id) => {
       await roomReadyPromise;
+      await requestDisplayName();
       myPeerId = id;
       knownMembers.add(id);
       if (!currentHostId) currentHostId = id;
