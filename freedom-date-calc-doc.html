@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Technical Reference Manual: Freedom Date Calculator Engine</title>
+    <!-- MathJax Configuration for Google Docs import compatibility -->
+    <script>
+        MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']]
+            },
+            svg: {
+                fontCache: 'global'
+            }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            color: #333333;
+            line-height: 1.6;
+            margin: 40px;
+            max-width: 900px;
+        }
+        h1 {
+            color: #1e3a8a;
+            border-bottom: 2px solid #1e3a8a;
+            padding-bottom: 8px;
+            font-size: 24pt;
+        }
+        h2 {
+            color: #0f172a;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 6px;
+            margin-top: 28px;
+            font-size: 16pt;
+        }
+        h3 {
+            color: #1e3a8a;
+            margin-top: 20px;
+            font-size: 13pt;
+        }
+        ul {
+            margin-top: 6px;
+            margin-bottom: 16px;
+        }
+        li {
+            margin-bottom: 4px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 10.5pt;
+        }
+        th, td {
+            border: 1px solid #cbd5e1;
+            padding: 10px 12px;
+            text-align: left;
+        }
+        th {
+            background-color: #f1f5f9;
+            color: #0f172a;
+            font-weight: bold;
+        }
+        tr:nth-child(even) {
+            background-color: #f8fafc;
+        }
+        .math-block {
+            background-color: #f8fafc;
+            border-left: 4px solid #1e3a8a;
+            padding: 12px 16px;
+            margin: 16px 0;
+            overflow-x: auto;
+        }
+        .pipeline-box {
+            background-color: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            border-radius: 6px;
+            padding: 16px;
+            margin: 20px 0;
+            font-size: 10pt;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Technical Reference Manual: Freedom Date Calculator Engine</h1>
+    <p><strong>Applies to:</strong> <code>freedom-date-calc.html</code></p>
+    <p>This manual describes the upgraded projection engine used to compare <strong>Traditional (Linear Savings &amp; Drawdown)</strong> and <strong>Stacking (Positive-Carry Capital Amplifier)</strong>. It documents the cash-flow rules, leverage constraints, forced-deleveraging behavior, optimization rules, and first-passage Freedom Date statistics implemented by the application.</p>
+
+    <h2>1. Core Parameters</h2>
+    <ul>
+        <li><strong>$I$</strong>: Total monthly gross income ($/mo)</li>
+        <li><strong>$E_0$</strong>: Baseline monthly living expenses ($/mo)</li>
+        <li><strong>$E_m$</strong>: Inflation-adjusted monthly living expenses at month $m$</li>
+        <li><strong>$Q_0$</strong>: Starting portfolio net equity ($)</li>
+        <li><strong>$Q_{m,s}$</strong>: Net equity at month $m$ for simulation path $s$</li>
+        <li><strong>$A_{m,s}$</strong>: Gross portfolio assets at month $m$ for simulation path $s$</li>
+        <li><strong>$D_{m,s}$</strong>: Margin debt at month $m$ for simulation path $s$</li>
+        <li><strong>$i_{inf}$</strong>: Annual inflation rate</li>
+        <li><strong>$r_a$</strong>: Expected annual capital-appreciation rate</li>
+        <li><strong>$y$</strong>: Annual cash-distribution yield</li>
+        <li><strong>$r_m$</strong>: Annual margin interest rate</li>
+        <li><strong>$L_{DTA}$</strong>: Strategic target debt-to-assets ratio</li>
+        <li><strong>$L_{max}$</strong>: Brokerage maximum debt-to-assets borrowing limit</li>
+        <li><strong>$M_{maint}$</strong>: Minimum equity percentage required by maintenance margin</li>
+        <li><strong>$\sigma_{ann}$</strong>: Annualized price volatility</li>
+    </ul>
+
+    <h2>2. Rate Conversion and Market Returns</h2>
+    <p>Annual assumptions are converted to monthly discrete rates:</p>
+    <div class="math-block">
+        $$\begin{aligned}
+        r_{inf,m} &= (1+i_{inf})^{1/12}-1 \\
+        \mu_{app,m} &= \frac{r_a}{12} \\
+        y_m &= \frac{y}{12} \\
+        r_{margin,m} &= \frac{r_m}{12} \\
+        \sigma_m &= \frac{\sigma_{ann}}{\sqrt{12}}
+        \end{aligned}$$
+    </div>
+
+    <p>When volatility is enabled, the paired monthly appreciation shock used by both modes for path $s$ is:</p>
+    <div class="math-block">
+        $$R_{app,m,s}=\mu_{app,m}+Z_{m,s}\sigma_m,\qquad Z_{m,s}\sim\mathcal{N}(0,1)$$
+    </div>
+    <p>When volatility is disabled, $\sigma_m=0$ and all 500 paths use the deterministic appreciation rate $\mu_{app,m}$.</p>
+
+    <h2>3. Input Validation and Cross-Field Constraints</h2>
+    <p>The engine rejects invalid assumptions instead of silently replacing or clamping them. The implemented ranges are:</p>
+    <table>
+        <thead><tr><th>Input</th><th>Allowed Range</th></tr></thead>
+        <tbody>
+            <tr><td>Income, expenses, starting equity</td><td>$\ge 0$</td></tr>
+            <tr><td>Current age</td><td>0 to 120</td></tr>
+            <tr><td>Expected annual appreciation</td><td>-100% to 100%</td></tr>
+            <tr><td>Annual volatility</td><td>0% to 300%</td></tr>
+            <tr><td>Annual inflation</td><td>Greater than -100%, up to 100%</td></tr>
+            <tr><td>Cash yield</td><td>Greater than 0%, up to 100%</td></tr>
+            <tr><td>Margin interest rate</td><td>0% to 100%</td></tr>
+            <tr><td>Strategic DTA</td><td>0% to 89%</td></tr>
+            <tr><td>Maximum borrowing limit</td><td>0% to 100%</td></tr>
+            <tr><td>Maintenance margin</td><td>0% to 99%</td></tr>
+        </tbody>
+    </table>
+
+    <p>The brokerage constraints imply a maximum allowable debt-to-assets ratio:</p>
+    <div class="math-block">
+        $$L_{guard}=\min\left(L_{max},\,1-M_{maint}\right)$$
+    </div>
+    <p>A configuration is valid only when:</p>
+    <div class="math-block">
+        $$L_{DTA}\le L_{guard}$$
+        $$y_{net}=y-(L_{DTA}\cdot r_m)>0$$
+    </div>
+    <p>The second rule requires positive net portfolio yield after the modeled cost of margin debt.</p>
+
+    <h2>4. Freedom Targets</h2>
+    <p>The target is the net equity required for portfolio cash flow to cover inflation-adjusted living expenses without relying on employment income.</p>
+
+    <h3>Traditional Target</h3>
+    <div class="math-block">
+        $$E_m=E_0(1+r_{inf,m})^m$$
+        $$Q_{target,trad}(m)=\frac{E_m\cdot12}{y}$$
+    </div>
+
+    <h3>Stacking Target</h3>
+    <p>At target leverage, net cash flow on one dollar of net equity reflects distributions on gross assets less margin interest:</p>
+    <div class="math-block">
+        $$y_{net}=y-(L_{DTA}\cdot r_m)$$
+        $$Q_{target,stack}(m)=\frac{(E_m\cdot12)(1-L_{DTA})}{y_{net}}$$
+    </div>
+    <p>Unlike the prior engine, the upgraded version does not replace a non-positive $y_{net}$ with an artificial minimum. It rejects the configuration.</p>
+
+    <h2>5. Monthly Iteration Engines</h2>
+
+    <h3>Mode 1: Traditional Engine</h3>
+    <p>Traditional mode holds an unleveraged portfolio. Income pays living expenses, and the remaining surplus or deficit changes portfolio equity:</p>
+    <div class="math-block">
+        $$\Delta C_m=I-E_m$$
+        $$Q_{m,s}=\max\left(0,\;Q_{m-1,s}
+        +(Q_{m-1,s}R_{app,m,s})
+        +(Q_{m-1,s}y_m)
+        +\Delta C_m\right)$$
+    </div>
+    <p>A positive $\Delta C_m$ is invested. A negative $\Delta C_m$ represents assets used to fund the lifestyle deficit.</p>
+
+    <h3>Mode 2: Stacking Engine</h3>
+    <p>Stacking separates gross assets, debt, and net equity:</p>
+    <div class="math-block">
+        $$A_0=\frac{Q_0}{1-L_{DTA}},\qquad D_0=A_0-Q_0,\qquad Q=A-D$$
+    </div>
+
+    <div class="pipeline-box">
+        <strong>Monthly stacking sequence:</strong><br>
+        1. Apply price appreciation to gross assets.<br>
+        2. Apply expenses, margin interest, employment income, and portfolio distributions to debt exactly once.<br>
+        3. Invest any cash remaining after debt reaches zero.<br>
+        4. Enforce brokerage guardrails and forced deleveraging when required.<br>
+        5. Reuse borrowing capacity when leverage is below the strategic target.
+    </div>
+
+    <h3>5.1 Asset Evolution</h3>
+    <div class="math-block">
+        $$A^*_{m,s}=A_{m-1,s}(1+R_{app,m,s})$$
+    </div>
+
+    <h3>5.2 Debt Sweep</h3>
+    <div class="math-block">
+        $$\text{Distribution Income}=A_{m-1,s}y_m$$
+        $$\text{Margin Interest}=D_{m-1,s}r_{margin,m}$$
+        $$D^*_{m,s}=D_{m-1,s}+E_m+\text{Margin Interest}-I-\text{Distribution Income}$$
+    </div>
+    <p>Employment income and distributions reduce debt once. The former <code>floatJuice</code> adjustment has been removed because it credited an additional return on income without adding corresponding invested assets.</p>
+
+    <h3>5.3 Excess Cash After Debt Repayment</h3>
+    <p>If the debt sweep produces $D^*_{m,s}&lt;0$, the negative balance is treated as excess cash and invested:</p>
+    <div class="math-block">
+        $$A^*_{m,s}\leftarrow A^*_{m,s}+|D^*_{m,s}|,\qquad D^*_{m,s}\leftarrow0$$
+    </div>
+
+    <h3>5.4 Guardrail Enforcement and Forced Deleveraging</h3>
+    <p>Calculate provisional equity and leverage:</p>
+    <div class="math-block">
+        $$Q^*_{m,s}=A^*_{m,s}-D^*_{m,s},\qquad L_{curr}=\frac{D^*_{m,s}}{A^*_{m,s}}$$
+    </div>
+    <p>If $Q^*_{m,s}\le0$, or an extreme return produces invalid gross assets, the account is liquidated to zero for that month.</p>
+
+    <p>If $L_{curr}>L_{guard}$, the model records a brokerage guardrail event and sells assets to repay debt. Let:</p>
+    <div class="math-block">
+        $$L_{recovery}=\min(L_{DTA},L_{guard})$$
+        $$S=\frac{D^*_{m,s}-(L_{recovery}A^*_{m,s})}{1-L_{recovery}}$$
+        $$A_{m,s}=A^*_{m,s}-S,\qquad D_{m,s}=D^*_{m,s}-S$$
+    </div>
+    <p>If the required sale is invalid or consumes the full asset balance, the account is liquidated. This makes downside brokerage constraints part of each stochastic path rather than display-only metrics.</p>
+
+    <h3>5.5 Strategic Releveraging</h3>
+    <p>If no guardrail is breached and $L_{curr}&lt;L_{DTA}$, borrowing capacity is reused:</p>
+    <div class="math-block">
+        $$A_{target}=\frac{Q^*_{m,s}}{1-L_{DTA}}$$
+        $$\Delta D_{borrow}=\max(0,A_{target}-A^*_{m,s})$$
+        $$A_{m,s}=A^*_{m,s}+\Delta D_{borrow}$$
+        $$D_{m,s}=D^*_{m,s}+\Delta D_{borrow}$$
+    </div>
+    <p>The borrowing occurs only if the resulting DTA remains within $L_{guard}$. If $L_{DTA}\le L_{curr}\le L_{guard}$, the provisional asset and debt balances are retained.</p>
+
+    <h2>6. Risk and Liquidity Metrics</h2>
+
+    <h3>Credit-Line Utilization</h3>
+    <div class="math-block">
+        $$\text{Credit Line}=A\cdot L_{max}$$
+        $$\text{Utilization}=\frac{D}{A\cdot L_{max}}\cdot100\%$$
+    </div>
+    <p>Zero debt reports 0% utilization. Positive debt with no available credit line is invalid rather than being reported as 0% utilization. The dashboard highlights utilization above 70%.</p>
+
+    <h3>Drop to Maintenance-Margin Call</h3>
+    <div class="math-block">
+        $$A_{call}=\frac{D}{1-M_{maint}}$$
+        $$\text{Drop to Call}=\frac{A-A_{call}}{A}\cdot100\%$$
+    </div>
+    <p>An unleveraged account reports a 100% cushion. The dashboard highlights cushions below 25%.</p>
+
+    <h3>Simulated Guardrail Event Rate</h3>
+    <p>The stacking narrative reports the percentage of simulation paths that required forced deleveraging at least once:</p>
+    <div class="math-block">
+        $$\text{Event Rate}=\frac{\#\{s:\text{path }s\text{ had one or more guardrail breaches}\}}{N}\cdot100\%$$
+    </div>
+
+    <h2>7. Auto-Optimization Engine</h2>
+    <p><code>optimizeArchitecture()</code> performs a bounded search:</p>
+    <ul>
+        <li>$L_{DTA}\in[15\%,35\%]$, step 2.5%</li>
+        <li>$y\in[8\%,15\%]$, step 0.5%</li>
+    </ul>
+
+    <p>A candidate is considered only when all of these rules pass:</p>
+    <ol>
+        <li>$L_{DTA}\le L_{guard}$</li>
+        <li>Gross distribution income exceeds margin interest</li>
+        <li>Credit-line utilization is finite and no more than 70%</li>
+        <li>Drop-to-call cushion is at least 25%</li>
+        <li>Estimated monthly net cash flow is positive</li>
+    </ol>
+
+    <div class="math-block">
+        $$A_0=\frac{Q_0}{1-L_{DTA}},\qquad D_0=A_0-Q_0$$
+        $$\text{Net Spread}=A_0y-D_0r_m$$
+        $$\text{Monthly Net Cash Flow}=I-E_0+\frac{\text{Net Spread}}{12}$$
+        $$m_{est}=\max\left(0,\frac{Q_{target,stack}(0)-Q_0}{\text{Monthly Net Cash Flow}}\right)$$
+    </div>
+
+    <p>The appreciation assumption selected with the winning yield remains:</p>
+    <div class="math-block">
+        $$r_a=\begin{cases}
+        2.5\% & y\ge12\%\\
+        3.5\% & 10\%\le y&lt;12\%\\
+        4.5\% & y&lt;10\%
+        \end{cases}$$
+    </div>
+    <p>If no safe candidate exists, the optimizer displays a message and leaves all user inputs unchanged. The winning candidate is then evaluated by the full 30-year simulation; the optimizer's objective is only a screening estimate.</p>
+
+    <h2>8. Monte Carlo and Freedom Date Statistics</h2>
+    <ul>
+        <li><strong>Path count:</strong> $N=500$</li>
+        <li><strong>Duration:</strong> $M=360$ months</li>
+        <li><strong>Pairing:</strong> Traditional and stacking receive the same market shock for a given month and path.</li>
+    </ul>
+
+    <h3>Monthly Equity Percentiles for the Chart</h3>
+    <p>At each month, equity across all paths is sorted to produce the 10th, 50th, and 90th percentile balance curves. These are chart bands only; they are not used as Freedom Date percentiles.</p>
+
+    <h3>First-Passage Freedom Dates</h3>
+    <p>For every path and mode, the engine records the first month in which equity meets that mode's contemporaneous inflation-adjusted target:</p>
+    <div class="math-block">
+        $$T_s=\min\{m:Q_{m,s}\ge Q_{target}(m)\}$$
+    </div>
+    <p>If a path does not meet the target within 360 months, it is right-censored as greater than 30 years. The application then sorts the 500 first-hit dates:</p>
+    <ul>
+        <li><strong>Optimistic Date:</strong> 10th percentile of $T_s$</li>
+        <li><strong>Expected Freedom Date:</strong> 50th percentile of $T_s$</li>
+        <li><strong>Conservative Date:</strong> 90th percentile of $T_s$</li>
+    </ul>
+    <p>If the selected percentile falls among censored paths, the dashboard displays <strong>&gt;30 Years</strong>. This first-passage method ensures the reported dates describe trajectory outcomes rather than crossings of unrelated monthly equity percentiles.</p>
+
+</body>
+</html>
+
