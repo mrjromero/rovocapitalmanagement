@@ -104,6 +104,25 @@
         .rules-matrix.active-traditional th.col-trad, .rules-matrix.active-traditional td.col-trad { background-color: #f1f5f9; color: var(--navy-dark); font-weight: 600;}
         
         .chart-container { position: relative; height: 380px; width: 100%; margin-top: 10px; }
+
+        .card-actions {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+            margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border-color);
+        }
+        .action-btn {
+            min-height: 46px; padding: 11px 14px; border-radius: 7px; border: 1px solid transparent;
+            display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+            font-size: 0.9rem; font-weight: 700; text-align: center; text-decoration: none;
+            cursor: pointer; transition: background-color 0.2s, border-color 0.2s, transform 0.1s;
+        }
+        .action-btn:hover { transform: translateY(-1px); }
+        .action-btn-primary { background: var(--navy-header); color: white; }
+        .action-btn-primary:hover { background: var(--navy-dark); }
+        .action-btn-secondary { background: #f8fafc; border-color: var(--border-color); color: var(--navy-header); }
+        .action-btn-secondary:hover { background: #eef2ff; border-color: #c7d2fe; }
+        .action-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        .action-help { grid-column: 1 / -1; color: var(--text-muted); font-size: 0.78rem; text-align: center; }
+        @media (max-width: 600px) { .card-actions { grid-template-columns: 1fr; } .action-help { grid-column: 1; } }
     </style>
 </head>
 <body>
@@ -230,6 +249,16 @@
                             <tr><td>Asset Liquidation</td><td class="col-trad">Standard Drawdown</td><td class="col-stack">Held Unless Guardrails Force Sales</td></tr>
                         </tbody>
                     </table>
+
+                    <div class="card-actions">
+                        <button type="button" class="action-btn action-btn-primary" id="downloadCsvBtn" onclick="downloadMonthlyCSV()" disabled>
+                            <span aria-hidden="true">↓</span> Download Monthly CSV
+                        </button>
+                        <a class="action-btn action-btn-secondary" href="freedom-date-calc-doc.html" target="_blank" rel="noopener">
+                            <span aria-hidden="true">↗</span> Technical Reference
+                        </a>
+                        <p class="action-help">CSV includes all 360 months for both modes, with required-equity and P10/P50/P90 projection data.</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -333,6 +362,7 @@
         document.getElementById('creditUtilization').innerText = "--";
         document.getElementById('dropToCall').innerText = "--";
         document.getElementById('narrativeBox').innerText = message;
+        document.getElementById('downloadCsvBtn').disabled = true;
         if (myChart) { myChart.destroy(); myChart = null; }
     }
 
@@ -617,14 +647,27 @@
             labels.push(m % 12 === 0 ? 'Year ' + (m/12) : 'Mo ' + m);
         }
 
+        const projectionStart = new Date();
         globalSimData = {
             maxMonths,
             currentAge: p.currentAge,
             income: p.income,
             currentExpenses: p.currentExpenses,
             monthlyInflationRate,
+            projectionStartYear: projectionStart.getFullYear(),
+            projectionStartMonth: projectionStart.getMonth(),
             labels,
             guardrailEventRate: stackGuardrailEvents.filter(count => count > 0).length / simulations,
+            monthlyExport: {
+                tradTargetLine: tradTargetLine.slice(),
+                stackTargetLine: stackTargetLine.slice(),
+                tradP10: tradData.p10.slice(),
+                tradP50: tradData.p50.slice(),
+                tradP90: tradData.p90.slice(),
+                stackP10: stackData.p10.slice(),
+                stackP50: stackData.p50.slice(),
+                stackP90: stackData.p90.slice()
+            },
             tradTargetLine: tradTargetLine.slice(0, renderMonths + 1),
             stackTargetLine: stackTargetLine.slice(0, renderMonths + 1),
             trad: {
@@ -640,6 +683,7 @@
                 p90: stackData.p90.slice(0, renderMonths + 1)
             }
         };
+        document.getElementById('downloadCsvBtn').disabled = false;
         updateDashboardUI();
     }
 
@@ -703,6 +747,73 @@
         document.getElementById('narrativeBox').innerHTML = narrative;
 
         renderChart(d.labels, activeTargetLine, d.trad.p50, d.stack.p50, activeData.p10, activeData.p90, currentMode);
+    }
+
+    function escapeCsvValue(value) {
+        const text = value === null || value === undefined ? "" : String(value);
+        return /[",\r\n]/.test(text) ? '"' + text.replace(/"/g, '""') + '"' : text;
+    }
+
+    function downloadMonthlyCSV() {
+        const d = globalSimData;
+        if (!d.monthlyExport) {
+            window.alert("Run a valid projection before downloading the CSV.");
+            return;
+        }
+
+        const x = d.monthlyExport;
+        const headers = [
+            "Month",
+            "Projection Date",
+            "Age",
+            "Inflated Monthly Expenses (USD)",
+            "Traditional Required Equity (USD)",
+            "Traditional P10 Equity (USD)",
+            "Traditional Median Equity (USD)",
+            "Traditional P90 Equity (USD)",
+            "Traditional Median Equity Meets Target",
+            "Stacking Required Equity (USD)",
+            "Stacking P10 Equity (USD)",
+            "Stacking Median Equity (USD)",
+            "Stacking P90 Equity (USD)",
+            "Stacking Median Equity Meets Target"
+        ];
+        const rows = [headers.map(escapeCsvValue).join(',')];
+        const money = value => Number.isFinite(value) ? value.toFixed(2) : "";
+
+        for (let month = 0; month <= d.maxMonths; month++) {
+            const projectionDate = new Date(d.projectionStartYear, d.projectionStartMonth + month, 1);
+            const dateLabel = projectionDate.getFullYear() + "-" + String(projectionDate.getMonth() + 1).padStart(2, '0');
+            const inflatedExpenses = d.currentExpenses * Math.pow(1 + d.monthlyInflationRate, month);
+            const values = [
+                month,
+                dateLabel,
+                (d.currentAge + (month / 12)).toFixed(2),
+                money(inflatedExpenses),
+                money(x.tradTargetLine[month]),
+                money(x.tradP10[month]),
+                money(x.tradP50[month]),
+                money(x.tradP90[month]),
+                x.tradP50[month] >= x.tradTargetLine[month] ? "TRUE" : "FALSE",
+                money(x.stackTargetLine[month]),
+                money(x.stackP10[month]),
+                money(x.stackP50[month]),
+                money(x.stackP90[month]),
+                x.stackP50[month] >= x.stackTargetLine[month] ? "TRUE" : "FALSE"
+            ];
+            rows.push(values.map(escapeCsvValue).join(','));
+        }
+
+        const csv = '\uFEFF' + rows.join('\r\n');
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = "freedom-date-monthly-projection-" + new Date().toISOString().slice(0, 10) + ".csv";
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 0);
     }
 
     function renderChart(labels, targetLine, tradP50, stackP50, activeP10, activeP90, mode) {
