@@ -98,6 +98,13 @@
     }
 
     .app-title { font-size: 1.2rem; font-weight: 700; letter-spacing: 2px; white-space: nowrap; }
+    .app-title-short { display: none; }
+    .header-actions { display: flex; align-items: center; justify-content: flex-end; gap: 10px; }
+    .disconnect-btn { min-height: 34px; padding: 5px 10px; border: 1px solid #7b2323; color: var(--danger); background: #000; font-size: 12px; font-weight: 700; letter-spacing: .7px; white-space: nowrap; cursor: pointer; }
+    .disconnect-btn:hover:not(:disabled), .disconnect-btn:active:not(:disabled) { color: #fff; background: #a21e1e; box-shadow: 0 0 12px rgba(255,69,69,.65); }
+    .disconnect-btn:disabled { opacity: .35; cursor: not-allowed; }
+    .disconnect-btn.start-over { border-color: var(--primary); color: var(--primary); }
+    .disconnect-btn.start-over:hover { color: #000; background: var(--primary); box-shadow: 0 0 12px var(--primary); }
     .status-badge {
       min-height: 30px;
       padding: 5px 9px;
@@ -204,6 +211,11 @@
 
     @media (max-width: 580px) {
       .app-title { font-size: 1rem; letter-spacing: 1px; }
+      .app-title-full { display: none; }
+      .app-title-short { display: inline; }
+      .app-header { padding-inline: 10px; gap: 8px; }
+      .header-actions { gap: 6px; }
+      .disconnect-btn { padding-inline: 7px; font-size: 10px; }
       .status-badge { max-width: 48%; font-size: 11px; }
       .scroll-body { padding-inline: 10px; }
       .room-meta { flex-direction: column; gap: 3px; }
@@ -221,10 +233,13 @@
 
   <div class="app-container">
     <header class="app-header">
-      <div class="app-title">📟 MATRIXCOM // v3.0</div>
-      <div class="status-badge" role="status" aria-live="polite">
-        <span id="status-dot" class="status-dot"></span>
-        <span id="conn-status">INITIALIZING</span>
+      <div class="app-title"><span class="app-title-full">📟 MATRIXCOM // v3.0</span><span class="app-title-short">📟 MC3</span></div>
+      <div class="header-actions">
+        <button id="leave-room-btn" class="disconnect-btn" type="button" disabled>DISCONNECT</button>
+        <div class="status-badge" role="status" aria-live="polite">
+          <span id="status-dot" class="status-dot"></span>
+          <span id="conn-status">INITIALIZING</span>
+        </div>
       </div>
     </header>
 
@@ -255,7 +270,6 @@
           <button id="share-btn" class="btn btn-secondary" type="button" disabled>COPY INVITE</button>
           <button id="toggle-qr-btn" class="btn btn-secondary" type="button" disabled>SHOW QR</button>
         </div>
-        <button id="leave-room-btn" class="btn btn-danger" type="button" disabled>LEAVE ROOM</button>
         <div id="qr-container">
           <canvas id="qr-canvas" role="img" aria-label="Room invitation QR code"></canvas>
           <div class="qr-caption">SCAN TO ENTER ENCRYPTED ROOM</div>
@@ -489,12 +503,18 @@
     function updateUI() {
       const active = connections.size > 0;
       ['msg-input', 'send-btn', 'menu-file', 'menu-video', 'menu-screen'].forEach((id) => { $(id).disabled = !active || leavingRoom; });
-      $('leave-room-btn').disabled = !myPeerId || leavingRoom;
+      const disconnectButton = $('leave-room-btn');
       if (leavingRoom) {
+        disconnectButton.disabled = false;
+        disconnectButton.textContent = 'START OVER';
+        disconnectButton.classList.add('start-over');
         $('room-role').textContent = 'ROOM DEPARTED · INVITATION REMOVED';
         setStatus('LEFT ROOM', 'error');
         return;
       }
+      disconnectButton.disabled = !myPeerId;
+      disconnectButton.textContent = 'DISCONNECT';
+      disconnectButton.classList.remove('start-over');
       $('room-role').textContent = currentHostId === myPeerId ? 'ROOM HOST · INVITE ROTATES AFTER HOST EXIT' : 'ROOM MEMBER · INVITE AUTHENTICATED';
       if (!myPeerId) return;
       const count = Math.min(knownMembers.size, MAX_ROOM_SIZE);
@@ -1524,9 +1544,13 @@
       $('toggle-qr-btn').textContent = visible ? 'SHOW QR' : 'HIDE QR';
     });
     $('leave-room-btn').addEventListener('click', () => {
+      if (leavingRoom) {
+        window.location.reload();
+        return;
+      }
       const prompt = currentHostId === myPeerId && connections.size
-        ? 'Leave this room? Another operator will become host and active transfers will stop.'
-        : 'Leave this room? Active transfers will stop.';
+        ? 'Disconnect from this room? Another operator will become host and active transfers will stop.'
+        : 'Disconnect from this room? Active transfers will stop.';
       if (window.confirm(prompt)) leaveRoom();
     });
 
