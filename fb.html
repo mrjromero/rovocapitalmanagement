@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bollinger Band Calculator</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card-bg: #1e293b;
+      --border: #334155;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --primary: #38bdf8;
+      --upper: #ef4444;
+      --middle: #38bdf8;
+      --lower: #22c55e;
+      --accent: #6366f1;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      padding: 24px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .container {
+      max-width: 1000px;
+      width: 100%;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+    }
+
+    .full-width {
+      grid-column: 1 / -1;
+    }
+
+    h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 4px;
+      color: #fff;
+    }
+
+    p.subtitle {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      margin-bottom: 20px;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: var(--text-muted);
+    }
+
+    input, textarea {
+      width: 100%;
+      background: #0f172a;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      color: var(--text);
+      font-size: 0.95rem;
+      transition: border-color 0.2s;
+    }
+
+    input:focus, textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .stat-box {
+      background: #0f172a;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px;
+      text-align: center;
+    }
+
+    .stat-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 4px;
+    }
+
+    .stat-value {
+      font-size: 1.3rem;
+      font-weight: 700;
+    }
+
+    .val-upper { color: var(--upper); }
+    .val-middle { color: var(--middle); }
+    .val-lower { color: var(--lower); }
+
+    .secondary-stats {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    .secondary-stat-item {
+      background: rgba(15, 23, 42, 0.5);
+      padding: 10px 14px;
+      border-radius: 6px;
+      border-left: 3px solid var(--accent);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .secondary-stat-item span:first-child {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+
+    .secondary-stat-item span:last-child {
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+
+    .status-badge {
+      display: inline-block;
+      margin-top: 14px;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+
+    canvas {
+      width: 100%;
+      height: 240px;
+      background: #0f172a;
+      border-radius: 8px;
+      margin-top: 10px;
+      border: 1px solid var(--border);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card full-width">
+      <h1>Bollinger Band Calculator</h1>
+      <p class="subtitle">Calculate dynamic price envelopes, volatility spreads, and oscillator metrics.</p>
+      
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+        <div class="form-group">
+          <label for="period">Lookback Period ($N$)</label>
+          <input type="number" id="period" value="20" min="2" max="100" />
+        </div>
+        <div class="form-group">
+          <label for="multiplier">Std Dev Multiplier ($K$)</label>
+          <input type="number" id="multiplier" value="2.0" step="0.1" min="0.5" max="5.0" />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="prices">Historical Close Prices (Comma or space separated, chronological)</label>
+        <textarea id="prices" rows="3">182.50, 183.20, 181.90, 184.10, 185.00, 186.40, 185.80, 187.20, 189.00, 188.40, 187.90, 189.50, 191.20, 190.80, 192.40, 193.10, 192.80, 194.50, 196.00, 195.40</textarea>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 style="font-size: 1.1rem; margin-bottom: 14px;">Calculated Bands</h2>
+      <div class="stats-grid">
+        <div class="stat-box">
+          <div class="stat-label" style="color: var(--upper);">Upper Band</div>
+          <div class="stat-value val-upper" id="upperBand">$0.00</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label" style="color: var(--middle);">Middle (SMA)</div>
+          <div class="stat-value val-middle" id="middleBand">$0.00</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label" style="color: var(--lower);">Lower Band</div>
+          <div class="stat-value val-lower" id="lowerBand">$0.00</div>
+        </div>
+      </div>
+
+      <div class="secondary-stats">
+        <div class="secondary-stat-item">
+          <span>Std Deviation ($\sigma$)</span>
+          <span id="stdDev">0.00</span>
+        </div>
+        <div class="secondary-stat-item">
+          <span>Bandwidth</span>
+          <span id="bandwidth">0.00%</span>
+        </div>
+        <div class="secondary-stat-item">
+          <span>%B Position</span>
+          <span id="percentB">0.00</span>
+        </div>
+        <div class="secondary-stat-item">
+          <span>Latest Price</span>
+          <span id="currentPrice">$0.00</span>
+        </div>
+      </div>
+
+      <div style="text-align: center;">
+        <span class="status-badge" id="signalBadge">Neutral</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 style="font-size: 1.1rem; margin-bottom: 4px;">Price Envelope Chart</h2>
+      <canvas id="chartCanvas"></canvas>
+    </div>
+  </div>
+
+  <script>
+    const periodInput = document.getElementById('period');
+    const multiplierInput = document.getElementById('multiplier');
+    const pricesInput = document.getElementById('prices');
+
+    const upperEl = document.getElementById('upperBand');
+    const middleEl = document.getElementById('middleBand');
+    const lowerEl = document.getElementById('lowerBand');
+    const stdDevEl = document.getElementById('stdDev');
+    const bandwidthEl = document.getElementById('bandwidth');
+    const percentBEl = document.getElementById('percentB');
+    const currentPriceEl = document.getElementById('currentPrice');
+    const signalBadge = document.getElementById('signalBadge');
+    const canvas = document.getElementById('chartCanvas');
+    const ctx = canvas.getContext('2d');
+
+    function parsePrices(raw) {
+      return raw
+        .split(/[\s,]+/)
+        .map(val => parseFloat(val.trim()))
+        .filter(val => !isNaN(val) && val > 0);
+    }
+
+    function calculate() {
+      const prices = parsePrices(pricesInput.value);
+      const period = parseInt(periodInput.value, 10);
+      const k = parseFloat(multiplierInput.value);
+
+      if (prices.length < 2 || isNaN(period) || isNaN(k) || period < 2) {
+        return;
+      }
+
+      // Use the window of size N from the end of the array
+      const slice = prices.slice(-period);
+      const n = slice.length;
+      const latestPrice = prices[prices.length - 1];
+
+      // Mean (SMA)
+      const mean = slice.reduce((sum, p) => sum + p, 0) / n;
+
+      // Sample standard deviation
+      const variance = slice.reduce((sum, p) => sum + Math.pow(p - mean, 2), 0) / n;
+      const stdDev = Math.sqrt(variance);
+
+      // Bands
+      const upper = mean + (k * stdDev);
+      const lower = mean - (k * stdDev);
+
+      // Metrics
+      const bandwidth = ((upper - lower) / mean) * 100;
+      const percentB = (upper - lower !== 0) ? (latestPrice - lower) / (upper - lower) : 0.5;
+
+      // Update UI
+      upperEl.textContent = `$${upper.toFixed(2)}`;
+      middleEl.textContent = `$${mean.toFixed(2)}`;
+      lowerEl.textContent = `$${lower.toFixed(2)}`;
+      stdDevEl.textContent = stdDev.toFixed(2);
+      bandwidthEl.textContent = `${bandwidth.toFixed(2)}%`;
+      percentBEl.textContent = percentB.toFixed(2);
+      currentPriceEl.textContent = `$${latestPrice.toFixed(2)}`;
+
+      // Update status tag
+      if (percentB > 1.0) {
+        signalBadge.textContent = 'Over Upper Band (Overbought)';
+        signalBadge.style.backgroundColor = 'rgba(239, 68, 68, 0.2)';
+        signalBadge.style.color = '#f87171';
+      } else if (percentB < 0.0) {
+        signalBadge.textContent = 'Under Lower Band (Oversold)';
+        signalBadge.style.backgroundColor = 'rgba(34, 197, 94, 0.2)';
+        signalBadge.style.color = '#4ade80';
+      } else {
+        signalBadge.textContent = 'In Channel (Neutral)';
+        signalBadge.style.backgroundColor = 'rgba(56, 189, 248, 0.2)';
+        signalBadge.style.color = '#38bdf8';
+      }
+
+      drawChart(prices, upper, mean, lower);
+    }
+
+    function drawChart(prices, upper, middle, lower) {
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      ctx.scale(dpr, dpr);
+
+      const w = rect.width;
+      const h = rect.height;
+      const pad = 24;
+
+      ctx.clearRect(0, 0, w, h);
+
+      const allValues = [...prices, upper, lower];
+      const minVal = Math.min(...allValues) * 0.995;
+      const maxVal = Math.max(...allValues) * 1.005;
+
+      const getY = val => h - pad - ((val - minVal) / (maxVal - minVal)) * (h - pad * 2);
+      const getX = idx => pad + (idx / (prices.length - 1)) * (w - pad * 2);
+
+      // Draw horizontal band threshold lines
+      const drawBandLine = (yVal, color, dash = []) => {
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash(dash);
+        ctx.beginPath();
+        ctx.moveTo(pad, yVal);
+        ctx.lineTo(w - pad, yVal);
+        ctx.stroke();
+      };
+
+      drawBandLine(getY(upper), 'rgba(239, 68, 68, 0.6)', [4, 4]);
+      drawBandLine(getY(middle), 'rgba(56, 189, 248, 0.6)', [2, 2]);
+      drawBandLine(getY(lower), 'rgba(34, 197, 94, 0.6)', [4, 4]);
+
+      // Plot historical price curve
+      ctx.setLineDash([]);
+      ctx.strokeStyle = '#f8fafc';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      prices.forEach((p, idx) => {
+        const x = getX(idx);
+        const y = getY(p);
+        if (idx === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      });
+      ctx.stroke();
+
+      // Plot point markers
+      prices.forEach((p, idx) => {
+        const x = getX(idx);
+        const y = getY(p);
+        ctx.fillStyle = idx === prices.length - 1 ? '#38bdf8' : '#64748b';
+        ctx.beginPath();
+        ctx.arc(x, y, idx === prices.length - 1 ? 4 : 2.5, 0, Math.PI * 2);
+        ctx.fill();
+      });
+    }
+
+    [periodInput, multiplierInput, pricesInput].forEach(input => {
+      input.addEventListener('input', calculate);
+    });
+
+    window.addEventListener('resize', calculate);
+    calculate();
+  </script>
+</body>
+</html>
