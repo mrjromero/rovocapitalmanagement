@@ -434,11 +434,6 @@
                             <h4 class="mb-3">Self-Sufficiency Milestones</h4>
                             <div class="milestones-container mb-4">
                                 <div class="milestone-item p-3">
-                                    <div class="milestone-label">First Covered Month</div>
-                                    <div id="milestoneFirstCovered" class="milestone-value">Calculating…</div>
-                                    <div class="milestone-description">First month cash dividends cover margin interest and living expenses.</div>
-                                </div>
-                                <div class="milestone-item p-3">
                                     <div class="milestone-label">Sustained Self-Sufficiency</div>
                                     <div id="milestoneSustained" class="milestone-value">Calculating…</div>
                                     <div class="milestone-description">First month with no later expense shortfall within the projection.</div>
@@ -782,7 +777,6 @@
             }
 
             // Calculate expense-coverage milestones across the selected horizon.
-            const firstCoveredIndex = coverageSurplusData.findIndex(surplus => surplus >= 0);
             let sustainedIndex = -1;
             let debtFreeIndex = -1;
 
@@ -793,7 +787,6 @@
             }
 
             const formatMilestone = index => index >= 0 ? `Month ${index + 1}` : `Beyond ${months}-month horizon`;
-            document.getElementById('milestoneFirstCovered').textContent = formatMilestone(firstCoveredIndex);
             document.getElementById('milestoneSustained').textContent = formatMilestone(sustainedIndex);
             document.getElementById('milestoneDebtFree').textContent = formatMilestone(debtFreeIndex);
 
@@ -818,7 +811,7 @@
             document.getElementById('summaryText').innerHTML = `
                 <p>Based on your current financial parameters, this analysis shows how your portfolio will perform over the next ${months} months. Your portfolio is projected to grow from ${fmtCur.format(initialPortValue)} to ${fmtCur.format(startPortValue)}, representing a ${fmtNum.format(pctGrowth)}% total growth. The calculations account for your monthly contributions of ${fmtCur.format(monthlyContribution)}, living expenses of ${fmtCur.format(livingExpensesBase)}, and an annual inflation rate of ${(inflationRateAnnual*100).toFixed(2)}%.</p>
                 <p>The guardrails you've established (Maximum DTA of ${targetMaxDTA.toFixed(2)}% and Minimum DSCR of ${targetMinDSCR}) help maintain a sustainable level of margin debt relative to your portfolio value and cash flow. During the projection period, your DTA reaches a maximum of ${fmtPct.format(maxObservedDTA/100)} and your DSCR falls to a minimum of ${minDscrDisplay}. Over the ${months}-month period, you'll pay a total of ${fmtCur.format(totalInterestPaid)} in margin interest while receiving ${fmtCur.format(totalCashDividends)} in cash dividends.</p>
-                <p>Your first covered month is ${formatMilestone(firstCoveredIndex)}, sustained self-sufficiency begins in ${formatMilestone(sustainedIndex)}, and debt-free self-sufficiency begins in ${formatMilestone(debtFreeIndex)}. These milestones use cash dividends after margin interest and living expenses; monthly contributions remain invested.</p>
+                <p>Sustained self-sufficiency begins in ${formatMilestone(sustainedIndex)}, and debt-free self-sufficiency begins in ${formatMilestone(debtFreeIndex)}. These milestones use cash dividends after margin interest and living expenses; monthly contributions remain invested.</p>
                 <p>${conclusionText}</p>
             `;
 
