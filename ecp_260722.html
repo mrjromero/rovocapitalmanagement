@@ -119,6 +119,11 @@
         .analysis-results h4 { color: var(--primary-color); font-weight: 600; margin-bottom: 15px; }
         
         .pass-status-container { border: 1px solid var(--border-color); border-radius: 5px; background-color: #f8f9fa; }
+
+        .planning-metrics { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+        .planning-metric { border: 1px solid var(--border-color); border-radius: 5px; background-color: #fff; padding: 12px; }
+        .planning-metric-label { color: #6c757d; font-size: 12px; line-height: 16px; margin-bottom: 4px; }
+        .planning-metric-value { color: var(--text-color); font-size: 16px; font-weight: 600; line-height: 20px; }
         
         input.form-control.months-input { border-radius: 5px !important; padding: 5px 10px !important; height: auto !important; text-align: center; width: 80px !important; }
 
@@ -132,6 +137,7 @@
             .table-container { height: 400px; }
             .table-view-toggle { font-size: 14px; }
             .table-view-toggle .form-check-input { width: 40px !important; height: 20px !important; }
+            .planning-metrics { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -414,14 +420,52 @@
                         <div class="panel-heading p-3 text-white fw-bold mb-title">Analysis Results</div>
                         <div class="panel-body p-4 analysis-results">
                             
-                            <!-- Pass/Fail Status Box -->
+                            <!-- Guardrail Status Box -->
                             <div class="pass-status-container p-3 mb-4">
                                 <h5 id="passFailText" class="text-success fw-bold mb-2 fs-6">
-                                    🟢 Pass – Your plan stays within guardrails
+                                    🟢 Within Guardrails
                                 </h5>
                                 <div class="projected-cash-flow-text mb-0" style="font-size: 13px;">
-                                    Indicates whether your Expense Coverage Plan remains within your DTA and DSCR limits during the projection period.
+                                    Tests the starting position and every projected month against your maximum DTA and minimum income-to-interest coverage limits.
                                 </div>
+                            </div>
+
+                            <!-- Expense Coverage Status Box -->
+                            <div class="pass-status-container p-3 mb-4">
+                                <h5 id="expenseCoverageStatusText" class="text-warning fw-bold mb-2 fs-6">
+                                    🟡 Calculating Expense Coverage
+                                </h5>
+                                <div id="expenseCoverageStatusDetail" class="projected-cash-flow-text mb-0" style="font-size: 13px;">
+                                    Indicates whether cash dividends after margin interest cover living expenses without additional borrowing.
+                                </div>
+                            </div>
+
+                            <!-- Planning Interpretation -->
+                            <h4 class="mb-3">Funding Interpretation</h4>
+                            <div class="planning-metrics mb-3">
+                                <div class="planning-metric">
+                                    <div class="planning-metric-label">Shortfall Months</div>
+                                    <div id="metricShortfallMonths" class="planning-metric-value">—</div>
+                                </div>
+                                <div class="planning-metric">
+                                    <div class="planning-metric-label">Baseline Bridge Funding</div>
+                                    <div id="metricBridgeFunding" class="planning-metric-value">—</div>
+                                </div>
+                                <div class="planning-metric">
+                                    <div class="planning-metric-label">Sustained Self-Funding</div>
+                                    <div id="metricSelfFundingMonth" class="planning-metric-value">—</div>
+                                </div>
+                                <div class="planning-metric">
+                                    <div class="planning-metric-label">Peak Margin Debt</div>
+                                    <div id="metricPeakDebt" class="planning-metric-value">—</div>
+                                </div>
+                                <div class="planning-metric">
+                                    <div class="planning-metric-label">Peak Monthly Shortfall</div>
+                                    <div id="metricPeakShortfall" class="planning-metric-value">—</div>
+                                </div>
+                            </div>
+                            <div class="projected-cash-flow-text mb-4" style="font-size: 12px;">
+                                Bridge funding is cumulative new margin used for expense shortfalls under the baseline assumptions. Monthly contributions remain invested and are not used for living expenses.
                             </div>
 
                             <!-- Summary Narrative -->
@@ -566,6 +610,7 @@
 
         // Shared Formatting functions
         const fmtCur = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
+        const fmtCurCents = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2 });
         const fmtPct = new Intl.NumberFormat('en-US', { style: 'percent', minimumFractionDigits: 2, maximumFractionDigits: 2 });
         const fmtNum = new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         const axisFmt = new Intl.NumberFormat('en-US'); 
@@ -651,6 +696,12 @@
             if (invalidInputs.length > 0) {
                 passFailEl.innerHTML = '⚠️ Check your inputs';
                 passFailEl.className = 'text-danger fw-bold mb-2 fs-6';
+                document.getElementById('expenseCoverageStatusText').innerHTML = '⚠️ Expense Coverage Unavailable';
+                document.getElementById('expenseCoverageStatusText').className = 'text-danger fw-bold mb-2 fs-6';
+                document.getElementById('expenseCoverageStatusDetail').textContent = 'Correct the highlighted input problem before using the funding interpretation.';
+                ['metricShortfallMonths', 'metricBridgeFunding', 'metricSelfFundingMonth', 'metricPeakDebt', 'metricPeakShortfall'].forEach(id => {
+                    document.getElementById(id).textContent = '—';
+                });
                 document.getElementById('summaryText').innerHTML = `<p>${invalidInputs.join('<br>')}</p>`;
                 document.querySelector('#summaryTable tbody').innerHTML = '';
                 document.querySelector('#detailedTable tbody').innerHTML = '';
@@ -677,11 +728,16 @@
             let totalContributions = 0;
             let totalNewMarginBorrowed = 0;
             let monthsWithExpenseShortfall = 0;
+            let lastExpenseShortfallMonth = 0;
+            let peakMonthlyShortfall = 0;
+            let peakShortfallMonth = 0;
             
             const initialDTA = initialMarginDebt / initialPortValue;
             let maxObservedDTA = initialDTA * 100;
             let minObservedDSCR = Infinity;
             let breachedGuardrails = maxObservedDTA > targetMaxDTA;
+            let peakMarginDebt = initialMarginDebt;
+            let peakMarginDebtMonth = 0;
 
             // Empty arrays for Chart and Table tracking
             const chartLabels = [];
@@ -709,12 +765,21 @@
                     newMarginBorrowed = Math.abs(cashFlowDiff);
                     totalNewMarginBorrowed += newMarginBorrowed;
                     monthsWithExpenseShortfall += 1;
+                    lastExpenseShortfallMonth = m;
+                    if (newMarginBorrowed > peakMonthlyShortfall) {
+                        peakMonthlyShortfall = newMarginBorrowed;
+                        peakShortfallMonth = m;
+                    }
                 } else {
                     marginRepaid = cashFlowDiff;
                     if (marginRepaid > currentDebt) marginRepaid = currentDebt; 
                 }
 
                 const outstandingMarginBalance = currentDebt + newMarginBorrowed - marginRepaid;
+                if (outstandingMarginBalance > peakMarginDebt) {
+                    peakMarginDebt = outstandingMarginBalance;
+                    peakMarginDebtMonth = m;
+                }
                 totalContributions += monthlyContribution;
                 
                 const growthAmount = startPortValue * monthlyGrowthRate;
@@ -790,18 +855,44 @@
 
             // Update UI Elements
             if (breachedGuardrails) {
-                passFailEl.innerHTML = '🔴 Fail – Your plan crosses your established guardrails';
+                passFailEl.innerHTML = '🔴 Guardrail Breach';
                 passFailEl.className = 'text-danger fw-bold mb-2 fs-6';
             } else {
-                passFailEl.innerHTML = '🟢 Pass – Your plan stays within guardrails';
+                passFailEl.innerHTML = '🟢 Within Guardrails';
                 passFailEl.className = 'text-success fw-bold mb-2 fs-6';
             }
+
+            const sustainedSelfFundingMonth = monthsWithExpenseShortfall === 0
+                ? 1
+                : (lastExpenseShortfallMonth < months ? lastExpenseShortfallMonth + 1 : null);
+            const expenseStatusEl = document.getElementById('expenseCoverageStatusText');
+            const expenseStatusDetailEl = document.getElementById('expenseCoverageStatusDetail');
+
+            if (monthsWithExpenseShortfall === 0) {
+                expenseStatusEl.innerHTML = '🟢 Self-Funding';
+                expenseStatusEl.className = 'text-success fw-bold mb-2 fs-6';
+                expenseStatusDetailEl.textContent = 'Cash dividends after margin interest cover living expenses in every projected month.';
+            } else if (sustainedSelfFundingMonth !== null) {
+                expenseStatusEl.innerHTML = '🟡 Bridge Required';
+                expenseStatusEl.className = 'text-warning fw-bold mb-2 fs-6';
+                expenseStatusDetailEl.textContent = `${fmtCurCents.format(totalNewMarginBorrowed)} of cumulative bridge funding is required across ${monthsWithExpenseShortfall} month${monthsWithExpenseShortfall === 1 ? '' : 's'} before sustained self-funding begins in month ${sustainedSelfFundingMonth}.`;
+            } else {
+                expenseStatusEl.innerHTML = '🔴 Not Self-Funding';
+                expenseStatusEl.className = 'text-danger fw-bold mb-2 fs-6';
+                expenseStatusDetailEl.textContent = `Expense shortfalls continue through the ${months}-month projection and require ${fmtCurCents.format(totalNewMarginBorrowed)} of cumulative new margin.`;
+            }
+
+            document.getElementById('metricShortfallMonths').textContent = `${monthsWithExpenseShortfall} of ${months}`;
+            document.getElementById('metricBridgeFunding').textContent = fmtCurCents.format(totalNewMarginBorrowed);
+            document.getElementById('metricSelfFundingMonth').textContent = sustainedSelfFundingMonth === null ? 'Beyond horizon' : `Month ${sustainedSelfFundingMonth}`;
+            document.getElementById('metricPeakDebt').textContent = `${fmtCurCents.format(peakMarginDebt)} · ${peakMarginDebtMonth === 0 ? 'Start' : `Month ${peakMarginDebtMonth}`}`;
+            document.getElementById('metricPeakShortfall').textContent = peakShortfallMonth === 0 ? '$0.00' : `${fmtCurCents.format(peakMonthlyShortfall)} · Month ${peakShortfallMonth}`;
 
             const pctGrowth = ((startPortValue - initialPortValue) / initialPortValue) * 100;
             const minDscrDisplay = minObservedDSCR === Infinity ? 'N/A' : fmtNum.format(minObservedDSCR);
             
             const expenseFundingText = monthsWithExpenseShortfall > 0
-                ? `Cash dividends after margin interest do not fully cover living expenses in ${monthsWithExpenseShortfall} of ${months} months. The projection therefore adds ${fmtCur.format(totalNewMarginBorrowed)} of new margin debt to fund those shortfalls.`
+                ? `Cash dividends after margin interest do not fully cover living expenses in ${monthsWithExpenseShortfall} of ${months} months. The projection therefore adds ${fmtCur.format(totalNewMarginBorrowed)} of cumulative new margin to fund those shortfalls. Peak margin debt is ${fmtCur.format(peakMarginDebt)} ${peakMarginDebtMonth === 0 ? 'at the start' : `in month ${peakMarginDebtMonth}`}, and ${sustainedSelfFundingMonth === null ? 'sustained self-funding is not reached within the projection' : `sustained self-funding begins in month ${sustainedSelfFundingMonth}`}.`
                 : `Cash dividends after margin interest cover living expenses in every projected month, so no new margin borrowing is required for expense shortfalls.`;
 
             let conclusionText = breachedGuardrails 
