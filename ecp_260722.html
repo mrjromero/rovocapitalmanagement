@@ -207,7 +207,7 @@
                                     <input type="text" inputmode="decimal" id="inflationRate" class="form-control format-number" value="5">
                                     <span class="input-group-text">%</span>
                                 </div>
-                                <div class="projected-cash-flow-text">Expected yearly increase in living expenses.</div>
+                                <div class="projected-cash-flow-text">Expected effective yearly increase in living expenses, converted to an equivalent monthly rate.</div>
                             </div>
                         </div>
                         <p class="card-text mb-0 mt-3 text-muted">Input your monthly income contribution to the portfolio, your living expenses, and the expected inflation rate. This information helps project how your cash flow will change over time and affects your ability to cover expenses.</p>
@@ -268,7 +268,7 @@
                                     <input type="text" inputmode="decimal" id="growthRate" class="form-control format-number" value="5">
                                     <span class="input-group-text">%</span>
                                 </div>
-                                <div class="projected-cash-flow-text">Expected annual appreciation of the portfolio value (excluding dividends).</div>
+                                <div class="projected-cash-flow-text">Expected effective annual appreciation excluding dividends, converted to an equivalent monthly rate.</div>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Interest Rate on Margin (%)</label>
@@ -276,7 +276,7 @@
                                     <input type="text" inputmode="decimal" id="marginInterest" class="form-control format-number" value="5">
                                     <span class="input-group-text">%</span>
                                 </div>
-                                <div class="projected-cash-flow-text">The annual interest rate charged on borrowed margin funds.</div>
+                                <div class="projected-cash-flow-text">The annual percentage rate charged on margin debt; monthly interest is calculated as APR ÷ 12.</div>
                             </div>
                         </div>
                         <p class="card-text mb-0 mt-3 text-muted">Specify the expected performance metrics for your portfolio, including yields from reinvested and cash-paying assets, portfolio growth rate, and the interest rate on margin. These parameters determine how your portfolio will grow and generate income over time.</p>
@@ -299,7 +299,7 @@
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Minimum DSCR</label>
                                 <input type="text" inputmode="decimal" id="minDSCR" class="form-control format-number mb-3" value="3">
-                                <div class="projected-cash-flow-text">Lower guardrail for debt service coverage ratio (income ÷ debt payments).</div>
+                                <div class="projected-cash-flow-text">Lower guardrail for cash dividends ÷ margin interest. Because no principal payment is scheduled, this is an interest-coverage proxy.</div>
                             </div>
                         </div>
                         <p class="card-text mb-0 mt-3 text-muted">Set your risk tolerance limits by establishing maximum debt-to-asset ratio and minimum debt service coverage ratio. These guardrails help ensure your expense coverage strategy remains within your acceptable risk parameters.</p>
@@ -340,7 +340,7 @@
                                     <div class="chart-container"><canvas id="chartDSCR"></canvas></div>
                                 </div>
                                 <div class="col-md-6 mb-4">
-                                    <h5 class="mb-title mb-3 fs-6">Net Monthly Cash Flow</h5>
+                                    <h5 class="mb-title mb-3 fs-6">Cash Flow After Interest & Living Expenses</h5>
                                     <div class="chart-container"><canvas id="chartCashFlow"></canvas></div>
                                 </div>
                             </div>
@@ -364,11 +364,11 @@
                                     <thead>
                                         <tr>
                                             <th>Month</th>
-                                            <th>Total Portfolio Value ($)</th>
+                                            <th>Portfolio Value at Month-End ($)</th>
                                             <th>Outstanding Margin Balance ($)</th>
                                             <th>DTA (%)</th>
                                             <th>DSCR</th>
-                                            <th>Net Equity ($)</th>
+                                            <th>Net Equity at Month-End ($)</th>
                                         </tr>
                                     </thead>
                                     <tbody></tbody>
@@ -379,7 +379,7 @@
                                     <thead>
                                         <tr>
                                             <th>Month</th>
-                                            <th>Total Portfolio Value ($)</th>
+                                            <th>Portfolio Value at Start of Month ($)</th>
                                             <th>Reinvested Dividends ($)</th>
                                             <th>Dividends Paid as Cash ($)</th>
                                             <th>Interest Paid on Margin ($)</th>
@@ -389,7 +389,7 @@
                                             <th>Margin Repaid ($)</th>
                                             <th>Outstanding Margin Balance ($)</th>
                                             <th>Total Contributions to Date ($)</th>
-                                            <th>Net Equity ($)</th>
+                                            <th>Net Equity at Month-End ($)</th>
                                             <th>Portfolio Value at Month-End ($)</th>
                                             <th>DTA (%)</th>
                                             <th>DSCR</th>
@@ -570,6 +570,10 @@
         const fmtNum = new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         const axisFmt = new Intl.NumberFormat('en-US'); 
 
+        // Convert an effective annual rate to the equivalent compounded monthly rate.
+        // Quoted distribution yields and margin APRs are handled separately as nominal annual rates.
+        const effectiveAnnualToMonthly = (annualRate) => Math.pow(1 + annualRate, 1 / 12) - 1;
+
         // Common Chart.js Theme
         Chart.defaults.font.family = '"Poppins", sans-serif';
         Chart.defaults.font.size = 11;
@@ -627,7 +631,43 @@
             const marginInterestAnnual = parseFormattedValue(document.getElementById('marginInterest').value) / 100;
             const targetMaxDTA = parseFormattedValue(document.getElementById('maxDTA').value);
             const targetMinDSCR = parseFormattedValue(document.getElementById('minDSCR').value);
-            const months = parseFormattedValue(document.getElementById('projectionMonths').value) || 12;
+            const rawMonths = parseFormattedValue(document.getElementById('projectionMonths').value);
+            const months = Math.round(rawMonths);
+
+            const passFailEl = document.getElementById('passFailText');
+            const invalidInputs = [];
+            if (initialPortValue <= 0) invalidInputs.push('Portfolio Value must be greater than zero.');
+            if (initialMarginDebt < 0) invalidInputs.push('Margin Debt cannot be negative.');
+            if (monthlyContribution < 0) invalidInputs.push('Monthly Contribution cannot be negative.');
+            if (livingExpensesBase < 0) invalidInputs.push('Monthly Living Expenses cannot be negative.');
+            if (inflationRateAnnual <= -1) invalidInputs.push('Annual Inflation Rate must be greater than -100%.');
+            if (yieldReinvestAnnual < 0 || yieldCashAnnual < 0) invalidInputs.push('Dividend yields cannot be negative.');
+            if (growthRateAnnual <= -1) invalidInputs.push('Portfolio Growth Rate must be greater than -100%.');
+            if (marginInterestAnnual < 0) invalidInputs.push('Margin Interest Rate cannot be negative.');
+            if (targetMaxDTA < 0 || targetMaxDTA > 100) invalidInputs.push('Maximum DTA must be between 0% and 100%.');
+            if (targetMinDSCR < 0) invalidInputs.push('Minimum DSCR cannot be negative.');
+            if (rawMonths < 1 || rawMonths > 1200) invalidInputs.push('Projection Months must be between 1 and 1,200.');
+
+            if (invalidInputs.length > 0) {
+                passFailEl.innerHTML = '⚠️ Check your inputs';
+                passFailEl.className = 'text-danger fw-bold mb-2 fs-6';
+                document.getElementById('summaryText').innerHTML = `<p>${invalidInputs.join('<br>')}</p>`;
+                document.querySelector('#summaryTable tbody').innerHTML = '';
+                document.querySelector('#detailedTable tbody').innerHTML = '';
+                csvSummaryData = [];
+                csvDetailedData = [];
+                if (chartPortEqMargin) { chartPortEqMargin.destroy(); chartPortEqMargin = null; }
+                if (chartDTA) { chartDTA.destroy(); chartDTA = null; }
+                if (chartDSCR) { chartDSCR.destroy(); chartDSCR = null; }
+                if (chartCashFlow) { chartCashFlow.destroy(); chartCashFlow = null; }
+                return;
+            }
+
+            // Timing convention: price growth and dividends are earned on the opening balance;
+            // contributions and reinvested dividends are added at month-end.
+            const monthlyGrowthRate = effectiveAnnualToMonthly(growthRateAnnual);
+            const monthlyInflationRate = effectiveAnnualToMonthly(inflationRateAnnual);
+            const monthlyMarginRate = marginInterestAnnual / 12;
 
             // State Trackers
             let startPortValue = initialPortValue;
@@ -635,10 +675,13 @@
             let totalInterestPaid = 0;
             let totalCashDividends = 0;
             let totalContributions = 0;
+            let totalNewMarginBorrowed = 0;
+            let monthsWithExpenseShortfall = 0;
             
-            let maxObservedDTA = 0;
+            const initialDTA = initialMarginDebt / initialPortValue;
+            let maxObservedDTA = initialDTA * 100;
             let minObservedDSCR = Infinity;
-            let breachedGuardrails = false;
+            let breachedGuardrails = maxObservedDTA > targetMaxDTA;
 
             // Empty arrays for Chart and Table tracking
             const chartLabels = [];
@@ -648,19 +691,15 @@
 
             // Core Logic Loop
             for (let m = 1; m <= months; m++) {
-                const moGrowth = growthRateAnnual / 12;
-                const moInterest = marginInterestAnnual / 12;
-                const moInflation = inflationRateAnnual / 12;
-
-                const reinvestDivs = Math.round(startPortValue * (yieldReinvestAnnual / 12) * allocReinvest);
-                const cashDivs = Math.round(startPortValue * (yieldCashAnnual / 12) * allocMargin);
+                const reinvestDivs = startPortValue * (yieldReinvestAnnual / 12) * allocReinvest;
+                const cashDivs = startPortValue * (yieldCashAnnual / 12) * allocMargin;
                 totalCashDividends += cashDivs;
 
-                const interestPaid = Math.round(currentDebt * moInterest);
+                const interestPaid = currentDebt * monthlyMarginRate;
                 totalInterestPaid += interestPaid;
 
                 const netCashAfterInterest = cashDivs - interestPaid;
-                const monthlyLivingExpenses = Math.round(livingExpensesBase * Math.pow((1 + moInflation), m - 1));
+                const monthlyLivingExpenses = livingExpensesBase * Math.pow((1 + monthlyInflationRate), m - 1);
                 const cashFlowDiff = netCashAfterInterest - monthlyLivingExpenses;
                 
                 let newMarginBorrowed = 0;
@@ -668,6 +707,8 @@
 
                 if (cashFlowDiff < 0) {
                     newMarginBorrowed = Math.abs(cashFlowDiff);
+                    totalNewMarginBorrowed += newMarginBorrowed;
+                    monthsWithExpenseShortfall += 1;
                 } else {
                     marginRepaid = cashFlowDiff;
                     if (marginRepaid > currentDebt) marginRepaid = currentDebt; 
@@ -676,10 +717,9 @@
                 const outstandingMarginBalance = currentDebt + newMarginBorrowed - marginRepaid;
                 totalContributions += monthlyContribution;
                 
-                const baseForGrowth = startPortValue + monthlyContribution + reinvestDivs;
-                const growthAmount = Math.round(baseForGrowth * moGrowth);
-                const portValueAtMonthEnd = baseForGrowth + growthAmount;
-                const netEquity = startPortValue - outstandingMarginBalance;
+                const growthAmount = startPortValue * monthlyGrowthRate;
+                const portValueAtMonthEnd = startPortValue + growthAmount + monthlyContribution + reinvestDivs;
+                const netEquity = portValueAtMonthEnd - outstandingMarginBalance;
                 
                 const DTA = outstandingMarginBalance > 0 ? (outstandingMarginBalance / portValueAtMonthEnd) : 0;
                 const DTA_pct = DTA * 100;
@@ -704,7 +744,7 @@
                 c_targetDtaData.push(targetMaxDTA);
                 c_dscrData.push(DSCR === 'N/A' ? null : DSCR);
                 c_targetDscrData.push(targetMinDSCR);
-                c_cashFlowData.push(netCashAfterInterest);
+                c_cashFlowData.push(cashFlowDiff);
 
                 // Push UI Table Data
                 detailedRows.push(`
@@ -732,7 +772,7 @@
                 summaryRows.push(`
                     <tr>
                         <td class="text-start">${m}</td>
-                        <td>${fmtCur.format(startPortValue)}</td>
+                        <td>${fmtCur.format(portValueAtMonthEnd)}</td>
                         <td>${fmtCur.format(outstandingMarginBalance)}</td>
                         <td>${fmtPct.format(DTA)}</td>
                         <td>${DSCR === 'N/A' ? 'N/A' : fmtNum.format(DSCR)}</td>
@@ -741,15 +781,14 @@
                 `);
 
                 // Push CSV Export Data (Raw numbers for clean spreadsheet importing)
-                csvSummaryData.push([m, startPortValue, outstandingMarginBalance, DTA_pct.toFixed(2), DSCR === 'N/A' ? 'N/A' : DSCR.toFixed(2), netEquity]);
-                csvDetailedData.push([m, startPortValue, reinvestDivs, cashDivs, interestPaid, netCashAfterInterest, monthlyLivingExpenses, newMarginBorrowed, marginRepaid, outstandingMarginBalance, totalContributions, netEquity, portValueAtMonthEnd, DTA_pct.toFixed(2), DSCR === 'N/A' ? 'N/A' : DSCR.toFixed(2), targetMaxDTA.toFixed(2), targetMinDSCR.toFixed(2)]);
+                csvSummaryData.push([m, portValueAtMonthEnd.toFixed(2), outstandingMarginBalance.toFixed(2), DTA_pct.toFixed(2), DSCR === 'N/A' ? 'N/A' : DSCR.toFixed(2), netEquity.toFixed(2)]);
+                csvDetailedData.push([m, startPortValue.toFixed(2), reinvestDivs.toFixed(2), cashDivs.toFixed(2), interestPaid.toFixed(2), netCashAfterInterest.toFixed(2), monthlyLivingExpenses.toFixed(2), newMarginBorrowed.toFixed(2), marginRepaid.toFixed(2), outstandingMarginBalance.toFixed(2), totalContributions.toFixed(2), netEquity.toFixed(2), portValueAtMonthEnd.toFixed(2), DTA_pct.toFixed(2), DSCR === 'N/A' ? 'N/A' : DSCR.toFixed(2), targetMaxDTA.toFixed(2), targetMinDSCR.toFixed(2)]);
 
                 startPortValue = portValueAtMonthEnd;
                 currentDebt = outstandingMarginBalance;
             }
 
             // Update UI Elements
-            const passFailEl = document.getElementById('passFailText');
             if (breachedGuardrails) {
                 passFailEl.innerHTML = '🔴 Fail – Your plan crosses your established guardrails';
                 passFailEl.className = 'text-danger fw-bold mb-2 fs-6';
@@ -761,13 +800,19 @@
             const pctGrowth = ((startPortValue - initialPortValue) / initialPortValue) * 100;
             const minDscrDisplay = minObservedDSCR === Infinity ? 'N/A' : fmtNum.format(minObservedDSCR);
             
+            const expenseFundingText = monthsWithExpenseShortfall > 0
+                ? `Cash dividends after margin interest do not fully cover living expenses in ${monthsWithExpenseShortfall} of ${months} months. The projection therefore adds ${fmtCur.format(totalNewMarginBorrowed)} of new margin debt to fund those shortfalls.`
+                : `Cash dividends after margin interest cover living expenses in every projected month, so no new margin borrowing is required for expense shortfalls.`;
+
             let conclusionText = breachedGuardrails 
-                ? `Your current strategy does not appear sustainable within your established risk parameters. Your projected debt levels or interest obligations exceed your defined guardrails. Consider adjusting your contribution amounts, reducing living expenses, or modifying your initial margin debt to build a a more resilient plan.`
-                : `Your current strategy appears sustainable within your established risk parameters. Your portfolio growth and cash flow are projected to adequately support your margin debt throughout the ${months}-month period. Continue to monitor your portfolio performance and adjust your strategy as needed based on changing market conditions or personal financial circumstances.`;
+                ? `This deterministic projection crosses at least one defined guardrail. Review the monthly table to identify the first breach before relying on the plan.`
+                : `This deterministic projection remains within the defined DTA and income-to-interest coverage guardrails for all ${months} months. It does not model market drawdowns, distribution changes, borrowing-rate changes, taxes, or broker maintenance requirements.`;
 
             document.getElementById('summaryText').innerHTML = `
                 <p>Based on your current financial parameters, this analysis shows how your portfolio will perform over the next ${months} months. Your portfolio is projected to grow from ${fmtCur.format(initialPortValue)} to ${fmtCur.format(startPortValue)}, representing a ${fmtNum.format(pctGrowth)}% total growth. The calculations account for your monthly contributions of ${fmtCur.format(monthlyContribution)}, living expenses of ${fmtCur.format(livingExpensesBase)}, and an annual inflation rate of ${(inflationRateAnnual*100).toFixed(2)}%.</p>
-                <p>The guardrails you've established (Maximum DTA of ${targetMaxDTA.toFixed(2)}% and Minimum DSCR of ${targetMinDSCR}) help maintain a sustainable level of margin debt relative to your portfolio value and cash flow. During the projection period, your DTA reaches a maximum of ${fmtPct.format(maxObservedDTA/100)} and your DSCR falls to a minimum of ${minDscrDisplay}. Over the ${months}-month period, you'll pay a total of ${fmtCur.format(totalInterestPaid)} in margin interest while receiving ${fmtCur.format(totalCashDividends)} in cash dividends.</p>
+                <p><strong>Timing assumptions:</strong> Price growth and dividends are calculated on each month's opening portfolio balance. Contributions and reinvested dividends are added at month-end. Annual growth and inflation assumptions are converted to equivalent compounded monthly rates; distribution yields and margin APR are divided by 12.</p>
+                <p>The guardrails you've established (Maximum DTA of ${targetMaxDTA.toFixed(2)}% and Minimum DSCR of ${targetMinDSCR}) are tested against the starting position and every month-end. Starting DTA is ${fmtPct.format(initialDTA)}; maximum observed DTA is ${fmtPct.format(maxObservedDTA/100)}; and minimum observed DSCR is ${minDscrDisplay}. Over the ${months}-month period, projected margin interest totals ${fmtCur.format(totalInterestPaid)} and cash dividends total ${fmtCur.format(totalCashDividends)}.</p>
+                <p>${expenseFundingText}</p>
                 <p>${conclusionText}</p>
             `;
 
@@ -786,10 +831,10 @@
             let rows = [];
 
             if (isDetailed) {
-                headers = ["Month", "Total Portfolio Value ($)", "Reinvested Dividends ($)", "Dividends Paid as Cash ($)", "Interest Paid on Margin ($)", "Net Cash After Interest ($)", "Monthly Living Expenses ($)", "New Margin Borrowed ($)", "Margin Repaid ($)", "Outstanding Margin Balance ($)", "Total Contributions to Date ($)", "Net Equity ($)", "Portfolio Value at Month-End ($)", "DTA (%)", "DSCR", "Maximum DTA Guardrail (%)", "Minimum DSCR Guardrail"];
+                headers = ["Month", "Portfolio Value at Start of Month ($)", "Reinvested Dividends ($)", "Dividends Paid as Cash ($)", "Interest Paid on Margin ($)", "Net Cash After Interest ($)", "Monthly Living Expenses ($)", "New Margin Borrowed ($)", "Margin Repaid ($)", "Outstanding Margin Balance ($)", "Total Contributions to Date ($)", "Net Equity at Month-End ($)", "Portfolio Value at Month-End ($)", "DTA (%)", "DSCR", "Maximum DTA Guardrail (%)", "Minimum DSCR Guardrail"];
                 rows = csvDetailedData;
             } else {
-                headers = ["Month", "Total Portfolio Value ($)", "Outstanding Margin Balance ($)", "DTA (%)", "DSCR", "Net Equity ($)"];
+                headers = ["Month", "Portfolio Value at Month-End ($)", "Outstanding Margin Balance ($)", "DTA (%)", "DSCR", "Net Equity at Month-End ($)"];
                 rows = csvSummaryData;
             }
 
@@ -872,7 +917,7 @@
                 data: {
                     labels: labels,
                     datasets: [
-                        { label: 'Net Cash After Interest ($)', data: cashData, backgroundColor: cSecondary }
+                        { label: 'Cash Flow After Interest & Living Expenses ($)', data: cashData, backgroundColor: cSecondary }
                     ]
                 },
                 options: opt4
