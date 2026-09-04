@@ -364,7 +364,7 @@
                                     <thead>
                                         <tr>
                                             <th>Month</th>
-                                            <th>Total Portfolio Value ($)</th>
+                                            <th>Month-End Portfolio Value ($)</th>
                                             <th>Outstanding Margin Balance ($)</th>
                                             <th>DTA (%)</th>
                                             <th>DSCR</th>
@@ -379,7 +379,7 @@
                                     <thead>
                                         <tr>
                                             <th>Month</th>
-                                            <th>Total Portfolio Value ($)</th>
+                                            <th>Beginning Portfolio Value ($)</th>
                                             <th>Reinvested Dividends ($)</th>
                                             <th>Dividends Paid as Cash ($)</th>
                                             <th>Interest Paid on Margin ($)</th>
@@ -702,8 +702,8 @@
 
                 // Push Chart Data
                 chartLabels.push(m);
-                // Fynanc charts the opening value recorded for each projection month.
-                c_portData.push(startPortValue);
+                // Keep portfolio value and Net Equity on the same month-end basis.
+                c_portData.push(portValueAtMonthEnd);
                 c_equityData.push(netEquity);
                 c_debtData.push(outstandingMarginBalance);
                 c_dtaData.push(DTA_pct);
@@ -738,7 +738,7 @@
                 summaryRows.push(`
                     <tr>
                         <td class="text-start">${m}</td>
-                        <td>${fmtCur.format(startPortValue)}</td>
+                        <td>${fmtCur.format(portValueAtMonthEnd)}</td>
                         <td>${fmtCur.format(outstandingMarginBalance)}</td>
                         <td>${fmtPct.format(DTA)}</td>
                         <td>${DSCR === 'N/A' ? 'N/A' : fmtNum.format(DSCR)}</td>
@@ -747,7 +747,7 @@
                 `);
 
                 // Push CSV Export Data (Raw numbers for clean spreadsheet importing)
-                csvSummaryData.push([m, startPortValue, outstandingMarginBalance, DTA_pct.toFixed(2), DSCR === 'N/A' ? 'N/A' : DSCR.toFixed(2), netEquity]);
+                csvSummaryData.push([m, portValueAtMonthEnd, outstandingMarginBalance, DTA_pct.toFixed(2), DSCR === 'N/A' ? 'N/A' : DSCR.toFixed(2), netEquity]);
                 csvDetailedData.push([m, startPortValue, reinvestDivs, cashDivs, interestPaid, netCashAfterInterest, monthlyLivingExpenses, newMarginBorrowed, marginRepaid, outstandingMarginBalance, totalContributions, netEquity, portValueAtMonthEnd, DTA_pct.toFixed(2), DSCR === 'N/A' ? 'N/A' : DSCR.toFixed(2), targetMaxDTA.toFixed(2), targetMinDSCR.toFixed(2)]);
 
                 startPortValue = portValueAtMonthEnd;
@@ -793,10 +793,10 @@
             let rows = [];
 
             if (isDetailed) {
-                headers = ["Month", "Total Portfolio Value ($)", "Reinvested Dividends ($)", "Dividends Paid as Cash ($)", "Interest Paid on Margin ($)", "Net Cash After Interest ($)", "Monthly Living Expenses ($)", "New Margin Borrowed ($)", "Margin Repaid ($)", "Outstanding Margin Balance ($)", "Total Contributions to Date ($)", "Net Equity ($)", "Portfolio Value at Month-End ($)", "DTA (%)", "DSCR", "Maximum DTA Guardrail (%)", "Minimum DSCR Guardrail"];
+                headers = ["Month", "Beginning Portfolio Value ($)", "Reinvested Dividends ($)", "Dividends Paid as Cash ($)", "Interest Paid on Margin ($)", "Net Cash After Interest ($)", "Monthly Living Expenses ($)", "New Margin Borrowed ($)", "Margin Repaid ($)", "Outstanding Margin Balance ($)", "Total Contributions to Date ($)", "Net Equity ($)", "Portfolio Value at Month-End ($)", "DTA (%)", "DSCR", "Maximum DTA Guardrail (%)", "Minimum DSCR Guardrail"];
                 rows = csvDetailedData;
             } else {
-                headers = ["Month", "Total Portfolio Value ($)", "Outstanding Margin Balance ($)", "DTA (%)", "DSCR", "Net Equity ($)"];
+                headers = ["Month", "Month-End Portfolio Value ($)", "Outstanding Margin Balance ($)", "DTA (%)", "DSCR", "Net Equity ($)"];
                 rows = csvSummaryData;
             }
 
@@ -829,7 +829,7 @@
                 data: {
                     labels: labels,
                     datasets: [
-                        { label: 'Total Portfolio Value ($)', data: pData, borderColor: cPrimary, backgroundColor: 'transparent', pointRadius: 1, borderWidth: 2 },
+                        { label: 'Month-End Portfolio Value ($)', data: pData, borderColor: cPrimary, backgroundColor: 'transparent', pointRadius: 1, borderWidth: 2 },
                         { label: 'Net Equity ($)', data: eData, borderColor: cSecondary, backgroundColor: 'transparent', pointRadius: 1, borderWidth: 2 },
                         { label: 'Outstanding Margin Balance ($)', data: mData, borderColor: cDanger, backgroundColor: 'rgba(220, 53, 69, 0.1)', fill: true, pointRadius: 1, borderWidth: 1 }
                     ]
