@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Positive Carry Velocity Engine | Educational Simulator & Guide</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#ecfdf5',
+              500: '#10b981',
+              600: '#059669',
+            },
+            accent: {
+              500: '#06b6d4',
+              600: '#0891b2',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Custom scrollbar & range styling */
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: #0f172a; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #475569; }
+    input[type=range] {
+      accent-color: #10b981;
+    }
+    .glass-card {
+      background: rgba(17, 24, 39, 0.75);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(51, 65, 85, 0.4);
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen font-sans antialiased selection:bg-emerald-500 selection:text-white">
+
+  <!-- Header -->
+  <header class="border-b border-slate-800 bg-slate-900/80 sticky top-0 z-50 backdrop-blur-md">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-wrap justify-between items-center gap-4">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-cyan-500 flex items-center justify-center shadow-lg shadow-emerald-500/20">
+          <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+          </svg>
+        </div>
+        <div>
+          <h1 class="text-lg font-bold tracking-tight text-white flex items-center gap-2">
+            Positive Carry Velocity Engine
+            <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-950 border border-emerald-500/30 text-emerald-400">Interactive Blueprint</span>
+          </h1>
+          <p class="text-xs text-slate-400">Spread Arbitrage • Household Cash Flow Routing • Wealth Acceleration</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <button id="btn-print" onclick="window.print()" class="px-3 py-1.5 text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg border border-slate-700 transition">
+          Print / Export Report
+        </button>
+        <a href="#narrative-guide" class="px-3 py-1.5 text-xs font-medium bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg shadow-md shadow-emerald-600/20 transition">
+          Read the Guide ↓
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-8">
+
+    <!-- Hero Milestone / Crossover Announcement Banner -->
+    <div id="crossover-banner" class="p-5 rounded-2xl bg-gradient-to-r from-emerald-950/70 via-slate-900 to-cyan-950/70 border border-emerald-500/30 shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+      <div class="flex items-start gap-4">
+        <div class="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 shrink-0">
+          <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+        <div>
+          <div class="text-xs font-bold tracking-wider uppercase text-emerald-400 mb-0.5">Lifestyle Freedom Milestone</div>
+          <h2 id="crossover-headline" class="text-xl font-bold text-white tracking-tight">Calculating Crossover Point...</h2>
+          <p id="crossover-subtext" class="text-sm text-slate-300 mt-1 leading-relaxed">
+            The moment your net positive carry completely covers your household bills, freeing 100% of your earned income.
+          </p>
+        </div>
+      </div>
+      <div class="shrink-0 bg-slate-800/80 px-4 py-2.5 rounded-xl border border-slate-700 text-right w-full md:w-auto">
+        <div class="text-xs text-slate-400">Net Monthly Spread Profit</div>
+        <div id="hero-net-spread" class="text-lg font-bold text-emerald-400">+$1,584 / mo</div>
+      </div>
+    </div>
+
+    <!-- Live Executive Metrics Strip -->
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3.5">
+      <div class="glass-card p-3.5 rounded-xl">
+        <div class="text-[11px] font-medium text-slate-400 uppercase tracking-wider">Net Carry Spread</div>
+        <div id="kpi-spread" class="text-lg font-bold text-emerald-400 mt-1">+9.35%</div>
+        <div class="text-[10px] text-slate-500">Gross (15%) - Margin (5.65%)</div>
+      </div>
+
+      <div class="glass-card p-3.5 rounded-xl">
+        <div class="text-[11px] font-medium text-slate-400 uppercase tracking-wider">Return on Equity</div>
+        <div id="kpi-roe" class="text-lg font-bold text-cyan-400 mt-1">19.01%</div>
+        <div class="text-[10px] text-slate-500">Effective carry on investor capital</div>
+      </div>
+
+      <div class="glass-card p-3.5 rounded-xl">
+        <div class="text-[11px] font-medium text-slate-400 uppercase tracking-wider">Coverage (DSCR)</div>
+        <div id="kpi-dscr" class="text-lg font-bold text-indigo-400 mt-1">8.85x</div>
+        <div class="text-[10px] text-slate-500">Gross income vs margin interest</div>
+      </div>
+
+      <div class="glass-card p-3.5 rounded-xl">
+        <div class="text-[11px] font-medium text-slate-400 uppercase tracking-wider">Crash Buffer</div>
+        <div id="kpi-buffer" class="text-lg font-bold text-amber-400 mt-1">57.1%</div>
+        <div class="text-[10px] text-slate-500">Max drop before margin call</div>
+      </div>
+
+      <div class="glass-card p-3.5 rounded-xl">
+        <div class="text-[11px] font-medium text-slate-400 uppercase tracking-wider">Bills Covered Now</div>
+        <div id="kpi-bills-covered" class="text-lg font-bold text-emerald-400 mt-1">31.7%</div>
+        <div class="text-[10px] text-slate-500">Carry vs monthly lifestyle cost</div>
+      </div>
+
+      <div class="glass-card p-3.5 rounded-xl">
+        <div class="text-[11px] font-medium text-slate-400 uppercase tracking-wider">Wealth Gap vs Trad</div>
+        <div id="kpi-wealth-diff" class="text-lg font-bold text-emerald-400 mt-1">+$448,593</div>
+        <div class="text-[10px] text-slate-500">Outperformance at horizon</div>
+      </div>
+    </div>
+
+    <!-- Main Interactive Grid: Controls & Charts -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+
+      <!-- Left Column: Controls (4 Cols) -->
+      <div class="lg:col-span-5 space-y-6">
+        <div class="glass-card p-6 rounded-2xl space-y-5">
+          <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+            <h3 class="font-bold text-white text-base flex items-center gap-2">
+              <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+              </svg>
+              Simulation Engine Controls
+            </h3>
+            <button id="btn-reset" class="text-xs text-slate-400 hover:text-emerald-400 underline transition">Default Values</button>
+          </div>
+
+          <!-- Scenario Presets -->
+          <div>
+            <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-2">Scenario Presets</label>
+            <div class="grid grid-cols-2 gap-2">
+              <button onclick="applyPreset('baseline')" class="px-2.5 py-1.5 text-xs font-medium rounded-lg bg-slate-800 hover:bg-slate-700 text-emerald-400 border border-slate-700 transition text-left">
+                🎯 Balanced (15% / 5.65%)
+              </button>
+              <button onclick="applyPreset('conservative')" class="px-2.5 py-1.5 text-xs font-medium rounded-lg bg-slate-800 hover:bg-slate-700 text-cyan-400 border border-slate-700 transition text-left">
+                🛡️ Fortress (12% / 20% LTV)
+              </button>
+              <button onclick="applyPreset('aggressive')" class="px-2.5 py-1.5 text-xs font-medium rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-400 border border-slate-700 transition text-left">
+                ⚡ Aggressive (16% / 35% LTV)
+              </button>
+              <button onclick="applyPreset('stress')" class="px-2.5 py-1.5 text-xs font-medium rounded-lg bg-slate-800 hover:bg-slate-700 text-rose-400 border border-slate-700 transition text-left">
+                ⚠️ Rate Shock (8.50% Margin)
+              </button>
+            </div>
+          </div>
+
+          <!-- Sliders -->
+          <div class="space-y-4 pt-1">
+            <!-- Starting Equity -->
+            <div>
+              <div class="flex justify-between text-xs mb-1">
+                <span class="text-slate-300 font-medium">Initial Portfolio Equity</span>
+                <span id="val-equity" class="font-bold text-white">$100,000</span>
+              </div>
+              <input id="slider-equity" type="range" min="10000" max="500000" step="5000" value="100000" class="w-full h-1.5 bg-slate-700 rounded-lg cursor-pointer" />
+            </div>
+
+            <!-- Monthly Income -->
+            <div>
+              <div class="flex justify-between text-xs mb-1">
+                <span class="text-slate-300 font-medium">Monthly Household Income (Deposited)</span>
+                <span id="val-income" class="font-bold text-emerald-400">$8,000 / mo</span>
+              </div>
+              <input id="slider-income" type="range" min="0" max="25000" step="500" value="8000" class="w-full h-1.5 bg-slate-700 rounded-lg cursor-pointer" />
+              <p class="text-[10px] text-slate-500 mt-0.5">100% of income is swept into the portfolio account on payday.</p>
+            </div>
+
+            <!-- Monthly Bills -->
+            <div>
+              <div class="flex justify-between text-xs mb-1">
+                <span class="text-slate-300 font-medium">Monthly Lifestyle Bills (Paid via Margin)</span>
+                <span id="val-bills" class="font-bold text-rose-400">$5,000 / mo</span>
+              </div>
+              <input id="slider-bills" type="range" min="1000" max="20000" step="250" value="5000" class="w-full h-1.5 bg-slate-700 rounded-lg cursor-pointer" />
+              <p class="text-[10px] text-slate-500 mt-0.5">Living expenses drawn against the margin credit facility.</p>
+            </div>
+
+            <!-- Gross Yield -->
+            <div>
+              <div class="flex justify-between text-xs mb-1">
+                <span class="text-slate-300 font-medium">Portfolio Gross Yield</span>
+                <span id="val-yield" class="font-bold text-emerald-400">15.00%</span>
+              </div>
+              <input id="slider-yield" type="range" min="6.0" max="24.0" step="0.25" value="15.0" class="w-full h-1.5 bg-slate-700 rounded-lg cursor-pointer" />
+            </div>
+
+            <!-- Margin Borrow Rate -->
+            <div>
+              <div class="flex justify-between text-xs mb-1">
+                <span class="text-slate-300 font-medium">Margin Borrow Rate</span>
+                <span id="val-margin-rate" class="font-bold text-amber-400">5.65%</span>
+              </div>
+              <input id="slider-margin-rate" type="range" min="2.0" max="12.0" step="0.10" value="5.65" class="w-full h-1.5 bg-slate-700 rounded-lg cursor-pointer" />
+            </div>
+
+            <!-- Target Margin LTV -->
+            <div>
+              <div class="flex justify-between text-xs mb-1">
+                <span class="text-slate-300 font-medium">Operating Margin LTV (Loan-to-Value)</span>
+                <span id="val-ltv" class="font-bold text-cyan-400">30.0%</span>
+              </div>
+              <input id="slider-ltv" type="range" min="10" max="45" step="1" value="30" class="w-full h-1.5 bg-slate-700 rounded-lg cursor-pointer" />
+              <div class="flex justify-between text-[10px] text-slate-500 mt-0.5">
+                <span>10% (Ultra Conservative)</span>
+                <span class="text-amber-400">35%+ (Caution)</span>
+              </div>
+            </div>
+
+            <!-- Simulation Horizon -->
+            <div>
+              <div class="flex justify-between text-xs mb-1">
+                <span class="text-slate-300 font-medium">Time Horizon</span>
+                <span id="val-years" class="font-bold text-white">10 Years</span>
+              </div>
+              <input id="slider-years" type="range" min="2" max="20" step="1" value="10" class="w-full h-1.5 bg-slate-700 rounded-lg cursor-pointer" />
+            </div>
+
+            <!-- Leverage Strategy Mode -->
+            <div class="pt-2 border-t border-slate-800">
+              <label class="text-xs font-semibold text-slate-300 block mb-2">Leverage Management Mode</label>
+              <div class="grid grid-cols-2 gap-2">
+                <button id="btn-mode-dynamic" onclick="setLeverageMode('dynamic')" class="p-2.5 rounded-xl border text-xs text-left font-medium transition bg-emerald-950/40 border-emerald-500/50 text-emerald-300">
+                  <div class="font-bold">Dynamic Constant LTV</div>
+                  <div class="text-[10px] opacity-80 mt-0.5">Re-leverage to target LTV as equity grows (Flywheel compounding).</div>
+                </button>
+                <button id="btn-mode-fixed" onclick="setLeverageMode('fixed')" class="p-2.5 rounded-xl border text-xs text-left font-medium transition bg-slate-900 border-slate-700 text-slate-400 hover:text-white">
+                  <div class="font-bold">Organic Deleveraging</div>
+                  <div class="text-[10px] opacity-80 mt-0.5">Cap margin debt. LTV naturally drops towards zero for max safety.</div>
+                </button>
+              </div>
+            </div>
+
+            <!-- Surplus Reinvestment Slider -->
+            <div>
+              <div class="flex justify-between text-xs mb-1">
+                <span class="text-slate-300 font-medium">Surplus Cash Reinvestment Rate</span>
+                <span id="val-reinvest" class="font-bold text-emerald-400">100% (Full Compounding)</span>
+              </div>
+              <input id="slider-reinvest" type="range" min="0" max="100" step="5" value="100" class="w-full h-1.5 bg-slate-700 rounded-lg cursor-pointer" />
+              <p class="text-[10px] text-slate-500 mt-0.5">Portion of net positive cash flow retained to expand collateral.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column: Visualizations & Charts (7 Cols) -->
+      <div class="lg:col-span-7 space-y-6">
+
+        <!-- Chart 1: Wealth Trajectory -->
+        <div class="glass-card p-6 rounded-2xl">
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+            <div>
+              <h3 class="font-bold text-white text-base">Total Wealth Trajectory: Positive Carry vs. Traditional</h3>
+              <p class="text-xs text-slate-400">Compares putting 100% of income into positive carry vs. standard checking & unleveraged investing.</p>
+            </div>
+            <span class="text-xs px-2.5 py-1 rounded-full bg-slate-800 border border-slate-700 text-slate-300">Annual Compounding</span>
+          </div>
+          <div class="h-72 w-full">
+            <canvas id="wealthChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Chart 2: Cash Flow Engine & Crossover Point -->
+        <div class="glass-card p-6 rounded-2xl">
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+            <div>
+              <h3 class="font-bold text-white text-base">Monthly Cash Flow & The Lifestyle Crossover Point</h3>
+              <p class="text-xs text-slate-400">Gross Portfolio Yield vs. Margin Cost vs. Monthly Bills.</p>
+            </div>
+            <span id="chart-crossover-tag" class="text-xs px-2.5 py-1 rounded-full bg-emerald-950 border border-emerald-500/40 text-emerald-400 font-semibold">
+              Crossover: Year 3
+            </span>
+          </div>
+          <div class="h-72 w-full">
+            <canvas id="cashFlowChart"></canvas>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Interactive Stress Test Matrix -->
+    <div class="glass-card p-6 rounded-2xl">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 mb-4 border-b border-slate-800 gap-2">
+        <div>
+          <h3 class="font-bold text-white text-base flex items-center gap-2">
+            <svg class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            Market Drawdown & Downside Tolerance Stress Matrix
+          </h3>
+          <p class="text-xs text-slate-400">Instant stress test of your current leverage against severe asset market pullbacks (assumes 30% broker maintenance requirement).</p>
+        </div>
+        <div class="text-xs text-slate-400 bg-slate-800/80 px-3 py-1.5 rounded-lg border border-slate-700">
+          Initial Assets: <span id="stress-portfolio-val" class="font-bold text-white">$142,857</span> | Debt: <span id="stress-debt-val" class="font-bold text-amber-400">$42,857</span>
+        </div>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs">
+          <thead>
+            <tr class="border-b border-slate-800 text-slate-400 uppercase tracking-wider text-[10px]">
+              <th class="py-2.5 px-3">Market Drawdown</th>
+              <th class="py-2.5 px-3">New Portfolio Value</th>
+              <th class="py-2.5 px-3">Remaining Equity</th>
+              <th class="py-2.5 px-3">Resulting LTV</th>
+              <th class="py-2.5 px-3">Margin Status</th>
+              <th class="py-2.5 px-3">Required Action / Health</th>
+            </tr>
+          </thead>
+          <tbody id="stress-table-body" class="divide-y divide-slate-800/60 font-medium">
+            <!-- Populated dynamically -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Comprehensive Plain-English Educational Guide & Narrative -->
+    <section id="narrative-guide" class="space-y-8 pt-4">
+      <div class="border-b border-slate-800 pb-4">
+        <h2 class="text-2xl font-bold tracking-tight text-white flex items-center gap-2">
+          <svg class="w-7 h-7 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+          </svg>
+          The Master Blueprint: How the Positive Carry Engine Works
+        </h2>
+        <p class="text-sm text-slate-400 mt-1">A plain-English explanation of why this strategy pays living expenses while simultaneously compounding wealth faster than traditional saving.</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+        <!-- Module 1 -->
+        <div class="glass-card p-6 rounded-2xl space-y-3">
+          <div class="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 font-bold flex items-center justify-center text-sm">1</div>
+          <h3 class="text-lg font-bold text-white">The Core Premise: The Spread Arbitrage</h3>
+          <p class="text-sm text-slate-300 leading-relaxed">
+            In standard personal finance, debt is treated as a consumer liability (like credit cards charging 22% or car loans). In high-level finance, debt is a tool of <strong>arbitrage</strong>.
+          </p>
+          <p class="text-sm text-slate-300 leading-relaxed">
+            When you borrow margin at <strong class="text-amber-400">5.65%</strong> and deploy it into income assets yielding <strong class="text-emerald-400">15.00%</strong>, you create a <strong class="text-emerald-400">+9.35% positive carry</strong>. The asset generates enough cash flow to pay its own borrowing cost and leaves a substantial profit on the table. The debt literally services itself.
+          </p>
+        </div>
+
+        <!-- Module 2 -->
+        <div class="glass-card p-6 rounded-2xl space-y-3">
+          <div class="w-8 h-8 rounded-lg bg-cyan-500/20 text-cyan-400 font-bold flex items-center justify-center text-sm">2</div>
+          <h3 class="text-lg font-bold text-white">The Velocity Shift: The Checking Account Trap</h3>
+          <p class="text-sm text-slate-300 leading-relaxed">
+            Most families route money sequentially: <em>Paycheck &rarr; Checking Account (0% interest) &rarr; Pay Bills &rarr; Invest Leftover Crumbs</em>. This creates massive <strong>cash drag</strong>: thousands of dollars sit idle 24/7 waiting for bills to arrive.
+          </p>
+          <p class="text-sm text-slate-300 leading-relaxed">
+            <strong>The Velocity Alternative:</strong> Sweep 100% of your paycheck directly into the positive carry brokerage account on day one. When bills are due throughout the month, pay them using the portfolio's low-interest margin credit line. Every dollar begins compounding or reducing margin interest immediately on day one.
+          </p>
+        </div>
+
+        <!-- Module 3 -->
+        <div class="glass-card p-6 rounded-2xl space-y-3">
+          <div class="w-8 h-8 rounded-lg bg-indigo-500/20 text-indigo-400 font-bold flex items-center justify-center text-sm">3</div>
+          <h3 class="text-lg font-bold text-white">The Lifestyle Crossover Point</h3>
+          <p class="text-sm text-slate-300 leading-relaxed">
+            In the early months, your earned paycheck covers part of the bills, while the net carry handles the rest. But because the surplus cash flow is continuously reinvested into more yielding assets, your collateral base grows exponentially.
+          </p>
+          <p class="text-sm text-slate-300 leading-relaxed">
+            Eventually, you cross the <strong class="text-emerald-400">Crossover Point</strong>: your portfolio's monthly net carry matches and surpasses your total monthly living expenses. At this milestone, your investment portfolio pays 100% of your mortgage, utilities, and lifestyle bills forever.
+          </p>
+        </div>
+
+        <!-- Module 4 -->
+        <div class="glass-card p-6 rounded-2xl space-y-3">
+          <div class="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-400 font-bold flex items-center justify-center text-sm">4</div>
+          <h3 class="text-lg font-bold text-white">The 4 Iron Rules of Margin Safety</h3>
+          <ul class="text-sm text-slate-300 space-y-2 list-disc list-inside leading-relaxed">
+            <li><strong>The 30% Hard Ceiling:</strong> Federal Reg T allows 50% margin borrowing, but operating above 35% is reckless. Keeping LTV around 25%–30% gives you a massive cushion against market crashes.</li>
+            <li><strong>Know Your Crash Buffer (DTA):</strong> At 30% LTV with a 30% maintenance rule, your portfolio can crash by <strong class="text-amber-400">57.1%</strong> before receiving a margin call.</li>
+            <li><strong>Maintain Robust DSCR (> 5.0x):</strong> Ensure distribution cash flow is at least 5x higher than margin interest so rate spikes cannot squeeze you.</li>
+            <li><strong>Quality Collateral:</strong> Build the portfolio with diversified income assets (ETFs, CEFs, BDCs) rather than speculative individual stocks.</li>
+          </ul>
+        </div>
+
+      </div>
+
+      <!-- Real World Workflow / Practical Architecture -->
+      <div class="glass-card p-6 rounded-2xl space-y-4">
+        <h3 class="text-lg font-bold text-white flex items-center gap-2">
+          <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+          </svg>
+          How to Execute the Strategy in Practice (Step-by-Step)
+        </h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+          <div class="p-4 rounded-xl bg-slate-900/90 border border-slate-800 space-y-2">
+            <div class="text-xs font-bold text-emerald-400 uppercase tracking-wider">Step 1 • Direct Deposit Sweep</div>
+            <p class="text-xs text-slate-300 leading-relaxed">
+              Route your employer direct deposit straight into your brokerage margin account (or an integrated brokerage checking account). This immediately reduces your margin balance or buys income assets on day one.
+            </p>
+          </div>
+          <div class="p-4 rounded-xl bg-slate-900/90 border border-slate-800 space-y-2">
+            <div class="text-xs font-bold text-cyan-400 uppercase tracking-wider">Step 2 • Bill Pay via Margin Line</div>
+            <p class="text-xs text-slate-300 leading-relaxed">
+              Connect your mortgage, credit cards, and household utilities directly to your brokerage account using ACH debit or checking privileges. As bills are paid, you draw against your low-cost margin line.
+            </p>
+          </div>
+          <div class="p-4 rounded-xl bg-slate-900/90 border border-slate-800 space-y-2">
+            <div class="text-xs font-bold text-indigo-400 uppercase tracking-wider">Step 3 • Automated Monthly Sweep</div>
+            <p class="text-xs text-slate-300 leading-relaxed">
+              As high-yield assets pay monthly distributions, the gross yield automatically clears margin interest. Any surplus cash flow automatically accumulates as equity, systematically paying down the loan or buying more assets.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer Disclaimers -->
+    <footer class="pt-8 pb-12 border-t border-slate-800 text-center text-xs text-slate-500 space-y-2">
+      <p>Positive Carry Velocity Engine &bull; Educational Modeling Tool</p>
+      <p class="max-w-3xl mx-auto text-[11px] text-slate-600 leading-normal">
+        Disclaimer: This simulation is designed for educational and conceptual modeling purposes only and does not constitute financial, investment, legal, or tax advice. Margin borrowing involves risk of loss, interest rate variability, and the possibility of margin calls during severe market declines. Past performance and illustrative yields do not guarantee future returns.
+      </p>
+    </footer>
+
+  </main>
+
+  <!-- Simulation Logic & Chart Script -->
+  <script>
+    // State management
+    const state = {
+      equity: 100000,
+      monthlyIncome: 8000,
+      monthlyBills: 5000,
+      grossYield: 15.0,
+      marginRate: 5.65,
+      targetLtv: 30.0,
+      years: 10,
+      reinvestPct: 1.0,
+      leverageMode: 'dynamic', // 'dynamic' or 'fixed'
+      maintenanceReq: 0.30 // standard 30% broker maintenance
+    };
+
+    let wealthChartInstance = null;
+    let cashFlowChartInstance = null;
+
+    // Helper formatters
+    const formatCurrency = (val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(val);
+    const formatPercent = (val) => `${val.toFixed(2)}%`;
+
+    // Initialize DOM hooks
+    function initDOMElements() {
+      // Sliders & value displays
+      const bindSlider = (id, key, formatFn, postUpdate) => {
+        const slider = document.getElementById(`slider-${id}`);
+        const display = document.getElementById(`val-${id}`);
+        slider.addEventListener('input', (e) => {
+          state[key] = parseFloat(e.target.value);
+          display.textContent = formatFn(state[key]);
+          if (postUpdate) postUpdate();
+          runSimulation();
+        });
+      };
+
+      bindSlider('equity', 'equity', (v) => formatCurrency(v));
+      bindSlider('income', 'monthlyIncome', (v) => `${formatCurrency(v)} / mo`);
+      bindSlider('bills', 'monthlyBills', (v) => `${formatCurrency(v)} / mo`);
+      bindSlider('yield', 'grossYield', (v) => `${v.toFixed(2)}%`);
+      bindSlider('margin-rate', 'marginRate', (v) => `${v.toFixed(2)}%`);
+      bindSlider('ltv', 'targetLtv', (v) => `${v.toFixed(1)}%`);
+      bindSlider('years', 'years', (v) => `${v} Years`);
+      bindSlider('reinvest', 'reinvestPct', (v) => {
+        state.reinvestPct = v / 100;
+        return v === 100 ? '100% (Full Compounding)' : (v === 0 ? '0% (Extract All Surplus)' : `${v}% Reinvested`);
+      });
+
+      document.getElementById('btn-reset').addEventListener('click', () => {
+        applyPreset('baseline');
+      });
+    }
+
+    function setLeverageMode(mode) {
+      state.leverageMode = mode;
+      const btnDynamic = document.getElementById('btn-mode-dynamic');
+      const btnFixed = document.getElementById('btn-mode-fixed');
+
+      if (mode === 'dynamic') {
+        btnDynamic.className = "p-2.5 rounded-xl border text-xs text-left font-medium transition bg-emerald-950/40 border-emerald-500/50 text-emerald-300";
+        btnFixed.className = "p-2.5 rounded-xl border text-xs text-left font-medium transition bg-slate-900 border-slate-700 text-slate-400 hover:text-white";
+      } else {
+        btnFixed.className = "p-2.5 rounded-xl border text-xs text-left font-medium transition bg-emerald-950/40 border-emerald-500/50 text-emerald-300";
+        btnDynamic.className = "p-2.5 rounded-xl border text-xs text-left font-medium transition bg-slate-900 border-slate-700 text-slate-400 hover:text-white";
+      }
+      runSimulation();
+    }
+
+    function applyPreset(type) {
+      if (type === 'baseline') {
+        state.grossYield = 15.0;
+        state.marginRate = 5.65;
+        state.targetLtv = 30.0;
+      } else if (type === 'conservative') {
+        state.grossYield = 12.0;
+        state.marginRate = 5.65;
+        state.targetLtv = 20.0;
+      } else if (type === 'aggressive') {
+        state.grossYield = 16.0;
+        state.marginRate = 5.50;
+        state.targetLtv = 35.0;
+      } else if (type === 'stress') {
+        state.grossYield = 14.0;
+        state.marginRate = 8.50;
+        state.targetLtv = 25.0;
+      }
+
+      // Sync slider UI
+      document.getElementById('slider-yield').value = state.grossYield;
+      document.getElementById('val-yield').textContent = `${state.grossYield.toFixed(2)}%`;
+      document.getElementById('slider-margin-rate').value = state.marginRate;
+      document.getElementById('val-margin-rate').textContent = `${state.marginRate.toFixed(2)}%`;
+      document.getElementById('slider-ltv').value = state.targetLtv;
+      document.getElementById('val-ltv').textContent = `${state.targetLtv.toFixed(1)}%`;
+
+      runSimulation();
+    }
+
+    // Core Mathematical Simulation Engine
+    function runSimulation() {
+      const y_m = (state.grossYield / 100) / 12;
+      const c_m = (state.marginRate / 100) / 12;
+      const ltv_dec = state.targetLtv / 100;
+      const months = state.years * 12;
+
+      // Initial Balance Sheet
+      let E = state.equity;
+      let P = E / (1 - ltv_dec);
+      let M = P * ltv_dec;
+      const fixedM = M; // for fixed debt mode
+
+      // Benchmark: Traditional Savings / Unleveraged investing
+      let E_trad = state.equity;
+      const trad_yield_m = y_m; // Unleveraged yield baseline
+
+      const yearlyLabels = [];
+      const carryEquitySeries = [];
+      const tradEquitySeries = [];
+      const grossYieldSeries = [];
+      const marginCostSeries = [];
+      const netCarrySeries = [];
+      const billsSeries = [];
+
+      let crossoverMonth = null;
+      let currentMonthlyNetCarry = 0;
+
+      for (let m = 1; m <= months; m++) {
+        // Month calculations
+        const grossIncome = P * y_m;
+        const marginCost = M * c_m;
+        const netCarry = grossIncome - marginCost;
+
+        if (m === 1) {
+          currentMonthlyNetCarry = netCarry;
+        }
+
+        // Check if net carry covers bills
+        if (netCarry >= state.monthlyBills && crossoverMonth === null) {
+          crossoverMonth = m;
+        }
+
+        // Household velocity: 100% income deposited, bills drawn
+        const householdNet = state.monthlyIncome - state.monthlyBills;
+        const monthlySurplus = netCarry + householdNet;
+
+        // Reinvestment into equity
+        const reinvested = monthlySurplus > 0 ? monthlySurplus * state.reinvestPct : monthlySurplus;
+        E += reinvested;
+
+        // Balance sheet expansion according to mode
+        if (state.leverageMode === 'dynamic') {
+          P = E / (1 - ltv_dec);
+          M = P - E;
+        } else {
+          // Fixed Debt mode: debt stays fixed, equity expands, LTV drops organically
+          M = fixedM;
+          P = E + M;
+        }
+
+        // Traditional benchmark compounding
+        E_trad = E_trad * (1 + trad_yield_m) + householdNet;
+
+        // Record yearly checkpoints
+        if (m % 12 === 0) {
+          const yr = m / 12;
+          yearlyLabels.push(`Yr ${yr}`);
+          carryEquitySeries.push(Math.round(E));
+          tradEquitySeries.push(Math.round(E_trad));
+          grossYieldSeries.push(Math.round(grossIncome));
+          marginCostSeries.push(Math.round(marginCost));
+          netCarrySeries.push(Math.round(netCarry));
+          billsSeries.push(Math.round(state.monthlyBills));
+        }
+      }
+
+      updateKPIs(currentMonthlyNetCarry, crossoverMonth, E, E_trad, P, M);
+      updateStressTable(P, M);
+      updateCharts(yearlyLabels, carryEquitySeries, tradEquitySeries, grossYieldSeries, marginCostSeries, netCarrySeries, billsSeries);
+    }
+
+    function updateKPIs(currentNetCarry, crossoverMonth, finalE, finalTradE, currentP, currentM) {
+      const spread = state.grossYield - state.marginRate;
+      const ltv_dec = state.targetLtv / 100;
+      const roe = (state.grossYield / 100 - ltv_dec * (state.marginRate / 100)) / (1 - ltv_dec);
+      const dscr = ltv_dec > 0 ? (state.grossYield / 100) / (ltv_dec * (state.marginRate / 100)) : 99;
+      const crashBuffer = (1 - (ltv_dec / (1 - state.maintenanceReq))) * 100;
+      const billsCoveredPct = (currentNetCarry / state.monthlyBills) * 100;
+      const wealthDiff = finalE - finalTradE;
+
+      document.getElementById('kpi-spread').textContent = `+${spread.toFixed(2)}%`;
+      document.getElementById('kpi-roe').textContent = `${(roe * 100).toFixed(2)}%`;
+      document.getElementById('kpi-dscr').textContent = `${dscr.toFixed(2)}x`;
+      document.getElementById('kpi-buffer').textContent = `${crashBuffer.toFixed(1)}%`;
+      document.getElementById('kpi-bills-covered').textContent = `${billsCoveredPct.toFixed(1)}%`;
+      document.getElementById('kpi-wealth-diff').textContent = (wealthDiff >= 0 ? '+' : '') + formatCurrency(wealthDiff);
+      document.getElementById('hero-net-spread').textContent = `+${formatCurrency(currentNetCarry)} / mo`;
+
+      // Crossover announcement
+      const crossoverTag = document.getElementById('chart-crossover-tag');
+      const bannerHeadline = document.getElementById('crossover-headline');
+      const bannerSubtext = document.getElementById('crossover-subtext');
+
+      if (currentNetCarry >= state.monthlyBills) {
+        crossoverTag.textContent = "Crossover: Day 1 Reached!";
+        bannerHeadline.textContent = "🌟 Immediate Lifestyle Freedom Achieved!";
+        bannerSubtext.textContent = `Your current starting portfolio generates ${formatCurrency(currentNetCarry)}/mo in net carry, immediately covering 100% of your ${formatCurrency(state.monthlyBills)}/mo bills from Day 1!`;
+      } else if (crossoverMonth !== null) {
+        const yr = Math.floor((crossoverMonth - 1) / 12) + 1;
+        const mo = ((crossoverMonth - 1) % 12) + 1;
+        crossoverTag.textContent = `Crossover: Year ${yr}, Mo ${mo}`;
+        bannerHeadline.textContent = `🌟 Crossover Point: Year ${yr}, Month ${mo}`;
+        bannerSubtext.textContent = `At Month ${crossoverMonth}, your portfolio's net carry completely replaces your earned income, generating ${formatCurrency(state.monthlyBills)}/month to cover 100% of household bills forever.`;
+      } else {
+        crossoverTag.textContent = "Crossover: Beyond Horizon";
+        bannerHeadline.textContent = "📈 Wealth Compounding in Progress";
+        bannerSubtext.textContent = `At current parameters, net carry reaches ${formatCurrency(currentNetCarry)}/mo and expands over time. Increase your initial equity, yield, or timeframe to achieve complete bill coverage.`;
+      }
+
+      document.getElementById('stress-portfolio-val').textContent = formatCurrency(state.equity / (1 - ltv_dec));
+      document.getElementById('stress-debt-val').textContent = formatCurrency((state.equity / (1 - ltv_dec)) * ltv_dec);
+    }
+
+    function updateStressTable(currentP, currentM) {
+      const tbody = document.getElementById('stress-table-body');
+      tbody.innerHTML = '';
+      const baseP = state.equity / (1 - (state.targetLtv / 100));
+      const baseM = baseP * (state.targetLtv / 100);
+      const drops = [0.10, 0.20, 0.30, 0.40, 0.50];
+
+      drops.forEach(drop => {
+        const newP = baseP * (1 - drop);
+        const newE = newP - baseM;
+        const newLtv = (baseM / newP) * 100;
+        const minEquityReq = newP * state.maintenanceReq;
+        const marginCall = newE < minEquityReq;
+
+        const row = document.createElement('tr');
+        row.className = marginCall ? "bg-rose-950/20 text-rose-300" : "hover:bg-slate-800/40 text-slate-300";
+
+        row.innerHTML = `
+          <td class="py-2.5 px-3 font-semibold ${marginCall ? 'text-rose-400' : 'text-slate-200'}">-${(drop * 100).toFixed(0)}% Crash</td>
+          <td class="py-2.5 px-3">${formatCurrency(newP)}</td>
+          <td class="py-2.5 px-3 ${newE < 0 ? 'text-rose-500 font-bold' : ''}">${formatCurrency(newE)}</td>
+          <td class="py-2.5 px-3 font-bold ${newLtv > 50 ? 'text-amber-400' : ''}">${newLtv.toFixed(1)}%</td>
+          <td class="py-2.5 px-3">
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${marginCall ? 'bg-rose-900/60 text-rose-300 border border-rose-600' : 'bg-emerald-950/60 text-emerald-400 border border-emerald-500/30'}">
+              ${marginCall ? 'MARGIN CALL' : 'HEALTHY'}
+            </span>
+          </td>
+          <td class="py-2.5 px-3 text-[11px] ${marginCall ? 'text-rose-400' : 'text-slate-400'}">
+            ${marginCall ? `Deposit ${formatCurrency(minEquityReq - newE)} or sell shares to restore 30% maintenance.` : `Safe buffer: +${formatCurrency(newE - minEquityReq)} equity surplus.`}
+          </td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    function updateCharts(labels, carryEquity, tradEquity, grossYield, marginCost, netCarry, bills) {
+      // 1. Wealth Chart
+      const ctxWealth = document.getElementById('wealthChart').getContext('2d');
+      if (wealthChartInstance) wealthChartInstance.destroy();
+
+      wealthChartInstance = new Chart(ctxWealth, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: 'Positive Carry Engine (Equity)',
+              data: carryEquity,
+              borderColor: '#10b981',
+              backgroundColor: 'rgba(16, 185, 129, 0.12)',
+              fill: true,
+              borderWidth: 2.5,
+              tension: 0.35,
+              pointRadius: 3,
+              pointHoverRadius: 6
+            },
+            {
+              label: 'Traditional Route (Unleveraged Checking/Savings)',
+              data: tradEquity,
+              borderColor: '#64748b',
+              backgroundColor: 'transparent',
+              borderDash: [5, 5],
+              borderWidth: 2,
+              tension: 0.35,
+              pointRadius: 2,
+              pointHoverRadius: 5
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { labels: { color: '#94a3b8', font: { size: 11 } } },
+            tooltip: {
+              callbacks: {
+                label: (ctx) => ` ${ctx.dataset.label}: ${formatCurrency(ctx.parsed.y)}`
+              }
+            }
+          },
+          scales: {
+            x: { grid: { color: '#1e293b' }, ticks: { color: '#94a3b8', font: { size: 11 } } },
+            y: {
+              grid: { color: '#1e293b' },
+              ticks: {
+                color: '#94a3b8',
+                font: { size: 11 },
+                callback: (val) => `$${(val / 1000).toFixed(0)}k`
+              }
+            }
+          }
+        }
+      });
+
+      // 2. Cash Flow & Crossover Chart
+      const ctxCashFlow = document.getElementById('cashFlowChart').getContext('2d');
+      if (cashFlowChartInstance) cashFlowChartInstance.destroy();
+
+      cashFlowChartInstance = new Chart(ctxCashFlow, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: 'Net Carry Cash Flow ($/mo)',
+              data: netCarry,
+              borderColor: '#10b981',
+              backgroundColor: 'rgba(16, 185, 129, 0.15)',
+              fill: true,
+              borderWidth: 2.5,
+              tension: 0.35,
+              pointRadius: 3
+            },
+            {
+              label: 'Household Bills ($/mo)',
+              data: bills,
+              borderColor: '#f43f5e',
+              borderDash: [6, 4],
+              borderWidth: 2,
+              pointRadius: 0,
+              fill: false
+            },
+            {
+              label: 'Margin Interest Cost ($/mo)',
+              data: marginCost,
+              borderColor: '#f59e0b',
+              borderWidth: 1.5,
+              pointRadius: 2,
+              fill: false
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { labels: { color: '#94a3b8', font: { size: 11 } } },
+            tooltip: {
+              callbacks: {
+                label: (ctx) => ` ${ctx.dataset.label}: ${formatCurrency(ctx.parsed.y)}/mo`
+              }
+            }
+          },
+          scales: {
+            x: { grid: { color: '#1e293b' }, ticks: { color: '#94a3b8', font: { size: 11 } } },
+            y: {
+              grid: { color: '#1e293b' },
+              ticks: {
+                color: '#94a3b8',
+                font: { size: 11 },
+                callback: (val) => formatCurrency(val)
+              }
+            }
+          }
+        }
+      });
+    }
+
+    // Initialize application on load
+    window.addEventListener('DOMContentLoaded', () => {
+      initDOMElements();
+      runSimulation();
+    });
+  </script>
+</body>
+</html>
