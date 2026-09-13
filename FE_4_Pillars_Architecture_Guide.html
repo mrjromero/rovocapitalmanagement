@@ -9,8 +9,8 @@
   <script>
     window.MathJax = {
       tex: {
-        inlineMath: [['$', '$'], ['\\(', '\\)']],
-        displayMath: [['$$', '$$'], ['\\[', '\\]']],
+        inlineMath: [['\\(', '\\)']],
+        displayMath: [['\\[', '\\]']],
         processEscapes: true
       },
       options: {
@@ -479,20 +479,20 @@
   </p>
   <div class="math-card">
     <div class="math-label">Leverage Expansion Formula</div>
-    $$	ext{Stressed LTV} = rac{	ext{Initial LTV}}{1 - 	ext{Drawdown}}$$
+    \[	ext{Stressed LTV} = \frac{	ext{Initial LTV}}{1 - 	ext{Drawdown}}\]
   </div>
   <p>
     When a standard 1.0-beta portfolio experiences a 30% drawdown, an initial 25% borrowing LTV expands to:
   </p>
   <div class="math-card">
-    $$	ext{Stressed LTV} = rac{0.25}{1 - 0.30} = rac{0.25}{0.70} = \mathbf{35.71\%}$$
+    \[	ext{Stressed LTV} = \frac{0.25}{1 - 0.30} = \frac{0.25}{0.70} = \mathbf{35.71\%}\]
   </div>
   <p>
     This crosses common broker maintenance limits, triggering automated margin calls and forced liquidations at the market bottom. Because the Live Engine captures <strong>51.46% of market upside against only 36.72% of downside</strong>:
   </p>
   <div class="math-card">
     <div class="math-label">Asymmetry Ratio Calculation</div>
-    $$	ext{Asymmetry Ratio} = rac{	ext{Upside Capture}}{	ext{Downside Capture}} = rac{51.46\%}{36.72\%} = \mathbf{1.401	imes}$$
+    \[	ext{Asymmetry Ratio} = \frac{	ext{Upside Capture}}{	ext{Downside Capture}} = \frac{51.46\%}{36.72\%} = \mathbf{1.401	imes}\]
   </div>
   <p>
     During the deepest market pullback since 2022, the live portfolio suffered only a <strong>-10.85% drawdown</strong>. Stressed leverage drifted from 25.00% to just <strong>28.04%</strong>—leaving a massive safety cushion below the 35% maintenance threshold.
@@ -509,7 +509,7 @@
   </p>
   <div class="math-card">
     <div class="math-label">Cash Interest Coverage Formula</div>
-    $$	ext{Coverage} = rac{	ext{Portfolio Distribution Yield}}{	ext{LTV} 	imes 	ext{Borrowing Rate}}$$
+    \[	ext{Coverage} = \frac{	ext{Portfolio Distribution Yield}}{	ext{LTV} 	imes 	ext{Borrowing Rate}}\]
   </div>
   <div class="table-container">
     <table>
@@ -527,17 +527,17 @@
         <tr>
           <td><strong>Base Floating Rate</strong></td>
           <td class="text-center">6.00%</td>
-          <td class="text-center">$$0.25 	imes 6.00\% = 1.50\%$$</td>
+          <td class="text-center">\[0.25 	imes 6.00\% = 1.50\%\]</td>
           <td class="text-center">7.00%</td>
-          <td class="text-center font-bold">$$rac{7.00\%}{1.50\%} = \mathbf{4.67	imes}$$</td>
+          <td class="text-center font-bold">\[\frac{7.00\%}{1.50\%} = \mathbf{4.67	imes}\]</td>
           <td><span class="status-pass">PASS</span> (Abundant Coverage)</td>
         </tr>
         <tr>
           <td><strong>Stressed Rate Spike</strong></td>
           <td class="text-center">8.00%</td>
-          <td class="text-center">$$0.25 	imes 8.00\% = 2.00\%$$</td>
+          <td class="text-center">\[0.25 	imes 8.00\% = 2.00\%\]</td>
           <td class="text-center">7.00%</td>
-          <td class="text-center font-bold">$$rac{7.00\%}{2.00\%} = \mathbf{3.50	imes}$$</td>
+          <td class="text-center font-bold">\[\frac{7.00\%}{2.00\%} = \mathbf{3.50	imes}\]</td>
           <td><span class="status-pass">PASS</span> (Clears $\ge 3.0	imes$ Mandate)</td>
         </tr>
       </tbody>
@@ -611,17 +611,17 @@
     During the March 2020 COVID crash, the proxy portfolio sustained an all-time maximum drawdown of <strong>-22.80%</strong>. Evaluating borrowing leverage through this liquidity shock establishes the strict mathematical boundary for portfolio safety:
   </p>
   <div class="math-card">
-    $$	ext{Stressed LTV} = rac{	ext{Initial LTV}}{1 - 0.2280} = rac{	ext{Initial LTV}}{0.7720}$$
+    \[	ext{Stressed LTV} = \frac{	ext{Initial LTV}}{1 - 0.2280} = \frac{	ext{Initial LTV}}{0.7720}\]
   </div>
   <ul>
     <li>
       <strong>Case A: Initial 25.0% LTV</strong>
-      $$	ext{Stressed LTV} = rac{0.25}{0.7720} = \mathbf{32.38\%}$$
+      \[	ext{Stressed LTV} = \frac{0.25}{0.7720} = \mathbf{32.38\%}\]
       <em>Outcome:</em> The portfolio absorbed the fastest 30%+ drop in modern financial history with a <strong>2.62% safety buffer</strong> beneath standard 35% broker maintenance thresholds. No assets were liquidated, and the portfolio achieved new all-time highs by December 2020.
     </li>
     <li>
       <strong>Case B: Initial 30.0% LTV</strong>
-      $$	ext{Stressed LTV} = rac{0.30}{0.7720} = \mathbf{38.86\%}$$
+      \[	ext{Stressed LTV} = \frac{0.30}{0.7720} = \mathbf{38.86\%}\]
       <em>Outcome:</em> Leverage breached the 35% maintenance threshold, triggering automated broker margin calls and forced liquidations at the market trough.
     </li>
   </ul>
@@ -638,7 +638,7 @@
   </p>
   <div class="math-card">
     <div class="math-label">Debt Service Coverage Ratio Formula</div>
-    $$	ext{DSCR} = rac{	ext{Portfolio Distribution Yield}}{	ext{LTV} 	imes 	ext{Borrowing Rate}}$$
+    \[	ext{DSCR} = \frac{	ext{Portfolio Distribution Yield}}{	ext{LTV} 	imes 	ext{Borrowing Rate}}\]
   </div>
   <p>
     Because <strong>Pillar 3 (PVAL) yields only 0.89%</strong>, it contributes just 2.6% of the portfolio's cash flow despite occupying 20% of capital. PVAL serves as the primary <em>"liquidity donor."</em> By trimming PVAL to fund higher-yielding productive carry (<strong>Pillar 2</strong>) or shifting internal weights within the floating collateral floor (<strong>Pillar 1</strong>), cash flow can be increased without sacrificing downside collateral protection.
