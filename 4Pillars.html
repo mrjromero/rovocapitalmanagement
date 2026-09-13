@@ -5,16 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>The Freedom Engine 4 Pillars Architecture: Live Engine vs. 13-Year Proxy</title>
   
-  <!-- MathJax for crystal clear mathematical formula rendering -->
+  <!-- MathJax Configuration: uses \( ... \) for inline to avoid clashes with $ amounts -->
   <script>
     window.MathJax = {
       tex: {
-        inlineMath: [['$', '$'], ['\\(', '\\)']],
-        displayMath: [['$$', '$$'], ['\\[', '\\]']],
+        inlineMath: [['\\(', '\\)']],
+        displayMath: [['\\[', '\\]'], ['$$', '$$']],
         processEscapes: true
       },
       options: {
-        skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+        skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
       }
     };
   </script>
@@ -23,19 +23,13 @@
   <style>
     :root {
       --primary: #0f172a;
-      --secondary: #1e3a8a;
-      --accent: #0284c7;
-      --accent-light: #e0f2fe;
-      --text-main: #1e293b;
-      --text-muted: #475569;
-      --bg-page: #f8fafc;
-      --bg-card: #ffffff;
+      --accent: #2563eb;
+      --text: #334155;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
       --border: #e2e8f0;
-      --border-dark: #cbd5e1;
-      --success: #0f766e;
-      --success-bg: #f0fdfa;
-      --danger: #b91c1c;
-      --danger-bg: #fef2f2;
+      --badge-pass-bg: #dcfce7;
+      --badge-pass-text: #15803d;
     }
 
     * {
@@ -46,245 +40,154 @@
 
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      color: var(--text-main);
-      background-color: var(--bg-page);
       line-height: 1.6;
-      padding: 40px 20px;
+      color: var(--text);
+      background-color: var(--bg);
+      padding: 2rem 1rem;
     }
 
     .container {
-      max-width: 1080px;
+      max-width: 1040px;
       margin: 0 auto;
-      background: var(--bg-card);
-      padding: 50px 60px;
-      border-radius: 12px;
-      box-shadow: 0 4px 20px rgba(15, 23, 42, 0.08);
+      background: var(--card-bg);
+      padding: 2.5rem;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
       border: 1px solid var(--border);
     }
 
-    .header {
-      border-bottom: 2px solid var(--secondary);
-      padding-bottom: 20px;
-      margin-bottom: 30px;
-    }
-
-    .header-badge {
-      display: inline-block;
-      font-size: 0.75rem;
-      font-weight: 700;
-      letter-spacing: 0.08em;
+    .tagline {
+      font-size: 0.8rem;
       text-transform: uppercase;
+      letter-spacing: 0.1em;
       color: var(--accent);
-      background: var(--accent-light);
-      padding: 4px 10px;
-      border-radius: 4px;
-      margin-bottom: 12px;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
     }
 
     h1 {
-      font-size: 1.95rem;
-      font-weight: 800;
+      font-size: 2rem;
       color: var(--primary);
       line-height: 1.25;
-      margin-bottom: 8px;
+      margin-bottom: 0.5rem;
     }
 
     .subtitle {
       font-size: 1.05rem;
-      color: var(--accent);
-      font-weight: 500;
+      font-style: italic;
+      color: #64748b;
+      margin-bottom: 2rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 2px solid var(--border);
     }
 
     h2 {
-      font-size: 1.3rem;
-      font-weight: 700;
-      color: var(--secondary);
-      margin-top: 36px;
-      margin-bottom: 14px;
-      padding-bottom: 6px;
+      font-size: 1.35rem;
+      color: var(--primary);
+      margin: 2rem 0 1rem;
+      padding-bottom: 0.35rem;
       border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      gap: 8px;
     }
 
     h3 {
-      font-size: 1.05rem;
-      font-weight: 700;
+      font-size: 1.15rem;
       color: var(--primary);
-      margin-top: 22px;
-      margin-bottom: 8px;
+      margin: 1.5rem 0 0.75rem;
     }
 
     p {
-      color: var(--text-muted);
-      font-size: 0.92rem;
-      margin-bottom: 14px;
-    }
-
-    strong {
-      color: var(--primary);
+      margin-bottom: 1rem;
     }
 
     ul, ol {
-      margin-left: 24px;
-      margin-bottom: 16px;
-      color: var(--text-muted);
-      font-size: 0.92rem;
+      margin: 0 0 1.25rem 1.5rem;
     }
 
     li {
-      margin-bottom: 6px;
+      margin-bottom: 0.5rem;
     }
 
-    /* Tables */
+    .formula-card {
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      padding: 1.25rem;
+      margin: 1.25rem 0;
+      text-align: center;
+    }
+
+    .formula-card h4 {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--accent);
+      margin-bottom: 0.5rem;
+    }
+
     .table-container {
-      width: 100%;
       overflow-x: auto;
-      margin: 18px 0 26px 0;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-      box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+      margin: 1.5rem 0;
     }
 
     table {
       width: 100%;
       border-collapse: collapse;
-      text-align: left;
-      font-size: 0.86rem;
-    }
-
-    thead th {
-      background-color: var(--secondary);
-      color: #ffffff;
-      font-weight: 600;
-      padding: 10px 14px;
-      text-transform: uppercase;
-      font-size: 0.74rem;
-      letter-spacing: 0.04em;
-    }
-
-    tbody td {
-      padding: 10px 14px;
-      border-bottom: 1px solid var(--border);
-      color: var(--text-main);
-      vertical-align: top;
-    }
-
-    tbody tr:nth-child(even) {
-      background-color: var(--bg-page);
-    }
-
-    tbody tr:hover {
-      background-color: #f1f5f9;
-    }
-
-    .text-center { text-align: center; }
-    .text-right { text-align: right; }
-    .font-semibold { font-weight: 600; }
-    .font-bold { font-weight: 700; }
-
-    /* Callout & Math Boxes */
-    .callout {
-      background-color: #f8fafc;
-      border-left: 4px solid var(--accent);
-      padding: 16px 20px;
-      border-radius: 0 8px 8px 0;
-      margin: 20px 0;
-      border-top: 1px solid var(--border);
-      border-right: 1px solid var(--border);
-      border-bottom: 1px solid var(--border);
-    }
-
-    .callout-title {
       font-size: 0.9rem;
-      font-weight: 700;
+      text-align: left;
+    }
+
+    th, td {
+      padding: 0.75rem 0.85rem;
+      border: 1px solid var(--border);
+      vertical-align: middle;
+    }
+
+    th {
+      background-color: #f1f5f9;
       color: var(--primary);
-      margin-bottom: 6px;
+      font-weight: 600;
+      font-size: 0.8rem;
       text-transform: uppercase;
       letter-spacing: 0.03em;
     }
 
-    .math-card {
-      background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
-      border: 1px solid var(--border-dark);
-      border-radius: 8px;
-      padding: 18px 24px;
-      margin: 18px 0;
-      text-align: center;
+    tr:nth-child(even) {
+      background-color: #fafafa;
     }
 
-    .math-card .math-label {
-      font-size: 0.78rem;
+    .badge-pass {
+      display: inline-block;
+      background-color: var(--badge-pass-bg);
+      color: var(--badge-pass-text);
+      font-size: 0.75rem;
       font-weight: 700;
-      text-transform: uppercase;
-      color: var(--accent);
-      letter-spacing: 0.05em;
-      margin-bottom: 8px;
-    }
-
-    .status-pass {
-      color: var(--success);
-      background: var(--success-bg);
-      font-weight: 600;
-      padding: 2px 6px;
+      padding: 0.2rem 0.5rem;
       border-radius: 4px;
-      border: 1px solid #a7f3d0;
-      font-size: 0.8rem;
-    }
-
-    .status-fail {
-      color: var(--danger);
-      background: var(--danger-bg);
-      font-weight: 600;
-      padding: 2px 6px;
-      border-radius: 4px;
-      border: 1px solid #fecaca;
-      font-size: 0.8rem;
     }
 
     .footer {
-      margin-top: 50px;
-      padding-top: 20px;
+      margin-top: 3rem;
+      padding-top: 1.5rem;
       border-top: 1px solid var(--border);
-      font-size: 0.78rem;
-      color: #64748b;
+      font-size: 0.75rem;
+      color: #94a3b8;
       display: flex;
       justify-content: space-between;
-      align-items: center;
-    }
-
-    @media print {
-      body {
-        padding: 0;
-        background: #fff;
-      }
-      .container {
-        border: none;
-        box-shadow: none;
-        padding: 0;
-        max-width: 100%;
-      }
-      .page-break {
-        page-break-before: always;
-      }
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
     }
   </style>
 </head>
 <body>
 
 <div class="container">
-  <!-- Header -->
-  <div class="header">
-    <div class="header-badge">Institutional Engineering & Quantitative Research</div>
-    <h1>THE FREEDOM ENGINE 4 PILLARS ARCHITECTURE</h1>
-    <div class="subtitle">Empirical Comparison: Live Engine (2022–2026) vs. Multi-Cycle Historical Proxy (2013–2026)</div>
-  </div>
+  <div class="tagline">Institutional Engineering &amp; Quantitative Research</div>
+  <h1>THE FREEDOM ENGINE 4 PILLARS ARCHITECTURE</h1>
+  <div class="subtitle">Empirical Comparison: Live Engine (2022–2026) vs. Multi-Cycle Historical Proxy (2013–2026)</div>
 
-  <!-- Section 1 -->
-  <h2>1. Executive Summary & Foundational Mandate</h2>
+  <h2>1. Executive Summary &amp; Foundational Mandate</h2>
   <p>
-    The <strong>Freedom Engine 4 Pillars Architecture</strong> is an institutional liability-driven investment framework engineered specifically for leveraged, positive-carry wealth accumulation. Traditional leveraged accounts routinely succumb during market drawdowns to three structural failure modes:
+    The <em>Freedom Engine 4 Pillars Architecture</em> is an institutional liability-driven investment framework engineered specifically for leveraged, positive-carry wealth accumulation. Traditional leveraged accounts routinely succumb during market drawdowns to three structural failure modes:
   </p>
   <ul>
     <li><strong>Interest Rate Duration Risk:</strong> Fixed-coupon bonds (e.g., BND, AGG) drop sharply in capital value when benchmark rates rise, precisely when margin borrowing costs increase.</li>
@@ -292,42 +195,41 @@
     <li><strong>The Drawdown Ratchet:</strong> Market drawdowns expand debt Loan-to-Value (LTV) non-linearly, forcing untimely liquidation at market troughs.</li>
   </ul>
   <p>
-    By deploying four segregated economic engines across floating collateral, productive index call spreads, quality equity compounding, and multi-asset trend following, the architecture generates equity-like returns (<strong>13.03%–14.24% CAGR</strong>) with <strong>46%–61% lower volatility</strong> than the S&P 500, a robust <strong>1.40× positive asymmetry ratio</strong>, and a self-funding <strong>7.00% organic cash yield</strong> that eliminates forced asset liquidations.
+    By deploying four segregated economic engines across floating collateral, productive index call spreads, quality equity compounding, and multi-asset trend following, the architecture generates equity-like returns (<strong>13.03%–14.24% CAGR</strong>) with <strong>46%–61% lower volatility</strong> than the S&amp;P 500, a robust <strong>1.40&times; positive asymmetry ratio</strong>, and a self-funding <strong>7.00% organic cash yield</strong> that eliminates forced asset liquidations.
   </p>
 
-  <!-- Section 2 -->
   <h2>2. The 4-Pillar Structural Architecture</h2>
   <div class="table-container">
     <table>
       <thead>
         <tr>
-          <th>Pillar & Allocation</th>
+          <th>Pillar &amp; Allocation</th>
           <th>Live Fund (Proxy)</th>
-          <th>Asset Class & Exposure</th>
-          <th>Core Economic Function & Risk Buffer</th>
+          <th>Asset Class &amp; Exposure</th>
+          <th>Core Economic Function &amp; Risk Buffer</th>
         </tr>
       </thead>
       <tbody>
         <tr>
-          <td><strong>Pillar 1: Collateral Floor</strong><br/><span style="color:var(--accent); font-weight:700;">35.0% Total</span></td>
-          <td><strong>JAAA</strong>: 20.0% (FLOT)<br/><strong>SRLN</strong>: 15.0% (BKLN)</td>
-          <td>AAA CLOs & Senior Secured Floating Bank Loans</td>
+          <td><strong>Pillar 1: Collateral Floor</strong><br><em>35.0% Total</em></td>
+          <td><strong>JAAA</strong>: 20.0% (FLOT)<br><strong>SRLN</strong>: 15.0% (BKLN)</td>
+          <td>AAA CLOs &amp; Senior Secured Floating Bank Loans</td>
           <td><strong>Zero Interest Rate Duration:</strong> Coupons adjust upward automatically with SOFR/Prime. Anchors portfolio collateral with minimal drawdowns (-2.6% to -4.0%).</td>
         </tr>
         <tr>
-          <td><strong>Pillar 2: Productive Carry</strong><br/><span style="color:var(--accent); font-weight:700;">35.0% Total</span></td>
-          <td><strong>SPYI</strong>: 20.0% (XYLD)<br/><strong>JEPQ</strong>: 15.0% (QYLD)</td>
-          <td>Active OTM Index Call Spreads (S&P 500 & Nasdaq-100)</td>
+          <td><strong>Pillar 2: Productive Carry</strong><br><em>35.0% Total</em></td>
+          <td><strong>SPYI</strong>: 20.0% (XYLD)<br><strong>JEPQ</strong>: 15.0% (QYLD)</td>
+          <td>Active OTM Index Call Spreads (S&amp;P 500 &amp; Nasdaq-100)</td>
           <td><strong>Autonomous Debt Servicing:</strong> Generates 11%+ distribution yields via out-of-the-money options and credit call spreads, permitting NAV growth (+4.3% to +8.4%).</td>
         </tr>
         <tr>
-          <td><strong>Pillar 3: Compounder</strong><br/><span style="color:var(--accent); font-weight:700;">20.0% Total</span></td>
+          <td><strong>Pillar 3: Compounder</strong><br><em>20.0% Total</em></td>
           <td><strong>PVAL</strong>: 20.0% (VTV)</td>
           <td>Concentrated Large-Cap Value Equities</td>
           <td><strong>Collateral Base Expansion:</strong> Compounds net equity value at high risk-adjusted rates (Sharpe 2.59, 23.5% 3Y return) with shallow drawdowns (-16.6%) to dilute borrowing LTV.</td>
         </tr>
         <tr>
-          <td><strong>Pillar 4: Crisis Alpha</strong><br/><span style="color:var(--accent); font-weight:700;">10.0% Total</span></td>
+          <td><strong>Pillar 4: Crisis Alpha</strong><br><em>10.0% Total</em></td>
           <td><strong>DBMF</strong>: 10.0% (AQMIX)</td>
           <td>Systematic Trend-Following Managed Futures (SG CTA)</td>
           <td><strong>Non-Correlated Market Hedge:</strong> Trades long/short across currencies, commodities, rates, and equity futures. Displays near-zero equity correlation (0.14 beta).</td>
@@ -336,164 +238,154 @@
     </table>
   </div>
 
-  <div class="page-break"></div>
-
-  <!-- Section 3 -->
   <h2>3. Empirical Head-to-Head Comparison: Live Engine vs. 13-Year Proxy</h2>
-  <p>
-    Extracted from rigorous <em>PortfoliosLab</em> analytics, this comparison contrasts the modern live vehicle mix against its 13-year institutional proxy and the broad S&P 500 Index benchmark.
-  </p>
-
+  <p>Extracted from rigorous <em>PortfoliosLab</em> analytics, this comparison contrasts the modern live vehicle mix against its 13-year institutional proxy and the broad S&amp;P 500 Index benchmark.</p>
   <div class="table-container">
     <table>
       <thead>
         <tr>
-          <th>Dimension & Metric</th>
-          <th class="text-center">FE 4 Pillars (Live Engine)</th>
-          <th class="text-center">FE 4 Pillars Proxy (13-Year)</th>
-          <th class="text-center">S&P 500 Benchmark</th>
+          <th>Dimension &amp; Metric</th>
+          <th>FE 4 Pillars (Live Engine)</th>
+          <th>FE 4 Pillars Proxy (13-Year)</th>
+          <th>S&amp;P 500 Benchmark</th>
           <th>Institutional Performance Analysis</th>
         </tr>
       </thead>
       <tbody>
         <tr>
           <td><strong>Core Holdings</strong></td>
-          <td>JAAA, SRLN, SPYI,<br/>JEPQ, PVAL, DBMF</td>
-          <td>FLOT, BKLN, XYLD,<br/>QYLD, VTV, AQMIX</td>
-          <td>S&P 500 Total Return<br/>(SPX / SPY)</td>
+          <td>JAAA, SRLN, SPYI, JEPQ, PVAL, DBMF</td>
+          <td>FLOT, BKLN, XYLD, QYLD, VTV, AQMIX</td>
+          <td>S&amp;P 500 Total Return (SPX / SPY)</td>
           <td>Live uses modern OTM call spreads; Proxy uses classic ATM buy-writes.</td>
         </tr>
         <tr>
           <td><strong>Analyzed Window</strong></td>
-          <td class="text-center">2022-08-30 to 2026-09-11<br/>(~4.0 Years)</td>
-          <td class="text-center">2013-12-12 to 2026-09-11<br/>(~12.75 Years)</td>
-          <td class="text-center">Full Period Match</td>
-          <td>Proxy covers 2015 energy crash, 2018 hikes, 2020 COVID, & 2022 inflation.</td>
+          <td>2022-08-30 to 2026-09-11 (~4.0 Years)</td>
+          <td>2013-12-12 to 2026-09-11 (~12.75 Years)</td>
+          <td>Full Period Match</td>
+          <td>Proxy covers 2015 energy crash, 2018 hikes, 2020 COVID, &amp; 2022 inflation.</td>
         </tr>
         <tr>
           <td><strong>1-Year Return</strong></td>
-          <td class="text-center font-bold">15.95%</td>
-          <td class="text-center font-bold">15.66%</td>
-          <td class="text-center">16.29%</td>
+          <td><strong>15.95%</strong></td>
+          <td><strong>15.66%</strong></td>
+          <td>16.29%</td>
           <td>Both models captured ~97%–98% of the equity bull run with half the risk.</td>
         </tr>
         <tr>
           <td><strong>3-Year Ann. Return</strong></td>
-          <td class="text-center font-bold">14.24%</td>
-          <td class="text-center font-bold">12.00%</td>
-          <td class="text-center">19.72%</td>
+          <td><strong>14.24%</strong></td>
+          <td><strong>12.00%</strong></td>
+          <td>19.72%</td>
           <td>Live outpaces proxy by <strong>+2.24%/yr</strong> due to SPYI/JEPQ out-of-the-money call design.</td>
         </tr>
         <tr>
           <td><strong>All-Time Ann. Return</strong></td>
-          <td class="text-center font-bold">13.03%</td>
-          <td class="text-center font-bold">7.11%</td>
-          <td class="text-center">8.11%</td>
-          <td>Live outgained S&P by <strong>+4.92%/yr</strong>; Proxy compounded steadily through ZIRP.</td>
+          <td><strong>13.03%</strong></td>
+          <td><strong>7.11%</strong></td>
+          <td>8.11%</td>
+          <td>Live outgained S&amp;P by <strong>+4.92%/yr</strong>; Proxy compounded steadily through ZIRP.</td>
         </tr>
         <tr>
           <td><strong>Annualized Volatility (1Y)</strong></td>
-          <td class="text-center font-bold">6.96%</td>
-          <td class="text-center font-bold">4.99%</td>
-          <td class="text-center">12.85%</td>
+          <td><strong>6.96%</strong></td>
+          <td><strong>4.99%</strong></td>
+          <td>12.85%</td>
           <td><strong>46%–61% volatility suppression</strong> protecting collateral from forced margin calls.</td>
         </tr>
         <tr>
           <td><strong>Market Beta / Alpha</strong></td>
-          <td class="text-center font-bold">0.49 / +4.26%</td>
-          <td class="text-center font-bold">0.45 / +1.40%</td>
-          <td class="text-center">1.00 / 0.00%</td>
+          <td><strong>0.49 / +4.26%</strong></td>
+          <td><strong>0.45 / +1.40%</strong></td>
+          <td>1.00 / 0.00%</td>
           <td>Extracts full equity market returns on less than half the systematic beta.</td>
         </tr>
         <tr>
           <td><strong>Upside / Downside Capture</strong></td>
-          <td class="text-center font-bold">51.46% / 36.72%</td>
-          <td class="text-center font-bold">42.29% / 41.71%</td>
-          <td class="text-center">100.0% / 100.0%</td>
-          <td>Live achieves a <strong>1.40× asymmetry ratio</strong>, cutting downside participation to ~37%.</td>
+          <td><strong>51.46% / 36.72%</strong></td>
+          <td><strong>42.29% / 41.71%</strong></td>
+          <td>100.0% / 100.0%</td>
+          <td>Live achieves a <strong>1.40&times; asymmetry ratio</strong>, cutting downside participation to ~37%.</td>
         </tr>
         <tr>
           <td><strong>Max Drawdown (All-Time)</strong></td>
-          <td class="text-center font-bold">-10.85% (2025)</td>
-          <td class="text-center font-bold">-22.80% (2020)</td>
-          <td class="text-center">-56.78% (All-time)<br/>-33.92% (10Y)</td>
+          <td><strong>-10.85% (2025)</strong></td>
+          <td><strong>-22.80% (2020)</strong></td>
+          <td>-56.78% (All-time)<br>-33.92% (10Y)</td>
           <td>Proxy proves survival through COVID-19; Live held pullbacks strictly to -10.85%.</td>
         </tr>
         <tr>
           <td><strong>Sharpe Ratio (1Y / All-Time)</strong></td>
-          <td class="text-center font-bold">2.30 / 1.62</td>
-          <td class="text-center font-bold">3.15 / 0.86</td>
-          <td class="text-center">1.27 / 0.47</td>
+          <td><strong>2.30 / 1.62</strong></td>
+          <td><strong>3.15 / 0.86</strong></td>
+          <td>1.27 / 0.47</td>
           <td>Top-tier risk efficiency (90th–97th percentile rank in PortfoliosLab peer group).</td>
         </tr>
         <tr>
           <td><strong>Sortino Ratio (1Y / All-Time)</strong></td>
-          <td class="text-center font-bold">3.22 / 2.30</td>
-          <td class="text-center font-bold">4.57 / 1.17</td>
-          <td class="text-center">1.81 / 0.76</td>
+          <td><strong>3.22 / 2.30</strong></td>
+          <td><strong>4.57 / 1.17</strong></td>
+          <td>1.81 / 0.76</td>
           <td>Substantial downside-risk efficiency, minimizing destructive drawdown pain.</td>
         </tr>
         <tr>
           <td><strong>TTM Distribution Yield</strong></td>
-          <td class="text-center font-bold">7.00%</td>
-          <td class="text-center font-bold">6.00%</td>
-          <td class="text-center">~1.30%</td>
-          <td>Generates 5× the organic cash flow of broad equities to service borrowing debt.</td>
+          <td><strong>7.00%</strong></td>
+          <td><strong>6.00%</strong></td>
+          <td>~1.30%</td>
+          <td>Generates 5&times; the organic cash flow of broad equities to service borrowing debt.</td>
         </tr>
         <tr>
           <td><strong>Expense Ratio / M1 Status</strong></td>
-          <td class="text-center">0.53% / <strong>100% on M1</strong></td>
-          <td class="text-center">0.47% / <strong>100% on M1</strong></td>
-          <td class="text-center">—</td>
+          <td>0.53% / <strong>100% on M1</strong></td>
+          <td>0.47% / <strong>100% on M1</strong></td>
+          <td>—</td>
           <td>Both models execute cleanly on M1 Finance without illiquid vehicle restrictions.</td>
         </tr>
       </tbody>
     </table>
   </div>
 
-  <!-- Section 4 -->
   <h2>4. Deconstructing the Return Spread: Why the Live Engine Outperforms the Proxy</h2>
   <p>
     The Live Engine compounded at <strong>13.03%–14.24%</strong> while the 13-Year Proxy annualized at <strong>7.11%–7.87%</strong>. This performance spread illustrates two major advancements in vehicle design:
   </p>
-  <div class="callout">
-    <div class="callout-title">1. Out-of-the-Money (OTM) Call Spreads vs. At-The-Money (ATM) Truncation</div>
-    Legacy covered call funds like <code>XYLD</code> and <code>QYLD</code> sell 100% at-the-money options. During market recoveries, ATM options cap upside immediately at the strike, forcing the fund to absorb subsequent drawdowns with limited rebound. Modern funds like <code>SPYI</code> (OTM call spreads) and <code>JEPQ</code> (dynamic OTM equity-linked notes) preserve upside participation, achieving an <strong>upside capture of 51.46%</strong> vs. the proxy's 42.29%.
-  </div>
-  <div class="callout">
-    <div class="callout-title">2. Monetary Policy & Floating Collateral Normalization</div>
-    Between 2014 and 2021, the Federal Reserve pinned benchmark rates near 0% (ZIRP). During that era, floating credit instruments (<code>FLOT</code>, <code>BKLN</code>) yielded only 1.5%–3.0%. In the current normalized rate regime, benchmark SOFR provides an organic 6.5%–8.0% yield on floating credit (<code>JAAA</code>, <code>SRLN</code>), substantially enhancing baseline positive carry without adding duration risk.
-  </div>
+  <ol>
+    <li>
+      <strong>Out-of-the-Money (OTM) Call Spreads vs. At-the-Money (ATM) Truncation:</strong> Legacy covered call funds like XYLD and QYLD sell 100% at-the-money options. During market recoveries, ATM options cap upside immediately at the strike, forcing the fund to absorb subsequent drawdowns with limited rebound. Modern funds like SPYI (OTM call spreads) and JEPQ (dynamic OTM equity-linked notes) preserve upside participation, achieving an <strong>upside capture of 51.46%</strong> vs. the proxy's 42.29%.
+    </li>
+    <li>
+      <strong>Monetary Policy &amp; Floating Collateral Normalization:</strong> Between 2014 and 2021, the Federal Reserve pinned benchmark rates near 0% (ZIRP). During that era, floating credit instruments (FLOT, BKLN) yielded only 1.5%–3.0%. In the current normalized rate regime, benchmark SOFR provides an organic 6.5%–8.0% yield on floating credit (JAAA, SRLN), substantially enhancing baseline positive carry without adding duration risk.
+    </li>
+  </ol>
 
-  <div class="page-break"></div>
-
-  <!-- Section 5 -->
   <h2>5. Structural Mechanics: Why the Architecture Works Under Leverage</h2>
-  <p>
-    The FE 4 Pillars operates as an engineered balance sheet designed to survive and compound under floating margin liabilities:
-  </p>
+  <p>The FE 4 Pillars operates as an engineered balance sheet designed to survive and compound under floating margin liabilities:</p>
 
-  <h3>Mechanism 1: The 1.40× Asymmetry Ratio Halts the "Drawdown Ratchet"</h3>
-  <p>
-    In any leveraged portfolio, drawdowns expand borrowing Loan-to-Value (LTV) non-linearly according to:
-  </p>
-  <div class="math-card">
-    <div class="math-label">Leverage Expansion Formula</div>
-    $$	ext{Stressed LTV} = rac{	ext{Initial LTV}}{1 - 	ext{Drawdown}}$$
+  <h3>Mechanism 1: The 1.40&times; Asymmetry Ratio Halts the "Drawdown Ratchet"</h3>
+  <p>In any leveraged portfolio, drawdowns expand borrowing Loan-to-Value (LTV) non-linearly according to:</p>
+
+  <div class="formula-card">
+    <h4>LEVERAGE EXPANSION FORMULA</h4>
+    \[ \text{LTV}_{\text{stressed}} = \frac{\text{LTV}_{\text{initial}}}{1 - \text{Drawdown}} \]
   </div>
-  <p>
-    When a standard 1.0-beta portfolio experiences a 30% drawdown, an initial 25% borrowing LTV expands to:
-  </p>
-  <div class="math-card">
-    $$	ext{Stressed LTV} = rac{0.25}{1 - 0.30} = rac{0.25}{0.70} = \mathbf{35.71\%}$$
+
+  <p>When a standard 1.0-beta portfolio experiences a 30% drawdown, an initial 25% borrowing LTV expands to:</p>
+
+  <div class="formula-card">
+    \[ \text{LTV}_{\text{stressed}} = \frac{25\%}{1 - 0.30} = \frac{25\%}{0.70} \approx 35.71\% \]
   </div>
+
   <p>
     This crosses common broker maintenance limits, triggering automated margin calls and forced liquidations at the market bottom. Because the Live Engine captures <strong>51.46% of market upside against only 36.72% of downside</strong>:
   </p>
-  <div class="math-card">
-    <div class="math-label">Asymmetry Ratio Calculation</div>
-    $$	ext{Asymmetry Ratio} = rac{	ext{Upside Capture}}{	ext{Downside Capture}} = rac{51.46\%}{36.72\%} = \mathbf{1.401	imes}$$
+
+  <div class="formula-card">
+    <h4>ASYMMETRY RATIO CALCULATION</h4>
+    \[ \text{Asymmetry Ratio} = \frac{\text{Upside Capture}}{\text{Downside Capture}} = \frac{51.46\%}{36.72\%} \approx 1.40\times \]
   </div>
+
   <p>
     During the deepest market pullback since 2022, the live portfolio suffered only a <strong>-10.85% drawdown</strong>. Stressed leverage drifted from 25.00% to just <strong>28.04%</strong>—leaving a massive safety cushion below the 35% maintenance threshold.
   </p>
@@ -503,42 +395,44 @@
     Margin borrowing creates a <em>floating-rate liability</em> tied to benchmark rates (SOFR or Prime + broker margin spread). Allocating <strong>35% to pure floating credit</strong> (JAAA and SRLN) matches the interest rate sensitivity of the debt. Because loan coupons reset every 30 to 90 days, cash flow increases automatically when financing costs rise, neutralizing interest rate duration risk.
   </p>
 
-  <h3>Mechanism 3: Stressed Cash-Interest Coverage Exceeds the 3.0× Institutional Mandate</h3>
+  <h3>Mechanism 3: Stressed Cash-Interest Coverage Exceeds the 3.0&times; Institutional Mandate</h3>
   <p>
     Generating an organic <strong>7.00% portfolio distribution yield</strong>, incoming cash flow easily covers debt service across both baseline and stressed borrowing conditions:
   </p>
-  <div class="math-card">
-    <div class="math-label">Cash Interest Coverage Formula</div>
-    $$	ext{Coverage} = rac{	ext{Portfolio Distribution Yield}}{	ext{LTV} 	imes 	ext{Borrowing Rate}}$$
+
+  <div class="formula-card">
+    <h4>CASH INTEREST COVERAGE FORMULA</h4>
+    \[ \text{Cash Interest Coverage} = \frac{\text{Portfolio Cash Yield}}{\text{Debt Service Hurdle}} = \frac{\text{Portfolio Cash Yield}}{\text{LTV} \times \text{Borrowing Rate}} \]
   </div>
+
   <div class="table-container">
     <table>
       <thead>
         <tr>
           <th>Borrowing Scenario</th>
-          <th class="text-center">Borrowing Rate</th>
-          <th class="text-center">Debt Service Hurdle (at 25% LTV)</th>
-          <th class="text-center">Portfolio Yield</th>
-          <th class="text-center">Cash Interest Coverage</th>
+          <th>Borrowing Rate</th>
+          <th>Debt Service Hurdle (at 25% LTV)</th>
+          <th>Portfolio Yield</th>
+          <th>Cash Interest Coverage</th>
           <th>Solvency Verdict</th>
         </tr>
       </thead>
       <tbody>
         <tr>
           <td><strong>Base Floating Rate</strong></td>
-          <td class="text-center">6.00%</td>
-          <td class="text-center">$$0.25 	imes 6.00\% = 1.50\%$$</td>
-          <td class="text-center">7.00%</td>
-          <td class="text-center font-bold">$$rac{7.00\%}{1.50\%} = \mathbf{4.67	imes}$$</td>
-          <td><span class="status-pass">PASS</span> (Abundant Coverage)</td>
+          <td>6.00%</td>
+          <td>\( 0.25 \times 6.00\% = 1.50\% \)</td>
+          <td>7.00%</td>
+          <td>\( \frac{7.00\%}{1.50\%} \approx 4.67\times \)</td>
+          <td><span class="badge-pass">PASS</span> (Abundant Coverage)</td>
         </tr>
         <tr>
           <td><strong>Stressed Rate Spike</strong></td>
-          <td class="text-center">8.00%</td>
-          <td class="text-center">$$0.25 	imes 8.00\% = 2.00\%$$</td>
-          <td class="text-center">7.00%</td>
-          <td class="text-center font-bold">$$rac{7.00\%}{2.00\%} = \mathbf{3.50	imes}$$</td>
-          <td><span class="status-pass">PASS</span> (Clears $\ge 3.0	imes$ Mandate)</td>
+          <td>8.00%</td>
+          <td>\( 0.25 \times 8.00\% = 2.00\% \)</td>
+          <td>7.00%</td>
+          <td>\( \frac{7.00\%}{2.00\%} = 3.50\times \)</td>
+          <td><span class="badge-pass">PASS</span> (Clears \( \ge 3.0\times \) Mandate)</td>
         </tr>
       </tbody>
     </table>
@@ -546,159 +440,152 @@
 
   <h3>Mechanism 4: True Factor Decoupling via Trend-Following Crisis Alpha</h3>
   <p>
-    The 10% allocation to <strong>DBMF</strong> provides genuine non-correlation by taking long/short positions across currencies, commodities, rates, and global equities. Empirical correlation data proves this independence: DBMF exhibits a <strong>0.14 correlation to the S&P 500</strong>, <strong>0.03 to JAAA</strong>, and <strong>0.05 to SRLN</strong>, stepping in as a counter-cyclical stabilizer during macro sell-offs.
+    The 10% allocation to <strong>DBMF</strong> provides genuine non-correlation by taking long/short positions across currencies, commodities, rates, and global equities. Empirical correlation data proves this independence: DBMF exhibits a <strong>0.14 correlation to the S&amp;P 500</strong>, <strong>0.03 to JAAA</strong>, and <strong>0.05 to SRLN</strong>, stepping in as a counter-cyclical stabilizer during macro sell-offs.
   </p>
 
-  <div class="page-break"></div>
-
-  <!-- Section 6 -->
   <h2>6. Multi-Cycle Stress Testing: Historical Crises in the 13-Year Proxy (2013–2026)</h2>
-  <p>
-    The 13-year proxy backtest covers four severe market shocks, demonstrating how the architecture behaves across diverse economic regimes:
-  </p>
+  <p>The 13-year proxy backtest covers four severe market shocks, demonstrating how the architecture behaves across diverse economic regimes:</p>
   <div class="table-container">
     <table>
       <thead>
         <tr>
-          <th>Historical Crisis Event & Dates</th>
-          <th class="text-center">S&P 500 Max DD</th>
-          <th class="text-center">Proxy Max DD</th>
-          <th class="text-center">Stressed LTV (25% Start)</th>
-          <th class="text-center">Stressed LTV (30% Start)</th>
-          <th>Solvency Verdict & Mechanical Behavior</th>
+          <th>Historical Crisis Event &amp; Dates</th>
+          <th>S&amp;P 500 Max DD</th>
+          <th>Proxy Max DD</th>
+          <th>Stressed LTV (25% Start)</th>
+          <th>Stressed LTV (30% Start)</th>
+          <th>Solvency Verdict &amp; Mechanical Behavior</th>
         </tr>
       </thead>
       <tbody>
         <tr>
-          <td><strong>COVID-19 Liquidity Shock</strong><br/>(2020-02-21 to 2020-03-23)</td>
-          <td class="text-center">-33.92%</td>
-          <td class="text-center font-bold">-22.80%</td>
-          <td class="text-center font-bold" style="color:var(--success);">32.38%</td>
-          <td class="text-center font-bold" style="color:var(--danger);">38.86%</td>
-          <td><span class="status-pass">SURVIVED AT 25% LTV</span> (2.62% buffer below 35% margin call). <span class="status-fail">FAILED AT 30% LTV</span> (Forced liquidation at bottom).</td>
+          <td><strong>COVID-19 Liquidity Shock</strong><br>(2020-02-21 to 2020-03-23)</td>
+          <td>-33.92%</td>
+          <td><strong>-22.80%</strong></td>
+          <td><strong>32.38%</strong></td>
+          <td><strong>38.86%</strong></td>
+          <td><strong>SURVIVED AT 25% LTV</strong> (2.62% buffer below 35% margin call).<br><strong>FAILED AT 30% LTV</strong> (Forced liquidation at bottom).</td>
         </tr>
         <tr>
-          <td><strong>2018 Fed Rate Hikes / Q4 Rout</strong><br/>(2018-10-04 to 2018-12-24)</td>
-          <td class="text-center">-19.78%</td>
-          <td class="text-center">-11.38%</td>
-          <td class="text-center">28.21%</td>
-          <td class="text-center">33.85%</td>
+          <td><strong>2018 Fed Rate Hikes / Q4 Rout</strong><br>(2018-10-04 to 2018-12-24)</td>
+          <td>-19.78%</td>
+          <td>-11.38%</td>
+          <td>28.21%</td>
+          <td>33.85%</td>
           <td>Comfortable solvency buffer (6.79% cushion). Trend following and floating debt protected capital.</td>
         </tr>
         <tr>
-          <td><strong>2022 Inflation & Rate Shock</strong><br/>(2022-04-21 to 2022-09-30)</td>
-          <td class="text-center">-25.43%</td>
-          <td class="text-center">-9.88%</td>
-          <td class="text-center">27.74%</td>
-          <td class="text-center">33.29%</td>
+          <td><strong>2022 Inflation &amp; Rate Shock</strong><br>(2022-04-21 to 2022-09-30)</td>
+          <td>-25.43%</td>
+          <td>-9.88%</td>
+          <td>27.74%</td>
+          <td>33.29%</td>
           <td>Floating credit floor completely shielded collateral while traditional 60/40 portfolios collapsed -16%+.</td>
         </tr>
         <tr>
-          <td><strong>2015–16 Energy & Credit Rout</strong><br/>(2015-05-22 to 2015-08-25)</td>
-          <td class="text-center">-14.16%</td>
-          <td class="text-center">-6.40%</td>
-          <td class="text-center">26.71%</td>
-          <td class="text-center">32.05%</td>
+          <td><strong>2015–16 Energy &amp; Credit Rout</strong><br>(2015-05-22 to 2015-08-25)</td>
+          <td>-14.16%</td>
+          <td>-6.40%</td>
+          <td>26.71%</td>
+          <td>32.05%</td>
           <td>Negligible collateral drift; cash flow continued self-servicing borrowing debt smoothly.</td>
         </tr>
       </tbody>
     </table>
   </div>
 
-  <!-- Section 7 -->
   <h2>7. Mathematical Proof of the 25% LTV Borrowing Ceiling</h2>
   <p>
     During the March 2020 COVID crash, the proxy portfolio sustained an all-time maximum drawdown of <strong>-22.80%</strong>. Evaluating borrowing leverage through this liquidity shock establishes the strict mathematical boundary for portfolio safety:
   </p>
-  <div class="math-card">
-    $$	ext{Stressed LTV} = rac{	ext{Initial LTV}}{1 - 0.2280} = rac{	ext{Initial LTV}}{0.7720}$$
+
+  <div class="formula-card">
+    \[ \text{LTV}_{\text{stressed}} = \frac{\text{LTV}_{\text{initial}}}{1 - \text{Max Drawdown}} = \frac{\text{LTV}_{\text{initial}}}{1 - 0.2280} = \frac{\text{LTV}_{\text{initial}}}{0.7720} \]
   </div>
+
   <ul>
     <li>
       <strong>Case A: Initial 25.0% LTV</strong>
-      $$	ext{Stressed LTV} = rac{0.25}{0.7720} = \mathbf{32.38\%}$$
+      <div class="formula-card">
+        \[ \text{LTV}_{\text{stressed}} = \frac{25.0\%}{1 - 0.2280} = \frac{25.0\%}{0.7720} \approx 32.38\% \]
+      </div>
       <em>Outcome:</em> The portfolio absorbed the fastest 30%+ drop in modern financial history with a <strong>2.62% safety buffer</strong> beneath standard 35% broker maintenance thresholds. No assets were liquidated, and the portfolio achieved new all-time highs by December 2020.
     </li>
     <li>
       <strong>Case B: Initial 30.0% LTV</strong>
-      $$	ext{Stressed LTV} = rac{0.30}{0.7720} = \mathbf{38.86\%}$$
+      <div class="formula-card">
+        \[ \text{LTV}_{\text{stressed}} = \frac{30.0\%}{1 - 0.2280} = \frac{30.0\%}{0.7720} \approx 38.86\% \]
+      </div>
       <em>Outcome:</em> Leverage breached the 35% maintenance threshold, triggering automated broker margin calls and forced liquidations at the market trough.
     </li>
   </ul>
-  <div class="callout" style="border-left-color: var(--danger); background-color: var(--danger-bg);">
-    <strong style="color:var(--danger);">Non-Negotiable Solvency Rule:</strong> Initial borrowing leverage must never exceed <strong>25.0% LTV</strong>. This guarantees that even a historic liquidity crisis leaves a safe operating buffer.
-  </div>
-
-  <div class="page-break"></div>
-
-  <!-- Section 8 -->
-  <h2>8. Implementation Blueprint: M1 Finance Sub-Pie Configuration</h2>
   <p>
-    To deploy the Freedom Engine on M1 Finance, structure the account into four segregated sub-pies:
+    <strong>Non-Negotiable Solvency Rule:</strong> Initial borrowing leverage must never exceed <strong>25.0% LTV</strong>. This guarantees that even a historic liquidity crisis leaves a safe operating buffer.
   </p>
 
+  <h2>8. Implementation Blueprint: M1 Finance Sub-Pie Configuration</h2>
+  <p>To deploy the Freedom Engine on M1 Finance, structure the account into four segregated sub-pies:</p>
   <div class="table-container">
     <table>
       <thead>
         <tr>
           <th>M1 Sub-Pie Slice</th>
-          <th class="text-center">Sub-Pie Weight</th>
+          <th>Sub-Pie Weight</th>
           <th>Underlying Ticker</th>
-          <th class="text-center">Slice Target</th>
-          <th class="text-center">Master Target</th>
-          <th>Operational Role & Exposure</th>
+          <th>Slice Target</th>
+          <th>Master Target</th>
+          <th>Operational Role &amp; Exposure</th>
         </tr>
       </thead>
       <tbody>
         <tr>
           <td><strong>1. Collateral Floor</strong></td>
-          <td class="text-center font-bold">35.0%</td>
-          <td>JAAA<br/>SRLN</td>
-          <td class="text-center">57.0%<br/>43.0%</td>
-          <td class="text-center font-bold">20.0%<br/>15.0%</td>
-          <td>Janus Henderson AAA CLO ETF (SOFR Floater)<br/>SPDR Blackstone Senior Loan ETF</td>
+          <td><strong>35.0%</strong></td>
+          <td>JAAA<br>SRLN</td>
+          <td>57.0%<br>43.0%</td>
+          <td><strong>20.0%</strong><br><strong>15.0%</strong></td>
+          <td>Janus Henderson AAA CLO ETF (SOFR Floater)<br>SPDR Blackstone Senior Loan ETF</td>
         </tr>
         <tr>
           <td><strong>2. Cash Carry</strong></td>
-          <td class="text-center font-bold">35.0%</td>
-          <td>SPYI<br/>JEPQ</td>
-          <td class="text-center">57.0%<br/>43.0%</td>
-          <td class="text-center font-bold">20.0%<br/>15.0%</td>
-          <td>NEOS S&P 500 High Income (OTM Call Spreads)<br/>JPMorgan Nasdaq Equity Premium Income</td>
+          <td><strong>35.0%</strong></td>
+          <td>SPYI<br>JEPQ</td>
+          <td>57.0%<br>43.0%</td>
+          <td><strong>20.0%</strong><br><strong>15.0%</strong></td>
+          <td>NEOS S&amp;P 500 High Income (OTM Call Spreads)<br>JPMorgan Nasdaq Equity Premium Income</td>
         </tr>
         <tr>
           <td><strong>3. Compounder</strong></td>
-          <td class="text-center font-bold">20.0%</td>
+          <td><strong>20.0%</strong></td>
           <td>PVAL</td>
-          <td class="text-center">100.0%</td>
-          <td class="text-center font-bold">20.0%</td>
+          <td>100.0%</td>
+          <td><strong>20.0%</strong></td>
           <td>Putnam Focused Large Cap Value ETF (NAV Growth Engine)</td>
         </tr>
         <tr>
           <td><strong>4. Crisis Alpha</strong></td>
-          <td class="text-center font-bold">10.0%</td>
+          <td><strong>10.0%</strong></td>
           <td>DBMF</td>
-          <td class="text-center">100.0%</td>
-          <td class="text-center font-bold">10.0%</td>
+          <td>100.0%</td>
+          <td><strong>10.0%</strong></td>
           <td>iMGP DBi Managed Futures Strategy ETF (CTA Trend Hedge)</td>
         </tr>
-        <tr style="background-color:#e2e8f0;">
+        <tr>
           <td><strong>Total Freedom Engine</strong></td>
-          <td class="text-center font-bold">100.0%</td>
+          <td><strong>100.0%</strong></td>
           <td>—</td>
-          <td class="text-center">—</td>
-          <td class="text-center font-bold">100.0%</td>
+          <td>—</td>
+          <td><strong>100.0%</strong></td>
           <td><strong>7.00% Organic Yield | 14.24% 3Y Return | Beta 0.49</strong></td>
         </tr>
       </tbody>
     </table>
   </div>
 
-  <!-- Section 9 -->
-  <h2>9. Execution Protocols: Cash Flow Sweeping & Rebalancing Rules</h2>
+  <h2>9. Execution Protocols: Cash Flow Sweeping &amp; Rebalancing Rules</h2>
   <ol>
     <li>
-      <strong>The Strict 25.0% Initial LTV Cap:</strong> Never initiate margin borrowing beyond 25.0% of total portfolio value ($25,000 borrowed on a $100,000 portfolio). This maintains a minimum 10% market-drop buffer before reaching 28% LTV and safely absorbs a 2020-style -22.8% shock without breaching 35% maintenance thresholds.
+      <strong>The Strict 25.0% Initial LTV Cap:</strong> Never initiate margin borrowing beyond 25.0% of total portfolio value (&#36;25,000 borrowed on a &#36;100,000 portfolio). This maintains a minimum 10% market-drop buffer before reaching 28% LTV and safely absorbs a 2020-style -22.8% shock without breaching 35% maintenance thresholds.
     </li>
     <li>
       <strong>Automated Smart Transfer Distribution Sweeping:</strong> The portfolio generates 7.00% in organic cash flow annually. In M1 Finance, configure automated Smart Transfer rules to route distributions dynamically:
@@ -708,14 +595,13 @@
       </ul>
     </li>
     <li>
-      <strong>Cash-Flow Rebalancing Bands (±4% Drift):</strong> Avoid selling appreciated assets to rebalance, which triggers capital gains taxes. Instead, establish a ±4.0% absolute tolerance band for each sub-pie. Direct monthly dividend distributions and new deposits to top off underweighted slices, achieving tax-free rebalancing through cash flow.
+      <strong>Cash-Flow Rebalancing Bands (&plusmn;4% Drift):</strong> Avoid selling appreciated assets to rebalance, which triggers capital gains taxes. Instead, establish a &plusmn;4.0% absolute tolerance band for each sub-pie. Direct monthly dividend distributions and new deposits to top off underweighted slices, achieving tax-free rebalancing through cash flow.
     </li>
   </ol>
 
-  <!-- Footer -->
   <div class="footer">
-    <div>CONFIDENTIAL & PROPRIETARY — PREPARED FOR PORTFOLIO ENGINEERING & RISK MANAGEMENT</div>
-    <div>Page 1 of 1 (Self-Contained Interactive Report)</div>
+    <span>Confidential &amp; Proprietary — Prepared for Portfolio Engineering &amp; Risk Management</span>
+    <span>Page 1 of 1 (Self-Contained Interactive Report)</span>
   </div>
 </div>
 
