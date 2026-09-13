@@ -1,0 +1,69 @@
+name: Fix FE MathJax formulas
+
+on:
+  push:
+    branches: [gh-pages]
+    paths:
+      - '.github/workflows/fix-fe-math.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+      - name: Repair malformed TeX control characters
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('FE_4_Pillars_Architecture_Guide.html')
+          text = path.read_text(encoding='utf-8')
+          original = text
+
+          # Repair form-feed corruption produced when "\\frac" was serialized
+          # as the control character \f followed by "rac".
+          text = text.replace('\x0crac', r'\frac')
+
+          # Use explicit MathJax delimiters only; ordinary currency values in the
+          # report contain dollar signs and must never be parsed as TeX.
+          text = text.replace("inlineMath: [['$', '$'], ['\\\\(', '\\\\)']]", "inlineMath: [['\\\\(', '\\\\)']]")
+          text = text.replace("displayMath: [['$$', '$$'], ['\\\\[', '\\\\]']]", "displayMath: [['\\\\[', '\\\\]']]")
+
+          # Convert all existing display formulas from $$...$$ to explicit
+          # MathJax display delimiters. There are no intended literal $$ pairs.
+          parts = text.split('$$')
+          if len(parts) > 1:
+              rebuilt = []
+              for i, part in enumerate(parts):
+                  rebuilt.append(part)
+                  if i < len(parts) - 1:
+                      rebuilt.append(r'\[' if i % 2 == 0 else r'\]')
+              text = ''.join(rebuilt)
+
+          # Convert the one inline formula used in prose to explicit delimiters.
+          text = text.replace(r'$\ge 3.0\times$', r'\(\ge 3.0\times\)')
+
+          if text == original:
+              print('No changes required.')
+          else:
+              path.write_text(text, encoding='utf-8')
+              print('Repaired malformed TeX and hardened MathJax delimiters.')
+          PY
+      - name: Commit repaired HTML
+        shell: bash
+        run: |
+          if git diff --quiet -- FE_4_Pillars_Architecture_Guide.html; then
+            echo 'No HTML changes to commit.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add FE_4_Pillars_Architecture_Guide.html
+          git commit -m 'Fix MathJax formulas in FE 4 Pillars guide'
+          git push origin gh-pages
