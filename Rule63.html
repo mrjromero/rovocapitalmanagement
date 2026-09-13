@@ -2,7 +2,21 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>The Positive Carry Velocity Engine - Educational Guide</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Positive Carry Velocity Engine & Rule of 63 | Educational Guide</title>
+
+  <!-- MathJax for rendering LaTeX notation dynamically -->
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']]
+      },
+      svg: { fontCache: 'global' }
+    };
+  </script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
   <style>
     /* =========================================================
        PRINT & PAGE FORMATTING STYLES (8.5 x 11 Letter PDF)
@@ -32,6 +46,48 @@
       page-break-after: avoid;
     }
 
+    /* Web Preview Shell (when viewed in a browser rather than print) */
+    @media screen {
+      body {
+        background-color: #0f172a;
+        padding: 24px 12px;
+      }
+      .page {
+        max-width: 8.5in;
+        min-height: 11in;
+        margin: 0 auto 24px auto;
+        background: #ffffff;
+        padding: 0.6in;
+        border-radius: 8px;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+      }
+      .print-btn-bar {
+        max-width: 8.5in;
+        margin: 0 auto 16px auto;
+        display: flex;
+        justify-content: flex-end;
+      }
+      .print-btn {
+        background-color: #059669;
+        color: #ffffff;
+        font-weight: 600;
+        font-size: 13px;
+        padding: 8px 16px;
+        border-radius: 6px;
+        border: none;
+        cursor: pointer;
+        transition: background 0.2s;
+      }
+      .print-btn:hover {
+        background-color: #047857;
+      }
+    }
+    @media print {
+      .print-btn-bar { display: none; }
+      body { background: transparent; padding: 0; }
+      .page { margin: 0; padding: 0; box-shadow: none; }
+    }
+
     /* Typography */
     h1, h2, h3, h4 {
       color: #0f172a;
@@ -39,17 +95,17 @@
       font-weight: 700;
       line-height: 1.25;
     }
-    h1 { font-size: 20pt; }
-    h2 { font-size: 14pt; border-bottom: 1.5pt solid #059669; padding-bottom: 4px; margin-top: 14px; }
-    h3 { font-size: 11pt; color: #047857; margin-top: 10px; }
-    p { margin: 0 0 8px 0; color: #334155; }
+    h1 { font-size: 19pt; }
+    h2 { font-size: 13pt; border-bottom: 1.5pt solid #059669; padding-bottom: 4px; margin-top: 14px; }
+    h3 { font-size: 10.5pt; color: #047857; margin-top: 8px; }
+    p { margin: 0 0 8px 0; color: #334155; font-size: 9.5pt; }
     strong { color: #0f172a; }
 
     /* Layout & Utilities */
     .header-bar {
       border-bottom: 2pt solid #059669;
       padding-bottom: 8px;
-      margin-bottom: 14px;
+      margin-bottom: 12px;
       display: flex;
       justify-content: space-between;
       align-items: flex-end;
@@ -57,7 +113,7 @@
     .badge {
       display: inline-block;
       padding: 3px 8px;
-      font-size: 8pt;
+      font-size: 7.5pt;
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.5px;
@@ -70,16 +126,16 @@
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 12px;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
     }
     .grid-3 {
       display: grid;
       grid-template-columns: 1fr 1fr 1fr;
       gap: 10px;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
     }
 
-    /* Cards */
+    /* Cards & Callouts */
     .card {
       border: 1px solid #cbd5e1;
       border-radius: 6px;
@@ -98,14 +154,12 @@
       border-radius: 6px;
       padding: 10px;
     }
-
-    /* Callout & Hero */
     .hero-box {
       background: #0f172a;
       color: #ffffff;
       border-radius: 6px;
       padding: 12px 16px;
-      margin-bottom: 14px;
+      margin-bottom: 12px;
     }
     .hero-box h2 {
       color: #34d399;
@@ -115,6 +169,7 @@
     .hero-box p {
       color: #e2e8f0;
       margin-bottom: 0;
+      font-size: 9.5pt;
     }
 
     /* Tables */
@@ -122,10 +177,10 @@
       width: 100%;
       border-collapse: collapse;
       font-size: 8.5pt;
-      margin: 8px 0 12px 0;
+      margin: 8px 0 10px 0;
     }
     th, td {
-      padding: 6px 8px;
+      padding: 5px 8px;
       border: 1px solid #cbd5e1;
       text-align: left;
     }
@@ -139,6 +194,67 @@
     }
     tr:nth-child(even) { background-color: #f8fafc; }
     .table-accent { font-weight: bold; color: #047857; }
+
+    /* =========================================================
+       NATIVE BULLETPROOF CSS MATH & FRACTION STYLES
+       ========================================================= */
+    .math-block {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-left: 3.5px solid #059669;
+      border-radius: 6px;
+      padding: 10px 14px;
+      margin: 10px 0;
+    }
+    .math-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 5px 0;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .math-row:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+    .math-label {
+      font-weight: 600;
+      color: #0f172a;
+      font-size: 9pt;
+    }
+    .math-equation {
+      display: inline-flex;
+      align-items: center;
+      font-family: "Cambria Math", "STIX Two Math", "Georgia", serif;
+      font-size: 9.5pt;
+      color: #0f172a;
+    }
+    .fraction {
+      display: inline-flex;
+      flex-direction: column;
+      vertical-align: middle;
+      text-align: center;
+      padding: 0 4px;
+      line-height: 1.1;
+      margin: 0 3px;
+    }
+    .num {
+      border-bottom: 1.2px solid #334155;
+      padding-bottom: 2px;
+      display: block;
+      font-size: 8.5pt;
+    }
+    .den {
+      padding-top: 2px;
+      display: block;
+      font-size: 8.5pt;
+    }
+    .math-result {
+      font-weight: 700;
+      color: #047857;
+      margin-left: 6px;
+      font-size: 10pt;
+    }
 
     /* Footer */
     .doc-footer {
@@ -156,6 +272,11 @@
   </style>
 </head>
 <body>
+
+  <!-- Print Button Bar (Hidden in Print) -->
+  <div class="print-btn-bar">
+    <button class="print-btn" onclick="window.print()">🖨️ Print / Save as PDF</button>
+  </div>
 
   <!-- =========================================================
        PAGE 1: FOUNDATIONS & THE VELOCITY CONCEPT
@@ -184,10 +305,10 @@
       <div class="card">
         <h3>Engine A: The Spread Arbitrage</h3>
         <p>
-          Standard personal finance treats debt as an enemy because consumer debt charges 18%–25%. In commercial finance, debt is an arbitrage tool.
+          Standard personal finance treats debt as an enemy because consumer credit cards charge 18%–25%. In commercial wealth engineering, debt is an arbitrage tool.
         </p>
         <p>
-          When you borrow margin at <strong>5.65%</strong> to hold assets yielding <strong>15.00%</strong>, you earn a net profit of <strong>+9.35%</strong> on borrowed capital. The portfolio pays its own borrowing cost and leaves surplus cash on the table.
+          When you borrow margin at <strong>5.65%</strong> to hold assets yielding <strong>15.00%</strong>, you earn a net profit spread of <strong>+9.35%</strong> on borrowed capital. The portfolio pays its own borrowing cost and leaves surplus cash on the table.
         </p>
       </div>
 
@@ -238,7 +359,7 @@
     <div class="card-highlight" style="margin-top: 10px;">
       <h3 style="margin-top: 0;">The End State: The Lifestyle Crossover Point</h3>
       <p style="margin-bottom: 0;">
-        Because distribution surplus is continuously reinvested, your collateral base grows rapidly. At the <strong>Lifestyle Crossover Point</strong>, the portfolio's monthly net positive carry exceeds 100% of your living expenses. Your assets now pay your mortgage, food, and utilities forever—without selling a single share.
+        Because distribution surplus is continuously reinvested, your collateral base grows rapidly. At the <strong>Lifestyle Crossover Point</strong>, the portfolio's monthly net positive carry exceeds 100% of your living expenses. Your assets now pay your mortgage, food, and utilities forever—without selling a single share of principal.
       </p>
     </div>
 
@@ -263,29 +384,61 @@
       </div>
     </div>
 
-    <div class="card-highlight" style="text-align: center; padding: 14px; margin-bottom: 12px;">
+    <div class="card-highlight" style="text-align: center; padding: 12px; margin-bottom: 12px;">
       <div style="font-size: 9pt; font-weight: 700; text-transform: uppercase; color: #047857; letter-spacing: 0.5px;">The Master Rule of Thumb</div>
-      <div style="font-size: 18pt; font-weight: 800; color: #0f172a; margin: 4px 0;">
-        Required Equity = Monthly Living Spend × 63
+      <div style="font-size: 18pt; font-weight: 800; color: #0f172a; margin: 3px 0;">
+        Required Equity = Monthly Living Spend &times; 63
       </div>
-      <div style="font-size: 9pt; color: #334155;">
-        (Or equivalently: <strong>Annual Living Spend × 5.25</strong>)
+      <div style="font-size: 8.5pt; color: #334155;">
+        (Or equivalently: <strong>Annual Living Spend &times; 5.25</strong>)
       </div>
     </div>
 
-    <h2>1. The Math Behind the Multiplier</h2>
+    <h2>1. The Math Behind the Multiplier (Clean Formulations)</h2>
     <p>
       Assuming a <strong>15.00%</strong> distribution yield, a <strong>5.65%</strong> margin borrow rate, and a conservative <strong>30.0% Loan-to-Value (LTV)</strong>:
     </p>
-    <ul>
-      <li><strong>Net Yield on Total Assets:</strong> $15.00\% - (0.30 \times 5.65\%) = \mathbf{13.31\%}$</li>
-      <li><strong>Return on Investor Equity (ROE):</strong> $\frac{13.31\%}{1 - 0.30} = \mathbf{19.01\%}$</li>
-      <li><strong>Capital Multiplier:</strong> $\frac{12 \text{ months}}{0.1901} \approx \mathbf{63.1}$</li>
-    </ul>
+
+    <!-- Clean, Robust CSS Formula Box -->
+    <div class="math-block">
+      <div class="math-row">
+        <span class="math-label">1. Net Yield on Total Assets:</span>
+        <span class="math-equation">
+          15.00% &minus; (0.30 &times; 5.65%) = 15.00% &minus; 1.695% = <span class="math-result">13.31%</span>
+        </span>
+      </div>
+
+      <div class="math-row">
+        <span class="math-label">2. Return on Investor Equity (ROE):</span>
+        <span class="math-equation">
+          <span class="fraction">
+            <span class="num">Net Asset Yield (13.31%)</span>
+            <span class="den">1.00 &minus; 0.30 (Equity Share)</span>
+          </span>
+          =
+          <span class="fraction">
+            <span class="num">13.31%</span>
+            <span class="den">0.70</span>
+          </span>
+          = <span class="math-result">19.01% Net ROE</span>
+        </span>
+      </div>
+
+      <div class="math-row">
+        <span class="math-label">3. Monthly Capital Multiplier:</span>
+        <span class="math-equation">
+          <span class="fraction">
+            <span class="num">12 Months</span>
+            <span class="den">0.1901 (Annual ROE)</span>
+          </span>
+          = <span class="math-result">63.13&times; Monthly Spend</span>
+        </span>
+      </div>
+    </div>
 
     <h2>2. Positive Carry vs. Traditional "4% Rule" (Rule of 300)</h2>
     <p>
-      Traditional retirement uses the 4% rule (multiplying monthly spend by <strong>300</strong>). Because the Positive Carry Engine extracts net spread arbitrage, it requires <strong>less than 1/4th the capital</strong> to achieve complete financial independence.
+      Traditional retirement uses the 4% rule (multiplying monthly spend by <strong>300</strong>). Because the Positive Carry Engine extracts net spread arbitrage, it requires <strong>less than 1/4th the capital</strong> to achieve complete bill coverage.
     </p>
 
     <table>
@@ -293,13 +446,21 @@
         <tr>
           <th>Monthly Spend ($)</th>
           <th>Annual Cost ($)</th>
-          <th>Traditional 4% Rule (300×)</th>
-          <th>Positive Carry Engine (63×)</th>
+          <th>Traditional 4% Rule (300&times;)</th>
+          <th>Positive Carry Engine (63&times;)</th>
           <th>Total Assets (At 30% LTV)</th>
           <th>Capital Saved</th>
         </tr>
       </thead>
       <tbody>
+        <tr>
+          <td><strong>$2,380 / mo</strong></td>
+          <td>$28,560</td>
+          <td>$714,000</td>
+          <td class="table-accent">$150,000</td>
+          <td>$214,286</td>
+          <td><strong>$564,000</strong></td>
+        </tr>
         <tr>
           <td><strong>$3,000 / mo</strong></td>
           <td>$36,000</td>
@@ -307,14 +468,6 @@
           <td class="table-accent">$189,000</td>
           <td>$270,000</td>
           <td><strong>$711,000</strong></td>
-        </tr>
-        <tr>
-          <td><strong>$4,000 / mo</strong></td>
-          <td>$48,000</td>
-          <td>$1,200,000</td>
-          <td class="table-accent">$252,000</td>
-          <td>$360,000</td>
-          <td><strong>$948,000</strong></td>
         </tr>
         <tr>
           <td><strong>$5,000 / mo</strong></td>
@@ -478,10 +631,11 @@
       </div>
     </div>
 
+    <!-- Educational Disclaimer -->
     <div class="card-warning" style="margin-top: 10px;">
-      <strong style="color: #92400e; font-size: 8pt;">Educational Disclaimer:</strong>
+      <strong style="color: #92400e; font-size: 8pt;">Educational & Strategic Modeling Disclaimer:</strong>
       <p style="font-size: 7.5pt; color: #78350f; margin: 0;">
-        This document is for educational and strategic modeling purposes only. Margin borrowing involves risk of loss, interest rate adjustments, and maintenance liquidation during severe market drops. Past yield performance does not guarantee future cash flow.
+        This document and associated calculations are designed strictly for educational, illustrative, and conceptual modeling purposes. They do not constitute investment, financial, tax, or legal advice. Margin borrowing involves a significant risk of loss, including variable interest rates, potential margin calls, and forced liquidation of collateral during severe market pullbacks. Illustrative yields (such as 15%) are hypothetical, fluctuate with market conditions, and are never guaranteed. Always evaluate your personal risk tolerance and consult a licensed financial professional prior to using leveraged credit strategies.
       </p>
     </div>
 
