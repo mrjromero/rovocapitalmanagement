@@ -1,0 +1,55 @@
+name: Rebuild FE 4 Pillars PDF
+
+on:
+  push:
+    branches: [gh-pages]
+    paths:
+      - '.github/workflows/rebuild-fe-pdf.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  rebuild:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+
+      - name: Rebuild PDF from corrected HTML
+        shell: bash
+        run: |
+          set -euo pipefail
+          CHROME="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || command -v chromium-browser || true)"
+          if [ -z "$CHROME" ]; then
+            echo "No Chromium/Chrome executable found on runner" >&2
+            exit 1
+          fi
+
+          HTML="$(pwd)/FE_4_Pillars_Architecture_Guide.html"
+          PDF="$(pwd)/FE_4_Pillars_Architecture_Guide.pdf"
+
+          "$CHROME" \
+            --headless=new \
+            --no-sandbox \
+            --disable-gpu \
+            --allow-file-access-from-files \
+            --virtual-time-budget=12000 \
+            --print-to-pdf="$PDF" \
+            --print-to-pdf-no-header \
+            "file://$HTML"
+
+          test -s "$PDF"
+          file "$PDF"
+
+      - name: Commit rebuilt PDF and remove one-time workflow
+        shell: bash
+        run: |
+          set -euo pipefail
+          git rm .github/workflows/rebuild-fe-pdf.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add FE_4_Pillars_Architecture_Guide.pdf
+          git commit -m 'Rebuild FE 4 Pillars PDF from corrected HTML'
+          git push origin gh-pages
