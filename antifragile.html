@@ -18,6 +18,7 @@
       --text: #334155;
       --text-heading: #0f172a;
       --border: #e2e8f0;
+      --muted: #64748b;
     }
 
     * {
@@ -72,7 +73,7 @@
 
     .subtitle {
       font-size: 1.1rem;
-      color: #64748b;
+      color: var(--muted);
     }
 
     h2 {
@@ -195,6 +196,28 @@
       text-transform: uppercase;
       font-size: 0.8rem;
       letter-spacing: 0.05em;
+    }
+
+    footer.disclaimer {
+      margin-top: 3rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--border);
+      font-size: 0.8rem;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    footer.disclaimer h3 {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #475569;
+      margin-bottom: 0.5rem;
+    }
+
+    footer.disclaimer p {
+      margin-bottom: 0.75rem;
+      font-size: 0.8rem;
     }
 
     @media (max-width: 768px) {
@@ -475,6 +498,16 @@
       <li><strong>Capital Re-deployment:</strong> Sweep the harvested cash back to the Tier 1 income engine (M1 Finance) to aggressively acquire high-yield assets at distressed valuations, permanently stepping up future portfolio income.</li>
     </ol>
   </section>
+
+  <footer class="disclaimer">
+    <h3>Important Regulatory & Risk Disclaimer</h3>
+    <p>
+      This document is prepared strictly for informational, conceptual, and educational purposes and does not constitute financial, legal, tax, or individualized investment advice. The strategies discussed—specifically including derivative instruments, options trading, margin borrowing, and positive-carry structures—involve substantial risk of principal loss and are not appropriate for all investors. Options are decaying assets and frequently expire worthless, resulting in the total loss of the premium invested.
+    </p>
+    <p>
+      Simulated, modeled, or hypothetical performance returns do not reflect actual trading results and carry inherent limitations; they do not account for real-world slippage, bid-ask spreads, liquidity evaporation during severe market dislocations, or platform-specific execution constraints. Tax treatment under Section 1256 and broker fee structures are subject to regulatory change and individual investor circumstances. Prior to executing any trading strategy or derivative hedge, consult with an independent certified financial planner (CFP), qualified tax attorney, and registered investment advisor (RIA).
+    </p>
+  </footer>
 </div>
 
 </body>
