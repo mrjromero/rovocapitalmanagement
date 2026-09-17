@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>CarryPilot Risk Engine | Regime Methodology & Leverage Mechanics</title>
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --surface: #ffffff;
+      --border: #e2e8f0;
+      --text: #1e293b;
+      --muted: #64748b;
+      --navy: #0f172a;
+      --green-bg: #f0fdf4;
+      --green-border: #16a34a;
+      --green-text: #15803d;
+      --yellow-bg: #fffbeb;
+      --yellow-border: #d97706;
+      --yellow-text: #b45309;
+      --red-bg: #fef2f2;
+      --red-border: #dc2626;
+      --red-text: #b91c1c;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      padding: 40px 20px;
+    }
+
+    .container {
+      max-width: 860px;
+      margin: 0 auto;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 40px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+
+    .header {
+      border-bottom: 2px solid var(--navy);
+      padding-bottom: 20px;
+      margin-bottom: 32px;
+    }
+
+    .header h1 {
+      font-size: 26px;
+      color: var(--navy);
+      letter-spacing: -0.5px;
+    }
+
+    .header p {
+      font-size: 14px;
+      color: var(--muted);
+      margin-top: 6px;
+    }
+
+    h2 {
+      font-size: 18px;
+      color: var(--navy);
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      margin: 32px 0 14px 0;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 6px;
+    }
+
+    p, ul {
+      margin-bottom: 16px;
+      font-size: 15px;
+      color: #334155;
+    }
+
+    ul { padding-left: 24px; }
+    li { margin-bottom: 8px; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0 30px 0;
+      font-size: 14px;
+    }
+
+    th {
+      background: #f1f5f9;
+      color: var(--navy);
+      text-align: left;
+      padding: 12px;
+      border-bottom: 2px solid #cbd5e1;
+      font-weight: 700;
+      text-transform: uppercase;
+      font-size: 12px;
+      letter-spacing: 0.5px;
+    }
+
+    td {
+      padding: 12px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+
+    .card {
+      border-radius: 8px;
+      padding: 18px 22px;
+      margin-bottom: 20px;
+      border: 1px solid var(--border);
+    }
+
+    .card-green {
+      background: var(--green-bg);
+      border-color: var(--green-border);
+      border-left: 6px solid var(--green-border);
+    }
+
+    .card-yellow {
+      background: var(--yellow-bg);
+      border-color: var(--yellow-border);
+      border-left: 6px solid var(--yellow-border);
+    }
+
+    .card-red {
+      background: var(--red-bg);
+      border-color: var(--red-border);
+      border-left: 6px solid var(--red-border);
+    }
+
+    .card-title {
+      font-size: 13px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-bottom: 8px;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 700;
+      vertical-align: middle;
+    }
+
+    .badge-green { background: #dcfce7; color: var(--green-text); border: 1px solid #bbf7d0; }
+    .badge-yellow { background: #fef3c7; color: var(--yellow-text); border: 1px solid #fde68a; }
+    .badge-red { background: #fee2e2; color: var(--red-text); border: 1px solid #fecaca; }
+
+    .formula {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+      background: #f1f5f9;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 13px;
+      color: #0f172a;
+    }
+
+    .footer {
+      border-top: 1px solid var(--border);
+      padding-top: 18px;
+      margin-top: 40px;
+      font-size: 12px;
+      color: var(--muted);
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <h1>CarryPilot Quantitative Methodology Guide</h1>
+    <p>Operational Risk Thresholds, Volatility Term Structures, and Adaptive Leverage Mechanics</p>
+  </div>
+
+  <h2>1. Executive Summary</h2>
+  <p>
+    CarryPilot operates an adaptive, quantitative risk framework designed for leveraged dividend, credit carry, and derivative overlay portfolios. Rather than enforcing rigid, hardcoded Loan-to-Value (LTV) constraints, the engine measures systemic fragility in real time across four institutional pillars:
+  </p>
+  <ul>
+    <li><strong>Volatility Term Structure:</strong> Spot VIX divided by 3-Month VIX (<span class="formula">^VIX / ^VIX3M</span>).</li>
+    <li><strong>Broad Market Momentum:</strong> S&amp;P 500 Price vs. its native 50-Day Moving Average (<span class="formula">SPX vs 50d SMA</span>).</li>
+    <li><strong>Multi-Tier Credit Solvency:</strong> High-Yield to Investment-Grade ratio (<span class="formula">HYG / LQD</span>) and Senior Loan performance (<span class="formula">BKLN</span>).</li>
+    <li><strong>Short-Term Funding Plumbing:</strong> 10-Year Treasury Yield vs. 13-Week T-Bill (<span class="formula">^TNX - ^IRX</span>) in basis points.</li>
+  </ul>
+
+  <h2>2. Regime Classification Matrix</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Regime</th>
+        <th>Volatility Ratio</th>
+        <th>SPX vs 50d MA</th>
+        <th>Credit Spreads</th>
+        <th>Portfolio Action Mandate</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="badge badge-green">NORMAL</span> 🟢 Green</td>
+        <td>&lt; 0.90 (Contango)</td>
+        <td>Above 50d MA</td>
+        <td>Compressing / Flat</td>
+        <td><strong>Full Operating Posture:</strong> Maintain target operating leverage, reinvest distributions into income engines.</td>
+      </tr>
+      <tr>
+        <td><span class="badge badge-yellow">WATCH</span> 🟡 Yellow</td>
+        <td>0.90 – 1.00 (Flat)</td>
+        <td>Testing / Mixed</td>
+        <td>Widening / Diverging</td>
+        <td><strong>Prudent Buffer Posture:</strong> Freeze borrowing, route dividend float to safe collateral or debt paydown.</td>
+      </tr>
+      <tr>
+        <td><span class="badge badge-red">DEFENSIVE</span> 🔴 Red / 🟠 Orange</td>
+        <td>&gt; 1.00 (Inversion)</td>
+        <td>Below 50d MA</td>
+        <td>Sharp Widening</td>
+        <td><strong>Defensive Trimming:</strong> Actively pay down margin debt, pause reinvestment, build cash reserves.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>3. Quantitative Trigger Breakdown</h2>
+
+  <div class="card card-green">
+    <div class="card-title" style="color: var(--green-text);">🟢 Green (Smooth Waters) • Safety Score: 8–10</div>
+    <p>
+      Occurs when the volatility term structure is in <strong>Contango</strong> (<span class="formula">VIX / VIX3M &lt; 0.90</span>) and equities trade comfortably above their 50-day moving average. Low forward implied volatility allows derivative overlay engines (SPYI, QDTE, FEPI) and senior floating credit (JAAA, CLOI) to generate clean positive spread arbitrage against borrow rates without capital erosion risk.
+    </p>
+  </div>
+
+  <div class="card card-yellow">
+    <div class="card-title" style="color: var(--yellow-text);">🟡 Yellow (Watchful / Caution) • Safety Score: 5–7</div>
+    <p>
+      Triggered when <strong>any</strong> of the following conditions emerge:
+    </p>
+    <ul>
+      <li>The volatility curve flattens into the caution band (<span class="formula">0.90 &le; Ratio &le; 1.00</span>).</li>
+      <li>The S&amp;P 500 breaks below its 50-day SMA, indicating distribution and negative dealer gamma risks.</li>
+      <li>The 5-day rolling trend engine detects a rapid deterioration (<span class="formula">VIX ratio delta &gt; +0.05 vs 5d avg</span>).</li>
+      <li>High-yield spreads diverge from equities, signaling corporate refinancing frictions.</li>
+    </ul>
+  </div>
+
+  <div class="card card-red">
+    <div class="card-title" style="color: var(--red-text);">🔴 Red / 🟠 Orange (Storm / De-risking) • Safety Score: 1–4</div>
+    <p>
+      Triggered when the volatility curve undergoes <strong>Backwardation / Inversion</strong> (<span class="formula">VIX / VIX3M &gt; 1.00</span>). Near-term options cost more than 3-month options, signaling institutional panic. Combined with a sub-50d SMA equity posture and widening credit spreads, this mandate requires immediate margin debt reduction to defend against collateral shrinkage.
+    </p>
+  </div>
+
+  <h2>4. Balance Sheet Architecture</h2>
+  <p>The CarryPilot model divides assets into two complementary engines:</p>
+  <ul>
+    <li><strong>Collateral Floor (Ballast):</strong> Ultra-short Treasuries (SGOV, TBIL, CSHI) and AAA senior floating CLOs (JAAA, CLOI) that trade with minimal volatility, clearing the borrow hurdle rate and shielding capital from drawdowns.</li>
+    <li><strong>Income Engine (Propulsion):</strong> Diversified covered call ETFs and Business Development Companies (SPYI, QDTE, ARCC) that harvest elevated cash-flow yields to compound net equity.</li>
+  </ul>
+
+  <div class="footer">
+    CarryPilot Risk Engine • Quantitative Macro Documentation • Hosted via GitHub Pages
+  </div>
+</div>
+
+</body>
+</html>
