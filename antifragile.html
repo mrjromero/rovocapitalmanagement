@@ -198,6 +198,18 @@
       letter-spacing: 0.05em;
     }
 
+    pre.code-flow {
+      background-color: #0f172a;
+      color: #f8fafc;
+      padding: 1.25rem;
+      border-radius: 8px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.85rem;
+      overflow-x: auto;
+      margin: 1.25rem 0;
+      line-height: 1.5;
+    }
+
     footer.disclaimer {
       margin-top: 3rem;
       padding-top: 1.5rem;
@@ -497,6 +509,70 @@
       <li><strong>Tranche 2 (20x–30x Multiple):</strong> If the market drawdown reaches 30%+ and the put value hits 20x to 30x, liquidate the remaining contracts entirely.</li>
       <li><strong>Capital Re-deployment:</strong> Sweep the harvested cash back to the Tier 1 income engine (M1 Finance) to aggressively acquire high-yield assets at distressed valuations, permanently stepping up future portfolio income.</li>
     </ol>
+  </section>
+
+  <section>
+    <h2>8. Automation Architecture: Rolling, Harvesting & Cash Flow Management</h2>
+    <p>
+      Automating a rolling tail-risk hedge requires separating the strategy into three functional loops: <strong>cash sweeping</strong>, <strong>systematic roll execution</strong>, and <strong>harvesting/monetization</strong>. Depending on technical overhead preferences, this can be achieved via broker-native order mechanics, third-party rules-based bots, or direct API scripting.
+    </p>
+
+    <h3>1. Broker-Native Conditional Orders (Semi-Automated)</h3>
+    <p>
+      Derivatives platforms (such as Charles Schwab / thinkorswim or Interactive Brokers) allow you to automate exit rules and harvesting the moment a position is established using <strong>Advanced Order Types</strong>:
+    </p>
+    <ul>
+      <li><strong>Standing GTC Limit Exits (Automated Harvesting):</strong> Immediately upon purchasing your 60–90 DTE put, attach a <strong>1st-Triggers-OCO (One-Cancels-Other)</strong> order:
+        <ul>
+          <li><strong>Tranche A Limit:</strong> GTC Limit Sell for 50% of contracts at <strong>10x entry price</strong> (e.g., bought at $1.50, limit to sell at $15.00).</li>
+          <li><strong>Tranche B Limit:</strong> GTC Limit Sell for remaining 50% at <strong>25x–30x entry price</strong>.</li>
+        </ul>
+      </li>
+      <li><strong>Contingent / Threshold Orders:</strong> Configure order triggers tied to the underlying index rather than the option price (useful if wide bid-ask spreads during a crash distort options pricing). For example: <em>If SPX drops &ge; 20% from the entry benchmark, trigger a Market-if-Touched or tight Limit order to close 50% of the puts.</em></li>
+      <li><strong>Calendar Alerts for Rolling:</strong> Set an automated platform alert at <strong>35 DTE</strong>. When triggered, a simple manual single-ticket roll is executed (simultaneously selling the decaying front-month put and buying the back-month 60–90 DTE put).</li>
+    </ul>
+
+    <h3>2. No-Code Automated Bot Platforms (Fully Automated)</h3>
+    <p>
+      Cloud-based trading automation platforms like <strong>Option Alpha</strong> connect directly to options brokerages (such as Schwab, Tradier, or TradeStation) and execute logic completely hands-free via visual bot recipes:
+    </p>
+    <pre class="code-flow">[ Scheduled Trigger: Every Monday / Market Open ]
+   ├── Check Existing Position:
+   │     └── If Open Put DTE &lt;= 35:
+   │           └── Close Position (Sell to Close)
+   │
+   ├── Check Allocation / Capital Available:
+   │     └── If Cash Available &gt;= Monthly Budget:
+   │           ├── Scan SPX/XSP Chain: Expiration = 60-90 DTE
+   │           ├── Filter Strike: Delta between 0.08 and 0.12 (15-20% OTM)
+   │           └── Open Position (Buy to Open 1 tranche)
+   │
+   └── Continuous Monitor (Every 5 minutes):
+         ├── If Position ROI &gt;= 1,000%: Close 50%
+         └── If Position ROI &gt;= 2,500%: Close Remaining 50%</pre>
+    <p>
+      This approach eliminates emotional interference, automatically rolls decaying contracts at your exact DTE threshold, and continuously checks for volatility spikes.
+    </p>
+
+    <h3>3. Custom Scripted Execution (Python via Broker REST APIs)</h3>
+    <p>
+      For custom hosting environments, scheduled cron jobs or serverless functions (e.g., AWS Lambda) can interface with broker REST APIs (Schwab Trader API, Tradier API, or IBKR Client Portal API):
+    </p>
+    <ul>
+      <li><strong>Option Chain Screening:</strong> Query <code>/markets/chains</code> for <code>SPX</code> or <code>XSP</code>; filter expirations for <code>60 &lt;= DTE &lt;= 90</code>; select the put contract where <code>Delta &asymp; -0.10</code> (or <code>Strike &asymp; Underlying * 0.82</code>).</li>
+      <li><strong>The Roll Engine:</strong> Fetch current portfolio positions daily. If an active hedge position has <code>DTE &lt;= 35</code>, execute a net-credit/debit roll or fire two sequential orders: <code>Sell to Close</code> existing, then <code>Buy to Open</code> target.</li>
+      <li><strong>The Harvesting Daemon:</strong> Poll current mark price every 60 seconds during market hours. If <code>Current Mark &gt;= Entry Price * 10</code>, send an immediate limit order at the mid-market price to scale out of the position.</li>
+    </ul>
+
+    <h3>4. Automating the Cash-Inflow Bridge</h3>
+    <p>
+      To keep the system frictionless across institutions, automate the transfer link between your income engine and the derivatives account:
+    </p>
+    <ul>
+      <li><strong>Clearing Rule (Income Broker):</strong> Set dividends and distribution cash to sit in the core cash balance rather than auto-reinvesting.</li>
+      <li><strong>Scheduled Bank/ACH Sweep:</strong> Configure a recurring monthly ACH transfer from the income account (or linked hub bank) to the options brokerage timed 3–5 days after standard fund distribution dates (typically the 1st or 15th of the month).</li>
+      <li><strong>Execution Buffer:</strong> Keep 1–2 months of hedge budget as cash dry powder in the options account so roll timing is never delayed by multi-day bank transfer clearing periods.</li>
+    </ul>
   </section>
 
   <footer class="disclaimer">
