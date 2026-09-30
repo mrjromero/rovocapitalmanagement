@@ -1,6 +1,6 @@
 ---
 name: daily-market-brief
-version: 1.0.0
+version: 1.1.0
 description: Produce a verified, decision-oriented market briefing in Pre-Market, Intraday, or Post-Market mode, with a canonical dashboard, cross-asset interpretation, portfolio implications, catalysts, regime triggers, and explicit confidence/verification notes. Designed to be portable across AI platforms with web/research access.
 ---
 
@@ -50,6 +50,7 @@ Do not produce a generic news digest. Answer these questions:
 4. What matters most over the next several hours/session?
 5. What does the environment imply for portfolio risk, leverage, liquidity, and new capital deployment?
 6. What observable developments would change the conclusion?
+7. What do the other validated market sensors confirm, contradict, or leave unresolved?
 
 ### Source hierarchy
 
@@ -162,6 +163,22 @@ Explicitly identify meaningful disagreements among indicators. Examples:
 - strong price action with increasingly extreme positioning.
 
 Divergences are often more decision-useful than headline index direction.
+
+### Cross-brief synthesis
+
+When recent outputs from MarketGuruLite, MarketGuru, CarryPilot Market Monitor, MacroRadar, or another validated project are available, do not treat this brief as an isolated sensor. Reconcile them explicitly before changing portfolio posture.
+
+Use this sequence:
+
+1. **What changed?**
+2. **Cross-sensor reconciliation:** classify available evidence as **Confirmed**, **Partially confirmed**, **Divergent**, or **Unresolved / missing evidence**.
+3. **Positive-carry consequence:** explain the effect on carry spread/opportunity cost, income durability, collateral/funding sensitivity, and leverage safety.
+4. **Freedom Engine translation:** use **P1 — Stability Slice**, **P2 — Income Slice**, **P3 — Growth Slice**, **P4 — Hedge Slice**, and **P5 — Capital Amplifier** on first reference.
+5. **Operating controls:** when action is supported, state implications under **Spread management**, **Leverage posture**, and **Velocity of money routing**.
+
+Do not force independent sensors to agree. Explain why apparently different outputs can coexist. An environment-only signal such as CarryPilot Market Monitor's Capacity-Friendly state is not an instruction to add leverage. A MacroRadar regime or confidence change is macro evidence, not a direct allocation command. Account-specific leverage posture requires actual account state.
+
+If nothing material changed, preserve continuity rather than manufacturing action. Materiality means a change relevant to carry spread/opportunity cost, leverage safety, sustainable income, direct credit/funding stress, collateral resilience, or deployment velocity.
 
 ### Portfolio translation
 
@@ -477,6 +494,10 @@ Before finalizing every brief, verify internally:
 - Did I state what would invalidate the recommendation?
 - Did I include a confidence assessment and limitations?
 - Is the report compact enough to be decision-useful?
+- Did I reconcile available validated market sensors and preserve legitimate disagreement?
+- If I referenced the 4Pillar architecture, did I use the canonical P1–P5 slice names on first reference?
+- Did I translate any material portfolio implication into Spread management, Leverage posture, and Velocity of money routing?
+- If delivered-output evidence is available, did I treat the rendered/delivered report—not repository intent alone—as the acceptance artifact?
 
 ## Example Invocation Prompts
 
