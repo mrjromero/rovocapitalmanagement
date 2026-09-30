@@ -1,0 +1,114 @@
+name: Refresh BLS Calendar Cache
+
+on:
+  push:
+    branches: [gh-pages]
+    paths:
+      - '.github/workflows/refresh-bls-calendar.yml'
+  schedule:
+    - cron: '17 */6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+
+      - name: Refresh normalized BLS calendar
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json, re, urllib.request, datetime, html
+          from pathlib import Path
+
+          targets = [
+              ("Employment Situation", "https://www.bls.gov/schedule/news_release/empsit.htm"),
+              ("Consumer Price Index", "https://www.bls.gov/schedule/news_release/cpi.htm"),
+              ("Producer Price Index", "https://www.bls.gov/schedule/news_release/ppi.htm"),
+          ]
+          headers = {
+              "User-Agent": "Mozilla/5.0 (GitHub Actions; CarryPilot calendar cache)",
+              "Accept": "text/html,application/xhtml+xml"
+          }
+          month_map = {"Jan.":1,"Feb.":2,"Mar.":3,"Apr.":4,"May":5,"Jun.":6,"Jul.":7,"Aug.":8,"Sep.":9,"Oct.":10,"Nov.":11,"Dec.":12}
+          events = []
+          failures = []
+
+          for title, url in targets:
+              try:
+                  req = urllib.request.Request(url, headers=headers)
+                  with urllib.request.urlopen(req, timeout=30) as r:
+                      body = r.read().decode("utf-8", "replace")
+                  plain = re.sub(r"<script[\s\S]*?</script>|<style[\s\S]*?</style>", " ", body, flags=re.I)
+                  plain = re.sub(r"<[^>]+>", " ", plain)
+                  plain = html.unescape(re.sub(r"\s+", " ", plain))
+                  if "Schedule of Releases for" not in plain:
+                      raise RuntimeError("schedule heading not found")
+                  row_re = re.compile(
+                      r"(January|February|March|April|May|June|July|August|September|October|November|December)\s+"
+                      r"(\d{4})(?:\s+\([PR]\))?\s+"
+                      r"(Jan\.|Feb\.|Mar\.|Apr\.|May|Jun\.|Jul\.|Aug\.|Sep\.|Oct\.|Nov\.|Dec\.)\s+"
+                      r"(\d{1,2}),\s+(\d{4})\s+(\d{1,2}:\d{2})\s+(AM|PM)",
+                      re.I
+                  )
+                  matched = 0
+                  for m in row_re.finditer(plain):
+                      matched += 1
+                      ref_month, ref_year, mon_abbr, day, year, clock, ampm = m.groups()
+                      hour, minute = map(int, clock.split(":"))
+                      if ampm.upper() == "PM" and hour != 12: hour += 12
+                      if ampm.upper() == "AM" and hour == 12: hour = 0
+                      release_date = f"{int(year):04d}-{month_map[mon_abbr]:02d}-{int(day):02d}"
+                      events.append({
+                          "title": title,
+                          "releaseDate": release_date,
+                          "releaseTime": f"{hour:02d}:{minute:02d}",
+                          "timezone": "America/New_York",
+                          "referencePeriod": f"{ref_month} {ref_year}",
+                          "sourceUrl": url,
+                      })
+                  if matched == 0:
+                      raise RuntimeError("no release rows matched")
+              except Exception as e:
+                  failures.append(f"{title}: {e}")
+
+          if failures:
+              raise SystemExit("BLS cache refresh failed closed: " + "; ".join(failures))
+
+          events.sort(key=lambda x: (x["releaseDate"], x["releaseTime"], x["title"]))
+          payload = {
+              "schemaVersion": 1,
+              "generatedAt": datetime.datetime.now(datetime.timezone.utc).replace(microsecond=0).isoformat().replace("+00:00","Z"),
+              "maxAgeHours": 36,
+              "upstream": {
+                  "authority": "U.S. Bureau of Labor Statistics",
+                  "calendarUrl": "https://www.bls.gov/schedule/news_release/bls.ics",
+                  "scheduleIndexUrl": "https://www.bls.gov/schedule/2026/",
+                  "note": "Normalized cache of official BLS release dates for CarryPilot fallback transport only."
+              },
+              "events": events
+          }
+          Path("data").mkdir(exist_ok=True)
+          Path("data/bls-calendar.json").write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+          PY
+
+      - name: Commit cache if changed
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- data/bls-calendar.json; then
+            echo "No BLS calendar changes."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/bls-calendar.json
+          git commit -m "data: refresh official BLS calendar cache"
+          git push origin gh-pages
