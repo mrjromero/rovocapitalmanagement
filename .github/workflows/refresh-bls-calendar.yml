@@ -1,153 +1,91 @@
-name: Refresh BLS Calendar Cache
+name: Validate BLS Calendar Cache
 
 on:
   push:
     branches: [gh-pages]
     paths:
       - '.github/workflows/refresh-bls-calendar.yml'
-  schedule:
-    - cron: '17 */6 * * *'
+      - 'data/bls-calendar.json'
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  refresh:
+  validate:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
         with:
           ref: gh-pages
 
-      - name: Refresh normalized BLS calendar
+      - name: Validate normalized BLS calendar cache
         shell: bash
         run: |
           set -euo pipefail
           python - <<'PY'
-          import datetime, json, re, urllib.request
+          import datetime, json, re
           from pathlib import Path
 
-          calendar_url = "https://www.bls.gov/schedule/news_release/bls.ics"
-          wanted = {
-              "Employment Situation": re.compile(r"^Employment Situation(?:\s+for\s+(.+))?$", re.I),
-              "Consumer Price Index": re.compile(r"^Consumer Price Index(?:\s+for\s+(.+))?$", re.I),
-              "Producer Price Index": re.compile(r"^Producer Price Index(?:\s+for\s+(.+))?$", re.I),
-          }
-          headers = {
-              "User-Agent": "CarryPilot-BLS-Calendar-Cache/1.0 (+https://github.com/mrjromero/rovocapitalmanagement)",
-              "Accept": "text/calendar,text/plain;q=0.9,*/*;q=0.1",
-          }
-
-          def unfold_ical(text):
-              text = text.replace("\r\n", "\n").replace("\r", "\n")
-              lines = []
-              for line in text.split("\n"):
-                  if line.startswith((" ", "\t")) and lines:
-                      lines[-1] += line[1:]
-                  else:
-                      lines.append(line)
-              return lines
-
-          def unescape_ical(value):
-              return (value.replace("\\n", " ")
-                           .replace("\\N", " ")
-                           .replace("\\,", ",")
-                           .replace("\\;", ";")
-                           .replace("\\\\", "\\"))
+          path = Path("data/bls-calendar.json")
+          if not path.is_file():
+              raise SystemExit("BLS cache validation failed closed: cache file missing")
 
           try:
-              req = urllib.request.Request(calendar_url, headers=headers)
-              with urllib.request.urlopen(req, timeout=30) as r:
-                  content_type = (r.headers.get("Content-Type") or "").lower()
-                  body = r.read().decode("utf-8", "replace")
+              payload = json.loads(path.read_text(encoding="utf-8"))
           except Exception as e:
-              raise SystemExit(f"BLS cache refresh failed closed: official calendar fetch failed: {e}")
+              raise SystemExit(f"BLS cache validation failed closed: invalid JSON: {e}")
 
-          if "BEGIN:VCALENDAR" not in body or "BEGIN:VEVENT" not in body:
-              raise SystemExit("BLS cache refresh failed closed: official calendar is not valid iCalendar content")
-          if content_type and "text/calendar" not in content_type and "text/plain" not in content_type:
-              raise SystemExit(f"BLS cache refresh failed closed: unexpected Content-Type {content_type!r}")
+          if payload.get("schemaVersion") != 1:
+              raise SystemExit("BLS cache validation failed closed: unsupported schemaVersion")
+          if payload.get("upstream", {}).get("authority") != "U.S. Bureau of Labor Statistics":
+              raise SystemExit("BLS cache validation failed closed: upstream authority mismatch")
+          if payload.get("upstream", {}).get("calendarUrl") != "https://www.bls.gov/schedule/news_release/bls.ics":
+              raise SystemExit("BLS cache validation failed closed: official calendar URL mismatch")
 
-          events = []
-          current = None
-          for line in unfold_ical(body):
-              if line == "BEGIN:VEVENT":
-                  current = {}
-                  continue
-              if line == "END:VEVENT":
-                  if current is not None:
-                      summary = unescape_ical(current.get("SUMMARY", "")).strip()
-                      dtstart = current.get("DTSTART", "")
-                      for title, pattern in wanted.items():
-                          m = pattern.match(summary)
-                          if not m:
-                              continue
-                          dm = re.fullmatch(r"(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})?", dtstart)
-                          if not dm:
-                              raise SystemExit(f"BLS cache refresh failed closed: unsupported DTSTART for {summary!r}: {dtstart!r}")
-                          year, month, day, hour, minute, _second = dm.groups()
-                          events.append({
-                              "title": title,
-                              "releaseDate": f"{year}-{month}-{day}",
-                              "releaseTime": f"{hour}:{minute}",
-                              "timezone": "America/New_York",
-                              "referencePeriod": (m.group(1) or "").strip(),
-                              "sourceUrl": calendar_url,
-                          })
-                          break
-                  current = None
-                  continue
-              if current is None or ":" not in line:
-                  continue
-              keypart, value = line.split(":", 1)
-              key = keypart.split(";", 1)[0].upper()
-              if key in ("SUMMARY", "DTSTART"):
-                  current[key] = value.strip()
+          try:
+              generated = datetime.datetime.fromisoformat(payload["generatedAt"].replace("Z", "+00:00"))
+          except Exception as e:
+              raise SystemExit(f"BLS cache validation failed closed: generatedAt invalid: {e}")
+          if generated.tzinfo is None:
+              raise SystemExit("BLS cache validation failed closed: generatedAt must be timezone-aware")
+          if generated > datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=5):
+              raise SystemExit("BLS cache validation failed closed: generatedAt is in the future")
 
-          if not events:
-              raise SystemExit("BLS cache refresh failed closed: no target releases found in official calendar")
+          max_age = payload.get("maxAgeHours")
+          if not isinstance(max_age, (int, float)) or max_age <= 0 or max_age > 36:
+              raise SystemExit("BLS cache validation failed closed: maxAgeHours must be within (0, 36]")
 
-          counts = {title: sum(1 for e in events if e["title"] == title) for title in wanted}
+          events = payload.get("events")
+          if not isinstance(events, list) or not events:
+              raise SystemExit("BLS cache validation failed closed: events missing or empty")
+
+          wanted = {"Employment Situation", "Consumer Price Index", "Producer Price Index"}
+          counts = {title: 0 for title in wanted}
+          seen = set()
+          for event in events:
+              title = event.get("title")
+              if title not in wanted:
+                  raise SystemExit(f"BLS cache validation failed closed: unexpected title {title!r}")
+              if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", event.get("releaseDate", "")):
+                  raise SystemExit(f"BLS cache validation failed closed: invalid releaseDate for {title}")
+              if event.get("releaseTime") != "08:30":
+                  raise SystemExit(f"BLS cache validation failed closed: unexpected releaseTime for {title}")
+              if event.get("timezone") != "America/New_York":
+                  raise SystemExit(f"BLS cache validation failed closed: unexpected timezone for {title}")
+              source = event.get("sourceUrl", "")
+              if not source.startswith("https://www.bls.gov/"):
+                  raise SystemExit(f"BLS cache validation failed closed: non-BLS source for {title}")
+              key = (title, event["releaseDate"], event["releaseTime"])
+              if key in seen:
+                  raise SystemExit(f"BLS cache validation failed closed: duplicate event {key}")
+              seen.add(key)
+              counts[title] += 1
+
           missing = [title for title, count in counts.items() if count == 0]
           if missing:
-              raise SystemExit("BLS cache refresh failed closed: target release series missing: " + ", ".join(missing))
+              raise SystemExit("BLS cache validation failed closed: missing release series: " + ", ".join(missing))
 
-          bad_times = [e for e in events if e["releaseTime"] != "08:30"]
-          if bad_times:
-              raise SystemExit("BLS cache refresh failed closed: unexpected target release time(s): " + json.dumps(bad_times))
-
-          keys = [(e["title"], e["releaseDate"], e["releaseTime"]) for e in events]
-          if len(keys) != len(set(keys)):
-              raise SystemExit("BLS cache refresh failed closed: duplicate target release entries detected")
-
-          events.sort(key=lambda x: (x["releaseDate"], x["releaseTime"], x["title"]))
-          payload = {
-              "schemaVersion": 1,
-              "generatedAt": datetime.datetime.now(datetime.timezone.utc).replace(microsecond=0).isoformat().replace("+00:00","Z"),
-              "maxAgeHours": 36,
-              "upstream": {
-                  "authority": "U.S. Bureau of Labor Statistics",
-                  "calendarUrl": calendar_url,
-                  "scheduleIndexUrl": "https://www.bls.gov/schedule/2026/",
-                  "note": "Normalized cache of the official BLS iCalendar feed for CarryPilot fallback transport only."
-              },
-              "events": events
-          }
-          Path("data").mkdir(exist_ok=True)
-          Path("data/bls-calendar.json").write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+          print(f"BLS cache integrity valid: {len(events)} events; generatedAt={payload['generatedAt']}; maxAgeHours={max_age}")
+          print("Network acquisition is intentionally outside GitHub-hosted runners because BLS returns HTTP 403 to that execution environment.")
           PY
-
-      - name: Commit cache if changed
-        shell: bash
-        run: |
-          set -euo pipefail
-          if git diff --quiet -- data/bls-calendar.json; then
-            echo "No BLS calendar changes."
-            exit 0
-          fi
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/bls-calendar.json
-          git commit -m "data: refresh official BLS calendar cache"
-          git push origin gh-pages
