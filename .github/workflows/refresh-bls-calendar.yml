@@ -16,7 +16,7 @@ jobs:
   refresh:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           ref: gh-pages
 
@@ -25,62 +25,101 @@ jobs:
         run: |
           set -euo pipefail
           python - <<'PY'
-          import json, re, urllib.request, datetime, html
+          import datetime, json, re, urllib.request
           from pathlib import Path
 
-          targets = [
-              ("Employment Situation", "https://www.bls.gov/schedule/news_release/empsit.htm"),
-              ("Consumer Price Index", "https://www.bls.gov/schedule/news_release/cpi.htm"),
-              ("Producer Price Index", "https://www.bls.gov/schedule/news_release/ppi.htm"),
-          ]
-          headers = {
-              "User-Agent": "Mozilla/5.0 (GitHub Actions; CarryPilot calendar cache)",
-              "Accept": "text/html,application/xhtml+xml"
+          calendar_url = "https://www.bls.gov/schedule/news_release/bls.ics"
+          wanted = {
+              "Employment Situation": re.compile(r"^Employment Situation(?:\s+for\s+(.+))?$", re.I),
+              "Consumer Price Index": re.compile(r"^Consumer Price Index(?:\s+for\s+(.+))?$", re.I),
+              "Producer Price Index": re.compile(r"^Producer Price Index(?:\s+for\s+(.+))?$", re.I),
           }
-          month_map = {"Jan.":1,"Feb.":2,"Mar.":3,"Apr.":4,"May":5,"Jun.":6,"Jul.":7,"Aug.":8,"Sep.":9,"Oct.":10,"Nov.":11,"Dec.":12}
+          headers = {
+              "User-Agent": "CarryPilot-BLS-Calendar-Cache/1.0 (+https://github.com/mrjromero/rovocapitalmanagement)",
+              "Accept": "text/calendar,text/plain;q=0.9,*/*;q=0.1",
+          }
+
+          def unfold_ical(text):
+              text = text.replace("\r\n", "\n").replace("\r", "\n")
+              lines = []
+              for line in text.split("\n"):
+                  if line.startswith((" ", "\t")) and lines:
+                      lines[-1] += line[1:]
+                  else:
+                      lines.append(line)
+              return lines
+
+          def unescape_ical(value):
+              return (value.replace("\\n", " ")
+                           .replace("\\N", " ")
+                           .replace("\\,", ",")
+                           .replace("\\;", ";")
+                           .replace("\\\\", "\\"))
+
+          try:
+              req = urllib.request.Request(calendar_url, headers=headers)
+              with urllib.request.urlopen(req, timeout=30) as r:
+                  content_type = (r.headers.get("Content-Type") or "").lower()
+                  body = r.read().decode("utf-8", "replace")
+          except Exception as e:
+              raise SystemExit(f"BLS cache refresh failed closed: official calendar fetch failed: {e}")
+
+          if "BEGIN:VCALENDAR" not in body or "BEGIN:VEVENT" not in body:
+              raise SystemExit("BLS cache refresh failed closed: official calendar is not valid iCalendar content")
+          if content_type and "text/calendar" not in content_type and "text/plain" not in content_type:
+              raise SystemExit(f"BLS cache refresh failed closed: unexpected Content-Type {content_type!r}")
+
           events = []
-          failures = []
+          current = None
+          for line in unfold_ical(body):
+              if line == "BEGIN:VEVENT":
+                  current = {}
+                  continue
+              if line == "END:VEVENT":
+                  if current is not None:
+                      summary = unescape_ical(current.get("SUMMARY", "")).strip()
+                      dtstart = current.get("DTSTART", "")
+                      for title, pattern in wanted.items():
+                          m = pattern.match(summary)
+                          if not m:
+                              continue
+                          dm = re.fullmatch(r"(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})?", dtstart)
+                          if not dm:
+                              raise SystemExit(f"BLS cache refresh failed closed: unsupported DTSTART for {summary!r}: {dtstart!r}")
+                          year, month, day, hour, minute, _second = dm.groups()
+                          events.append({
+                              "title": title,
+                              "releaseDate": f"{year}-{month}-{day}",
+                              "releaseTime": f"{hour}:{minute}",
+                              "timezone": "America/New_York",
+                              "referencePeriod": (m.group(1) or "").strip(),
+                              "sourceUrl": calendar_url,
+                          })
+                          break
+                  current = None
+                  continue
+              if current is None or ":" not in line:
+                  continue
+              keypart, value = line.split(":", 1)
+              key = keypart.split(";", 1)[0].upper()
+              if key in ("SUMMARY", "DTSTART"):
+                  current[key] = value.strip()
 
-          for title, url in targets:
-              try:
-                  req = urllib.request.Request(url, headers=headers)
-                  with urllib.request.urlopen(req, timeout=30) as r:
-                      body = r.read().decode("utf-8", "replace")
-                  plain = re.sub(r"<script[\s\S]*?</script>|<style[\s\S]*?</style>", " ", body, flags=re.I)
-                  plain = re.sub(r"<[^>]+>", " ", plain)
-                  plain = html.unescape(re.sub(r"\s+", " ", plain))
-                  if "Schedule of Releases for" not in plain:
-                      raise RuntimeError("schedule heading not found")
-                  row_re = re.compile(
-                      r"(January|February|March|April|May|June|July|August|September|October|November|December)\s+"
-                      r"(\d{4})(?:\s+\([PR]\))?\s+"
-                      r"(Jan\.|Feb\.|Mar\.|Apr\.|May|Jun\.|Jul\.|Aug\.|Sep\.|Oct\.|Nov\.|Dec\.)\s+"
-                      r"(\d{1,2}),\s+(\d{4})\s+(\d{1,2}:\d{2})\s+(AM|PM)",
-                      re.I
-                  )
-                  matched = 0
-                  for m in row_re.finditer(plain):
-                      matched += 1
-                      ref_month, ref_year, mon_abbr, day, year, clock, ampm = m.groups()
-                      hour, minute = map(int, clock.split(":"))
-                      if ampm.upper() == "PM" and hour != 12: hour += 12
-                      if ampm.upper() == "AM" and hour == 12: hour = 0
-                      release_date = f"{int(year):04d}-{month_map[mon_abbr]:02d}-{int(day):02d}"
-                      events.append({
-                          "title": title,
-                          "releaseDate": release_date,
-                          "releaseTime": f"{hour:02d}:{minute:02d}",
-                          "timezone": "America/New_York",
-                          "referencePeriod": f"{ref_month} {ref_year}",
-                          "sourceUrl": url,
-                      })
-                  if matched == 0:
-                      raise RuntimeError("no release rows matched")
-              except Exception as e:
-                  failures.append(f"{title}: {e}")
+          if not events:
+              raise SystemExit("BLS cache refresh failed closed: no target releases found in official calendar")
 
-          if failures:
-              raise SystemExit("BLS cache refresh failed closed: " + "; ".join(failures))
+          counts = {title: sum(1 for e in events if e["title"] == title) for title in wanted}
+          missing = [title for title, count in counts.items() if count == 0]
+          if missing:
+              raise SystemExit("BLS cache refresh failed closed: target release series missing: " + ", ".join(missing))
+
+          bad_times = [e for e in events if e["releaseTime"] != "08:30"]
+          if bad_times:
+              raise SystemExit("BLS cache refresh failed closed: unexpected target release time(s): " + json.dumps(bad_times))
+
+          keys = [(e["title"], e["releaseDate"], e["releaseTime"]) for e in events]
+          if len(keys) != len(set(keys)):
+              raise SystemExit("BLS cache refresh failed closed: duplicate target release entries detected")
 
           events.sort(key=lambda x: (x["releaseDate"], x["releaseTime"], x["title"]))
           payload = {
@@ -89,9 +128,9 @@ jobs:
               "maxAgeHours": 36,
               "upstream": {
                   "authority": "U.S. Bureau of Labor Statistics",
-                  "calendarUrl": "https://www.bls.gov/schedule/news_release/bls.ics",
+                  "calendarUrl": calendar_url,
                   "scheduleIndexUrl": "https://www.bls.gov/schedule/2026/",
-                  "note": "Normalized cache of official BLS release dates for CarryPilot fallback transport only."
+                  "note": "Normalized cache of the official BLS iCalendar feed for CarryPilot fallback transport only."
               },
               "events": events
           }
