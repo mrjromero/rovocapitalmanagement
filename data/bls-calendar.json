@@ -1,12 +1,12 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-30T14:40:32Z",
+  "generatedAt": "2026-10-01T06:33:50Z",
   "maxAgeHours": 36,
   "upstream": {
     "authority": "U.S. Bureau of Labor Statistics",
     "calendarUrl": "https://www.bls.gov/schedule/news_release/bls.ics",
     "scheduleIndexUrl": "https://www.bls.gov/schedule/2026/",
-    "note": "Normalized cache of official BLS release dates for CarryPilot fallback transport only."
+    "note": "Normalized cache of official BLS release dates for CarryPilot fallback transport only; refreshed from BLS-authoritative schedule evidence outside GitHub-hosted runners."
   },
   "events": [
     {
