@@ -1,6 +1,6 @@
 ---
 name: daily-market-brief
-version: 1.1.0
+version: 1.2.0
 description: Produce a verified, decision-oriented market briefing in Pre-Market, Intraday, or Post-Market mode, with a canonical dashboard, cross-asset interpretation, portfolio implications, catalysts, regime triggers, and explicit confidence/verification notes. Designed to be portable across AI platforms with web/research access.
 ---
 
@@ -177,6 +177,67 @@ Use this sequence:
 5. **Operating controls:** when action is supported, state implications under **Spread management**, **Leverage posture**, and **Velocity of money routing**.
 
 Do not force independent sensors to agree. Explain why apparently different outputs can coexist. An environment-only signal such as CarryPilot Market Monitor's Capacity-Friendly state is not an instruction to add leverage. A MacroRadar regime or confidence change is macro evidence, not a direct allocation command. Account-specific leverage posture requires actual account state.
+
+### CarryPilot Gamma shadow input
+
+When connected access to the CarryPilot history spreadsheet is available, read the most recent row from the `CarryPilot_Gamma_Shadow` tab during brief preparation.
+
+Treat Gamma as **observe-only environmental evidence**, not as CarryPilot's authoritative production status.
+
+Required handling:
+
+1. **Freshness and identity**
+   - Prefer the latest completed-session Gamma row.
+   - Read at minimum: Run Timestamp, Target Session, Model Version, Raw State, Smoothed State, Gate Reason, v1 Score, v1 State, Disagreement, Disagreement Reason, Credit Phase, and each channel state/evidence field.
+   - Confirm the row is attributable to the current `gamma-observe-only` model family.
+   - If the row is stale relative to the latest completed U.S. market session, malformed, or unavailable, mark Gamma **Unresolved / missing evidence** and do not infer its state.
+
+2. **Authority boundary**
+   - CarryPilot production v1 remains the authoritative CarryPilot status until a separate promotion decision is made.
+   - Gamma must not overwrite, relabel, or silently replace v1.
+   - A Gamma WATCH/ELEVATED/DEFENSIVE state is evidence for synthesis, not an account-level instruction.
+
+3. **Channel decomposition**
+   Reconcile Gamma primarily through its channels, not only its aggregate label:
+   - Funding Plumbing
+   - Capital Environment
+   - Credit Conditions
+   - Market Stress
+   - Liquidity / Market Functioning
+   - Macro Catalyst Risk
+
+   Preserve explicit `INSUFFICIENT EVIDENCE` states. Missing evidence must not be converted into NORMAL.
+
+4. **Disagreement interpretation**
+   When Gamma and v1 differ, explain the economic source of disagreement when material. For example:
+   - v1 may remain NORMAL because VIX, equity trend, and one-day liquid-credit proxies are orderly;
+   - Gamma may be WATCH because direct credit spreads or multi-session rate velocity are deteriorating.
+
+   Classify the relationship using **Confirmed**, **Partially confirmed**, **Divergent**, or **Unresolved / missing evidence** rather than deciding that one sensor is automatically correct.
+
+5. **Daily Market Brief usage**
+   - Use Gamma internally in the Executive Interpretation, Rates / funding, Credit, and cross-sensor reconciliation.
+   - Do not add a prominent user-facing "Gamma status" line by default while Gamma remains observe-only.
+   - Surface Gamma by name when the disagreement itself is material to the decision or the user asks for sensor detail.
+   - Prefer plain-English synthesis such as: "Funding and surface market stress remain orderly, while rates and credit are deteriorating enough to preserve optionality."
+
+6. **Portfolio translation boundary**
+   Gamma may change the environmental evidence used by the Daily Market Brief, but it cannot by itself set:
+   - leverage additions or reductions,
+   - target LTV,
+   - debt routing,
+   - Safety Buffer size,
+   - P1–P5 allocations.
+
+   Those decisions require the current Freedom Engine / balance-sheet state and the rest of the validated sensor set.
+
+7. **Operating-control translation**
+   If Gamma adds material evidence, translate it through:
+   - **Spread management:** whether compensation for credit/rate risk is improving or worsening relative to funding and Treasury alternatives.
+   - **Leverage posture:** whether external conditions support consuming capacity or favor preserving optionality.
+   - **Velocity of money routing:** whether incremental capital should deploy normally, stage more slowly, remain temporarily in **P1 — Stability Slice**, reduce liabilities, or wait for better compensation.
+
+   The final action still requires live account evidence and cross-sensor confirmation.
 
 If nothing material changed, preserve continuity rather than manufacturing action. Materiality means a change relevant to carry spread/opportunity cost, leverage safety, sustainable income, direct credit/funding stress, collateral resilience, or deployment velocity.
 
@@ -495,6 +556,8 @@ Before finalizing every brief, verify internally:
 - Did I include a confidence assessment and limitations?
 - Is the report compact enough to be decision-useful?
 - Did I reconcile available validated market sensors and preserve legitimate disagreement?
+- If connected Gamma shadow evidence was available, did I verify its freshness/model identity, preserve v1 authority, and use channel-level evidence rather than blindly copying the aggregate state?
+- Did I preserve Gamma `INSUFFICIENT EVIDENCE` channels rather than treating missing evidence as NORMAL?
 - If I referenced the 4Pillar architecture, did I use the canonical P1–P5 slice names on first reference?
 - Did I translate any material portfolio implication into Spread management, Leverage posture, and Velocity of money routing?
 - If delivered-output evidence is available, did I treat the rendered/delivered report—not repository intent alone—as the acceptance artifact?
