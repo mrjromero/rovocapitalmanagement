@@ -173,7 +173,7 @@ Use this sequence:
 1. **What changed?**
 2. **Cross-sensor reconciliation:** classify available evidence as **Confirmed**, **Partially confirmed**, **Divergent**, or **Unresolved / missing evidence**.
 3. **Positive-carry consequence:** explain the effect on carry spread/opportunity cost, income durability, collateral/funding sensitivity, and leverage safety.
-4. **Freedom Engine translation:** use **P1 — Stability Slice**, **P2 — Income Slice**, **P3 — Growth Slice**, **P4 — Hedge Slice**, and **P5 — Capital Amplifier** on first reference.
+4. **Freedom Engine translation:** use **Stability holdings**, **Income holdings**, **Growth holdings**, **Hedge holdings**, and **Household Treasury** on first reference.
 5. **Operating controls:** when action is supported, state implications under **Spread management**, **Leverage posture**, and **Velocity of money routing**.
 
 Do not force independent sensors to agree. Explain why apparently different outputs can coexist. An environment-only signal such as CarryPilot Market Monitor's Capacity-Friendly state is not an instruction to add leverage. A MacroRadar regime or confidence change is macro evidence, not a direct allocation command. Account-specific leverage posture requires actual account state.
@@ -227,7 +227,7 @@ Required handling:
    - target LTV,
    - debt routing,
    - Safety Buffer size,
-   - P1–P5 allocations.
+   - Stability, Income, Growth, and Hedge holdings plus Household Treasury allocations.
 
    Those decisions require the current Freedom Engine / balance-sheet state and the rest of the validated sensor set.
 
@@ -235,7 +235,7 @@ Required handling:
    If Gamma adds material evidence, translate it through:
    - **Spread management:** whether compensation for credit/rate risk is improving or worsening relative to funding and Treasury alternatives.
    - **Leverage posture:** whether external conditions support consuming capacity or favor preserving optionality.
-   - **Velocity of money routing:** whether incremental capital should deploy normally, stage more slowly, remain temporarily in **P1 — Stability Slice**, reduce liabilities, or wait for better compensation.
+   - **Velocity of money routing:** whether incremental capital should deploy normally, stage more slowly, remain temporarily in **Stability holdings**, reduce liabilities, or wait for better compensation.
 
    The final action still requires live account evidence and cross-sensor confirmation.
 
@@ -558,7 +558,7 @@ Before finalizing every brief, verify internally:
 - Did I reconcile available validated market sensors and preserve legitimate disagreement?
 - If connected Gamma shadow evidence was available, did I verify its freshness/model identity, preserve v1 authority, and use channel-level evidence rather than blindly copying the aggregate state?
 - Did I preserve Gamma `INSUFFICIENT EVIDENCE` channels rather than treating missing evidence as NORMAL?
-- If I referenced the 4Pillar architecture, did I use the canonical P1–P5 slice names on first reference?
+- If I referenced the 4Pillar architecture, did I use the canonical Stability, Income, Growth, and Hedge holdings plus Household Treasury slice names on first reference?
 - Did I translate any material portfolio implication into Spread management, Leverage posture, and Velocity of money routing?
 - If delivered-output evidence is available, did I treat the rendered/delivered report—not repository intent alone—as the acceptance artifact?
 
