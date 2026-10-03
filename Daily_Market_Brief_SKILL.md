@@ -558,7 +558,7 @@ Before finalizing every brief, verify internally:
 - Did I reconcile available validated market sensors and preserve legitimate disagreement?
 - If connected Gamma shadow evidence was available, did I verify its freshness/model identity, preserve v1 authority, and use channel-level evidence rather than blindly copying the aggregate state?
 - Did I preserve Gamma `INSUFFICIENT EVIDENCE` channels rather than treating missing evidence as NORMAL?
-- If I referenced the 4Pillar architecture, did I use the canonical Stability, Income, Growth, and Hedge holdings plus Household Treasury slice names on first reference?
+- If I referenced the 4Pillar architecture, did I use the canonical Stability, Income, Growth, and Hedge holdings plus Household Treasury names on first reference?
 - Did I translate any material portfolio implication into Spread management, Leverage posture, and Velocity of money routing?
 - If delivered-output evidence is available, did I treat the rendered/delivered report—not repository intent alone—as the acceptance artifact?
 
