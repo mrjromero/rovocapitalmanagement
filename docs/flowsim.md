@@ -24,7 +24,7 @@ Every month checks:
 
 Debt/asset and interest-coverage limits are illustrative screens. Coverage is distributions / interest only, **not household DSCR**. A zero denominator is N/A, never an automatic pass. Funding or insolvency failures stop the path. Breaches flag a path but do not simulate lender liquidation. Comparisons at different/failing horizons are undefined.
 
-The default month 36 ends with investments $101,456.888495, debt $22,072.553027 and equity $79,384.335469, compared with pay-cash equity about $78,176.70. These rounded reference values are examples, not forecasts. The baseline is not stress-approved capacity.
+The default month 36 ends with investments $101,456.89, debt $22,072.55 and equity $79,384.34, compared with pay-cash equity about $78,176.70. These rounded reference values are examples, not forecasts. The baseline is not stress-approved capacity.
 
 ## Limits
 
