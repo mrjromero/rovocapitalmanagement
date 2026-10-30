@@ -5,7 +5,8 @@ const form=document.querySelector('#scenario'), $=id=>document.getElementById(id
 const money=new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',maximumFractionDigits:2});
 const compact=new Intl.NumberFormat('en-US',{notation:'compact',maximumFractionDigits:1});
 const pct=v=>v===null?'N/A':`${(100*v).toFixed(2)}%`, cash=v=>money.format(v);
-let latest=null, latestConfig=null;
+let latest=null, latestConfig=null, inspectedMonth=0;
+const hiddenSeries=new Set();
 const columns=[['month','Month','int'],['opening_assets','Opening investments'],['opening_debt','Opening debt'],['opening_cash','Opening reserve'],['income','Take-home pay'],['expenses','All bills'],['unrouted_expenses','Bills paid directly'],['routed_expenses','Bills financed'],['interest','Interest cost'],['interest_paid','Interest paid in cash'],['capitalized_interest','Interest added to debt'],['household_cash_after_financing','Paycheck cash after financing'],['invested','Total invested'],['distributions','Cash distributions'],['principal_repaid','Debt repaid'],['price_gain','Price change'],['shock_return','Shock gain / loss'],['assets','Ending investments'],['cash','Ending reserve'],['debt','Ending debt'],['net_equity','Net equity'],['real_net_equity','Inflation-adjusted equity'],['external_surplus','Household surplus'],['economic_return','Economic return'],['dta','Debt / investments','pct'],['period_max_dta','Highest monthly debt ratio','pct'],['portfolio_interest_coverage','Interest coverage','ratio'],['accounting_residual','Reconciliation error'],['status','Funding status','text'],['scenario_constraint_violations','Limits breached','list']];
 const simple=['month','income','unrouted_expenses','routed_expenses','interest_paid','capitalized_interest','invested','distributions','principal_repaid','assets','debt','net_equity','dta'];
 function num(name){const raw=form.elements[name].value;if(raw.trim()==='')throw new Error(`Please enter ${name}.`);const n=Number(raw);if(!Number.isFinite(n))throw new Error(`Invalid ${name}.`);return n;}
@@ -30,15 +31,40 @@ function table(){if(!latest)return;const mode=$('ledgerMode').value,cs=$('column
  $('ledgerBody').replaceChildren();for(const row of latest[mode].monthly){const tr=document.createElement('tr');tr.className=row.status==='failed'?'failed':row.scenario_constraint_violations.length?'breach':'';for(const[key,,type]of cs){let td=document.createElement('td');td.textContent=fmt(row[key],type);tr.append(td);}$('ledgerBody').append(tr);}
 }
 function chart(){const c=latestConfig,series=[['FLOW investments',latest.flow,'assets','#adbdb5'],['FLOW debt',latest.flow,'debt','#bd7b2e'],['Pay-cash net equity',latest.pay_cash,'net_equity','#527ab0'],['FLOW net equity',latest.flow,'net_equity','#147b72']];
- const W=900,H=320,L=65,R=18,T=20,B=40;const initial=c.initial_assets+c.initial_cash-c.initial_debt;
- const points=series.map(([label,s,key,color])=>({label,color,values:[[0,key==='assets'?c.initial_assets:key==='debt'?c.initial_debt:initial],...s.monthly.map(r=>[r.month,r[key]])]}));
+ const W=Math.max(280,$('chart').clientWidth||900),H=320,L=65,R=24,T=20,B=40;const initial=c.initial_assets+c.initial_cash-c.initial_debt;
+ const points=series.filter(([label])=>!hiddenSeries.has(label)).map(([label,s,key,color])=>({label,color,values:[[0,key==='assets'?c.initial_assets:key==='debt'?c.initial_debt:initial],...s.monthly.map(r=>[r.month,r[key]])]}));
  const vals=points.flatMap(s=>s.values.map(p=>p[1]));let lo=Math.min(0,...vals),hi=Math.max(1,...vals);if(hi===lo)hi=lo+1;const x=m=>L+m/c.months*(W-L-R),y=v=>T+(hi-v)/(hi-lo)*(H-T-B);
  let svg=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-labelledby="chartTitle chartDesc"><title id="chartTitle">Investments, debt, and net equity</title><desc id="chartDesc">Month-by-month values are also available in the accessible ledger and CSV. Lines stop if funding fails.</desc>`;
  for(let n=0;n<=4;n++){const v=lo+(hi-lo)*n/4;svg+=`<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="#e2eae6"/><text x="${L-10}" y="${y(v)+4}" text-anchor="end" fill="#5b7075" font-size="11">$${compact.format(v)}</text>`;}
- for(const m of [...new Set([0,Math.round(c.months/2),c.months])])svg+=`<text x="${x(m)}" y="${H-12}" text-anchor="middle" fill="#5b7075" font-size="11">Month ${m}</text>`;
- for(const s of points)svg+=`<polyline fill="none" stroke="${s.color}" stroke-width="${s.label==='FLOW net equity'?3:2}" stroke-linejoin="round" points="${s.values.map(([m,v])=>`${x(m)},${y(v)}`).join(' ')}"/>`;
- $('chart').innerHTML=svg+'</svg>';
+ for(let m=0;m<=c.months;m++)svg+=`<line x1="${x(m)}" x2="${x(m)}" y1="${H-B}" y2="${H-B+4}" stroke="#b8cac8"/>`;
+ for(const m of [...new Set([0,Math.round(c.months/2),c.months])])svg+=`<text x="${x(m)}" y="${H-12}" text-anchor="${m===0?'start':m===c.months?'end':'middle'}" fill="#5b7075" font-size="11">Month ${m}</text>`;
+ for(const s of points){
+  svg+=`<polyline fill="none" stroke="${s.color}" stroke-width="${s.label==='FLOW net equity'?3:2}" stroke-linejoin="round" points="${s.values.map(([m,v])=>`${x(m)},${y(v)}`).join(' ')}"/>`;
+  for(const [m,v]of s.values)svg+=`<circle cx="${x(m)}" cy="${y(v)}" r="2" fill="${s.color}"/>`;
+ }
+ svg+='<g class="chart-selection" aria-hidden="true"></g></svg>';
+ $('chart').innerHTML=svg+'<p class="hint" id="chartHelp">Hover or tap the chart to inspect a month. Use the slider with arrow keys; Home and End select the first and last month. Values are from the last run.</p><label for="chartMonth">Inspect month</label><input id="chartMonth" type="range" min="0" max="'+c.months+'" step="1" aria-describedby="chartHelp"><div id="chartReadout" class="chart-readout" role="status" aria-live="polite" aria-atomic="true"></div>';
+ const slider=$('chartMonth'),plot=$('chart').querySelector('svg'),selection=plot.querySelector('.chart-selection');
+ function inspect(month){
+  inspectedMonth=Math.max(0,Math.min(c.months,Math.round(month)));slider.value=inspectedMonth;
+  slider.setAttribute('aria-valuetext',`Month ${inspectedMonth}${inspectedMonth===0?' (starting position)':''}`);
+  let marks=`<line x1="${x(inspectedMonth)}" x2="${x(inspectedMonth)}" y1="${T}" y2="${H-B}" stroke="#5b7075" stroke-dasharray="3 3"/>`;
+  const title=document.createElement('strong');title.textContent=`Month ${inspectedMonth}${inspectedMonth===0?' · Starting position':''}`;$('chartReadout').replaceChildren(title);
+  if(!points.length){const empty=document.createElement('p');empty.textContent='All lines hidden. Select a legend label to show a line.';$('chartReadout').append(empty);}
+  for(const s of points){const point=s.values.find(p=>p[0]===inspectedMonth),item=document.createElement('div'),label=document.createElement('span'),value=document.createElement('b');label.textContent=s.label;value.textContent=point?cash(point[1]):'N/A — path stopped';item.append(label,value);$('chartReadout').append(item);if(point)marks+=`<circle cx="${x(inspectedMonth)}" cy="${y(point[1])}" r="4" stroke="white" stroke-width="1.5" fill="${s.color}"/>`;}
+  selection.innerHTML=marks;
+ }
+ function inspectPointer(event){const box=plot.getBoundingClientRect();if(box.width)inspect(((event.clientX-box.left)*W/box.width-L)/(W-L-R)*c.months);}
+ plot.addEventListener('pointermove',event=>{if(event.pointerType!=='touch')inspectPointer(event);});
+ plot.addEventListener('pointerdown',inspectPointer);
+ slider.addEventListener('input',()=>inspect(Number(slider.value)));
+ inspect(inspectedMonth);
 }
+window.addEventListener('resize',()=>{if(latest)chart();});
+document.querySelectorAll('.legend [data-series]').forEach(button=>button.addEventListener('click',()=>{
+ const label=button.dataset.series;if(hiddenSeries.has(label))hiddenSeries.delete(label);else hiddenSeries.add(label);
+ button.setAttribute('aria-pressed',String(!hiddenSeries.has(label)));if(latest)chart();
+}));
 function render(){const f=latest.flow,p=latest.pay_cash,c=latestConfig;const breaches=f.monthly.filter(r=>r.scenario_constraint_violations.length);const undefinedLimits=f.monthly.some(r=>r.scenario_constraints_undefined.length);const known=c.evidence.reserve_status.startsWith('User');
  $('equity').textContent=cash(f.final.net_equity);$('equityDetail').textContent=`Month ${f.final.month}: ${cash(f.final.assets)} invested · ${cash(f.final.debt)} debt`;
  $('advantage').textContent=latest.comparison.same_full_horizon?cash(latest.comparison.ending_equity_advantage):'Not comparable';

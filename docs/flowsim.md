@@ -40,6 +40,12 @@ node --test tests/flowsim.test.js
 
 The 43 tests include 15 Python-generated reference cases (cash/capitalized interest, existing debt, market shocks, zero APR/yield, negative returns, cash/access gaps, reserves, asset sales, inflation, actual day counts, and monthly paths), monthly identity checks, invalid input and overflow.
 
-Optional DOM test: install jsdom from the npm registry in a temporary dependency directory, then run `NODE_PATH=/path/to/node_modules node tests/flowsim-dom.cjs`. DOM integration was checked in JSDOM: default values, 36 rows, chart series, full/learning ledger, pay-cash view, repeated CSV downloads and readback, invalid routing, reset, stress, funding failure, zero APR, capitalized interest and reserve scenario. Browser-level visual/mobile rendering remains unverified in the current environment because Chromium launch is restricted and the cloud browser cannot reach the local server. Responsive styles are supplied but this is not a claim of visual QA.
+Optional DOM test: install jsdom from the npm registry in a temporary dependency directory, then run `NODE_PATH=/path/to/node_modules node tests/flowsim-dom.cjs`. DOM integration was checked in JSDOM: default values, 36 rows, chart series, full/learning ledger, pay-cash view, repeated CSV downloads and readback, invalid routing, reset, stress, funding failure, zero APR, capitalized interest and reserve scenario. The monthly chart update was additionally checked in Chrome at desktop, 375px and 320px widths, with 36/60-month endpoints, keyboard inspection and legend toggles. Touch pointer mapping is covered by DOM tests; physical-device touch testing is not claimed.
 
-No deployment workflow is added and no existing site files are changed.
+No deployment workflow is added. Chart changes are confined to the FLOW simulator UI.
+
+## Monthly chart inspection
+
+Each plotted month has a marker. Hover or tap to select the nearest month; the persistent readout below the chart lists dollar values without an edge-clipped popup. The month slider supports arrow keys, Home and End. Click, tap, Space or Enter on a legend button to hide/show a series. The axis and readout use visible series; hiding every series shows a recovery prompt. Selection and legend state survive redraws. Stopped paths report N/A after their last calculated month. Chart controls never alter scenario inputs, the ledger, or CSV.
+
+Run `node tests/flowsim-chart.cjs` with the same temporary jsdom dependency as the DOM suite. It covers 36/60-month endpoints, mouse/touch pointer mapping, all-hidden recovery, resize state, failed paths, and byte-identical CSV before/after chart interaction.
