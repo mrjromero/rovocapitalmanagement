@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="robots" content="noindex, nofollow">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Income Amplifier - Corrected Ledger</title>
+    <title>Income Amplifier — Corrected Ledger</title>
     <!-- Include Chart.js for Projections -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js"></script>
     <style>
@@ -503,7 +503,7 @@
         <div class="form-group">
             <label for="stackMultiplier">Stack Increase Multiplier</label>
             <input type="number" step="0.1" id="stackMultiplier" value="1.5">
-            <div class="hint">Each new stack = previous stack x this multiplier</div>
+            <div class="hint">Each new stack = previous stack × this multiplier</div>
         </div>
         <div class="form-group">
             <label for="personalCashFlow">Personal Contribution ($/month)</label>
@@ -844,7 +844,7 @@
             </div>
 
             <div class="snapshot-card">
-                <h3>Ledger reconciliation � through Month ${globalSimulationData.maxMonths}</h3>
+                <h3>Ledger reconciliation · through Month ${globalSimulationData.maxMonths}</h3>
                 <div class="snapshot-metrics-row">${[
                     ['Cumulative gross receipts', metrics.receipts], ['Returned principal', metrics.principalReceived],
                     ['Earned asset interest', metrics.interestReceived], ['Personal contributions', metrics.personalCash],
@@ -852,8 +852,8 @@
                     ['Remaining principal', metrics.remainingPrincipal], ['Ending LOC debt', metrics.endingDebt],
                     ['Cash surplus', metrics.cashSurplus], ['Book net equity', metrics.netEquity]
                 ].map(([label,value]) => `<div class="snapshot-metric-item"><div class="snapshot-metric-title">${label}</div><div class="snapshot-metric-value">${formatCurrencyPrecise(value)}</div></div>`).join('')}</div>
-                <p class="hint">Net economic result = earned asset interest - LOC financing cost = book net equity - contributions. Book net equity = remaining principal + cash surplus - debt. Future interest is excluded; principal is assumed fully collectible, not marked to market. All cash is recycled, so this result is not a spendable cash balance.</p>
-                <p class="hint">Timing: opening debt accrues one month of interest; existing investments pay; your contribution arrives; then at most one purchase occurs. A purchase in M1 pays in M2-M37 for a 36-month term. Peak debt includes opening, interest-accrued, and post-purchase checkpoints.</p>
+                <p class="hint">Net economic result = earned asset interest − LOC financing cost = book net equity − contributions. Book net equity = remaining principal + cash surplus − debt. Future interest is excluded; principal is assumed fully collectible, not marked to market. All cash is recycled, so this result is not a spendable cash balance.</p>
+                <p class="hint">Timing: opening debt accrues one month of interest; existing investments pay; your contribution arrives; then at most one purchase occurs. A purchase in M1 pays in M2–M37 for a 36-month term. Peak debt includes opening, interest-accrued, and post-purchase checkpoints.</p>
                 <p class="hint">Hypothetical model: constant input rates, no defaults, fees, taxes, prepayments, credit cap or credit withdrawal. Positive LOC balances are treated as non-interest-bearing cash. Growth triggers use whole monthly payoff periods. Scheduled lifetime interest in the stack table is before financing costs and may extend beyond the horizon.</p>
             </div>
             <div class="chart-container">
@@ -863,7 +863,7 @@
                         <div class="tooltip-wrapper" style="margin-left: 8px; font-weight: normal;">
                             <button class="info-icon" aria-label="More info" tabindex="0">?</button>
                             <div class="tooltip-content" id="chart-tooltip">
-                                <p>This chart illustrates the <strong>velocity of money</strong>-showing exactly how debt, personal contributions, and gross receipts change over time.</p>
+                                <p>This chart illustrates the <strong>velocity of money</strong>—showing exactly how debt, personal contributions, and gross receipts change over time.</p>
                                 <h4>Interactive Feature</h4>
                                 <ul>
                                     <li><strong>Stack-by-Stack Tab:</strong> Shows granular, month-by-month "sawtooth" velocity mechanics alongside your flat personal contribution baseline and the highlighted <strong>Receipt Crossover Milestone</strong>.</li>
@@ -969,7 +969,7 @@
                                     <td class="profit-green">+${formatCurrency(profit)}</td>
                                     <td class="text-center">
                                         <button class="btn-sm" onclick="openScheduleModal(${s.id})" aria-label="View amortization schedule">
-                                            ?? View
+                                            🔍 View
                                         </button>
                                     </td>
                                 </tr>
@@ -1019,7 +1019,7 @@
 
     function renderChart(viewMode) {
         if (typeof Chart === 'undefined') {
-            document.getElementById('chart-title').textContent = 'Chart unavailable offline - tables and CSV remain available';
+            document.getElementById('chart-title').textContent = 'Chart unavailable offline — tables and CSV remain available';
             return;
         }
         const ctx = document.getElementById('projectionChart').getContext('2d');
@@ -1206,7 +1206,7 @@
                     crossoverData[crossoverIdx] = incomeData[crossoverIdx];
                     chartDataSets.push({
                         type: 'line',
-                        label: `? Receipt Crossover (M${globalSimulationData.crossoverMonth})`,
+                        label: `⚡ Receipt Crossover (M${globalSimulationData.crossoverMonth})`,
                         data: crossoverData,
                         borderColor: '#d97706',
                         backgroundColor: '#d97706',
@@ -1478,3 +1478,4 @@
 
 </body>
 </html>
+
