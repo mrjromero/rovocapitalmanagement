@@ -8,7 +8,7 @@ window.FlowTimeline=(()=>{
  let result=null,config=null,month=1;
  const dialog=$('timelineDialog'),grid=$('timelineGrid'),detail=$('timelineDetail');
  const element=(tag,text,cls)=>{const e=document.createElement(tag);e.textContent=text;if(cls)e.className=cls;return e;};
- const activeLanes=()=>config?.adaptive_policy?lanes.concat([['paycheck_target_invested','Paycheck-target investment','allocation'],['distribution_expense_coverage','Distributions / all bills','share']]):lanes;
+ const activeLanes=()=>config?.adaptive_policy?lanes.concat([['paycheck_target_invested','Household cash allocated to investment','allocation'],['distribution_expense_coverage','Distributions / all bills','share']]):lanes;
  const known=()=>config.evidence.reserve_status.startsWith('User');
  function rowAt(m){return result[$('timelineMode').value].monthly.find(r=>r.month===m);}
  function amount(row,key){if(row&&key==='financed_share')return row.expenses>0?(100*row.routed_expenses/row.expenses).toFixed(1)+'%':'N/A (no bills)';if(row&&key==='distribution_expense_coverage')return row[key]===null?'N/A':(100*row[key]).toFixed(1)+'%';return key==='cash'&&!known()?'Unknown / excluded':row?money.format(row[key]):'Not modeled';}
@@ -17,16 +17,16 @@ window.FlowTimeline=(()=>{
   if(!result)return;
   month=Math.max(1,Math.min(config.months,Math.round(m)));$('timelineMonth').value=month;$('timelineMonth').setAttribute('aria-valuetext',`Month ${month}`);
   $('timelinePrevious').disabled=month===1;$('timelineNext').disabled=month===config.months;
-  const r=rowAt(month);detail.replaceChildren(element('h3',`${$('timelineMode').selectedOptions[0].textContent} · Month ${month}`),element('p',state(month),'timeline-state'));
+  const r=rowAt(month);const summary=$('timelineSummary');summary.replaceChildren(element('strong',`Month ${month} - ${state(month)}`));if(r)summary.append(element('p',`Direct: ${amount(r,'unrouted_expenses')} | Financed: ${amount(r,'routed_expenses')} (${amount(r,'financed_share')})`));detail.replaceChildren(element('h3',`${$('timelineMode').selectedOptions[0].textContent} · Month ${month}`),element('p',state(month),'timeline-state'));
   if(r){if(r.routing_decision){detail.append(element('p',`Routing: ${r.routing_decision}. ${explainReasons(r.routing_reasons)}`));detail.append(element('p','Financing changes how bills are paid; it does not reduce the take-home income assumed here.','hint'));}if(r.status==='failed')detail.append(element('p','This is the failed-month ledger snapshot, not a successfully funded month.'));
-   if(r.scenario_constraint_violations.length)detail.append(element('p',`Limits: ${r.scenario_constraint_violations.join(', ')}`));
+   if(config.adaptive_policy)detail.append(element('p','Household cash allocated to investment comes from pooled available cash, not separately traced salary dollars.','hint'));detail.append(element('p',`Highest monthly DTA including borrowing peak: ${r.period_max_dta===null?'N/A':(r.period_max_dta*100).toFixed(2)+'%'}`));if(r.scenario_constraint_violations.length)detail.append(element('p',`Limits: ${r.scenario_constraint_violations.join(', ')}`));
    const dl=element('dl','');for(const[key,label]of activeLanes()){dl.append(element('dt',label),element('dd',amount(r,key)));}detail.append(dl);
   }else detail.append(element('p','No amounts are projected after the path stops. Earlier months remain available.'));
   grid.querySelectorAll('[data-month]').forEach(e=>{const selected=Number(e.dataset.month)===month;e.classList.toggle('selected',selected);if(e.tagName==='BUTTON'){e.setAttribute('aria-pressed',String(selected));e.tabIndex=selected?0:-1;}});
   if(scroll){const e=grid.querySelector(`[data-month="${month}"]`);e?.scrollIntoView?.({block:'nearest',inline:'center'});}
  }
  function draw(){
-  grid.replaceChildren();if(!result){detail.replaceChildren(element('p','Run a valid scenario to view its monthly timeline.'));return;}
+  grid.replaceChildren();if(!result){$('timelineSummary').replaceChildren();detail.replaceChildren(element('p','Run a valid scenario to view its monthly timeline.'));return;}
   const table=element('table','');table.className='timeline-table';table.append(element('caption','Monthly amounts from the last run. Colored bands identify categories; their widths represent one month, not dollar magnitude. In the financed-share row, gold is financed and gray is direct-paid.'));
   const head=element('thead',''),hr=element('tr','');hr.append(element('th','Monthly ledger'));
   for(let m=1;m<=config.months;m++){const th=element('th','');th.scope='col';th.dataset.month=m;const b=element('button',`M${m}`);b.type='button';b.dataset.month=m;b.setAttribute('aria-label',`Inspect month ${m}`);th.append(b);hr.append(th);}head.append(hr);table.append(head);

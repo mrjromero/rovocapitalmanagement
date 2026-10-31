@@ -15,7 +15,9 @@ function equal(actual, expected, path='result') {
     for (const [k,v] of Object.entries(expected)) equal(actual[k],v,path+'.'+k);
   } else assert.equal(actual,expected,path);
 }
-for (const c of fixture.cases) test('Python parity: '+c.name,()=>equal(engine.compare(c.input),c.expected));
+// Reference fixtures predate the peak-risk reporting correction; preserve all financial comparisons.
+function accountingOnly(value){if(Array.isArray(value))return value.map(accountingOnly);if(value&&typeof value==='object')return Object.fromEntries(Object.entries(value).filter(([k])=>!['max_dta','period_max_dta','scenario_constraint_violations'].includes(k)).map(([k,v])=>[k,accountingOnly(v)]));return value;}
+for(const c of fixture.cases)test('Python accounting parity and independent peak-risk checks: '+c.name,()=>{const actual=engine.compare(c.input);equal(accountingOnly(actual),accountingOnly(c.expected));for(const strategy of ['flow','pay_cash']){const path=actual[strategy];for(let i=0;i<path.monthly.length;i++){const r=path.monthly[i],old=c.expected[strategy].monthly[i],collateral=r.opening_assets+r.shock_return,peak=collateral>0?(r.opening_debt+r.routed_expenses+r.capitalized_interest)/collateral:null;equal(r.peak_financing_dta,peak);equal(r.observed_max_dta,old.period_max_dta);const values=[old.period_max_dta,peak].filter(v=>v!==null);equal(r.period_max_dta,values.length?Math.max(...values):null);assert.deepEqual(r.scenario_constraint_violations.filter(k=>k!=='max_dta'),old.scenario_constraint_violations.filter(k=>k!=='max_dta'));if(c.input.scenario_constraints?.max_dta!==undefined)assert.equal(r.scenario_constraint_violations.includes('max_dta'),r.period_max_dta!==null&&r.period_max_dta>c.input.scenario_constraints.max_dta);}const maxima=path.monthly.map(r=>r.period_max_dta).filter(v=>v!==null);equal(path.max_dta,maxima.length?Math.max(...maxima):null);}});
 test('matches published synthetic 36-month baseline and first month',()=>{
  const r=engine.compare(engine.defaultConfig());
  equal(r.flow.final.net_equity,79384.33546853966);
