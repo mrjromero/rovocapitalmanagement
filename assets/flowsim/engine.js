@@ -70,7 +70,37 @@
       if (!['max_dta','min_cash','min_interest_coverage'].includes(k)) throw new Error('Unsupported scenario constraint ' + k);
       number(v, k, 0);
     }
+    if (c.adaptive_policy) {
+      const p=c.adaptive_policy;
+      if(!isObject(p)||typeof p.reserve_known!=='boolean')throw new Error('Adaptive policy requires explicit reserve knowledge');
+      for(const k of ['grid_dollars','monthly_increase'])number(p[k],k,k==='grid_dollars'?1:0);
+      for(const k of ['asset_haircut','payout_cut'])number(p[k],k,0,1);
+      number(p.apr_add,'apr_add',0);number(p.reserve_months,'reserve_months',0);
+      number(c.scenario_constraints?.max_dta,'adaptive max_dta',0,1);
+      number(c.scenario_constraints?.min_interest_coverage,'adaptive min_interest_coverage',0);
+      if(c.rate_convention!=='nominal_monthly'||c.interest_timing!=='opening_plus_current_routing')throw new Error('Adaptive routing requires nominal monthly opening-plus-routing interest');
+    }
     return c;
+  }
+  function adaptiveRoute(c,s) {
+    const p=c.adaptive_policy,collateral=s.assets*(1-p.asset_haircut),payout=s.distributions*(1-p.asset_haircut)*(1-p.payout_cut),rate=s.apr+p.apr_add;
+    const ceiling=Math.min(s.expenses,s.ceiling);
+    function check(candidate){
+      const interest=(s.debt+candidate)*rate/12,peak=s.debt+candidate+(c.interest_payment_policy==='capitalize'?interest:0),dta=ratio(peak,collateral),coverage=ratio(payout,interest),required=p.reserve_months*(s.expenses+interest),reasons=[];
+      if(!p.reserve_known)reasons.push('reserve_unknown');
+      if(s.cash*s.access+1e-8<required)reasons.push('reserve_screen');
+      if(dta===null)reasons.push('dta_undefined');else if(dta>c.scenario_constraints.max_dta+1e-12)reasons.push('peak_dta');
+      if(coverage===null)reasons.push('coverage_undefined');else if(coverage+1e-12<c.scenario_constraints.min_interest_coverage)reasons.push('interest_coverage');
+      const actualInterest=(s.debt+candidate)*s.apr/12,free=s.income-s.expenses+candidate-(c.interest_payment_policy==='capitalize'?0:actualInterest)-c.costs.monthly_fees-c.costs.monthly_taxes;
+      if(s.cash+free+s.distributions < -1e-8 || s.cash*s.access+free+s.distributions < -1e-8 || (c.shortfall_policy==='stop' && s.cash+free+s.distributions<c.allocation.reserve_floor-1e-8))reasons.push('cash_funding');
+      return {candidate,dta,coverage,required,reasons};
+    }
+    const count=Math.floor((ceiling+1e-8)/p.grid_dollars);if(count>10000)throw new Error('Adaptive grid exceeds 10,000 candidates; increase grid dollars');
+    let selected=null,lastRejected=null;
+    // Explicit descending grid: never assume funding improves with smaller borrowing.
+    for(let n=count;n>=1;n--){const r=check(n*p.grid_dollars);if(!r.reasons.length){selected=r;break;}lastRejected=r;}
+    const screen=selected??check(0);
+    return {amount:selected?.candidate??0,ceiling,screen,reasons:selected?(selected.candidate<count*p.grid_dollars?check(selected.candidate+p.grid_dollars).reasons:['monthly_ceiling_or_grid']):[...new Set([...screen.reasons,...(lastRejected?.reasons??[]),...(count===0?['below_grid']:[])])]};
   }
   function dayFraction(c, m) {
     if (c.rate_convention === 'nominal_monthly') return 1 / 12;
@@ -78,11 +108,11 @@
     const days = new Date(Date.UTC(year, month + m - 1, 0)).getUTCDate();
     return days / (c.rate_convention === 'actual_365' ? 365 : 360);
   }
-  function simulate(config, payCash = false) {
+  function simulate(config, payCash = false, fixedRouting = false) {
     validate(config); // Validate before JSON copying so NaN/Infinity cannot silently become null.
     const c = clone(config); let A = c.initial_assets, D = c.initial_debt, C = c.initial_cash;
     const rows = []; let inflation = 1, income = c.monthly_take_home, status = 'completed', failure = null;
-    let dm = 1, im = 1, access = 1, aprOverride = null;
+    let dm = 1, im = 1, access = 1, aprOverride = null, previousRouted=0;
     for (let m = 1; m <= c.months; m++) {
       const openingA = A, openingD = D, openingC = C, openingE = A + C - D;
       if (m > 1) { inflation *= 1 + c.annual_inflation / 12; income *= 1 + c.annual_income_growth / 12; }
@@ -92,19 +122,23 @@
         dm = s.distribution_multiplier ?? dm; im = s.income_multiplier ?? im;
         access = s.accessible_cash_fraction ?? access; aprOverride = s.apr_override ?? aprOverride;
       }
+      const admissionAssets=A;
       const postShockDta = ratio(D, A), priceGain = A * at(c.annual_price_return, m, 'annual_price_return') / 12;
       const dist = A * at(c.annual_distribution_yield, m, 'annual_distribution_yield') / 12 * dm;
       A += priceGain;
       if (A < -1e-8) throw new Error('Price path creates negative asset value');
       const expenses = c.expenses.reduce((s, e) => s + e.monthly_amount * inflation, 0);
-      const routed = payCash ? 0 : c.expenses.reduce((s, e) => s + e.monthly_amount * inflation * at(e.routed_fraction, m, 'routed_fraction'), 0);
+      let routed = payCash ? 0 : c.expenses.reduce((s, e) => s + e.monthly_amount * inflation * at(e.routed_fraction, m, 'routed_fraction'), 0);
       const actualIncome = income * im, apr = aprOverride ?? at(c.annual_apr, m, 'annual_apr');
+      let admission=null;
+      if(c.adaptive_policy&&!payCash&&!fixedRouting){admission=adaptiveRoute(c,{assets:admissionAssets,debt:D,cash:C,access,expenses,distributions:dist,apr,income:actualIncome,ceiling:m===1?routed:previousRouted+c.adaptive_policy.monthly_increase});routed=admission.amount;}
       const interest = (D + (c.interest_timing === 'opening_plus_current_routing' ? routed : 0)) * apr * dayFraction(c, m);
       const fees = c.costs.monthly_fees, taxes = c.costs.monthly_taxes, surplus = actualIncome - expenses;
       const capitalized = c.interest_payment_policy === 'capitalize' ? interest : 0, interestPaid = interest - capitalized;
       const free = surplus + routed - interestPaid - fees - taxes;
       D += routed + capitalized; C += free + dist;
-      const floor = c.allocation.reserve_floor; let sold = 0, invested = 0, repaid = 0, reason = null;
+      const peakFinancingDebt=D;
+      const floor = c.allocation.reserve_floor; let sold = 0, invested = 0, repaid = 0, reason = null, paycheckInvested=0;
       const shortage = Math.max(0, -C, -(openingC * access + free + dist));
       if (shortage > 1e-8 && c.shortfall_policy === 'sell_assets' && A >= shortage) { sold = shortage; A -= sold; C += sold; }
       if (C < -1e-8) reason = 'unfunded_cash_gap';
@@ -123,6 +157,7 @@
         let available = Math.min(Math.max(0, C - floor), Math.max(0, accessible));
         const target = Math.max(0, free) * c.allocation.household_invest_fraction + dist * c.allocation.distribution_reinvest_fraction;
         invested = Math.min(available, target); A += invested; C -= invested; available -= invested;
+        paycheckInvested=Math.min(invested,Math.max(0,free)*c.allocation.household_invest_fraction);
         repaid = Math.min(D, available * c.allocation.remaining_cash_debt_paydown_fraction); D -= repaid; C -= repaid; available -= repaid;
         const extra = available * (c.allocation.remaining_cash_invest_fraction ?? 0); A += extra; C -= extra; invested += extra;
       }
@@ -137,6 +172,8 @@
         else if (k.startsWith('max') ? v > limit : v < limit) violations.push(k);
       }
       rows.push({month:m,opening_assets:openingA,opening_debt:openingD,opening_cash:openingC,income:actualIncome,expenses,routed_expenses:routed,unrouted_expenses:expenses-routed,external_surplus:surplus,household_cash_after_financing:free,distributions:dist,price_gain:priceGain,shock_return:shockReturn,economic_return:economic,interest,interest_paid:interestPaid,capitalized_interest:capitalized,apr,fees,taxes,invested,asset_sales:sold,principal_repaid:repaid,assets:A,cash:C,total_assets:A+C,debt:D,net_equity:E,real_net_equity:E/inflation,dta,post_shock_dta:postShockDta,period_max_dta:periodMaxDta,portfolio_interest_coverage:coverage,portfolio_cash_after_interest:dist-interest,distribution_expense_coverage:ratio(dist,expenses),accounting_residual:residual,scenario_constraint_violations:violations,scenario_constraints_undefined:unknown,status});
+      if(c.adaptive_policy)Object.assign(rows[rows.length-1],{financed_share:ratio(routed,expenses),paycheck_target_invested:paycheckInvested,peak_financing_debt:peakFinancingDebt,peak_financing_dta:ratio(peakFinancingDebt,admissionAssets),routing_ceiling:admission?.ceiling??0,screen_dta:admission?.screen.dta??null,screen_interest_coverage:admission?.screen.coverage??null,screen_reserve_required:admission?.screen.required??null,routing_decision:payCash?'pay_cash':fixedRouting?'fixed':routed>previousRouted?'increased':routed<previousRouted?'decreased':'unchanged',routing_reasons:admission?.reasons??[payCash?'pay_cash':'fixed']});
+      previousRouted=routed;
       if (failure) break;
     }
     const annual = [], keys = ['income','expenses','routed_expenses','unrouted_expenses','external_surplus','distributions','economic_return','interest','interest_paid','capitalized_interest','fees','taxes','invested','asset_sales','principal_repaid'];
@@ -150,7 +187,9 @@
   function compare(c) {
     const flow = simulate(c), cash = simulate(c,true);
     const same = flow.status === 'completed' && cash.status === 'completed' && flow.final.month === c.months && cash.final.month === c.months;
-    return {run_type:c.run_type,inputs:clone(c),scope:'Offline household scenario; not a lender test, forecast guarantee or borrowing permission',conventions:{returns:'nominal annual price return / 12 plus separate cash distributions; never supply total return as price return',inflation:'nominal annual / 12 compounded, all bills; month 1 uninflated',dta:'debt / investment assets, excludes separate cash reserves',coverage:'portfolio cash distributions / interest only; not household DSCR; undefined ratios are null',timing:c.interest_timing,interest_payment_policy:('interest_payment_policy' in c ? c.interest_payment_policy : 'cash'),costs:clone(c.costs)},flow,pay_cash:cash,comparison:{same_full_horizon:same,ending_equity_advantage:same ? flow.final.net_equity-cash.final.net_equity : null},limitations:['No intramonth solvency/settlement, lender eligibility or house maintenance modeled','Monthly fees/taxes are supplied cash estimates, not tax-law calculations','No probabilities; deterministic paths are assumptions, not calibrated forecasts']};
+    const result={run_type:c.run_type,inputs:clone(c),scope:'Offline household scenario; not a lender test, forecast guarantee or borrowing permission',conventions:{returns:'nominal annual price return / 12 plus separate cash distributions; never supply total return as price return',inflation:'nominal annual / 12 compounded, all bills; month 1 uninflated',dta:'debt / investment assets, excludes separate cash reserves',coverage:'portfolio cash distributions / interest only; not household DSCR; undefined ratios are null',timing:c.interest_timing,interest_payment_policy:('interest_payment_policy' in c ? c.interest_payment_policy : 'cash'),costs:clone(c.costs)},flow,pay_cash:cash,comparison:{same_full_horizon:same,ending_equity_advantage:same ? flow.final.net_equity-cash.final.net_equity : null},limitations:['No intramonth solvency/settlement, lender eligibility or house maintenance modeled','Monthly fees/taxes are supplied cash estimates, not tax-law calculations','No probabilities; deterministic paths are assumptions, not calibrated forecasts']};
+    if(c.adaptive_policy){result.fixed=simulate(c,false,true);const comparable=flow.status==='completed'&&result.fixed.status==='completed';result.comparison.fixed_same_full_horizon=comparable;result.comparison.advantage_over_fixed=comparable?flow.final.net_equity-result.fixed.final.net_equity:null;}
+    return result;
   }
   function defaultConfig() {
     return {run_type:'scenario',months:36,initial_assets:10000,initial_debt:0,initial_cash:0,monthly_take_home:5000,expenses:[{name:'Total household bills',monthly_amount:3500,routed_fraction:900/3500}],annual_income_growth:0.032,annual_inflation:0.032,annual_distribution_yield:0.07390497057934528,annual_price_return:0.02,annual_apr:0.059,rate_convention:'nominal_monthly',interest_timing:'opening_plus_current_routing',interest_payment_policy:'cash',allocation:{household_invest_fraction:1,distribution_reinvest_fraction:0,remaining_cash_debt_paydown_fraction:1,reserve_floor:0,remaining_cash_invest_fraction:1},costs:{tax_treatment:'excluded',fee_treatment:'excluded',monthly_fees:0,monthly_taxes:0},shortfall_policy:'stop',evidence:{classification:'Synthetic educational sample',reserve_status:'Unknown; zero here is an explicit no-reserve sensitivity, not an observed household balance'},scenario_constraints:{max_dta:0.25,min_interest_coverage:3}};
