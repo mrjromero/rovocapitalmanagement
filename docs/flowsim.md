@@ -50,6 +50,22 @@ Each plotted month has a marker. Hover or tap to select the nearest month; the p
 
 Run `node tests/flowsim-chart.cjs` with the same temporary jsdom dependency as the DOM suite. It covers 36/60-month endpoints, mouse/touch pointer mapping, all-hidden recovery, resize state, failed paths, and byte-identical CSV before/after chart interaction.
 
-The always-visible Scenario guardrails section exposes the existing DTA guardrail (%) and Minimum DSCR (interest-only) inputs. DTA is debt divided by investment assets, excluding separate cash. Editing the threshold changes breach checks only; it does not target a borrowing ratio, rebalance investments, or represent lender maintenance limits.
+The always-visible Scenario guardrails section exposes the existing DTA guardrail (%) and Minimum DSCR (interest-only) inputs. DTA is debt divided by investment assets, excluding separate cash. In fixed mode, editing the threshold changes breach checks only. Adaptive mode also uses the threshold to screen new modeled bill financing; neither mode rebalances investments or represents lender maintenance limits.
 
 Minimum DSCR (interest-only), expressed in multiples (x), is portfolio cash distributions divided by margin interest only. It excludes principal repayments and other household debt service. The underlying interest coverage calculation and output terminology are unchanged.
+
+## Monthly ledger timeline
+
+`View timeline` beside the dynamic ledger opens a native modal dialog inspired by Cashflow Stacker's month grid, horizontal colored bands and drill-down interaction. FLOW uses cash-flow categories and ending balances rather than inventing investment cohorts or daily timing. Each band cell spans one month; its text gives the dollar amount, not its width. All compared strategies read the same monthly result rows used by the ledger and CSV.
+
+Hover, click/tap or keyboard focus selects a month. The slider, previous/next buttons, arrow keys, Page Up/Down (12 months) and Home/End support long horizons. A sticky month header and category column support horizontal scrolling; the detail panel moves below the grid on narrow screens. Escape closes the dialog and restores focus. Only the selected month's cells enter the tab order.
+
+Failed-month snapshots are explicitly marked; later months have no projected amounts. Unknown reserves remain unknown/excluded. Undefined ratios and guardrail breaches are distinguished from modeled months. Values always refer to the last run, as described in the timeline, including when the main form has unrun edits.
+
+Run `node tests/flowsim-timeline.cjs` with the existing temporary jsdom dependency via NODE_PATH. It verifies 36/60-month navigation, both strategies, keyboard and touch-click event handling, failed/stopped/invalid states, reserve semantics, undefined ratios, unchanged ledger/equity and byte-identical CSV. Chrome checks cover desktop, 375px and 320px, final-month inspection and Escape focus restoration. Physical touch-device testing is not claimed. No new runtime dependency or external service is used.
+
+## Optional adaptive routing
+
+Fixed share remains the default. Adaptive mode selects the highest tested amount on an explicit dollar grid using current opening state, additional stress screens, known accessible cash and actual cash-funding feasibility. Financing can shrink immediately; increases are bounded. See [the adaptive design](flowsim-adaptive-design.md) for timing, denominators and limitations. The financed-share band shows financed bills in gold and direct-paid bills in gray. Paycheck-target investment and distribution coverage of all bills remain separate measures; financing more does not establish lower income dependence.
+
+Adaptive comparisons add the original fixed share with the same initial debt, alongside pay-cash. New audit columns include pre-contribution peak debt and screening reasons. Original fixed-mode outputs and CSV are unchanged. Run `node --test tests/flowsim-adaptive.test.js` and `node tests/flowsim-adaptive-dom.cjs` (the latter uses the temporary jsdom dependency), as well as existing engine, DOM, chart and timeline tests.
