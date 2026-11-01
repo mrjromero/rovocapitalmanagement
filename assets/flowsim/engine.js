@@ -72,10 +72,11 @@
     }
     if (c.adaptive_policy) {
       const p=c.adaptive_policy;
-      if(!isObject(p)||typeof p.reserve_known!=='boolean')throw new Error('Adaptive policy requires explicit reserve knowledge');
+      if(!isObject(p))throw new Error('Adaptive policy must be an object');
+      if('reserve_known' in p || 'reserve_months' in p)throw new Error('Legacy adaptive reserve gate retired: explicitly remove reserve_known and reserve_months to use optional B2 cash; review the changed policy before rerunning.');
       for(const k of ['grid_dollars','monthly_increase'])number(p[k],k,k==='grid_dollars'?1:0);
       for(const k of ['asset_haircut','payout_cut'])number(p[k],k,0,1);
-      number(p.apr_add,'apr_add',0);number(p.reserve_months,'reserve_months',0);
+      number(p.apr_add,'apr_add',0);
       number(c.scenario_constraints?.max_dta,'adaptive max_dta',0,1);
       number(c.scenario_constraints?.min_interest_coverage,'adaptive min_interest_coverage',0);
       if(c.rate_convention!=='nominal_monthly'||c.interest_timing!=='opening_plus_current_routing')throw new Error('Adaptive routing requires nominal monthly opening-plus-routing interest');
@@ -86,14 +87,12 @@
     const p=c.adaptive_policy,collateral=s.assets*(1-p.asset_haircut),payout=s.distributions*(1-p.asset_haircut)*(1-p.payout_cut),rate=s.apr+p.apr_add;
     const ceiling=Math.min(s.expenses,s.ceiling);
     function check(candidate){
-      const interest=(s.debt+candidate)*rate/12,peak=s.debt+candidate+(c.interest_payment_policy==='capitalize'?interest:0),dta=ratio(peak,collateral),coverage=ratio(payout,interest),required=p.reserve_months*(s.expenses+interest),reasons=[];
-      if(!p.reserve_known)reasons.push('reserve_unknown');
-      if(s.cash*s.access+1e-8<required)reasons.push('reserve_screen');
+      const interest=(s.debt+candidate)*rate/12,peak=s.debt+candidate+(c.interest_payment_policy==='capitalize'?interest:0),dta=ratio(peak,collateral),coverage=ratio(payout,interest),reasons=[];
       if(dta===null)reasons.push('dta_undefined');else if(dta>c.scenario_constraints.max_dta+1e-12)reasons.push('peak_dta');
       if(coverage===null)reasons.push('coverage_undefined');else if(coverage+1e-12<c.scenario_constraints.min_interest_coverage)reasons.push('interest_coverage');
       const actualInterest=(s.debt+candidate)*s.apr/12,free=s.income-s.expenses+candidate-(c.interest_payment_policy==='capitalize'?0:actualInterest)-c.costs.monthly_fees-c.costs.monthly_taxes;
       if(s.cash+free+s.distributions < -1e-8 || s.cash*s.access+free+s.distributions < -1e-8 || (c.shortfall_policy==='stop' && s.cash+free+s.distributions<c.allocation.reserve_floor-1e-8))reasons.push('cash_funding');
-      return {candidate,dta,coverage,required,reasons};
+      return {candidate,dta,coverage,reasons};
     }
     const count=Math.floor((ceiling+1e-8)/p.grid_dollars);if(count>10000)throw new Error('Adaptive grid exceeds 10,000 candidates; increase grid dollars');
     let selected=null,lastRejected=null;
@@ -172,7 +171,7 @@
         else if (k.startsWith('max') ? v > limit : v < limit) violations.push(k);
       }
       rows.push({month:m,opening_assets:openingA,opening_debt:openingD,opening_cash:openingC,income:actualIncome,expenses,routed_expenses:routed,unrouted_expenses:expenses-routed,external_surplus:surplus,household_cash_after_financing:free,distributions:dist,price_gain:priceGain,shock_return:shockReturn,economic_return:economic,interest,interest_paid:interestPaid,capitalized_interest:capitalized,apr,fees,taxes,invested,asset_sales:sold,principal_repaid:repaid,assets:A,cash:C,total_assets:A+C,debt:D,net_equity:E,real_net_equity:E/inflation,dta,post_shock_dta:postShockDta,period_max_dta:periodMaxDta,observed_max_dta:observedMaxDta,peak_financing_debt:peakFinancingDebt,peak_financing_dta:peakDta,portfolio_interest_coverage:coverage,portfolio_cash_after_interest:dist-interest,distribution_expense_coverage:ratio(dist,expenses),accounting_residual:residual,scenario_constraint_violations:violations,scenario_constraints_undefined:unknown,status});
-      if(c.adaptive_policy)Object.assign(rows[rows.length-1],{financed_share:ratio(routed,expenses),paycheck_target_invested:paycheckInvested,peak_financing_debt:peakFinancingDebt,peak_financing_dta:ratio(peakFinancingDebt,admissionAssets),routing_ceiling:admission?.ceiling??0,screen_dta:admission?.screen.dta??null,screen_interest_coverage:admission?.screen.coverage??null,screen_reserve_required:admission?.screen.required??null,routing_decision:payCash?'pay_cash':fixedRouting?'fixed':routed>previousRouted?'increased':routed<previousRouted?'decreased':'unchanged',routing_reasons:admission?.reasons??[payCash?'pay_cash':'fixed']});
+      if(c.adaptive_policy)Object.assign(rows[rows.length-1],{financed_share:ratio(routed,expenses),paycheck_target_invested:paycheckInvested,peak_financing_debt:peakFinancingDebt,peak_financing_dta:ratio(peakFinancingDebt,admissionAssets),routing_ceiling:admission?.ceiling??0,screen_dta:admission?.screen.dta??null,screen_interest_coverage:admission?.screen.coverage??null,routing_decision:payCash?'pay_cash':fixedRouting?'fixed':routed>previousRouted?'increased':routed<previousRouted?'decreased':'unchanged',routing_reasons:admission?.reasons??[payCash?'pay_cash':'fixed']});
       previousRouted=routed;
       if (failure) break;
     }

@@ -8,7 +8,7 @@ q('#columnMode').value='full';q('#columnMode').dispatchEvent(new w.Event('change
 assert.match(q('#explanationSummary').textContent,/\$98.42 more/);assert(!q('#scenarioExplanation details').open);
 set('income','6000');assert(q('#scenarioExplanation').hidden);run();assert(!q('#scenarioExplanation').hidden);
 set('routing','999999');run();assert(q('#scenarioExplanation').hidden);q('#reset').click();assert(!q('#scenarioExplanation').hidden);
-set('routingMode','adaptive');run();assert.match(q('#explanationSummary').textContent,/new adaptive financing is blocked/);
+set('routingMode','adaptive');run();assert.match(q('#explanationSummary').textContent,/B2 cash is unknown and excluded/);assert(q('#routingSummary').textContent.includes('$200'));assert(!q('[name=adaptiveReserve]'));assert(!q('#explanationSummary').textContent.includes('blocked'));
 assert.match(q('#reserveHelp').textContent,/Bucket 2/);assert.match(q('#dscrHelp').textContent,/assumes no scheduled principal/);assert.match(q('#dtaHelp').textContent,/not M1 credit utilization/);
 assert(!d.documentElement.outerHTML.includes('drive.google.com'));assert.equal(q('[name=apr]').value,'6');assert.equal(q('[name=reserve]').value,'');
 console.log('Explanation UI PASS: result text, progressive details, stale/invalid hiding, reset, adaptive unknown cash, scoped terms and round household sample.');w.close();
