@@ -3,10 +3,12 @@ const root=path.join(__dirname,'..'),dom=new JSDOM(fs.readFileSync(path.join(roo
 w.URL.createObjectURL=()=> 'blob:test';w.URL.revokeObjectURL=()=>{};w.HTMLAnchorElement.prototype.click=()=>{};
 for(const f of ['engine','timeline','explanations','app'])w.eval(fs.readFileSync(path.join(root,'assets/flowsim',f+'.js'),'utf8'));
 const run=()=>q('form').dispatchEvent(new w.Event('submit',{cancelable:true})),set=(n,v)=>{q(`[name=${n}]`).value=v;q(`[name=${n}]`).dispatchEvent(new w.Event('input',{bubbles:true}));};
-assert.match(q('#explanationSummary').textContent,/\$1,207.63 more/);assert(!q('#scenarioExplanation details').open);
+assert.equal(q('[name=routing]').value,'250');assert.equal(q('[name=interest]').value,'capitalize');assert.equal(q('#maxDta').textContent,'6.42%');
+q('#columnMode').value='full';q('#columnMode').dispatchEvent(new w.Event('change'));const heads=[...q('#ledgerHead').rows[0].cells].map(c=>c.textContent),first=q('#ledgerBody').rows[0];for(const [label,value]of [['Bills paid directly','$3,250.00'],['Bills financed','$250.00'],['Interest added to debt','$1.25'],['Total invested','$1,750.00'],['Ending debt','$192.92']])assert.equal(first.cells[heads.indexOf(label)].textContent,value);
+assert.match(q('#explanationSummary').textContent,/\$98.42 more/);assert(!q('#scenarioExplanation details').open);
 set('income','6000');assert(q('#scenarioExplanation').hidden);run();assert(!q('#scenarioExplanation').hidden);
 set('routing','999999');run();assert(q('#scenarioExplanation').hidden);q('#reset').click();assert(!q('#scenarioExplanation').hidden);
 set('routingMode','adaptive');run();assert.match(q('#explanationSummary').textContent,/new adaptive financing is blocked/);
 assert.match(q('#reserveHelp').textContent,/Bucket 2/);assert.match(q('#dscrHelp').textContent,/assumes no scheduled principal/);assert.match(q('#dtaHelp').textContent,/not M1 credit utilization/);
-assert(!d.documentElement.outerHTML.includes('drive.google.com'));assert.equal(q('[name=apr]').value,'5.9');assert.equal(q('[name=reserve]').value,'');
-console.log('Explanation UI PASS: result text, progressive details, stale/invalid hiding, reset, adaptive unknown cash, scoped terms and unchanged defaults.');w.close();
+assert(!d.documentElement.outerHTML.includes('drive.google.com'));assert.equal(q('[name=apr]').value,'6');assert.equal(q('[name=reserve]').value,'');
+console.log('Explanation UI PASS: result text, progressive details, stale/invalid hiding, reset, adaptive unknown cash, scoped terms and round household sample.');w.close();

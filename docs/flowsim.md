@@ -10,7 +10,7 @@ Serve this repository with a static server, for example `python3 -m http.server 
 
 The JavaScript engine independently matches a deterministic Python reference over 15 recorded scenarios. Both FLOW and pay-cash start with identical investments, debt, separate reserves, income, expenses and rate paths. Pay-cash disables only new bill borrowing; existing debt remains.
 
-The default uses 36 months, $10,000 investments, no debt, $5,000 take-home, $3,500 bills, $900 initial borrowing, 7.390497057934528% annual cash yield, 2% annual **price-only** growth, 5.9% borrowing APR and 3.2% annual pay/bill growth. The financed fraction stays constant; $900 therefore increases with bill inflation. These are assumptions, not a current rate quote or recommended portfolio.
+The UI sample and Reset Sample use 36 months, $10,000 investments, no debt, $5,000 take-home, $3,500 bills, $250 initial bill financing, 7% annual distribution yield, 2% annual **price-only** growth, 6% margin APR and 3% annual pay/bill growth. Interest is added to margin debt. B2 remains blank/unknown. The financed fraction stays constant; $250 therefore increases with bill inflation. These round amounts illustrate a household; they are not a statistical average. These are assumptions, not a current rate quote or recommended portfolio.
 
 Each month uses annual rates divided by 12. Price changes/distributions apply to opening assets (after any shock). Interest applies to opening debt plus current bill borrowing for the full month. Direct bills and cash-paid interest reduce investable paycheck cash. Positive household cash is invested; remaining distributions repay debt; excess is reinvested. Capitalized interest remains an economic cost and adds debt. Month 1 uses the starting budget; pay and all bills grow thereafter.
 
@@ -24,7 +24,7 @@ Every month checks:
 
 Debt/asset and interest-coverage limits are illustrative screens. Coverage is distributions / interest only: this FLOW margin scenario assumes no scheduled principal. Voluntary paydowns are distinct from required debt service; it is **not full household DSCR**. A zero denominator is N/A, never an automatic pass. Funding or insolvency failures stop the path. Breaches flag a path but do not simulate lender liquidation. Comparisons at different/failing horizons are undefined.
 
-The default month 36 ends with investments $101,456.89, debt $22,072.55 and equity $79,384.34, compared with pay-cash equity about $78,176.70. These rounded reference values are examples, not forecasts. The baseline is not stress-approved capacity.
+The UI sample month 36 ends with investments $78,380.40, debt $817.33 and equity $77,563.06, compared with pay-cash equity $77,464.64. Peak DTA is 6.42%; minimum interest-only DSCR is 18.27x. Unknown B2 means resilience remains unresolved. The $250 amount illustrates a small partial bill shift; it is not optimized or recommended. Engine API defaults and the former $900 sample remain explicit historical regression fixtures. These rounded reference values are examples, not forecasts. The baseline is not stress-approved capacity.
 
 ## Limits
 

@@ -1,6 +1,6 @@
 # Scenario explanations and terminology
 
-This presentation-only change leaves the engine, routing decisions, defaults and CSV keys/values unchanged. `explanations.js` reads the same results as the ledger. It does not infer an affordable loan or minimum outside income.
+This presentation-only change leaves the engine, routing policy and CSV schema unchanged. `explanations.js` reads the same results as the ledger. It does not infer an affordable loan or minimum outside income.
 
 The three short paragraphs report equal-horizon net-equity difference, recorded limits/funding failures, and financed-share movement. Details disclose assumptions and scope. Failed paths never produce a full-horizon advantage. Differences below half a cent are described as equal to the nearest cent. Adaptive movement counts only transitions between funded months with nonzero bills. The first rise/fall can list accompanying changes, explicitly as observations rather than isolated causes. Recorded candidate rejection/search reasons are not a precise capacity attribution. Unknown cash, failed funding and numerical breaches remain distinct. Editing inputs hides the explanation until another valid run.
 
@@ -22,7 +22,7 @@ Authorized education-source review supplied the distinctions above. Private cour
 - [M1 interest calculation and billing](https://help.m1.com/en/articles/9332232-how-m1-margin-loan-interest-is-calculated-and-charged): cash-first billing is distinct from the calculator's explicit cash/capitalization scenario policy.
 - [M1 Margin Loans](https://help.m1.com/en/articles/9332210-what-is-a-margin-loan-and-how-they-work-on-m1): official product name.
 
-CSV retains technical field names for compatibility, including `paycheck_target_invested` and `portfolio_interest_coverage`; the UI supplies their scoped meanings. No schema change, new engine metadata, dependencies, network calls or storage.
+CSV retains technical field names for compatibility, including `paycheck_target_invested` and `portfolio_interest_coverage`; the UI supplies their scoped meanings. No schema change, new engine metadata, dependencies, network calls or storage. The subsequent UI sample update uses round household assumptions documented in flowsim.md; existing entered scenarios are not changed.
 
 ## Verification
 
