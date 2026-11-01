@@ -1,6 +1,6 @@
 # Adaptive bill routing — educational design
 
-Fixed routing remains the default and retains its original calculation and CSV. Adaptive routing is an optional scenario policy, not lender capacity or a recommended allowance. It changes new bill financing only; existing debt stays in all alternatives.
+Fixed routing remains the default and retains its original cash accounting; risk reporting includes the pre-repayment borrowing peak. Adaptive routing is an optional scenario policy, not lender capacity or a recommended allowance. It changes new bill financing only; existing debt stays in all alternatives.
 
 ## Decision at the start of each month
 
@@ -16,7 +16,7 @@ The defaults for these added controls are labeled hypothetical stress assumption
 
 The selected amount enters the existing monthly cash/debt waterfall. Every month's equity identity must still reconcile. Distributions cannot simultaneously pay bills, repay debt and be reinvested. Show realized paycheck-target investment separately from total investment, and show all-bills distribution coverage; more bill borrowing frees paycheck cash for investment but does not reduce the modeled income requirement or establish financial independence.
 
-For adaptive runs compare adaptive, the original fixed share (from initial financed bills / initial bills), and matched pay-cash under identical starting debt/assets/cash, budgets, shocks, interest convention and allocations. If either path stops, full-horizon superiority is undefined. Fixed runs retain their existing outputs. Adaptive ledger/CSV add chosen share, ceiling, screening ratios, reserve requirement, decision/reasons and paycheck-target investment. The timeline uses these exact rows and shows direct-paid versus financed bills and financed percentage. It must not force an increasing share.
+For adaptive runs compare adaptive, the original fixed share (from initial financed bills / initial bills), and matched pay-cash under identical starting debt/assets/cash, budgets, shocks, interest convention and allocations. If either path stops, full-horizon superiority is undefined. Fixed runs retain their existing financial outputs; peak-risk columns and breach flags are added consistently. Adaptive ledger/CSV add chosen share, ceiling, screening ratios, reserve requirement, decision/reasons and paycheck-target investment. The timeline uses these exact rows and shows direct-paid versus financed bills and financed percentage. It must not force an increasing share.
 
 ## Required evidence
 
@@ -26,4 +26,4 @@ Synthetic tests cover cash/capitalized interest, opening leverage, zero denomina
 
 The opening accessible-cash screen is not a full stressed survival simulation. Including interest in cash coverage even when capitalized is a conservative scenario choice. Additional cushions compound path shocks. The monthly ramp can slow recovery and does not measure economic capacity. Zero-income borrowing may occur when the declared constraints permit; that is not paycheck independence. The model does not solve for minimum outside income. Candidates round down to grid increments; an off-grid ceiling is not separately tested.
 
-The headline maximum DTA includes actual debt immediately after new financing/capitalized interest divided by post-shock pre-contribution collateral, alongside the existing opening/post-shock/closing measurements. Original accounting and its audit metric remain unchanged. Adaptive mode explicitly rejects day-count and interest-timing conventions other than nominal monthly opening-plus-routing.
+The headline maximum DTA includes actual debt immediately after new financing/capitalized interest divided by post-shock pre-contribution collateral, alongside the existing opening/post-shock/closing measurements. Cash accounting is unchanged. The monthly maximum and breach flags include the borrowing peak; the prior observations-only ratio remains available as observed_max_dta. Adaptive mode explicitly rejects day-count and interest-timing conventions other than nominal monthly opening-plus-routing.
