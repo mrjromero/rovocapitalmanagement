@@ -18,7 +18,7 @@ const inspect=m=>{q('#timelineMonth').value=m;q('#timelineMonth').dispatchEvent(
  }
  q('#timelineMode').value='flow';set('income',0);run();q('#viewTimeline').click();inspect(1);assert(q('#timelineDetail').textContent.includes('Funding failed'));inspect(60);assert(q('#timelineDetail').textContent.includes('Stopped'));assert.equal(d.querySelectorAll('#timelineGrid tbody button[data-month="60"]').length,0);
  set('income',5000);set('apr',0);run();inspect(1);assert(q('#timelineDetail').textContent.includes('Ratio undefined'));
- set('reserve',11000);run();assert(q('#timelineReserve').textContent.includes('nonyielding'));assert(q('#timelineDetail').textContent.includes('$11,000.00'));
+ set('reserve',11000);run();assert(q('#timelineReserve').textContent.includes('nonyielding'));assert(q('#timelineDetail').textContent.includes('$11,000'));
  set('routing',4000);run();assert(q('#viewTimeline').disabled);assert.equal(q('#timelineGrid').childElementCount,0);assert(q('#timelineDetail').textContent.includes('valid scenario'));
  console.log('Timeline QA passed: 36/60 months, keyboard, touch-click mapping, modes, failures/stopped/empty states, unknown and known reserves, undefined ratios, unchanged ledger/equity and byte-identical CSV.');w.close();
 })().catch(e=>{console.error(e);process.exitCode=1;w.close();});

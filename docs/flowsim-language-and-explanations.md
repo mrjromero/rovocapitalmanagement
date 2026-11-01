@@ -1,6 +1,6 @@
 # Scenario explanations and terminology
 
-This presentation-only change leaves the engine, routing policy and CSV schema unchanged. `explanations.js` reads the same results as the ledger. It does not infer an affordable loan or minimum outside income.
+This presentation-only change leaves the engine, routing policy unchanged; numeric presentation and the documented CSV format are updated. `explanations.js` reads the same results as the ledger. It does not infer an affordable loan or minimum outside income.
 
 The three short paragraphs report equal-horizon net-equity difference, recorded limits/funding failures, and financed-share movement. Details disclose assumptions and scope. Failed paths never produce a full-horizon advantage. Differences below half a cent are described as equal to the nearest cent. Adaptive movement counts only transitions between funded months with nonzero bills. The first rise/fall can list accompanying changes, explicitly as observations rather than isolated causes. Recorded candidate rejection/search reasons are not a precise capacity attribution. Unknown cash, failed funding and numerical breaches remain distinct. Editing inputs hides the explanation until another valid run.
 
@@ -22,8 +22,11 @@ Authorized education-source review supplied the distinctions above. Private cour
 - [M1 interest calculation and billing](https://help.m1.com/en/articles/9332232-how-m1-margin-loan-interest-is-calculated-and-charged): cash-first billing is distinct from the calculator's explicit cash/capitalization scenario policy.
 - [M1 Margin Loans](https://help.m1.com/en/articles/9332210-what-is-a-margin-loan-and-how-they-work-on-m1): official product name.
 
-CSV retains technical field names for compatibility, including `paycheck_target_invested` and `portfolio_interest_coverage`; the UI supplies their scoped meanings. No schema change, new engine metadata, dependencies, network calls or storage. The subsequent UI sample update uses round household assumptions documented in flowsim.md; existing entered scenarios are not changed.
+CSV schema 2 rounds standalone numeric values to at most two decimals. Fractional percentage fields (DTA, financed share, APR and rate assumptions) become explicitly named `_pct` fields and are multiplied by 100; DSCR remains a multiple, not a percent. Monetary values remain dollars. This is a deliberate compatibility change: consumers must use the new header units. Flags retain full-precision engine decisions even when a displayed boundary rounds to the limit. Canonical configuration JSON preserves full-precision inputs for reproducibility; shock/policy JSON retains canonical units. Rounded ledger amounts may not sum to the cent and are not a full-precision reconciliation export. Other technical keys such as `paycheck_target_invested` and `portfolio_interest_coverage` remain. No new engine metadata, dependencies, network calls or storage. The subsequent UI sample update uses round household assumptions documented in flowsim.md; existing entered scenarios are not changed.
 
 ## Verification
 
 Run `node tests/flowsim-explanations.test.js` for gain/loss/tie, unmatched stopped horizons, failed funding, unknown reserves, undefined ratios, adaptive stress transitions, zero bills and nonmutation. Run existing model suites directly with Node (or `node --test` where subprocess execution is permitted) plus all `tests/*.cjs` with jsdom available through `NODE_PATH`.
+
+
+Numeric presentation uses whole-dollar headline cards, up to two decimals elsewhere and no unnecessary trailing zeros. Monetary inputs accept cents; a deliberate change rounds higher precision only on field commit and announces it. Initial/loaded values are not silently rewritten. Months remain integer-only. Engine values and threshold comparisons are never rounded.

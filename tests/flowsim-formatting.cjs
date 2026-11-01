@@ -1,0 +1,16 @@
+const fs=require('fs'),path=require('path'),assert=require('assert/strict'),{JSDOM}=require('jsdom');
+const root=path.join(__dirname,'..'),dom=new JSDOM(fs.readFileSync(path.join(root,'flowsim.html'),'utf8'),{runScripts:'outside-only'}),w=dom.window,d=w.document,q=s=>d.querySelector(s);let blob;
+w.URL.createObjectURL=b=>(blob=b,'blob:test');w.URL.revokeObjectURL=()=>{};w.HTMLAnchorElement.prototype.click=()=>{};
+for(const f of ['engine','timeline','explanations','app'])w.eval(fs.readFileSync(path.join(root,'assets/flowsim',f+'.js'),'utf8'));
+const set=(n,v)=>{q(`[name=${n}]`).value=v;},run=()=>q('form').dispatchEvent(new w.Event('submit',{cancelable:true}));
+(async()=>{
+ const input=q('[name=income]');input.value='5000.125';input.dispatchEvent(new w.Event('input',{bubbles:true}));assert.equal(input.value,'5000.125','no keystroke rounding');input.dispatchEvent(new w.Event('change',{bubbles:true}));assert.equal(input.value,'5000.13');assert.match(q('#inputPrecision').textContent,/was rounded/);input.value='5000.12';input.dispatchEvent(new w.Event('change',{bubbles:true}));assert.equal(input.value,'5000.12');
+ // A displayed boundary must retain the engine's full-precision breach flag.
+ for(const[n,v]of Object.entries({assets:10000,debt:0,reserve:0,income:5000,bills:3500,routing:2500.4,months:1,apr:0,interest:'cash',yield:0,growth:0}))set(n,v);run();assert.equal(q('#maxDta').textContent,'25%');assert.match(q('#resultStatus').textContent,/DTA guardrail breached/);assert.match(q('#coverageDetail').textContent,/N\/A/);q('#export').click();
+ const csv=await new Promise(ok=>{const r=new w.FileReader();r.onload=()=>ok(r.result);r.readAsText(blob);});const records=csv.split(/\r?\n/).map(l=>[...l.matchAll(/"((?:[^"]|"")*)"/g)].map(m=>m[1].replaceAll('""','"'))),head=records.find(r=>r[0]==='Strategy'),row=records.find(r=>r[0]==='flow');assert.equal(row[head.indexOf('peak_financing_dta_pct')],'25');assert.equal(row[head.indexOf('scenario_constraint_violations')],'max_dta');assert.equal(row[head.indexOf('routed_expenses')],'2500.4');assert(head.includes('apr_pct'));assert(!head.includes('apr'));assert(records.some(r=>r[1]==='annual_apr_pct'));
+ for(const r of records)for(const v of r)if(/^-?\d+\.\d+$/.test(v))assert(v.split('.')[1].length<=2,v);
+ set('routing','2500');set('apr','12');set('yield','9');run();q('#columnMode').value='full';q('#columnMode').dispatchEvent(new w.Event('change'));assert(!q('#ledgerBody').textContent.includes('3.00'));
+ set('routing','0');set('growth','-0.01');run();assert(!q('#explanationSummary').textContent.includes('NaN'));assert(!q('#explanationSummary').textContent.includes('Infinity'));
+ q('#reset').click();assert.equal(q('#equity').textContent,'$77,563');assert.equal(q('[name=income]').value,'5000');assert.equal(q('[name=apr]').value,'6');
+ console.log('Formatting PASS: commit-only cents, preserved entered cents, whole-dollar cards, full-precision boundary flags, explicit CSV percent units and <=2 decimals, zero/negative/N/A.');w.close();
+})().catch(e=>{console.error(e);process.exitCode=1;w.close();});

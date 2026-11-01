@@ -1,7 +1,7 @@
 /* Presentation only. Reads recorded results; never changes the routing policy. */
 'use strict';
 (function(root){
- const money=new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'});
+ const money=new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',minimumFractionDigits:0,maximumFractionDigits:2});
  const names={reserve_unknown:'unknown B2 cash',reserve_screen:'the accessible B2 cash screen',peak_dta:'the stressed peak DTA guardrail',interest_coverage:'stressed interest-only DSCR',dta_undefined:'an undefined DTA ratio',coverage_undefined:'undefined interest-only DSCR',cash_funding:'available household funding',monthly_ceiling_or_grid:'the monthly increase ceiling or test grid',below_grid:'a ceiling below one test increment'};
  const months=rows=>rows.slice(0,6).map(r=>r.month).join(', ')+(rows.length>6?` and ${rows.length-6} more`:'');
  function describe(result,c){
@@ -28,7 +28,7 @@
     const oldCollateral=a.opening_assets+a.shock_return,newCollateral=b.opening_assets+b.shock_return;if(Math.abs(newCollateral-oldCollateral)>.005)changes.push('post-shock opening investments '+(newCollateral>oldCollateral?'rose':'fell'));
     for(const[key,name]of [['opening_debt','opening margin debt'],['expenses','bills'],['distributions','distributions'],['income','take-home pay']])if(Math.abs(b[key]-a[key])>.005)changes.push(`${name} ${b[key]>a[key]?'rose':'fell'}`);
     if(b.apr!==a.apr)changes.push(`APR ${b.apr>a.apr?'rose':'fell'}`);if(b.shock_return)changes.push('a market shock was recorded');
-    detail.push(`${label}: month ${b.month}, from ${(100*a.routed_expenses/a.expenses).toFixed(1)}% to ${(100*b.routed_expenses/b.expenses).toFixed(1)}%. ${changes.length?'Alongside this, '+changes.join(', ')+'. ':''}These are observations, not isolated causes.`);
+    detail.push(`${label}: month ${b.month}, from ${Number((100*a.routed_expenses/a.expenses).toFixed(2))}% to ${Number((100*b.routed_expenses/b.expenses).toFixed(2))}%. ${changes.length?'Alongside this, '+changes.join(', ')+'. ':''}These are observations, not isolated causes.`);
    }
   }
   detail.push('More bill financing can free household cash for contribution. It does not reduce the income assumed here or calculate the minimum paycheck needed. Total invested can also include excess distributions; it is not a separately traced paycheck contribution.');
