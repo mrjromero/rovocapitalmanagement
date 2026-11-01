@@ -22,13 +22,15 @@ Every month checks:
 
 `change in equity = household surplus + economic return - interest - fees - taxes`
 
-Debt/asset and interest-coverage limits are illustrative screens. Coverage is distributions / interest only, **not household DSCR**. A zero denominator is N/A, never an automatic pass. Funding or insolvency failures stop the path. Breaches flag a path but do not simulate lender liquidation. Comparisons at different/failing horizons are undefined.
+Debt/asset and interest-coverage limits are illustrative screens. Coverage is distributions / interest only: this FLOW margin scenario assumes no scheduled principal. Voluntary paydowns are distinct from required debt service; it is **not full household DSCR**. A zero denominator is N/A, never an automatic pass. Funding or insolvency failures stop the path. Breaches flag a path but do not simulate lender liquidation. Comparisons at different/failing horizons are undefined.
 
 The default month 36 ends with investments $101,456.89, debt $22,072.55 and equity $79,384.34, compared with pay-cash equity about $78,176.70. These rounded reference values are examples, not forecasts. The baseline is not stress-approved capacity.
 
 ## Limits
 
 Taxes/fees, scheduled principal payments, exact daily timing, lender eligibility/maintenance and real dividend schedules are not modeled in the UI. Yield is not proof of sustainable economic return. Separate reserves, hypothetical checks and a completed run cannot certify safety. Noindex is a crawler hint, not privacy or access control.
+
+See [scenario explanations and terminology](flowsim-language-and-explanations.md) for the scoped education/broker labels and deterministic result narrative.
 
 ## Verification
 

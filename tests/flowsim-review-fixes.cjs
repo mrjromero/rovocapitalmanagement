@@ -1,7 +1,7 @@
 const fs=require('fs'),path=require('path'),assert=require('assert/strict'),{JSDOM}=require('jsdom');
 const root=path.join(__dirname,'..'),dom=new JSDOM(fs.readFileSync(path.join(root,'flowsim.html'),'utf8'),{runScripts:'outside-only'}),w=dom.window,d=w.document,q=s=>d.querySelector(s);let blob;
 w.URL.createObjectURL=b=>(blob=b,'blob:test');w.URL.revokeObjectURL=()=>{};w.HTMLAnchorElement.prototype.click=()=>{};w.HTMLDialogElement.prototype.showModal=function(){this.open=true;};w.HTMLDialogElement.prototype.close=function(){this.open=false;};
-for(const f of ['engine','timeline','app'])w.eval(fs.readFileSync(path.join(root,'assets/flowsim',f+'.js'),'utf8'));
+for(const f of ['engine','timeline','explanations','app'])w.eval(fs.readFileSync(path.join(root,'assets/flowsim',f+'.js'),'utf8'));
 (async()=>{
  // Emulate Chrome's named-control masking, absent from jsdom.
  Object.defineProperty(q('form'),'reset',{configurable:true,value:q('#reset')});q('[name=income]').value='123';q('[name=months]').value='1';q('#reset').click();assert.equal(q('[name=income]').value,'5000');assert.equal(q('[name=months]').value,'36');assert.equal(q('#ledgerBody').rows.length,36);assert.equal(q('#equity').textContent,'$79,384.34');

@@ -1,0 +1,12 @@
+const fs=require('fs'),path=require('path'),assert=require('assert/strict'),{JSDOM}=require('jsdom');
+const root=path.join(__dirname,'..'),dom=new JSDOM(fs.readFileSync(path.join(root,'flowsim.html'),'utf8'),{runScripts:'outside-only'}),w=dom.window,d=w.document,q=s=>d.querySelector(s);
+w.URL.createObjectURL=()=> 'blob:test';w.URL.revokeObjectURL=()=>{};w.HTMLAnchorElement.prototype.click=()=>{};
+for(const f of ['engine','timeline','explanations','app'])w.eval(fs.readFileSync(path.join(root,'assets/flowsim',f+'.js'),'utf8'));
+const run=()=>q('form').dispatchEvent(new w.Event('submit',{cancelable:true})),set=(n,v)=>{q(`[name=${n}]`).value=v;q(`[name=${n}]`).dispatchEvent(new w.Event('input',{bubbles:true}));};
+assert.match(q('#explanationSummary').textContent,/\$1,207.63 more/);assert(!q('#scenarioExplanation details').open);
+set('income','6000');assert(q('#scenarioExplanation').hidden);run();assert(!q('#scenarioExplanation').hidden);
+set('routing','999999');run();assert(q('#scenarioExplanation').hidden);q('#reset').click();assert(!q('#scenarioExplanation').hidden);
+set('routingMode','adaptive');run();assert.match(q('#explanationSummary').textContent,/new adaptive financing is blocked/);
+assert.match(q('#reserveHelp').textContent,/Bucket 2/);assert.match(q('#dscrHelp').textContent,/assumes no scheduled principal/);assert.match(q('#dtaHelp').textContent,/not M1 credit utilization/);
+assert(!d.documentElement.outerHTML.includes('drive.google.com'));assert.equal(q('[name=apr]').value,'5.9');assert.equal(q('[name=reserve]').value,'');
+console.log('Explanation UI PASS: result text, progressive details, stale/invalid hiding, reset, adaptive unknown cash, scoped terms and unchanged defaults.');w.close();

@@ -2,7 +2,7 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
 const root=path.join(__dirname,'..'),dom=new JSDOM(fs.readFileSync(path.join(root,'flowsim.html'),'utf8'),{runScripts:'outside-only'}),w=dom.window,d=w.document;
 const q=s=>d.querySelector(s);let blobs=[];
 w.URL.createObjectURL=b=>{blobs.push(b);return 'blob:test';};w.URL.revokeObjectURL=()=>{};w.HTMLAnchorElement.prototype.click=()=>{};
-for(const file of ['engine','app'])w.eval(fs.readFileSync(path.join(root,'assets/flowsim',file+'.js'),'utf8'));
+for(const file of ['engine','explanations','app'])w.eval(fs.readFileSync(path.join(root,'assets/flowsim',file+'.js'),'utf8'));
 const run=()=>q('#scenario').dispatchEvent(new w.Event('submit',{cancelable:true}));
 const inspect=n=>{q('#chartMonth').value=n;q('#chartMonth').dispatchEvent(new w.Event('input'));};
 const read=b=>new Promise(resolve=>{const r=new w.FileReader();r.onload=()=>resolve(r.result);r.readAsText(b);});
