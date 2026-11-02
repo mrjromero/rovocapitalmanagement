@@ -2,7 +2,7 @@
 'use strict';
 (function(root){
  const money=new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',minimumFractionDigits:0,maximumFractionDigits:2});
- const names={peak_dta:'the stressed peak DTA guardrail',interest_coverage:'stressed interest-only DSCR',dta_undefined:'an undefined DTA ratio',coverage_undefined:'undefined interest-only DSCR',cash_funding:'available household funding',monthly_ceiling_or_grid:'the monthly increase ceiling or test grid',below_grid:'a ceiling below one test increment'};
+ const names={target_dta:'Actual peak DTA is above the operating target',target_undefined:'Target DTA cannot be calculated',bills_or_grid:'Bill ceiling reached at automatic precision',peak_dta:'the stressed peak DTA guardrail',interest_coverage:'stressed interest-only DSCR',dta_undefined:'an undefined DTA ratio',coverage_undefined:'undefined interest-only DSCR',cash_funding:'available household funding',monthly_ceiling_or_grid:'the monthly increase ceiling at automatic precision',below_grid:'a ceiling below one test increment'};
  const months=rows=>rows.slice(0,6).map(r=>r.month).join(', ')+(rows.length>6?` and ${rows.length-6} more`:'');
  function describe(result,c){
   const f=result.flow, rows=f.monthly, done=rows.filter(r=>r.status!=='failed'), cmp=result.comparison, detail=[];
@@ -11,11 +11,10 @@
   else {const diff=cmp.ending_equity_advantage;outcome=Math.abs(diff)<.005?`FLOW and paying bills directly end with the same net equity to the nearest cent at month ${c.months}.`:`FLOW ends with ${money.format(Math.abs(diff))} ${diff>0?'more':'less'} net equity than paying bills directly at month ${c.months}.`;outcome+=' Both start with the same assets and existing debt.';}
   const breached=rows.filter(r=>r.scenario_constraint_violations.length), undefinedRows=rows.filter(r=>r.scenario_constraints_undefined.length);
   let limits='';
-  if(f.failure){limits=`FLOW stops in month ${f.failure.month}: ${f.failure.reason.replaceAll('_',' ')}.`;detail.push(`Failed checks: ${f.failure.failed_checks.join(', ').replaceAll('_',' ')}. Unfunded cash: ${money.format(f.failure.cash_gap)}; inaccessible-cash gap: ${money.format(f.failure.accessible_cash_gap)}.`);}
+  if(f.failure){limits=`FLOW stops in month ${f.failure.month}: ${f.failure.reason.replaceAll('_',' ')}.`;detail.push(`Failed checks: ${f.failure.failed_checks.join(', ').replaceAll('_',' ')}. Unfunded cash: ${money.format(f.failure.cash_gap)}.`);}
   if(breached.length){limits+=(limits?' ':'')+`Recorded guardrail breaches in months ${months(breached)}.`;const labels={max_dta:'DTA',min_interest_coverage:'interest-only DSCR'};detail.push('Breached checks: '+[...new Set(breached.flatMap(r=>r.scenario_constraint_violations))].map(x=>labels[x]||x.replaceAll('_',' ')).join(', ')+'.');}
   if(undefinedRows.length)limits+=(limits?' ':'')+'Some ratios are N/A; this is not a complete guardrail pass.';
-  const known=c.evidence?.reserve_status?.startsWith('User');
-  if(!known)limits+=(limits?' ':'')+'B2 cash is unknown and excluded; resilience is unresolved. B2 is optional for financing, but household funding must still work.';
+  const admissionFailures=rows.filter(r=>r.admission_passed===false);if(admissionFailures.length)limits+=(limits?' ':'')+'Adaptive admission did not pass in months '+months(admissionFailures)+'. Existing debt may exceed a stressed guardrail or the operating target even with zero new financing.';
   if(!limits)limits='The recorded path completes within the selected numerical guardrails. This does not establish borrowing safety or lender approval.';
   let movement;
   if(!c.adaptive_policy)movement='Fixed mode keeps the financed share of bills constant; financed dollars follow modeled bills. Guardrail warnings do not adjust that share.';
@@ -32,7 +31,7 @@
    }
   }
   detail.push('More bill financing can free household cash for contribution. It does not reduce the income assumed here or calculate the minimum paycheck needed. Total invested can also include excess distributions; it is not a separately traced paycheck contribution.');
-  detail.push('Rates, growth and stress paths are assumptions. B2 is modeled as separate nonyielding cash. This is a monthly FLOW illustration, not the full Maximum Contribution or M1 sweep workflow.');
+  detail.push('Rates, growth and stress paths are assumptions. This is a monthly FLOW illustration, not the full Maximum Contribution or M1 sweep workflow.');
   return {outcome,limits,movement,detail};
  }
  const api={describe};if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.FlowExplanations=api;

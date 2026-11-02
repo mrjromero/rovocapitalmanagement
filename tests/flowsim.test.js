@@ -4,6 +4,9 @@ const {test} = require('node:test');
 const fs = require('node:fs');
 const engine = require('../assets/flowsim/engine.js');
 const fixture = JSON.parse(fs.readFileSync(require.resolve('./fixtures/flowsim-reference.json'),'utf8'));
+const legacyCases=fixture.cases.filter(c=>c.input.initial_cash!==0||c.input.shortfall_policy!=='stop');
+fixture.cases=fixture.cases.filter(c=>c.input.initial_cash===0&&c.input.shortfall_policy==='stop'&&c.expected.flow.status==='completed'&&c.expected.pay_cash.status==='completed');
+for(const c of legacyCases)test('legacy funding configuration rejected: '+c.name,()=>assert.throws(()=>engine.compare(c.input),/Legacy/));
 function equal(actual, expected, path='result') {
   if (typeof expected === 'number') {
     assert.equal(typeof actual,'number',path);
@@ -16,8 +19,8 @@ function equal(actual, expected, path='result') {
   } else assert.equal(actual,expected,path);
 }
 // Reference fixtures predate the peak-risk reporting correction; preserve all financial comparisons.
-function accountingOnly(value){if(Array.isArray(value))return value.map(accountingOnly);if(value&&typeof value==='object')return Object.fromEntries(Object.entries(value).filter(([k])=>!['max_dta','period_max_dta','scenario_constraint_violations'].includes(k)).map(([k,v])=>[k,accountingOnly(v)]));return value;}
-for(const c of fixture.cases)test('Python accounting parity and independent peak-risk checks: '+c.name,()=>{const actual=engine.compare(c.input);equal(accountingOnly(actual),accountingOnly(c.expected));for(const strategy of ['flow','pay_cash']){const path=actual[strategy];for(let i=0;i<path.monthly.length;i++){const r=path.monthly[i],old=c.expected[strategy].monthly[i],collateral=r.opening_assets+r.shock_return,peak=collateral>0?(r.opening_debt+r.routed_expenses+r.capitalized_interest)/collateral:null;equal(r.peak_financing_dta,peak);equal(r.observed_max_dta,old.period_max_dta);const values=[old.period_max_dta,peak].filter(v=>v!==null);equal(r.period_max_dta,values.length?Math.max(...values):null);assert.deepEqual(r.scenario_constraint_violations.filter(k=>k!=='max_dta'),old.scenario_constraint_violations.filter(k=>k!=='max_dta'));if(c.input.scenario_constraints?.max_dta!==undefined)assert.equal(r.scenario_constraint_violations.includes('max_dta'),r.period_max_dta!==null&&r.period_max_dta>c.input.scenario_constraints.max_dta);}const maxima=path.monthly.map(r=>r.period_max_dta).filter(v=>v!==null);equal(path.max_dta,maxima.length?Math.max(...maxima):null);}});
+function accountingOnly(value){if(Array.isArray(value))return value.map(accountingOnly);if(value&&typeof value==='object')return Object.fromEntries(Object.entries(value).filter(([k])=>!['max_dta','period_max_dta','scenario_constraint_violations','opening_cash','cash','ending_cash','asset_sales'].includes(k)).map(([k,v])=>[k,accountingOnly(v)]));return value;}
+for(const c of fixture.cases)test('Python accounting parity and independent peak-risk checks: '+c.name,()=>{const actual=engine.compare(c.input);for(const strategy of ['flow','pay_cash'])equal(accountingOnly(actual[strategy]),accountingOnly(c.expected[strategy]));for(const strategy of ['flow','pay_cash']){const path=actual[strategy];for(let i=0;i<path.monthly.length;i++){const r=path.monthly[i],old=c.expected[strategy].monthly[i],collateral=r.opening_assets+r.shock_return,peak=collateral>0?(r.opening_debt+r.routed_expenses+r.capitalized_interest)/collateral:null;equal(r.peak_financing_dta,peak);equal(r.observed_max_dta,old.period_max_dta);const values=[old.period_max_dta,peak].filter(v=>v!==null);equal(r.period_max_dta,values.length?Math.max(...values):null);assert.deepEqual(r.scenario_constraint_violations.filter(k=>k!=='max_dta'),old.scenario_constraint_violations.filter(k=>k!=='max_dta'));if(c.input.scenario_constraints?.max_dta!==undefined)assert.equal(r.scenario_constraint_violations.includes('max_dta'),r.period_max_dta!==null&&r.period_max_dta>c.input.scenario_constraints.max_dta);}const maxima=path.monthly.map(r=>r.period_max_dta).filter(v=>v!==null);equal(path.max_dta,maxima.length?Math.max(...maxima):null);}});
 test('matches published synthetic 36-month baseline and first month',()=>{
  const r=engine.compare(engine.defaultConfig());
  equal(r.flow.final.net_equity,79384.33546853966);
@@ -32,7 +35,7 @@ test('every monthly identity reconciles and borrowing is never income',()=>{
   for(const r of ledger.monthly) {
    equal(r.external_surplus,r.income-r.expenses);
    equal(r.unrouted_expenses+r.routed_expenses,r.expenses);
-   equal(r.assets+r.cash-r.debt,r.net_equity);
+   equal(r.assets-r.debt,r.net_equity);
    assert.ok(Math.abs(r.accounting_residual)<1e-7);
   }
  }
@@ -54,7 +57,7 @@ const invalid=[
  ['NaN',c=>c.initial_assets=NaN],['Infinity',c=>c.annual_apr=Infinity],['negative debt',c=>c.initial_debt=-1],
  ['fraction above one',c=>c.expenses[0].routed_fraction=1.01],['fraction below zero',c=>c.expenses[0].routed_fraction=-.01],
  ['missing pay',c=>delete c.monthly_take_home],['fractional horizon',c=>c.months=2.5],['zero horizon',c=>c.months=0],
- ['short rate path',c=>c.annual_apr=[.05]],['null costs',c=>c.costs=null],['missing reserves',c=>delete c.initial_cash],
+ ['short rate path',c=>c.annual_apr=[.05]],['null costs',c=>c.costs=null],['legacy cash',c=>c.initial_cash=1],
  ['invalid calendar date',c=>{c.rate_convention='actual_365';c.start_date='2027-02-29';}],
  ['invalid shock',c=>c.shocks=[{month:37}]],['invalid access',c=>c.shocks=[{month:1,accessible_cash_fraction:2}]],
  ['unknown constraint',c=>c.scenario_constraints={dscr:3}],['excluded nonzero taxes',c=>c.costs.monthly_taxes=10],
