@@ -15,7 +15,7 @@ FLOW separates household earning/spending from investment distribution cash:
 1. Household take-home pay can build investments rather than immediately paying every bill.
 2. Some entered bills can instead be funded by a margin draw. That draw increases debt and pays the bill. **Borrowing is financing, not income, investment return or an increase in net wealth.**
 3. Investments change in price and produce distributions. Price growth and distributions are separate assumptions. A high distribution rate is not proof of investment profit, sustainable yield or capital preservation.
-4. Distributions allocated to cash pay modeled interest first. Remaining cash either reduces principal or pays toward a target debt-to-investments ratio and then returns to investments.
+4. Distributions allocated to cash pay modeled interest first. Remaining cash pays principal toward a target debt-to-investments ratio and then returns to investments.
 5. Outcomes depend on the entire balance sheet and funding path. More investments accompanied by more debt can produce little additional net equity and less unused modeled headroom.
 
 In **Maximum within ending guardrails** mode, the app finances the greatest permitted portion of entered bills that month. Unfinanced bills are paid from take-home pay, and **only the remaining pay is invested**. No dollar of pay is simultaneously spent and invested. Existing debt stays in the model. No reserve withdrawal, asset sale or discretionary loan is invented to close a shortfall.
@@ -33,13 +33,13 @@ All displayed balances are **nominal dollars**. Higher nominal investments do no
 1. Enter investment assets and existing debt within the same account boundary. Exclude external reserves.
 2. Enter monthly **take-home** pay and all household bills you want modeled. Gross salary is not spendable pay without a tax bridge.
 3. Enter annual distribution yield and margin APR. Even a dated account observation is an assumption about future months, not a guarantee.
-4. Choose bill financing and the cash sweep. The visible UI starts with **Maximum within ending guardrails** and **B · Pay toward target, then reinvest**. The A/B table compares both sweeps under the selected assumptions.
+4. Choose bill financing. The visible UI starts with **Maximum within ending guardrails** and always uses **Target then reinvest**. There is no cash-sweep selector or distribution-cash comparison card; target DTA remains editable.
 5. Set the target DTA, ending DTA ceiling and minimum cash-interest coverage. These have distinct meanings below.
 6. Review the immediate reinvestment/cash split. Editing either side adjusts the other to total 100%.
-7. Open **Forecast & stress assumptions** for annual price/pay/bill growth and the combined shock. The comparison summary states whether stress is active. Collapsed settings still affect the calculation.
+7. Open **Forecast & stress assumptions** for annual price/pay/bill growth and the combined shock. The active scenario heading and assumptions summary identify the financing rule, target-then-reinvest routing and whether stress is active. Collapsed settings still affect the calculation.
 8. Read completion/failure first. Compare investments **and debt** alongside net equity, interest, financed bills and direct bill payments. Inspect months with the chart/slider and ledger; filter warning breaches if helpful.
 
-Generic reset values: investments $100,000; debt $20,000; monthly pay $5,000; bills $3,500; yield 7%; APR 4.24%; annual price growth 2%; pay/bill growth 3%; 100% cash distributions; target DTA 20%; ceiling 25%; coverage floor 3×; 60 months. These are software examples, not recommended settings. For backward compatibility the engine API's omitted routing options retain fixed financing/principal sweep; the visible UI explicitly selects the new constrained target mode.
+Generic reset values: investments $100,000; debt $20,000; monthly pay $5,000; bills $3,500; yield 7%; APR 4.24%; annual price growth 2%; pay/bill growth 3%; 100% cash distributions; target DTA 20%; ceiling 25%; coverage floor 3×; 60 months. These are software examples, not recommended settings. For backward compatibility the engine API's omitted routing options retain fixed financing/principal sweep; the visible UI explicitly sends target routing on every calculation, including resets and reloads, regardless of the chosen financing mode.
 
 ### Short labels and accessible explanations
 
@@ -50,9 +50,7 @@ Open **?** for a plain-language explanation. Native expandable help works by cli
 | Feature | Implemented behavior | Interpretation limit |
 |---|---|---|
 | Monthly maximum financing | Largest feasible cent amount/share of entered bills, with pay-funding and ending checks | Not a sustainable whole-horizon spending budget or lender capacity |
-| A: Principal sweep | Remaining distribution cash pays principal as far as possible | Voluntary, not a scheduled amortizing payment |
-| B: Target then reinvest | Pays principal toward ending target DTA, then reinvests remaining cash | Does not guarantee the target or borrow solely to reach it |
-| A/B comparison | Same starting values, horizon, financing rule and stress | Each path recalculates its own capacity; later financed amounts can differ |
+| Target then reinvest | Pays principal toward ending target DTA, then reinvests remaining cash | Does not guarantee the target or borrow solely to reach it |
 | Distribution split | Immediate reinvestment is separate from cash available for interest | Immediately reinvested distributions do not provide cash coverage |
 | Guardrails | Ending DTA and period cash-interest coverage | No intraday/peak or actual lending checks |
 | Combined stress | Specified asset/yield/rate/income shocks | Sensitivity, not calibrated forecast/probability |
@@ -63,11 +61,11 @@ Open **?** for a plain-language explanation. Native expandable help works by cli
 
 **DTA = margin debt ÷ investment assets.** Generated surplus is excluded. This remains DTA throughout the app; it is **not M1 Smart Rules utilization**. Translate utilization separately using the applicable M1 credit limit/current terms. Do not copy the same percentage or assume the denominators match. Credit eligibility, borrowing limits and maintenance requirements differ from this model.
 
-The **target** guides B's allocation of cash after interest. It is measured after the draw, interest treatment, principal payment and reinvestment. If the account is below target, B does not manufacture borrowing to raise it. If cash is insufficient, it pays available cash toward principal and remains above target.
+The **target** guides allocation of cash after interest. It is measured after the draw, interest treatment, principal payment and reinvestment. If the account is below target, the model does not manufacture borrowing to raise it. If cash is insufficient, it pays available cash toward principal and remains above target.
 
 The **ceiling** limits financing only in Maximum mode. A lower target is an operating aim, not a second hard threshold. A target above the ceiling does not override it. Equality passes within the documented numerical tolerance.
 
-**Cash-interest coverage = cash-allocated distributions ÷ modeled period interest.** Interest is measured before the sweep, not recomputed from ending debt. Immediate reinvestment is excluded. Cash that B later reinvests was available to pay interest first and remains in this numerator. This is not household DSCR, total-bill coverage or principal-service coverage. Zero interest is N/A.
+**Cash-interest coverage = cash-allocated distributions ÷ modeled period interest.** Interest is measured before the sweep, not recomputed from ending debt. Immediate reinvestment is excluded. Cash that the target-then-reinvest route later reinvests was available to pay interest first and remains in this numerator. This is not household DSCR, total-bill coverage or principal-service coverage. Zero interest is N/A.
 
 ## Exact monthly calculation sequence
 
@@ -76,11 +74,11 @@ The **ceiling** limits financing only in Maximum mode. A lower target is an oper
 3. Split distributions into immediate reinvestment R and cash C. These sum to total distributions before display rounding.
 4. Choose financed bills F. Fixed mode uses all bills B. Maximum requires 0≤F≤B and invested pay P−(B−F)≥0, then tests ending checks. Unfinanced bills B−F are paid directly from pay P.
 5. Interest I=(opening debt D+F)×APR/12. Cash pays min(C,I). Only uncovered interest max(0,I−C) capitalizes into debt. Capitalization is a hypothetical model choice, not verified lender permission.
-6. Define Q=D+F+uncovered interest; cash remaining L=max(0,C−I); and base investments A*=price-grown investments+remaining pay+R. A repays min(Q,L) principal and retains any remainder as generated surplus. B calculates the target payment below.
+6. Define Q=D+F+uncovered interest; cash remaining L=max(0,C−I); and base investments A*=price-grown investments+remaining pay+R. The target-then-reinvest route calculates the target payment below.
 7. Update investments, debt and surplus, then evaluate ending DTA and coverage. Fixed mode records failures and continues; Maximum stops before a month with no feasible funded route.
 8. Reconcile net equity for every completed row.
 
-For B and target fraction t, where 0≤t<1:
+For target fraction t, where 0≤t<1:
 
 ```text
 principal payment = clamp((Q − t × (A* + L)) / (1 − t), 0, min(Q,L))
@@ -99,6 +97,10 @@ change in equity = take-home pay − all bills + price gain − shock loss
 
 Borrowing is not extra income; principal repayment is not an extra loss. Capitalized interest remains an economic cost even when no cash pays it. Generated surplus starts at zero, earns no return and never funds bills.
 
+### Engine compatibility
+
+The programmatic engine retains both `principal` and `target` sweep paths for backward compatibility, and both remain tested. Omitted routing options still use fixed (full-bill, warning-only) financing and the principal sweep. In that legacy principal path, principal repayment is min(Q,L); any cash remaining after debt clears accumulates as generated surplus without return and cannot fund bills. This is API compatibility, not a selectable route in the current UI. The UI always supplies `sweep: "target"`, including reset and reload, and still offers both financing modes.
+
 ### Solver and failure treatment
 
 Maximum financing enumerates all piecewise-linear regions created by interest shortfall, debt clearance and target-payment clamping. It intersects funding and ratio constraints in each region and considers the greatest cent amount in every feasible interval, plus the exact bill ceiling. It does not assume a coarse scan or binary monotonic search is sufficient and does not silently truncate a search. See the [specification](flowsim-v2-routing.md) for tolerances.
@@ -107,7 +109,7 @@ This is a **monthly model maximum at cent precision**, not a continuous exact op
 
 ## Worked month-by-month example — synthetic data only
 
-This 12-month example is generated and verified against the implemented engine. Starting investments are **$10,000**, debt **$2,400**, equity **$7,600**, monthly take-home pay **$1,000** and bills **$300**. Annual price/pay/bill growth, distribution yield and APR are each **12%**, giving 1% monthly rates. Cash allocation is **100%** and immediate reinvestment **0%**. Mode: Maximum; sweep B; target 20%; ceiling 25%; coverage floor 3×; no stress. The conspicuous rates are teaching assumptions, not forecasts or recommendations.
+This 12-month example is generated and verified against the implemented engine. Starting investments are **$10,000**, debt **$2,400**, equity **$7,600**, monthly take-home pay **$1,000** and bills **$300**. Annual price/pay/bill growth, distribution yield and APR are each **12%**, giving 1% monthly rates. Cash allocation is **100%** and immediate reinvestment **0%**. Mode: Maximum; routing: Target then reinvest; target 20%; ceiling 25%; coverage floor 3×; no stress. The conspicuous rates are teaching assumptions, not forecasts or recommendations.
 
 Month one in order:
 
@@ -118,7 +120,7 @@ Month one in order:
 5. Ending investments=$11,110; debt=$2,629.03; equity=$8,480.97; DTA=23.66%; coverage=3.74×. Both checks pass even though the 20% target has not yet been reached.
 6. Equity rises **$880.97 = $1,010−$303+$100+$101−$27.03**. The $303 borrowed does not itself create wealth.
 
-The tables show two-decimal values; checks and accounting retain full precision. Here interest charged equals interest cash-paid; capitalized interest, immediate reinvestment, directly paid bills and retained generated cash are zero throughout. All listed pay is invested and all bills financed. In month 10, B can first reach target and reinvest residual cash.
+The tables show two-decimal values; checks and accounting retain full precision. Here interest charged equals interest cash-paid; capitalized interest, immediate reinvestment, directly paid bills and retained generated cash are zero throughout. All listed pay is invested and all bills financed. In month 10, the route can first reach target and reinvest residual cash.
 
 <!-- BEGIN VERIFIED EXAMPLE -->
 | Month | Pay invested | Bills financed | Distributions (cash) | Interest paid | Principal paid | Cash reinvested after target |
@@ -169,9 +171,9 @@ Asset decline and yield cut compound multiplicatively in distribution dollars. P
 
 ## Results, exports and privacy
 
-The comparison reports completion, investments/debt/equity/cash, charged/capitalized interest, principal, redirected cash, financed/direct bills, invested pay, worst ending checks and all breach months. Four chart series, the inspector and the ledger use the same rows. Principal payments are separate from interest and household expenses.
+The active scenario reports completion and failure status. Summary metrics, the chart, inspector, ledger and CSV describe investments/debt/equity/cash, charged/capitalized interest, principal, redirected cash, financed/direct bills, invested pay and ending checks. The ledger can be filtered to breach months. Four chart series, the inspector and the ledger use the same rows. Principal payments are separate from interest and household expenses.
 
-Percentage inputs display at most two decimals after editing. Users can type more digits; the full numeric value stays in memory. Unrelated edits/help do not round it. Deliberately replacing the field replaces its value. There is no automatic persistence: reload/reset behavior is unchanged.
+Percentage inputs display at most two decimals after editing. Users can type more digits; the full numeric value stays in memory. Unrelated edits/help do not round it. Deliberately replacing the field replaces its value. There is no automatic persistence: reload/reset restores the generic defaults, with target-then-reinvest routing explicitly applied.
 
 Standard CSV percentage inputs, DTA and APR round to two decimals. Legacy fraction fields retain units and round to equivalent percentage resolution. The UI/file disclose that rounded inputs cannot exactly reproduce a full-precision scenario. Canonical internal keys such as `drip` remain compatible; the visible description is Reinvested distributions. Programmatic `toCsv(result,{fullPrecision:true})` preserves unrounded numeric values without another normal-screen control.
 
@@ -192,7 +194,7 @@ Zero interest is N/A coverage. Positive debt with zero assets has undefined nume
 
 ## Verification and development direction
 
-Tests cover independent first-month and 60-month calculations, cash splits, target math, cent reference cases, narrow/no feasible intervals, large values, inherited breaches, zero denominators, capitalization, stress timing, reconciliation, invalid clearing, comparison/chart/ledger agreement, CSV, precision retention, help and reset. `tests/flowsim-v2-docs.cjs` checks this worked example against the engine. Desktop/mobile browser checks cover layout, keyboard/click help and representative mode transitions. CSV Blob content is verified automatically; a completed Chrome filesystem download has not been independently verified.
+Tests cover independent first-month and 60-month calculations, cash splits, target math, cent reference cases, narrow/no feasible intervals, large values, inherited breaches, zero denominators, capitalization, stress timing, reconciliation, invalid clearing, active-scenario/chart/ledger agreement, CSV, precision retention, help and reset. `tests/flowsim-v2-docs.cjs` checks this worked example against the engine. Desktop/mobile browser checks cover layout, keyboard/click help and representative mode transitions. CSV Blob content is verified automatically; a completed Chrome filesystem download has not been independently verified.
 
 With Node 24 and jsdom available through NODE_PATH:
 
