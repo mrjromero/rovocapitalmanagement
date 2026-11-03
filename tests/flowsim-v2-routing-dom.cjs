@@ -10,6 +10,6 @@ try{
  set('assets',0);set('debt',10000);set('pay',0);assert.equal(q('#verdictBadge').textContent,'STOP');assert.equal(q('#ledgerBody').rows.length,0);assert.equal(q('#chart').children.length,0);assert(q('#comparison').textContent.includes('0 / 60'));assert(!q('#csv').disabled);
  set('financing','fixed');assert.equal(q('#ledgerBody').rows.length,60);assert.equal(q('#verdictBadge').textContent,'FAIL');assert(q('#verdictText').textContent.includes('Warning-only'));
  set('targetDta',100);assert(q('#error').textContent);assert.equal(q('#comparison').children.length,0);assert(q('#csv').disabled);
- q('#reset').click();assert.equal(q('[name=financing]').value,'fixed');assert.equal(q('[name=sweep]').value,'principal');assert.equal(q('[name=stress]').value,'0');assert.equal(q('#ledgerBody').rows.length,60);assert.equal(q('#error').textContent,'');
+ q('#reset').click();assert.equal(q('[name=financing]').value,'maximum');assert.equal(q('[name=sweep]').value,'target');assert.equal(q('[name=stress]').value,'0');assert.equal(q('#ledgerBody').rows.length,60);assert.equal(q('#error').textContent,'');
  console.log('V2 routing DOM PASS: A/B comparison, target, mode, stress, early/no-row failure, ledger, chart, invalid clearing and reset.');
 }finally{w.close();}

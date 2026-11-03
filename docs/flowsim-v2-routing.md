@@ -1,6 +1,6 @@
-# Local routing comparison
+# Routing comparison specification
 
-This local extension keeps the original full-bill, warning-only planner available. It adds an A/B distribution-cash comparison and a separately selected maximum-financing rule. Generic defaults are unchanged; personal observations must stay in runtime inputs, never source or URLs.
+This extension keeps the original full-bill, warning-only planner available. It adds an A/B distribution-cash comparison and a separately selected maximum-financing rule. Generic defaults are unchanged; personal observations must stay in runtime inputs, never source or URLs.
 
 ## Two cash sweeps
 
@@ -36,3 +36,7 @@ Short labels such as Price growth have native expandable ? help. Price growth me
 Committed percentage fields display at most two decimals. During editing, users can enter additional digits; on change/blur the display rounds, while a separate in-memory value retains the full entered JavaScript numeric precision. Unrelated edits and rerenders do not replace it with the rounded display. Re-editing the field deliberately replaces its value; reset clears retained precision. Allocation complements retain full precision. Existing engine input keys and scenario semantics are unchanged. There is no automatic persistence; reloading still resets the app as before.
 
 The normal user CSV rounds percentage inputs, DTA percentages and APR to two decimals. Existing fraction-valued financedShare and failure-DTA fields retain their units and use four decimal places, equivalent to 0.01 percentage-point resolution. Both the UI and CSV explain that rounded exports cannot exactly reproduce a full-precision scenario. Programmatic consumers can request `FlowSimV2.toCsv(result, {fullPrecision:true})` for unrounded numeric values with the same canonical column names. This option does not add a normal-screen control. Calculation and guardrail checks always retain full precision.
+
+## Visible defaults and advanced assumptions
+
+The normal UI starts in Maximum financing / Target then reinvest. Engine option defaults remain Fixed / Principal for existing programmatic callers. Price/pay/bill growth and combined stress are grouped in an expandable Forecast & stress assumptions section; the comparison always states whether stress is enabled. See the [complete guide](flowsim-v2-guide.md) for usage and a verified synthetic monthly ledger.

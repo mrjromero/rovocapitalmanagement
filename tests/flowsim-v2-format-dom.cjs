@@ -3,6 +3,7 @@ const dom=new JSDOM(fs.readFileSync(path.join(__dirname,'../FlowSimV2.html'),'ut
 const simulate=F.simulate;F.simulate=c=>(last=simulate(c));
 const set=(name,value,commit=true)=>{const e=q(`[name=${name}]`);e.value=String(value);e.dispatchEvent(new w.Event('input',{bubbles:true}));if(commit)e.dispatchEvent(new w.Event('change',{bubbles:true}));};
 try{
+ set('financing','fixed');set('sweep','principal');
  set('yield',7.123456789);set('apr',4.241234567);set('growth',2.3456789);set('targetDta',20.123456);set('maxDta',28.123456);
  assert.equal(q('[name=yield]').value,'7.12');assert.equal(last.inputs.yield,7.123456789);assert.equal(last.inputs.apr,4.241234567);assert.equal(last.inputs.growth,2.3456789);assert.equal(last.inputs.targetDta,20.123456);assert.equal(last.inputs.maxDta,28.123456);
  const exact=simulate({...F.defaults,yield:7.123456789,apr:4.241234567,growth:2.3456789,targetDta:20.123456,maxDta:28.123456});assert.equal(last.final.netEquity,exact.final.netEquity);
