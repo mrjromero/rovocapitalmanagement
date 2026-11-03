@@ -25,3 +25,6 @@ Synthetic probes revealed differences from requested V2 semantics: reference pay
 - Browser control detached during final mobile chart/download check. Actual CSV download completion and final viewport reset are unverified; no completed download found. Automated CSV content test passes. Preview tab remained listed at http://127.0.0.1:8767/FlowSimV2.html.
 
 No public push, merge or deployment is part of this local version.
+
+## Terminology update
+The UI uses Reinvested distributions. Internal input/result key drip and canonical CSV headers remain unchanged for compatibility; CSV includes a Field label mapping that explains drip as Reinvested distributions (allocation percent in inputs, dollar amount in ledger). Calculations and existing scenarios are unchanged.
