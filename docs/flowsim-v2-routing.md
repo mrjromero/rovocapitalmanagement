@@ -28,3 +28,11 @@ Pay, bills and prices grow by nominal annual rate/12 starting in month 1. Price 
 ## Validation
 
 Existing 12 engine regressions retain legacy fixed-sweep behavior. Added routing tests cover hand-calculated targets and capacity, split conservation, zero target/debt/interest/assets, interest capitalization, off-grid expense ceilings, inherited breaches, funding failure, stress timing, large values and exhaustive cent comparison over 300 deterministic synthetic cases. Separate DOM regression checks comparison, mode and target changes, failure horizons, chart/ledger counts, invalid clearing and reset. All committed examples are synthetic. CSV retains legacy keys and appends routing/failure information and additional flow columns.
+
+## Labels, help and percentage precision
+
+Short labels such as Price growth have native expandable ? help. Price growth means annual investment price change excluding distributions. Help is outside input labels, has descriptive accessible names, and opens with click/touch or Enter/Space; it is not hover-only. Mobile targets are 44 pixels. Material inputs and the four summary metrics use the same pattern.
+
+Committed percentage fields display at most two decimals. During editing, users can enter additional digits; on change/blur the display rounds, while a separate in-memory value retains the full entered JavaScript numeric precision. Unrelated edits and rerenders do not replace it with the rounded display. Re-editing the field deliberately replaces its value; reset clears retained precision. Allocation complements retain full precision. Existing engine input keys and scenario semantics are unchanged. There is no automatic persistence; reloading still resets the app as before.
+
+The normal user CSV rounds percentage inputs, DTA percentages and APR to two decimals. Existing fraction-valued financedShare and failure-DTA fields retain their units and use four decimal places, equivalent to 0.01 percentage-point resolution. Both the UI and CSV explain that rounded exports cannot exactly reproduce a full-precision scenario. Programmatic consumers can request `FlowSimV2.toCsv(result, {fullPrecision:true})` for unrounded numeric values with the same canonical column names. This option does not add a normal-screen control. Calculation and guardrail checks always retain full precision.
