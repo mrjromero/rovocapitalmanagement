@@ -90,3 +90,9 @@ Tests cover small/large/zero capital, partial/full financing, stage 3 vs 4, stag
 `equity change = pay − bills + price gain − shock loss + distributions − interest charged`.
 
 Desktop and 390px mobile checks cover document overflow, keyboard controls, exports, reset and unfunded-month messaging. Screen-reader and Safari/Firefox testing are not claimed. V3’s existing engine/DOM tests are rerun, and its engine is compared byte-for-byte with the published predecessor.
+
+## Monthly chart inspection
+
+Hover over or tap the plot to inspect the nearest individual completed month. A guide and markers show the selected month, with balances for investments, debt, net equity including cash, and cash. The month slider and cash-flow detail stay synchronized. Slider arrow keys provide month-by-month keyboard access; Escape dismisses its tooltip. Every completed month is inspectable even when axis labels remain spaced for readability, including 600-month projections. Changing inputs or resetting clears old tooltip values. No calculation or CSV precision is changed.
+
+`node tests/flowsim-v4-chart.cjs` verifies all monthly hover targets, values, mobile coordinate scaling, slider synchronization and edge cases (requires the same jsdom dependency as the DOM suite).
