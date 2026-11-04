@@ -1,7 +1,13 @@
 # rovocapitalmanagement
 GitHub Pages
 
-## FlowSim V3
+## FlowSim V4 · Contribution Roadmap
+
+[Standalone app](FlowSimV4.html) · [Rules, assumptions and verification](docs/flowsim-v4.md)
+
+Plans contributions, partial/full recurring-bill redirection and optional reduced contributions. Tracks retained wages and cash explicitly. Monthly modeled capacity is not lender approval or a sustainable borrowing guarantee. No account connections, boosters or high-ticket transactions.
+
+## FlowSim V3 · Fixed Financing Simulator
 
 [Standalone app source](FlowSimV3.html) · [Model, assumptions and test instructions](docs/flowsim-v3.md)
 

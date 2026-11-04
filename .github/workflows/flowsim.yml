@@ -3,10 +3,10 @@ name: FlowSim validation
 on:
   pull_request:
     branches: [gh-pages]
-    paths: ['FlowSimV2.html', 'FlowSimV3.html', 'docs/flowsim-v*.md', 'flowsim.html', 'assets/flowsim/**', 'tests/flowsim*', 'tests/fixtures/flowsim-reference.json', '.github/workflows/flowsim.yml']
+    paths: ['FlowSimV2.html', 'FlowSimV3.html', 'FlowSimV4.html', 'docs/flowsim-v*.md', 'flowsim.html', 'assets/flowsim/**', 'tests/flowsim*', 'tests/fixtures/flowsim-reference.json', '.github/workflows/flowsim.yml']
   push:
     branches: [gh-pages]
-    paths: ['FlowSimV2.html', 'FlowSimV3.html', 'docs/flowsim-v*.md', 'flowsim.html', 'assets/flowsim/**', 'tests/flowsim*', 'tests/fixtures/flowsim-reference.json', '.github/workflows/flowsim.yml']
+    paths: ['FlowSimV2.html', 'FlowSimV3.html', 'FlowSimV4.html', 'docs/flowsim-v*.md', 'flowsim.html', 'assets/flowsim/**', 'tests/flowsim*', 'tests/fixtures/flowsim-reference.json', '.github/workflows/flowsim.yml']
 
 permissions:
   contents: read
