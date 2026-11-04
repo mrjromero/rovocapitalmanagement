@@ -96,3 +96,13 @@ Desktop and 390px mobile checks cover document overflow, keyboard controls, expo
 Hover over or tap the plot to inspect the nearest individual completed month. A guide and markers show the selected month, with balances for investments, debt, net equity including cash, and cash. The month slider and cash-flow detail stay synchronized. Slider arrow keys provide month-by-month keyboard access; Escape dismisses its tooltip. Every completed month is inspectable even when axis labels remain spaced for readability, including 600-month projections. Changing inputs or resetting clears old tooltip values. No calculation or CSV precision is changed.
 
 `node tests/flowsim-v4-chart.cjs` verifies all monthly hover targets, values, mobile coordinate scaling, slider synchronization and edge cases (requires the same jsdom dependency as the DOM suite).
+
+## Published URLs and synchronization
+
+Share `https://rovocapitalmanagement.llc/flow-stages.html`. The legacy `https://rovocapitalmanagement.llc/FlowSimV4.html` remains available with the identical standalone simulator.
+
+Keep `FlowSimV4.html` as the editing source, then run `cp FlowSimV4.html flow-stages.html` before testing and publishing either URL. Publish both files in the same commit. `tests/flowsim-v4-alias.cjs` requires byte-for-byte equality and checks the shared header and controls; CI runs when either HTML file changes. Do not update just one copy.
+
+## Search-engine indexing
+
+The original `flowsim.html`, V2, V3 and both V4 URLs use a static `noindex,nofollow` robots meta tag. `robots.txt` keeps its site-wide crawl block and allows only these exact page paths and their query-string variants, so compliant search crawlers can read the noindex instruction. Other site paths remain blocked. Existing search results may take time to disappear after recrawling; this does not guarantee removal by every search engine. These are public links, not password-protected or private pages.

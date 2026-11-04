@@ -1,2 +1,14 @@
 User-agent: *
 Disallow: /
+
+# Allow only the simulator pages so crawlers can read their noindex directives.
+Allow: /flowsim.html$
+Allow: /flowsim.html?
+Allow: /FlowSimV2.html$
+Allow: /FlowSimV2.html?
+Allow: /FlowSimV3.html$
+Allow: /FlowSimV3.html?
+Allow: /FlowSimV4.html$
+Allow: /FlowSimV4.html?
+Allow: /flow-stages.html$
+Allow: /flow-stages.html?
