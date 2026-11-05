@@ -1,6 +1,6 @@
 ---
 name: daily-market-brief
-version: 1.2.0
+version: 1.2.1
 description: Produce a verified, decision-oriented market briefing in Pre-Market, Intraday, or Post-Market mode, with a canonical dashboard, cross-asset interpretation, portfolio implications, catalysts, regime triggers, and explicit confidence/verification notes. Designed to be portable across AI platforms with web/research access.
 ---
 
@@ -177,6 +177,16 @@ Use this sequence:
 5. **Operating controls:** when action is supported, state implications under **Spread management**, **Leverage posture**, and **Velocity of money routing**.
 
 Do not force independent sensors to agree. Explain why apparently different outputs can coexist. An environment-only signal such as CarryPilot Market Monitor's Capacity-Friendly state is not an instruction to add leverage. A MacroRadar regime or confidence change is macro evidence, not a direct allocation command. Account-specific leverage posture requires actual account state.
+
+### Liquidity transmission (materiality-gated; no additional headline score)
+
+When liquidity meaningfully affects the day's positive-carry interpretation, use the [Liquidity Transmission Lens](https://github.com/mrjromero/market-guru-lite/blob/main/docs/LIQUIDITY-TRANSMISSION-LENS-20261105.md) as an **evidence-quality and reconciliation guide**, not a new deterministic indicator or an independent producer alert.
+
+- Keep **Fed reserves / QE / QT / ON RRP**, **commercial-bank loans and deposit creation**, and **Treasury TGA / cash / fiscal flows** separate. Source candidate series include Fed H.4.1, H.8/H.6/SLOOS, and official Treasury statements. Distinguish these from **market funding pressure** (dated SOFR/EFFR/IORB/repo readings) and direct credit spreads.
+- Every material claim needs the observation/effective date, retrieval date, units, publication frequency and comparison basis. Do **not** treat weekly bank data, survey results, and TGA balances as same-session live observations. Missing evidence is unavailable, not benign.
+- Do **not** sum base money, broad money and fiscal flows as "total liquidity"; their coverage overlaps and their units mix stocks with flows. Neither an eSLR rule change nor an isolated TGA drawdown proves new bank lending, asset-price support, or net private financial wealth.
+- Resolve whether credit **availability**, borrowing **cost**, and actual credit **deployment** agree or conflict. Surface opposing evidence before interpreting impacts on cash coverage, the borrowing hurdle, collateral, and capital velocity. Never turn an environmental reading into an account-level borrow, repay, or rebalance instruction.
+- If no material, reliably verifiable new evidence exists, **do not add a section, dashboard row, score, expanded narrative, or unsupported implication**. Preserve the existing format, established cross-sensor rules, and any stronger source/freshness requirements.
 
 ### CarryPilot Gamma shadow input
 
