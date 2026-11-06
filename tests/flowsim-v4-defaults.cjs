@@ -4,7 +4,7 @@ const assert = require('node:assert/strict');
 const { JSDOM } = require('jsdom');
 
 const expected = {
-  assets: 25000, debt: 0, cash: 8200, upfront: 0, pay: 6338, bills: 5500,
+  assets: 25000, debt: 0, cash: 0, upfront: 0, pay: 6338, bills: 5500,
   retain: 0, contribution: 100, financeStart: 1, target: 20, maxDta: 25,
   minCoverage: 3, yield: 7, apr: 5.25, growth: 2, payGrowth: 3.1,
   inflation: 3.7, months: 120, useCash: 1, reduceStart: 0, reduced: 50,
@@ -28,7 +28,7 @@ for (const filename of ['FlowSimV4.html', 'flow-stages.html']) {
     assert.equal($('ledgerBody').rows.length, 120);
     assert.equal($('warningsOnly').getAttribute('aria-pressed'), 'false');
     assert.equal($('inspect').value, '1');
-    assert.equal($('cash').value, '8200');
+    assert.equal($('cash').value, '0');
     assert.equal($('pay').value, '6338');
     assert.equal($('bills').value, '5500');
     assert.equal($('apr').value, '5.25');
