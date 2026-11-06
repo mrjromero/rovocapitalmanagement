@@ -12,7 +12,7 @@ V4 is separate from V2 and V3. V3 is renamed **Fixed Financing Simulator** in it
 4. **Full-income contributions:** all recurring bills are financed and the entire positive paycheck is contributed.
 5. **Reduced-contribution FLOW:** an optional user-selected month changes the percentage of available wages contributed. Salary does not disappear. Wages not contributed or spent remain in cash. The stage can be enabled even if full bill financing has not been reached; it is a contribution choice, not proof of independence.
 
-Stage labels are descriptions, not invented FYNANC thresholds. Stages may be skipped, revisited or reversed when capacity changes. Roadmap dates are the first achievement, not guarantees that a condition lasts. Full bill financing and full-income contributions are separate milestones and can occur together. Stage 2’s milestone specifically requires partial financing, not merely any financing.
+Stage labels are descriptions, not invented FYNANC thresholds. Stages may be skipped, revisited or reversed when capacity changes. Roadmap dates are the first achievement, not guarantees that a condition lasts. Full bill financing and full-income contributions are separate milestones and can occur together. The engine’s partial-redirection milestone specifically requires partial financing, not merely any financing. If no partial month occurs but full redirection is reached, the Stage 2 roadmap card is highlighted as reached and says “Reached: full redirection reached in month N,” using the first full-redirection month. This does not invent a partial-financing month or change ledger stages. If partial financing occurs anywhere in the completed projection, its actual first month remains the Stage 2 caption, even when it follows an earlier full-redirection month.
 
 ## Assumptions and monthly sequence
 
@@ -74,6 +74,7 @@ Opening investments $12,000, debt/cash $0, pay $5,000, bills $3,500, yield/APR 1
 ```sh
 node --test --test-isolation=none tests/flowsim-v4.test.cjs
 node tests/flowsim-v4-dom.cjs
+node tests/flowsim-v4-roadmap.cjs
 node tests/flowsim-v4-browser.js
 ```
 
