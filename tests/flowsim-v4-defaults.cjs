@@ -3,7 +3,7 @@ const path = require('node:path');
 const assert = require('node:assert/strict');
 const { JSDOM } = require('jsdom');
 
-const expected = {
+const legacyExpected = {
   assets: 25000, debt: 0, cash: 0, upfront: 0, pay: 6338, bills: 5500,
   retain: 0, contribution: 100, financeStart: 1, target: 20, maxDta: 25,
   minCoverage: 3, yield: 7, apr: 5.25, growth: 2, payGrowth: 3.1,
@@ -17,6 +17,8 @@ for (const filename of ['FlowSimV4.html', 'flow-stages.html']) {
     runScripts: 'dangerously', url: 'http://localhost/' + filename
   });
   const w = dom.window, d = w.document, F = w.FlowSimV4;
+  const expected={...legacyExpected};
+  if(filename==='FlowSimV4.html'){delete expected.target;Object.assign(expected,{bandFloor:23,bandCeiling:26,bandSplit:50});}
   const $ = id => d.getElementById(id);
   function checkDefaults() {
     assert.deepEqual({ ...F.defaults }, expected, filename + ': exact defaults');

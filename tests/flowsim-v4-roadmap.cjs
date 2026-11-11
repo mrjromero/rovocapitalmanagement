@@ -6,7 +6,7 @@ const { JSDOM } = require('jsdom');
 // Synthetic inputs keep the milestone dates exact and independent of returns.
 const base = {
   assets: 10000, debt: 0, cash: 0, upfront: 0, pay: 5000, bills: 1000,
-  retain: 0, contribution: 100, financeStart: 1, target: 0, maxDta: 25,
+  retain: 0, contribution: 100, financeStart: 1, bandFloor: 0, bandCeiling: 0, bandSplit: 0, maxDta: 25,
   minCoverage: 0, yield: 0, apr: 0, growth: 0, payGrowth: 0, inflation: 0,
   months: 3, useCash: 0, reduceStart: 0, stressStart: 0
 };
@@ -20,6 +20,7 @@ for (const filename of ['FlowSimV4.html', 'flow-stages.html']) {
   const caption = index => cards()[index].querySelector('.caption').textContent;
   function configure(overrides = {}) {
     const config = { ...F.defaults, ...base, ...overrides };
+    if(filename==='flow-stages.html'){delete config.bandFloor;delete config.bandCeiling;delete config.bandSplit;config.target=0;}
     for (const [key, value] of Object.entries(config)) d.getElementById(key).value = value;
     d.getElementById('months').dispatchEvent(new w.Event('input', { bubbles: true }));
     assert(d.getElementById('error').hidden, filename + ': valid scenario');
