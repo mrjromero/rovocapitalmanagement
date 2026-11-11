@@ -100,10 +100,31 @@ Hover over or tap the plot to inspect the nearest individual completed month. A 
 
 ## Published URLs and synchronization
 
-Share `https://rovocapitalmanagement.llc/flow-stages.html`. The legacy `https://rovocapitalmanagement.llc/FlowSimV4.html` remains available with the identical standalone simulator.
+Share `https://rovocapitalmanagement.llc/flow-stages.html`. The legacy `https://rovocapitalmanagement.llc/FlowSimV4.html` remains available with the same calculation model.
 
-Keep `FlowSimV4.html` as the editing source, then run `cp FlowSimV4.html flow-stages.html` before testing and publishing either URL. Publish both files in the same commit. `tests/flowsim-v4-alias.cjs` requires byte-for-byte equality and checks the shared header and controls; CI runs when either HTML file changes. Do not update just one copy.
+The Wealth Engine Journey is an intentionally V4-only review feature. Do **not** copy `FlowSimV4.html` over `flow-stages.html`: applying this feature to Flow Stages requires separate user approval. The alias test strips only explicitly marked narrative additions from V4, then requires byte-for-byte equality with Flow Stages for every pre-existing part of the app. Both URLs retain the same simulation engine, assumptions, controls and exports. CI runs when either HTML file changes.
 
 ## Search-engine indexing
 
 The original `flowsim.html`, V2, V3 and both V4 URLs use a static `noindex,nofollow` robots meta tag. `robots.txt` keeps its site-wide crawl block and allows only these exact page paths and their query-string variants, so compliant search crawlers can read the noindex instruction. Other site paths remain blocked. Existing search results may take time to disappear after recrawling; this does not guarantee removal by every search engine. These are public links, not password-protected or private pages.
+
+
+## Your Wealth Engine Journey (V4-only review)
+
+A dark card directly above the month-by-month plan derives four paragraphs from every complete simulation result. It covers the initial wage allocation, the first strictly-more-than-half and full bill-financing months, later full-financing reversals, the sustained contribution crossover, and the final completed month's equity and distribution allocation. Zero completed months receive three concise fallback paragraphs. All month pills select the existing slider, chart marker/tooltip and inspector, then focus and scroll to the slider. Scenario edits and reset rebuild the story; invalid inputs hide it rather than leave stale milestones. Ledger filtering does not change it.
+
+The requested monthly crossover measure is:
+
+`reinvested + principal + priceGain - shockLoss > contributed + 1e-7`
+
+Principal is paid only from distributions. Price change includes both negative growth and the separately recorded one-time shock. Paid interest is already removed before principal and reinvestment and must not be subtracted twice. Capitalized unpaid interest is **not silently added to this user-defined measure**: when a qualifying interval contains it, the narrative states the total added to debt and explicitly says this is not a net-wealth crossover. Actual net investment-side equity contribution would subtract capitalized interest as well. Neither comparison represents total household equity change, because it excludes wages retained in cash, bills, and new bill debt.
+
+A backward scan finds the first month in the final uninterrupted qualifying suffix, not the first temporary crossing. It is labeled as holding only **through the modeled horizon**, never forever. A one-month or final-month crossover states that no later months are tested. Early funding failure prevents a requested-horizon crossover claim. Zero bills do not generate financing milestones, and zero contributions do not imply independence. Final distributions are reconciled as interest paid + principal repayment + reinvestment, with unpaid interest separately disclosed.
+
+Additional verification:
+
+```sh
+node --test --test-isolation=none tests/flowsim-v4-journey.test.cjs
+node tests/flowsim-v4-journey-dom.cjs
+node tests/flowsim-v4-journey-browser.js
+```

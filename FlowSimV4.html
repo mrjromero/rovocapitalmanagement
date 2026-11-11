@@ -2,6 +2,9 @@
 <html lang="en"><head><meta charset="utf-8"><meta name="robots" content="noindex,nofollow"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'none'; img-src data: blob:; base-uri 'none'; form-action 'none'"><title>FLOW V4 · Contribution Roadmap</title>
 <style>
 :root{color-scheme:dark;font:14px/1.5 system-ui,sans-serif;--bg:#0b1220;--panel:#121e30;--border:#2b3b52;--text:#eff5ff;--muted:#b0bfd3;--green:#65e1bd;--blue:#86b8ff;--amber:#f1cd85;--red:#ffa7b0}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text)}header{padding:24px 32px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:20px}h1{margin:2px 0;font-size:26px;letter-spacing:-.8px}h2{font-size:18px;margin:0 0 8px}h3{font-size:14px;margin:0 0 7px}p{margin:6px 0;color:var(--muted)}.overline{font-size:11px;letter-spacing:1.6px;color:var(--green);text-transform:uppercase}.local{font-size:12px;color:var(--green);border:1px solid #346052;padding:8px 12px;border-radius:24px}.layout{display:grid;grid-template-columns:330px minmax(0,1fr);max-width:1800px;margin:auto}.layout.scenario-collapsed{grid-template-columns:72px minmax(0,1fr)}.scenario-toggle{position:sticky;top:0;z-index:2;width:100%;margin-bottom:16px;text-align:left}.scenario-collapsed aside{padding:12px 8px}.scenario-collapsed .scenario-toggle{white-space:pre-line;text-align:center;font-size:12px;padding:8px 4px}aside{padding:24px;border-right:1px solid var(--border)}main{padding:28px;min-width:0}button,input,select{font:inherit}button{min-height:44px;padding:9px 13px;border-radius:8px;border:1px solid #41536b;background:#1a2c43;color:var(--text);cursor:pointer}button:hover{background:#29415e}button[aria-pressed=true]{border-color:var(--green);color:var(--green)}button:disabled{opacity:.5;cursor:not-allowed}input[type=number],select{width:100%;min-height:44px;background:#091321;border:1px solid #3b4e68;color:var(--text);border-radius:7px;padding:9px 11px;font-variant-numeric:tabular-nums}input[aria-invalid=true]{border-color:var(--red)}:focus-visible{outline:3px solid var(--green);outline-offset:3px}label{display:block;font-size:12px;margin:12px 0 5px;color:#d5e0f1}.field-help{font-size:12px;color:var(--muted)}details{margin-top:10px}summary{cursor:pointer;min-height:44px;padding:10px 0;font-size:13px}fieldset{border:0;border-top:1px solid var(--border);margin:20px 0 0;padding:12px 0 0}legend{font-size:12px;color:var(--green);padding:0 8px 0 0;letter-spacing:.8px}.row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}.banner,.card{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:20px}.banner{border-left:4px solid var(--green);margin-bottom:18px}.banner.warn{border-left-color:var(--amber)}.banner.fail{border-left-color:var(--red)}.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:20px 0}.metric{font-size:24px;font-weight:650;letter-spacing:-.5px;margin:8px 0;font-variant-numeric:tabular-nums}.caption{font-size:12px;color:var(--muted)}.roadmap{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin:14px 0 20px}.step{padding:16px 12px;border:1px solid var(--border);border-radius:10px;background:#0e192a}.step.reached{border-color:#3e7b69;background:#133329}.step b{display:block;color:var(--green);margin-bottom:8px;font-size:11px;letter-spacing:1px}.step strong{display:block;font-size:13px}.step p{font-size:12px}.section{margin:20px 0}.legend{display:flex;gap:16px;flex-wrap:wrap;margin:10px 0;font-size:12px}.legend span:before{content:'●';color:var(--color);margin-right:6px}svg{width:100%;height:auto;display:block}.chart-wrap{position:relative}.chart-tooltip{position:absolute;z-index:1;top:8px;width:260px;max-width:100%;padding:12px;background:#091321;border:1px solid #657e9d;border-radius:8px;box-shadow:0 4px 16px #0008;pointer-events:none;font-size:12px;font-variant-numeric:tabular-nums}.chart-tooltip strong{display:block;margin-bottom:6px}.chart-tooltip div{display:flex;justify-content:space-between;gap:8px}.inspect{padding:12px 0;border-top:1px solid var(--border)}input[type=range]{accent-color:var(--green);width:100%;min-height:36px}.flow{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:14px 0}.flow div{padding:12px;background:#0b1525;border-radius:8px}.flow strong{display:block;font-size:17px;margin-top:5px}.table-wrap{overflow:auto;max-height:520px;margin-top:15px}table{border-collapse:collapse;width:100%;font-size:12px;font-variant-numeric:tabular-nums}th,td{padding:11px 12px;text-align:right;white-space:nowrap;border-bottom:1px solid var(--border)}th{position:sticky;top:0;background:#1b2b42;color:var(--muted);font-weight:500}th:first-child,td:first-child{text-align:left}tr.warn{background:#2d2530}.error{font-size:12px;color:var(--red)}.notice{border:1px solid #705f3a;padding:14px;border-radius:8px;margin-bottom:15px;color:var(--amber)}.empty{padding:25px;text-align:center;color:var(--muted)}a{color:var(--green)}footer{font-size:12px;color:var(--muted);margin:22px 0}.toolbar{display:flex;gap:7px;flex-wrap:wrap}#printReport{display:none}
+/* V4_JOURNEY_STYLE_START */
+.journey-card{background:linear-gradient(135deg,#14263a,var(--panel) 65%);border-color:#365769}.journey-heading{display:flex;align-items:center;gap:10px;margin-bottom:12px}.journey-heading h2{margin:0}.journey-icon{width:30px;height:30px;flex:none;color:var(--green)}.journey-copy p{margin:0 0 14px;line-height:1.75;color:#d5e0f1}.journey-copy p:last-child{margin-bottom:0}.journey-month{display:inline-flex;align-items:center;min-height:36px;padding:2px 9px;margin:0 2px;border-radius:999px;border-color:#426f6b;background:#183831;color:var(--green);font-size:12px;font-weight:650;vertical-align:baseline;white-space:nowrap}.journey-month:hover{background:#245347}.journey-note{margin:14px 0 0;padding-top:12px;border-top:1px solid var(--border)}
+/* V4_JOURNEY_STYLE_END */
 @media(min-width:1000px){aside{position:sticky;top:0;height:100dvh;overflow:auto}}@media(max-width:1150px){.grid,.flow{grid-template-columns:repeat(2,minmax(0,1fr))}.roadmap{grid-template-columns:repeat(3,minmax(0,1fr))}}@media(max-width:760px){header{padding:20px;align-items:flex-start}h1{font-size:23px}.local{display:none}.layout{display:block}.scenario-collapsed aside{padding:12px 18px}.scenario-collapsed .scenario-toggle{white-space:normal;text-align:left;font-size:14px;padding:9px 13px;margin:0}aside{border-right:0;border-bottom:1px solid var(--border);padding:20px}main{padding:18px}.roadmap{grid-template-columns:repeat(2,minmax(0,1fr))}.metric{font-size:21px}.card{padding:16px}.grid{gap:9px}.flow{gap:7px}.flow strong{font-size:15px}}
 @media print{@page{size:A4 landscape;margin:10mm}header,.layout{display:none!important}body{background:white;color:black;font:9pt sans-serif}#printReport{display:block}#printReport p{color:#333}#printReport table{font-size:7pt;table-layout:fixed}#printReport th,#printReport td{white-space:normal;overflow-wrap:anywhere;position:static;background:white;color:black;border:1px solid #bbb;padding:4px}#printReport tr{break-inside:avoid}#printReport thead{display:table-header-group}.print-section{break-before:page}}
 </style></head><body>
@@ -10,6 +13,9 @@
 <div id="error" role="alert" hidden></div><div id="summary" class="banner" aria-live="polite"></div>
 <section aria-labelledby="roadmapTitle"><div class="row"><h2 id="roadmapTitle">Your contribution stages</h2><span class="caption">Stages may be skipped or revisited</span></div><div id="roadmap" class="roadmap"></div><p class="caption">Stages describe cash routing, not financial independence. Full bill financing and full-income contributions are different milestones.</p></section>
 <div id="metrics" class="grid"></div>
+<!-- V4_JOURNEY_CARD_START -->
+<section id="wealthJourney" class="card section journey-card" aria-labelledby="journeyTitle"><div class="journey-heading"><svg class="journey-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="m16 8-2.5 5.5L8 16l2.5-5.5Z"/></svg><h2 id="journeyTitle">Your Wealth Engine Journey</h2></div><div id="journeyCopy" class="journey-copy"></div><p class="caption journey-note">Select a month pill to inspect it below. The crossover compares monthly reinvestment + distribution-funded principal repayment + net price change with paycheck contributions. Net price change includes any modeled price drop. Interest already paid is not counted again; unpaid interest added to debt is disclosed separately. This is a hypothetical path, not proof of financial independence or a guarantee beyond the modeled horizon.</p></section>
+<!-- V4_JOURNEY_CARD_END -->
 <section class="card section"><div class="row"><h2>Month-by-month plan</h2><span id="monthLabel" class="caption"></span></div><div class="legend"><span style="--color:var(--green)">Investments</span><span style="--color:var(--red)">Debt</span><span style="--color:var(--blue)">Net equity including cash</span></div><p class="caption">Hover or tap the chart to inspect each month. You can also use the month slider and arrow keys below.</p><div class="chart-wrap" id="chartWrap"><svg id="chart" viewBox="0 0 1000 280" role="img" aria-labelledby="chartTitle chartDesc"></svg><div id="chartTooltip" class="chart-tooltip" hidden></div></div><div class="inspect"><label for="inspect">Inspect a completed month</label><input id="inspect" type="range" min="1" max="60" value="1"><div id="monthDetail" aria-live="polite"></div></div></section>
 <section class="card section"><div class="row"><div><h2>Monthly ledger</h2><p id="count" class="caption"></p></div><div class="toolbar"><button id="warningsOnly" aria-pressed="false">Warnings only</button><button id="csv">Download CSV</button><button id="pdf">Print / PDF</button></div></div><div class="table-wrap" tabindex="0" role="region" aria-label="Monthly ledger, horizontally scrollable"><table><caption class="caption">USD · Every completed month · Percentages rounded only for display</caption><thead id="ledgerHead"></thead><tbody id="ledgerBody"></tbody></table></div><div id="empty" class="empty" hidden></div><p class="caption">Exports include every completed month, all assumptions and any unfunded month, regardless of this filter.</p></section>
 <details class="card section"><summary>Model rules, constraints and limitations</summary>
@@ -105,6 +111,98 @@ window.FlowSimV4=(()=>{
   return {defaults,labels,stages,columns,validate,capacity,simulate,format,toCsv};
 })();
 </script>
+<!-- V4_JOURNEY_SCRIPT_START -->
+<script id="journey">
+'use strict';
+// Presentation-only analysis. The simulation, its precision and its ledger are unchanged.
+window.FlowJourneyV4=(()=>{
+  const EPS=1e-7;
+  const contribution=row=>row.reinvested+row.principal+row.priceGain-row.shockLoss;
+  const full=row=>row.bills>0&&Math.abs(row.financed-row.bills)<EPS;
+  function analyze(result){
+    const rows=result.rows;
+    let suffix=null;
+    // Work backward: an earlier crossing that later reverses is not sustained.
+    for(let i=rows.length-1;i>=0;i--){
+      if(contribution(rows[i])-rows[i].contributed<=EPS)break;
+      suffix=rows[i];
+    }
+    const firstFull=rows.find(full)||null;
+    return {
+      first:rows[0]||null,last:rows.at(-1)||null,
+      half:rows.find(row=>row.bills>0&&row.financed-row.bills/2>EPS)||null,
+      full:firstFull,
+      reversal:firstFull?rows.find(row=>row.month>firstFull.month&&!full(row))||null:null,
+      firstCross:rows.find(row=>contribution(row)-row.contributed>EPS)||null,
+      crossover:!result.failure&&rows.length===result.config.months?suffix:null,
+      completedSuffix:suffix
+    };
+  }
+  function summarize(result){
+    const a=analyze(result),{first,last}=a,F=window.FlowSimV4;
+    const money=value=>F.format(Math.abs(value)<EPS?0:value,'$');
+    const month=row=>({month:row.month});
+    const paragraphs=[];
+    if(!first){
+      paragraphs.push(['Your journey cannot begin under these assumptions: bills cannot be fully funded in month '+result.failure.month+'. No monthly activity has been included.']);
+      paragraphs.push(['The starting position remains '+money(result.initial.assets)+' in investments and '+money(result.initial.cash)+' in cash, less '+money(result.initial.debt)+' of debt. No borrowing or wealth-generation milestone can be established.']);
+      paragraphs.push(['Starting net equity is '+money(result.initial.equity)+'. Review the funding shortfall above and adjust the assumptions to model a completed month.']);
+      return {analysis:a,paragraphs};
+    }
+    const p1=['In ',month(first),', your '+money(first.pay)+' paycheck sends '+money(first.payBills)+' to bills, '+money(first.contributed)+' to investments and '+money(first.retained)+' to cash. '];
+    if(first.cashBills>EPS)p1.push('Existing cash also covers '+money(first.cashBills)+' of bills. ');
+    if(first.contributed>Math.max(0,contribution(first)-first.capitalized)+EPS)p1.push('Your paycheck contribution adds more to net equity than the investments do at the start.');
+    else if(first.contributed<=EPS)p1.push('No paycheck money is invested at the start.');
+    else p1.push('Your existing investments already contribute at least as much as your paycheck contribution at the start.');
+    paragraphs.push(p1);
+
+    const p2=[];
+    if(!result.config.bills)p2.push('No recurring bills are entered, so there is no bill-financing milestone to reach.');
+    else{
+      if(a.half)p2.push('Borrowing first funds more than half your bills in ',month(a.half),' ('+F.format(a.half.financed/a.half.bills,'%')+'). ');
+      else p2.push('Borrowing does not fund more than half your bills in any completed month. ');
+      if(a.full){
+        p2.push('All bills first fit modeled financing in ',month(a.full),'. ');
+        if(a.reversal)p2.push('That reverses in ',month(a.reversal),'; full financing is not continuous afterward. ');
+        else if(result.failure)p2.push('It holds for the remaining completed months, but the projection stops early. ');
+        else if(a.full.month===last.month)p2.push('This is the final modeled month, so no later persistence is tested. ');
+        else p2.push('It holds through the modeled horizon. ');
+      }else p2.push('Full bill financing is not reached in the completed months. ');
+      p2.push('Borrowing pays bills by adding debt; it is not investment income.');
+    }
+    paragraphs.push(p2);
+
+    const p3=[];
+    if(a.crossover){
+      const cross=a.crossover;
+      p3.push('In ',month(cross),', reinvested distributions, distribution-funded principal repayments and net price growth total '+money(contribution(cross))+' versus '+money(cross.contributed)+' contributed from your paycheck. ');
+      if(first.month===last.month)p3.push('This exceeds paycheck contributions in the only modeled month; there are no later months to test.');
+      else if(cross.month===last.month)p3.push('It first stays ahead in the final modeled month; no later months are modeled.');
+      else p3.push('This combination '+(cross.month===1?'is already ahead and stays':'first pulls ahead and stays')+' higher through the modeled horizon, ending in month '+last.month+'.');
+      if(cross.contributed<=EPS)p3.push(' Paycheck contributions are zero at this milestone.');
+      const unpaid=result.rows.filter(row=>row.month>=cross.month).reduce((sum,row)=>sum+row.capitalized,0);
+      if(unpaid>EPS)p3.push(' This comparison excludes '+money(unpaid)+' of unpaid interest added to debt over that interval, so it is not a net-wealth crossover.');
+    }else if(result.failure){
+      p3.push('The projection stops before month '+result.failure.month+', so a crossover through the requested '+result.config.months+'-month horizon cannot be established.');
+      if(a.firstCross)p3.push(' The investment components exceed paycheck contributions in some completed months, but that does not establish the requested horizon-wide result.');
+    }else{
+      p3.push('Reinvested distributions, distribution-funded principal repayments and net price growth do not stay above paycheck contributions through this '+last.month+'-month modeled horizon. ');
+      if(a.firstCross)p3.push('An earlier crossing reverses before the end. ');
+      if(last.contributed>Math.max(0,contribution(last)-last.capitalized)+EPS)p3.push('Your paycheck contribution still leads at the end. ');
+      p3.push('A longer horizon or different assumptions may change the result; neither is a promise.');
+    }
+    paragraphs.push(p3);
+
+    const p4=['At ',month(last),result.failure?' (the last completed month)':' (the end of your modeled horizon)',', net equity is '+money(last.equity)+', including cash and after debt. That month produces '+money(last.distributions)+' in distributions: '+money(last.paid)+' pays interest, '+money(last.principal)+' repays principal and '+money(last.reinvested)+' is automatically reinvested.'];
+    if(last.capitalized>EPS)p4.push(' Another '+money(last.capitalized)+' of unpaid interest is added to debt.');
+    if(last.equity<0)p4.push(' Debt exceeds investments plus cash.');
+    paragraphs.push(p4);
+    return {analysis:a,paragraphs};
+  }
+  return {contribution,analyze,summarize};
+})();
+</script>
+<!-- V4_JOURNEY_SCRIPT_END -->
 <script id="ui">
 'use strict';
 (()=>{const F=window.FlowSimV4,$=id=>document.getElementById(id);let result=null,filtered=false,precision={},chartScale=null,scenarioScrollTop=0;
@@ -113,7 +211,7 @@ const tips={assets:'Already invested. Do not include it again in starting cash o
 const monthKeys=['months','financeStart','reduceStart','stressStart','payCutMonths'],moneyKeys=['assets','debt','cash','upfront','pay','bills','retain'];
 for(const [title,keys]of groups){const field=document.createElement('fieldset');field.innerHTML='<legend>'+title+'</legend>';for(const k of keys)field.insertAdjacentHTML('beforeend',`<label for="${k}">${F.labels[k]}</label>${k==='useCash'?'<select id="useCash"><option value="1">Yes · use available cash</option><option value="0">No · preserve cash</option></select>':`<input id="${k}" type="number" step="${monthKeys.includes(k)?1:'any'}" inputmode="decimal" required aria-describedby="help-${k} err-${k}">`}<span id="err-${k}" class="error"></span><details><summary>About ${F.labels[k].split(' (')[0].toLowerCase()}</summary><p class="field-help" id="help-${k}">${tips[k]}</p></details>`);if(title.startsWith('Optional')){const d=document.createElement('details');d.innerHTML='<summary>'+title+'</summary>';d.append(field);$('parameters').append(d);}else $('parameters').append(field);}
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-function calculate(){hideTooltip();chartScale=null;const config=Object.fromEntries(Object.keys(F.defaults).map(k=>[k,Object.hasOwn(precision,k)?precision[k]:$(k).value.trim()===''?NaN:Number($(k).value)]));const e=F.validate(config);for(const k of Object.keys(config)){$('err-'+k).textContent=e[k]||'';$(k).setAttribute('aria-invalid',String(!!e[k]));}try{result=F.simulate(config);$('error').hidden=true;$('csv').disabled=false;$('pdf').disabled=false;render();}catch(err){result=null;$('error').hidden=false;$('error').className='notice';$('error').textContent=err.message;for(const k of ['summary','roadmap','metrics','chart','monthDetail','ledgerBody','printReport'])$(k).innerHTML='';$('count').textContent='No valid projection';$('monthLabel').textContent='';$('inspect').disabled=true;$('csv').disabled=true;$('pdf').disabled=true;$('empty').hidden=true;}}
+function calculate(){hideTooltip();chartScale=null;const config=Object.fromEntries(Object.keys(F.defaults).map(k=>[k,Object.hasOwn(precision,k)?precision[k]:$(k).value.trim()===''?NaN:Number($(k).value)]));const e=F.validate(config);for(const k of Object.keys(config)){$('err-'+k).textContent=e[k]||'';$(k).setAttribute('aria-invalid',String(!!e[k]));}try{result=F.simulate(config);$('error').hidden=true;$('csv').disabled=false;$('pdf').disabled=false;render();}catch(err){result=null;$('error').hidden=false;$('error').className='notice';$('error').textContent=err.message;for(const k of ['summary','roadmap','metrics','chart','monthDetail','ledgerBody','printReport'])$(k).innerHTML='';/* V4_JOURNEY_ERROR_START */$('journeyCopy').replaceChildren();$('wealthJourney').hidden=true;/* V4_JOURNEY_ERROR_END */$('count').textContent='No valid projection';$('monthLabel').textContent='';$('inspect').disabled=true;$('csv').disabled=true;$('pdf').disabled=true;$('empty').hidden=true;}}
 function render(){const r=result,c=r.config,end=r.final;$('summary').className='banner'+(r.failure?' fail':r.warningMonths?' warn':'');$('summary').innerHTML='<h2>'+(r.failure?'Projection stops before month '+r.failure.month:r.rows.length+' months modeled')+'</h2><p>'+(r.failure?`${F.format(r.failure.shortfall,'$')} of bills cannot be funded from permitted draws, pay and allowed cash. No activity from that month is included in balances.`:`${r.warningMonths} month(s) have a guardrail, undefined-DTA or cash-allocation warning. Capacity is hypothetical, not lender approval or a long-term safe borrowing budget.`)+'</p>'+r.warnings.map(w=>'<p>'+esc(w)+'</p>').join('');
 const stageInfo=[['Foundation',1,'Contribute only available pay. Existing cash funds the upfront transfer.'],['Partial redirection',r.milestones.partial,'Some recurring bills move from wages to modeled financing.'],['Full bill redirection',r.milestones.fullBills,'All recurring bills fit the month’s modeled draw constraints.'],['Full-income contributions',r.milestones.fullPay,'All bills are financed and the entire paycheck is contributed.'],['Reduced-contribution FLOW',r.milestones.reduced,'Optional contribution change; retained pay remains visible.']];$('roadmap').innerHTML=stageInfo.map(([title,m,description],i)=>{
   // Full redirection can be reached without any partial month. Keep the actual
@@ -124,7 +222,30 @@ const stageInfo=[['Foundation',1,'Contribute only available pay. Existing cash f
   return `<div class="step ${reached?'reached':''}"><b>STAGE ${i+1}</b><strong>${title}</strong><p>${description}</p><span class="caption">${status}</span></div>`;
 }).join('');
 const metric=(label,value,note)=>`<div class="card"><div class="caption">${label}</div><div class="metric">${value}</div><div class="caption">${note}</div></div>`;$('metrics').innerHTML=metric('Net equity · investments + cash − debt',F.format(end.equity,'$'),'At '+(r.rows.length?'completed month '+r.rows.length:'start; no completed months'))+metric('Actual pay contributions',F.format(r.totals.contributed,'$'),'Upfront transfer separately: '+F.format(c.upfront,'$'))+metric('Recurring bills redirected',F.format(r.totals.financed,'$'),r.totals.bills?F.format(r.totals.financed/r.totals.bills,'%')+' of completed-month bills':'No completed-month bills')+metric('Cash retained in the model',F.format(end.cash,'$'),'Wages retained: '+F.format(r.totals.retained,'$')+' · Cash used for bills: '+F.format(r.totals.cashBills,'$'));
-$('inspect').disabled=!r.rows.length;$('inspect').max=Math.max(1,r.rows.length);$('inspect').value=Math.min(Number($('inspect').value)||1,Math.max(1,r.rows.length));chart();inspect();ledger();}
+$('inspect').disabled=!r.rows.length;$('inspect').max=Math.max(1,r.rows.length);$('inspect').value=Math.min(Number($('inspect').value)||1,Math.max(1,r.rows.length));chart();inspect();ledger();/* V4_JOURNEY_RENDER_START */renderJourney();/* V4_JOURNEY_RENDER_END */}
+/* V4_JOURNEY_UI_START */
+function renderJourney(){
+  const summary=window.FlowJourneyV4.summarize(result);
+  $('wealthJourney').hidden=false;
+  $('journeyCopy').replaceChildren(...summary.paragraphs.map(parts=>{
+    const p=document.createElement('p');
+    for(const part of parts){
+      if(typeof part==='string')p.append(document.createTextNode(part));
+      else{const button=document.createElement('button');button.type='button';button.className='journey-month';button.dataset.month=part.month;button.textContent='Month '+part.month;button.setAttribute('aria-label','Inspect month '+part.month+' in the month-by-month plan');button.setAttribute('aria-controls','inspect monthDetail');p.append(button);}
+    }
+    return p;
+  }));
+}
+$('journeyCopy').addEventListener('click',event=>{
+  const button=event.target.closest('button[data-month]');
+  if(!button||!result?.rows.length)return;
+  const month=Number(button.dataset.month);
+  if(!result.rows.some(row=>row.month===month))return;
+  $('inspect').value=month;inspect();selectChartMonth(true);
+  $('inspect').focus({preventScroll:true});
+  if($('inspect').scrollIntoView)$('inspect').scrollIntoView({block:'center',behavior:'auto'});
+});
+/* V4_JOURNEY_UI_END */
 function chart(){const rows=result.rows;if(!rows.length){$('chart').innerHTML='<title id="chartTitle">No completed months</title><desc id="chartDesc">The first month could not be funded.</desc>';return;}const vals=rows.flatMap(r=>[r.assets,r.debt,r.equity]),lo=Math.min(0,...vals),hi=Math.max(1,...vals),x=m=>75+(m-1)/Math.max(1,rows.length-1)*900,y=v=>235-(v-lo)/(hi-lo)*210,compact=v=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',notation:'compact',maximumFractionDigits:1}).format(v);let svg='<title id="chartTitle">Monthly balance sheet</title><desc id="chartDesc">Investments, debt and net equity including retained cash. Hover or tap for each month’s balances. Use the month slider and arrow keys or ledger for exact values.</desc>';for(let i=0;i<5;i++){const v=lo+(hi-lo)*i/4;svg+=`<line x1="75" x2="975" y1="${y(v)}" y2="${y(v)}" stroke="#2b3b52"/><text x="65" y="${y(v)+4}" text-anchor="end" fill="#b0bfd3" font-size="12">${compact(v)}</text>`;}for(const [k,color]of [['assets','#65e1bd'],['debt','#ffa7b0'],['equity','#86b8ff']]){svg+=`<polyline fill="none" stroke="${color}" stroke-width="2.5" points="${rows.map(r=>x(r.month)+','+y(r[k])).join(' ')}"/>`;if(rows.length===1)svg+=`<circle cx="75" cy="${y(rows[0][k])}" r="4" fill="${color}"/>`;}for(const m of [...new Set([1,Math.max(1,Math.round(rows.length/2)),rows.length])])svg+=`<text x="${x(m)}" y="260" fill="#b0bfd3" font-size="12" text-anchor="middle">Month ${m}</text>`;$('chart').innerHTML=svg+'<g id="chartSelection" pointer-events="none"></g>';chartScale={x,y};}
 function hideTooltip(){$('chartTooltip').hidden=true;}
 function selectChartMonth(showTooltip=false){
