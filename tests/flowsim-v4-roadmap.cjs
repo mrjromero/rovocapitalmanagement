@@ -62,7 +62,7 @@ for (const filename of ['FlowSimV4.html', 'flow-stages.html']) {
     assert(!d.getElementById('error').hidden);
     assert.equal(cards().length, 0, 'Invalid input clears the previous milestone');
     d.getElementById('reset').click();
-    assert.equal(caption(1), 'First reached: month 2');
+    assert.equal(caption(1), filename === 'FlowSimV4.html' ? 'First reached: month 1' : 'First reached: month 2');
     assert(cards()[1].classList.contains('reached'));
     assert.equal(d.querySelector('meta[name="robots"]').content, 'noindex,nofollow');
   } finally {

@@ -9,7 +9,7 @@ const between=(s,start,end)=>s.slice(s.indexOf(start),s.indexOf(end,s.indexOf(st
 assert.equal(between(source,'  function capacity(','  // Assess after'),between(legacy,'  function capacity(','  function simulate('),'Draw capacity must remain independent and unchanged.');
 assert.equal(between(source,'    let a=config.assets+config.upfront','      const interest='),between(legacy,'    let a=config.assets+config.upfront','      const interest='),'Price growth, distributions, bill funding, stops and wage allocation must stay unchanged.');
 assert.equal(between(source,'      a=base+reinvested;','      const row='),between(legacy,'      a=base+reinvested;','      const row='),'Balance, warning and stage accounting must stay unchanged.');
-assert(source.includes('id="wealthJourney"')&&source.includes('bandFloor:23,bandCeiling:26,bandSplit:50'));
+assert(source.includes('id="wealthJourney"')&&source.includes('bandFloor:25,bandCeiling:30,bandSplit:70'));
 assert(!legacy.includes('id="wealthJourney"')&&!legacy.includes('bandFloor'),'Do not port V4 features to Flow Stages without authorization.');
 for(const filename of ['FlowSimV4.html','flow-stages.html']){
  const dom=new JSDOM(fs.readFileSync(path.join(__dirname,'..',filename),'utf8'),{runScripts:'dangerously',url:'https://rovocapitalmanagement.llc/'+filename}),d=dom.window.document;

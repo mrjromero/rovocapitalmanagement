@@ -4,7 +4,7 @@ const set=(id,value)=>{$(id).value=value;$(id).dispatchEvent(new w.Event('input'
 try{
  assert.equal($('journeyTitle').textContent,'Your Wealth Engine Journey');
  assert.equal($('wealthJourney').nextElementSibling.querySelector('h2').textContent,'Month-by-month plan');
- assert.equal($('journeyCopy').children.length,4);assert.equal($('journeyCopy').querySelectorAll('h3').length,4);assert.match($('journeyCopy').textContent,/In Month 2, your 25% DTA draw limit taps the brakes/);
+ assert.equal($('journeyCopy').children.length,4);assert.equal($('journeyCopy').querySelectorAll('h3').length,4);assert.match($('journeyCopy').textContent,/The 30% DTA draw limit constrains borrowing in Month 1/);
  const initial=$('journeyCopy').textContent;
  for(const button of d.querySelectorAll('.journey-month')){button.click();const month=button.dataset.month;assert.equal($('inspect').value,month);assert.equal(d.activeElement,$('inspect'));assert($('monthLabel').textContent.startsWith('Month '+month+' ·'));assert.equal($('chartTooltip').querySelector('strong').textContent,'Month '+month);assert.equal($('chartTooltip').hidden,false);assert($('chartSelection').children.length>0);}
  $('warningsOnly').click();assert.equal($('journeyCopy').textContent,initial);$('warningsOnly').click();
