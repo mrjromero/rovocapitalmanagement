@@ -3,8 +3,10 @@ const read=name=>fs.readFileSync(path.join(__dirname,'..',name),'utf8'),source=r
 const hash=s=>crypto.createHash('sha256').update(s).digest('hex');
 // The user approved synchronization only after an exact, durable legacy backup.
 assert.equal(hash(backup),'315ccb49c8f0c78da17c5dcce1e3538fdcd7f0ae11357a5e114175b35b1725c2','Preserve every byte of the pre-sync Flow Stages backup.');
-assert.equal(hash(source),'5fdcfee715a28ed8ab98b3b631b163f0eb8b2cda593ad16af72b491718d98b07','This synchronization must not change V4.');
-assert.equal(shared,source.replaceAll('FLOW V4','FLOW STAGES').replace('FLOW-V4-roadmap.csv','FLOW-Stages-roadmap.csv'),'Only three user-visible titles and the CSV filename may differ between active apps.');
+assert.equal(hash(shared),'c0b31f91c7b1a7e17d432f2bded9be69a1e69da5f3760034a5393f339bca76f2','V4-only interface changes must not alter approved Flow Stages.');
+const engine=html=>html.match(/<script id="engine">([\s\S]*?)<\/script>/)[1].replaceAll('FLOW STAGES','FLOW V4');
+assert.equal(engine(source),engine(shared),'Engine, precision, defaults and export schema remain synchronized.');
+assert(source.includes('id="columnPicker"')&&!shared.includes('id="columnPicker"'),'The new picker is V4-only.');
 assert.equal((source.match(/FLOW V4/g)||[]).length,3);
 assert(source.includes('id="wealthJourney"')&&shared.includes('bandFloor:25,bandCeiling:30,bandSplit:70'));
 assert(!backup.includes('id="wealthJourney"')&&!backup.includes('bandFloor'),'The backup retains its original static-target implementation.');
@@ -29,4 +31,4 @@ for(const filename of ['FlowSimV4.html','flow-stages.html']){
   $('reset').click();assert.equal($('months').value,'120');assert.equal($('stage5Card').open,false);assert.equal($('ledgerBody').rows.length,120);
  }finally{w.close();}
 }
-console.log('Flow Stages sync PASS: exact backup and unchanged V4; complete source parity except branding; both live routes, defaults, chart, compact Stage 5, automatic plan, restore/reset, CSV and print.');
+console.log('Flow Stages isolation PASS: exact approved production and backup; engine parity with V4-only presentation changes; both live routes, defaults, chart, compact Stage 5, automatic plan, restore/reset, CSV and print.');
