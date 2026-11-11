@@ -10,7 +10,7 @@ V4 is separate from V2 and V3. V3 is renamed **Fixed Financing Simulator** in it
 2. **Partial bill redirection:** more than zero but less than all recurring bills fit modeled draw capacity. Remaining bills use wages, then cash if enabled.
 3. **Full bill redirection:** all recurring bills are financed, but some wages remain in cash rather than being contributed.
 4. **Full-income contributions:** all recurring bills are financed and the entire positive paycheck is contributed.
-5. **Reduced-contribution FLOW:** an optional user-selected month changes the percentage of available wages contributed. Salary does not disappear. Wages not contributed or spent remain in cash. The stage can be enabled even if full bill financing has not been reached; it is a contribution choice, not proof of independence.
+5. **Reduced-contribution FLOW:** an optional user-selected month changes the percentage of available wages contributed. Salary does not disappear. In the dashboard, uninvested Stage 5 pay after the requested cash allocation leaves FLOW; it cannot fund later months. The stage can be enabled even if full bill financing has not been reached; it is a contribution choice, not proof of independence.
 
 Stage labels are descriptions, not invented FYNANC thresholds. Stages may be skipped, revisited or reversed when capacity changes. Roadmap dates are the first achievement, not guarantees that a condition lasts. Full bill financing and full-income contributions are separate milestones and can occur together. The engine’s partial-redirection milestone specifically requires partial financing, not merely any financing. If no partial month occurs but full redirection is reached, the Stage 2 roadmap card is highlighted as reached and says “Reached: full redirection reached in month N,” using the first full-redirection month. This does not invent a partial-financing month or change ledger stages. If partial financing occurs anywhere in the completed projection, its actual first month remains the Stage 2 caption, even when it follows an earlier full-redirection month.
 
@@ -23,7 +23,7 @@ The reset values are investments $25,000, debt $5,000, cash $0, upfront contribu
 3. Calculate distributions on price-grown opening investments **before** this month’s salary contributions. All distributions are available for modeled interest first. This deliberately differs from V3, which calculates distributions after salary routing. V2 also uses pre-contribution distributions, but grows pay/bills from month 1.
 4. Compute permitted recurring-bill draw from opening collateral, debt, distributions, APR and selected constraints. Salary is not collateral used to finance its own same-month redirection. Redirection can be disabled or delayed by month.
 5. Pay unfinanced bills from wages first, then existing cash if enabled. If any bills remain unfunded beyond $0.0000001 numerical tolerance, stop **before** that month. The failure reports its shortfall and minimum draw needed; displayed balances and the ledger contain only completed months. No asset sale, extra loan or fictional income bridges the gap.
-6. Reserve up to the requested monthly pay allocation in cash, but only from pay still available after bills. Flag any unmet allocation. Contribute the chosen percentage of the remaining available wages; retain all other wages in cash. Stage 5 changes this percentage, not employment/pay assumptions.
+6. Reserve up to the requested monthly pay allocation in cash, but only from pay still available after bills. Flag any unmet allocation. Contribute the chosen percentage of the remaining available wages; before Stage 5, retain other uninvested wages in cash. During Stage 5 in the dashboard, uninvested pay after the requested allocation is redirected outside FLOW. Stage 5 changes allocation, not employment/pay assumptions.
 7. Interest equals `(opening debt + financed bills) × APR / 1200`. Distributions pay interest; uncovered interest capitalizes into debt as an explicit hypothetical accounting assumption. Remaining distribution cash follows the debt band described below. The allocation ratio includes actual current-month wage contributions, but not current-month distribution reinvestment. Distributions cannot be used twice.
 8. End cash = opening cash − cash paid toward bills + retained wages. Cash earns no return. Ending equity = investments + cash − debt. Record pre-sweep and ending DTA, coverage, financing constraint and warnings. Existing breaches can continue with no new draw while contributions and distributions potentially repair the balance sheet.
 
@@ -62,7 +62,7 @@ Coverage means distributions divided by charged interest, not household DSCR or 
 
 Optional user-entered stress starts at an integer month: a one-time investment valuation drop; an ongoing proportional yield cut; an ongoing APR increase in percentage points; and a temporary proportional pay cut for the selected number of months. No stress values or probability are prescribed. A valuation shock is not an added one-time purchase. Taxes, fees, uncertain returns, lender rules and actual transfers are excluded. No boosters, high-ticket purchases, external lump-sum inflows or additional one-time transactions are included.
 
-The model greedily takes the permitted bill draw each month. Early full capacity may later fall to partial capacity. A smaller contribution may accelerate cash accumulation while slowing investment growth. Neither outcome establishes financial independence or makes borrowing suitable.
+The model greedily takes the permitted bill draw each month. Early full capacity may later fall to partial capacity. A smaller Stage 5 contribution may increase cash redirected outside FLOW while slowing investment growth. Neither outcome establishes financial independence or makes borrowing suitable.
 
 ## Worked independent fixture
 
@@ -87,13 +87,13 @@ DOM tests require `jsdom` via NODE_PATH or installed dependencies. Optional brow
 
 Tests cover small/large/zero capital, partial/full financing, stage 3 vs 4, stage 5 retained pay, upfront cash transfers, insufficient cash allocation, capacity bounds/equality, capitalized interest, inherited breaches, cash exhaustion and disabled cash use, zero denominators, debt-band branches, split bounds and full payoff, stress timing, negative returns, pay/bill growth, 1/600 months, fractional precision, input validation, complete exports and 80 varied synthetic paths. For each completed month, independently check:
 
-`pay = bills from pay + actual contribution + retained pay`
+`pay = bills from pay + actual contribution + retained pay + redirected pay`
 
 `bills = financed bills + bills from pay + bills from cash`
 
 `distributions = interest paid + principal repaid + reinvested distributions`
 
-`equity change = pay − bills + price gain − shock loss + distributions − interest charged`.
+`FLOW equity change = pay − bills + price gain − shock loss + distributions − interest charged − redirected pay`.
 
 Desktop and 390px mobile checks cover document overflow, keyboard controls, exports, reset and unfunded-month messaging. Screen-reader and Safari/Firefox testing are not claimed. V3’s existing engine/DOM tests are rerun, and its engine is compared byte-for-byte with the published predecessor.
 
@@ -152,50 +152,60 @@ A completed run without monthly warnings shows only a small “X months modeled�
 The banner’s quick filter and the ledger filter stay synchronized; filtering never changes model totals, milestone dates or exports. Unfunded bills take priority: a stopped projection retains its red failure banner and explanation, including when no months completed or all completed months were otherwise clear. Invalid input clears the previous status and configuration notes. Reset restores the simple baseline count and clears the filter.
 
 
-## V4 work-optional contribution scenarios
+## Automatic full-bill cash-redirection plan
 
-The five cards pair cash routing with the requested autonomy labels: Wage Dependent, Collateral Assisted, Lifestyle Decoupled, Maximum Compounding Velocity, and Work Optional. Each label has a qualified explanation. In particular, financing is debt, and Stage 5 preserves earned income rather than stopping it. Stage 4 remains descriptive when a contribution taper prevents its 100%-pay milestone. These are hypothetical routing stages, not verified financial independence.
+The five cards pair cash routing with the requested autonomy labels. They describe modeled mechanics, not verified independence. Stage 5 is a compact native disclosure labeled “Coming later” until a manual Stage 5 is active in completed rows, an automatic plan is available, or a changed-plan alert needs attention. It then opens automatically. Users can inspect or collapse it with mouse, Enter or Space; their choice persists across updates with the same relevance. Reset returns to compact form. A manually active schedule is explicitly labeled a comparison, not an automatically passing plan.
 
-The Stage 5 **Work-Optional Glidepath** switch calculates a separate continuous-100%-available-pay reference and exposes three distinct reference dates:
+Normal defaults and all input IDs remain unchanged. The three contribution schedule fields now live in **Optional · Manual contribution comparison**. The main Stage 5 result shows the calculated start, contribution, first-month outgoing cash and cumulative redirection. No personal scenario values are hard-coded or persisted.
 
-- `crossoverMonth`: first internal-output month meeting or exceeding actual wage investment.
-- `fullRedirectionMonth`: first positive-bill month fully financed without wages or existing cash.
-- `sustainedFullRedirectionMonth`: start of the final uninterrupted full-financing suffix, only for a completed horizon.
+### Goal and search order
 
-A zero-bill scenario has no financing milestone, but its zero bill gap can satisfy candidate eligibility. First full financing can reverse; none of these dates promises persistence outside the modeled horizon. The active candidate has its **own** first and sustained financing dates, shown in the narrative and CSV, and is never represented by an untapered date. A reference milestone beyond an active stopped projection is text rather than a nonfunctional inspector button.
+The automatic plan asks: what is the earliest modeled month from which all entered bills can remain financed within selected constraints, while some earned income is redirected elsewhere? The portfolio-output crossover remains an informational milestone, not an activation gate.
 
-### Deterministic candidate search
+1. Build a separate continuous-100%-available-pay reference, preserving all other assumptions.
+2. Check start months from 1 through the requested horizon, in order.
+3. At each start, test 0–99% contributions in ascending whole-percentage steps.
+4. Select the earliest passing start, then the lowest passing percentage **on that grid**. This is not a continuous optimum, a terminal-wealth optimizer, or a guarantee that a short passing interval persists longer.
 
-The first reference crossover is fixed before taper testing. Beginning at that month, search ascending integer contribution percentages on a 1-percentage-point grid, 0 through 99. This finds the lowest passing **grid** percentage, not a mathematically exact continuous minimum. Do not use binary search: debt-band branches can make feasibility nonmonotonic. A baseline that fails the lower DTA floor does not by itself exclude a lower-contribution candidate. The candidate must actually reduce at least one wage investment; zero wages do not create a fictitious reduction.
+Every candidate reruns the actual altered path. From the candidate start **inclusive through the horizon**, every month must:
 
-A positive taper may retain partial wage-funded bills. A 0% taper is excluded if the trigger precedes the reference's first full financing (except zero-bill scenarios), and must maintain full financing in **every** remaining candidate month. The engine never silently moves the trigger to a later month or creates an unrequested second-phase schedule. Manual Stage 5 settings remain available for exploring other dates.
+- Fully finance all entered bills, with no wages or existing cash supplementing them.
+- Keep ending debt-to-investments inside both selected band bounds and respect the independent pre-sweep and ending draw guardrail.
+- Fully service interest and meet the cash-interest coverage minimum. Zero-interest coverage is N/A, not fabricated infinity.
+- Fund the requested cash allocation without inventing money.
 
-Each candidate reruns the original deterministic engine with the selected assumptions and is validated from the trigger **inclusive through the entire horizon**, not only its final balance:
+A candidate also needs a positive amount of earned pay to redirect in at least one tested month. Zero wages cannot manufacture a benefit. Zero bills do not manufacture full-financing milestone dates. Low-debt paths can fail the selected band floor; the model does not borrow merely to satisfy that lower bound.
 
-1. Every modeled month completes. No use of existing cash to bridge bills after the trigger.
-2. Wages fund any bill gap. Additionally require `pay × (1 − candidate percentage / 100) >= bills − financed`, the user's conservative whole-pay reserve check.
-3. For a 0% candidate, no bills use wages or existing cash at any point in the remaining horizon.
-4. Ending DTA stays within both selected band bounds, and pre-sweep/ending DTA respects the independent draw guardrail. Undefined DTA fails.
-5. Distributions fully service interest and meet the selected coverage minimum. Zero interest is N/A and does not require a fabricated infinite ratio.
-6. The requested cash allocation is funded.
+The search does not assume feasibility is monotonic in either percentage or time. Only same-month pre-contribution bill-funding/interest/coverage conditions can safely skip a start. Baseline ending DTA, output crossover, and later baseline failures do not prematurely rule out earlier candidates. A matching untapered prefix is reused; invalid suffixes stop at their first failed check. The winning candidate is materialized as a complete month-1-to-horizon run and checked again before display. Continuation rows match a full rerun exactly; numerical tolerances are 1e-7 for cash and 1e-10 for ratios.
 
-The unchanged simulation pays direct bills first, reserves requested cash, then applies the contribution percentage to **remaining available pay**. The reserve check does not change that allocation, subtract bills twice, or invent more retained cash. Ratios use 1e-10 and cash uses 1e-7 numerical tolerances. A lower band floor may reject otherwise low-debt paths; the app reports that result rather than borrowing to manufacture eligibility or overriding the user's bound. No candidate is labeled safe or a guarantee of employment independence.
+### Cash that leaves FLOW
 
-### State, narrative and export behavior
+The dashboard applies this rule to both automatic Stage 5 and the optional manual Stage 5 comparison:
 
-ON applies `contribution=100`, `reduceStart=crossoverMonth`, and `reduced=lowest passing grid percentage`, then displays the exact validated candidate in all charts and ledger rows. Those three fields are temporarily disabled. Other scenario changes recompute eligibility. If no candidate remains, automatic mode pauses and returns to continuous 100% contributions with an explanation. OFF likewise sets `contribution=100` and `reduceStart=0`.
+- Pay direct bills first, then reserve the requested cash allocation inside FLOW.
+- Invest the selected percentage of the remaining available pay.
+- During Stage 5, send the uninvested remainder **outside FLOW**.
 
-The prior three manual settings, including exact fractional precision, are preserved in memory and can be restored with an explicit button while OFF. Editing a manual contribution field replaces the saved snapshot. Reset and page reload return to the unchanged 120-month baseline with automatic mode disabled; no browser persistence is introduced. The disabled/no-trigger switch still explains the reason. Keyboard focus survives switch and restore rerenders, including a collapsed input panel.
+Requested cash allocations stay inside FLOW and remain separately visible. Outside redirection is an outflow, not another FLOW cash balance. It cannot be recycled into later bills, collateral or interest coverage. No balances, returns, taxes, liquidity or spendability of the outside strategy are modeled. Cumulative redirection is reported separately and is never added back to FLOW net equity.
 
-The Heavy Lifting section reports reference output versus actual contribution, reference borrowing coverage and wage-funded bill gap, separate full-financing dates, and an actionable switch clue. While ON it reports actual first-month and remaining-horizon retained wages, active bill drag, and candidate financing dates/reversals. Dollar amounts at the trigger are not represented as constant future gaps. Wages continue, and retained wages are not passive income. CSV includes reference and active dates, mode, grid and actual applied parameters. Print includes mode, checks and complete rows regardless of filtering.
+The low-level engine retains its historical retained-cash behavior when called without options for compatibility. Dashboard simulations explicitly request external Stage 5 routing. CSV records which cash destination was applied. The new redirected-pay column is appended, preserving previous ledger column positions. Inspector and print wages reconcile as bills + investment + cash kept inside FLOW + pay redirected outside. Existing baseline results remain numerically unchanged because Stage 5 is disabled by default.
 
-### Checked baseline extensions and edge cases
+### State and reporting
 
-The default 120-month horizon has no output crossover. Extending the unchanged defaults gives crossover month 182, with $7,089.84 internal output versus $7,083.45 invested from wages. Borrowing covers $5,295.91 of $5,499.73 in bills (96.3%); wages cover $203.82. First and sustained full financing in the untapered reference are both **month 188**, not the illustrative month 207.
+ON applies the calculated schedule and displays the exact validated candidate in charts, ledger, narrative and exports. Calculated fields are results; the advanced manual schedule is temporarily disabled. Other assumption changes re-evaluate the plan. If no candidate remains, automatic mode pauses, reverts to continuous 100% contributions and shows the reason. OFF also restores 100% continuous investment.
 
-- Through 240 months, the minimum grid contribution is 1%. At the trigger, $7,287.27 pay equals $203.82 bills + $70.83 invested + $7,012.62 retained. This candidate never fully finances bills within 240 months.
-- Through 540 months, the minimum is also 1%, but active first and sustained full financing move to month 410.
-- Through 600 months, no tested taper passes. The 1% candidate falls below the selected DTA floor in month 543; higher contributions fail sooner or fail the reserve check. The model does not relax the lower bound.
-- A manually selected 0% contribution beginning at month 207 initially finances all bills but loses full financing in month 211, and therefore fails automatic zero-taper validation.
+Prior manual percentages and start month are preserved with exact precision, recoverable by the Restore manual contribution settings button while OFF. Restoring affects only those three fields and is not an eligibility certification. Editing a manual contribution field replaces the snapshot; reset and reload discard it. No storage or network behavior is added.
 
-New tests `flowsim-v4-glidepath.test.cjs` and `flowsim-v4-glidepath-dom.cjs` cover an independently computed exhaustive-grid oracle, partial bill gaps, zero-taper reversals, first/sustained dates, horizon edge cases, no candidate, only 100% passing, nonmonotonic baseline eligibility, zero wage/debt/assets/interest, unpaid interest, shocks, cash allocation, per-month validation, exact manual restoration, invalid-input recovery, repeated toggles, reset, synchronized exports and filtering. They run under the existing sequential CI glob. The base simulation engine and Flow Stages file remain byte-identical.
+The narrative distinguishes reference output crossover from the full-bill-financing plan, reports first-month contribution/outflow and total redirected, and states the **exact number of months tested**. A one-month candidate explicitly says no later month tests persistence. Wages continue under the entered growth and stress assumptions. Financed bills remain debt-funded spending, not passive income. The terminal result excludes all outgoing pay and states its cumulative amount separately. CSV records the objective, reference and active dates, tested period, actual parameters, routing destination and outgoing total. Print always includes all completed rows regardless of warning filters.
+
+### Checked public baseline extensions
+
+The unchanged 120-month default has no passing automatic plan. At 240 months:
+
+- Informational output crossover is month 182. Borrowing then covers 96.3% of bills, leaving $203.82 to wages, so it is **not** a valid automatic start.
+- The earliest passing start is month **188**, with **97%** of available pay invested. All **53 months from 188 through 240** pass the full-bill-financing checks.
+- The first month invests **$7,157.47** and redirects **$221.37** outside FLOW. Across the tested interval, **$12,390.96** leaves FLOW.
+
+At 600 months, no candidate passes the complete remaining period under the selected band floor and other constraints. The exhaustive implementation evaluates all necessary start/percentage pairs without freezing the UI for repeated full-prefix reruns. On the test machine, the 600-month case takes roughly half a second; this is a measured example, not a cross-device timing guarantee.
+
+Tests cover an independent exhaustive full-rerun oracle, later feasible starts, output crossover independence, 100%-only cases, nonmonotonic band behavior, prefix equality, no reuse of exported cash, conservation, requested cash allocation, zero inputs/interest, shocks and later funding failures, every-month validation, horizon edge cases, invalid inputs, manual restoration, toggles, compact disclosure, reset, CSV and print. Flow Stages remains frozen byte-for-byte.
