@@ -1,15 +1,24 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="robots" content="noindex,nofollow"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'none'; img-src data: blob:; base-uri 'none'; form-action 'none'"><title>FLOW V4 · Contribution Roadmap</title>
+<html lang="en"><head><meta charset="utf-8"><meta name="robots" content="noindex,nofollow"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'none'; img-src data: blob:; base-uri 'none'; form-action 'none'"><title>FLOW STAGES · Contribution Roadmap</title>
 <style>
 :root{color-scheme:dark;font:14px/1.5 system-ui,sans-serif;--bg:#0b1220;--panel:#121e30;--border:#2b3b52;--text:#eff5ff;--muted:#b0bfd3;--green:#65e1bd;--blue:#86b8ff;--amber:#f1cd85;--red:#ffa7b0}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text)}header{padding:24px 32px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:20px}h1{margin:2px 0;font-size:26px;letter-spacing:-.8px}h2{font-size:18px;margin:0 0 8px}h3{font-size:14px;margin:0 0 7px}p{margin:6px 0;color:var(--muted)}.overline{font-size:11px;letter-spacing:1.6px;color:var(--green);text-transform:uppercase}.local{font-size:12px;color:var(--green);border:1px solid #346052;padding:8px 12px;border-radius:24px}.layout{display:grid;grid-template-columns:330px minmax(0,1fr);max-width:1800px;margin:auto}.layout.scenario-collapsed{grid-template-columns:72px minmax(0,1fr)}.scenario-toggle{position:sticky;top:0;z-index:2;width:100%;margin-bottom:16px;text-align:left}.scenario-collapsed aside{padding:12px 8px}.scenario-collapsed .scenario-toggle{white-space:pre-line;text-align:center;font-size:12px;padding:8px 4px}aside{padding:24px;border-right:1px solid var(--border)}main{padding:28px;min-width:0}button,input,select{font:inherit}button{min-height:44px;padding:9px 13px;border-radius:8px;border:1px solid #41536b;background:#1a2c43;color:var(--text);cursor:pointer}button:hover{background:#29415e}button[aria-pressed=true]{border-color:var(--green);color:var(--green)}button:disabled{opacity:.5;cursor:not-allowed}input[type=number],select{width:100%;min-height:44px;background:#091321;border:1px solid #3b4e68;color:var(--text);border-radius:7px;padding:9px 11px;font-variant-numeric:tabular-nums}input[aria-invalid=true]{border-color:var(--red)}:focus-visible{outline:3px solid var(--green);outline-offset:3px}label{display:block;font-size:12px;margin:12px 0 5px;color:#d5e0f1}.field-help{font-size:12px;color:var(--muted)}details{margin-top:10px}summary{cursor:pointer;min-height:44px;padding:10px 0;font-size:13px}fieldset{border:0;border-top:1px solid var(--border);margin:20px 0 0;padding:12px 0 0}legend{font-size:12px;color:var(--green);padding:0 8px 0 0;letter-spacing:.8px}.row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}.banner,.card{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:20px}.banner{border-left:4px solid var(--green);margin-bottom:18px}.banner.warn{border-left-color:var(--amber)}.banner.fail{border-left-color:var(--red)}.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:20px 0}.metric{font-size:24px;font-weight:650;letter-spacing:-.5px;margin:8px 0;font-variant-numeric:tabular-nums}.caption{font-size:12px;color:var(--muted)}.roadmap{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin:14px 0 20px}.step{padding:16px 12px;border:1px solid var(--border);border-radius:10px;background:#0e192a}.step.reached{border-color:#3e7b69;background:#133329}.step b{display:block;color:var(--green);margin-bottom:8px;font-size:11px;letter-spacing:1px}.step strong{display:block;font-size:13px}.step p{font-size:12px}.section{margin:20px 0}.legend{display:flex;gap:16px;flex-wrap:wrap;margin:10px 0;font-size:12px}.legend span:before{content:'●';color:var(--color);margin-right:6px}svg{width:100%;height:auto;display:block}.chart-wrap{position:relative}.chart-tooltip{position:absolute;z-index:1;top:8px;width:260px;max-width:100%;padding:12px;background:#091321;border:1px solid #657e9d;border-radius:8px;box-shadow:0 4px 16px #0008;pointer-events:none;font-size:12px;font-variant-numeric:tabular-nums}.chart-tooltip strong{display:block;margin-bottom:6px}.chart-tooltip div{display:flex;justify-content:space-between;gap:8px}.inspect{padding:12px 0;border-top:1px solid var(--border)}input[type=range]{accent-color:var(--green);width:100%;min-height:36px}.flow{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:14px 0}.flow div{padding:12px;background:#0b1525;border-radius:8px}.flow strong{display:block;font-size:17px;margin-top:5px}.table-wrap{overflow:auto;max-height:520px;margin-top:15px}table{border-collapse:collapse;width:100%;font-size:12px;font-variant-numeric:tabular-nums}th,td{padding:11px 12px;text-align:right;white-space:nowrap;border-bottom:1px solid var(--border)}th{position:sticky;top:0;background:#1b2b42;color:var(--muted);font-weight:500}th:first-child,td:first-child{text-align:left}tr.warn{background:#2d2530}.error{font-size:12px;color:var(--red)}.notice{border:1px solid #705f3a;padding:14px;border-radius:8px;margin-bottom:15px;color:var(--amber)}.empty{padding:25px;text-align:center;color:var(--muted)}a{color:var(--green)}footer{font-size:12px;color:var(--muted);margin:22px 0}.toolbar{display:flex;gap:7px;flex-wrap:wrap}#printReport{display:none}
+.simulation-count{margin-bottom:18px}.status-actions{margin-top:12px}
+.roadmap{grid-template-columns:repeat(4,minmax(0,1fr))}.roadmap .step:last-child{grid-column:1/-1}.stage-dimension{display:block;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px}.autonomy-badge{display:block;color:var(--green);font-weight:650;margin-bottom:4px}.glide-panel{margin-top:14px;padding-top:14px;border-top:1px solid var(--border)}.glide-switch{display:flex;align-items:center;gap:10px;font-size:14px;min-height:44px;margin:4px 0}.glide-switch input{width:22px;height:22px;accent-color:var(--green)}.glide-panel p{max-width:100ch}.glide-panel button{margin-top:8px}
+.stage5-card{padding:0;margin-top:0;min-width:0}.stage5-card>summary{display:flex;align-items:center;gap:12px;flex-wrap:wrap;list-style:none;padding:12px 16px}.stage5-card>summary::-webkit-details-marker{display:none}.stage5-card>summary:before{content:'▸';color:var(--green)}.stage5-card[open]>summary:before{content:'▾'}.stage5-card>summary b{margin:0}.stage5-heading{display:flex;align-items:center;gap:10px;flex-wrap:wrap;min-width:0}.stage5-status{margin-left:auto;color:var(--muted);font-size:12px}.stage5-body{padding:0 16px 16px}.stage5-body .stage5-actual{color:var(--text)}
+/* V4_JOURNEY_STYLE_START */
+.journey-card{background:linear-gradient(135deg,#14263a,var(--panel) 65%);border-color:#365769}.journey-heading{display:flex;align-items:center;gap:10px;margin-bottom:12px}.journey-heading h2{margin:0}.journey-icon{width:30px;height:30px;flex:none;color:var(--green)}.journey-phase{margin:0 0 18px}.journey-phase:last-child{margin-bottom:0}.journey-phase h3{color:var(--green);font-size:13px;margin:0 0 5px}.journey-copy p{margin:0;line-height:1.75;color:#d5e0f1}.journey-copy p:last-child{margin-bottom:0}.journey-month{display:inline-flex;align-items:center;min-height:36px;padding:2px 9px;margin:0 2px;border-radius:999px;border-color:#426f6b;background:#183831;color:var(--green);font-size:12px;font-weight:650;vertical-align:baseline;white-space:nowrap}.journey-month:hover{background:#245347}.journey-note{margin:14px 0 0;padding-top:12px;border-top:1px solid var(--border)}
+/* V4_JOURNEY_STYLE_END */
 @media(min-width:1000px){aside{position:sticky;top:0;height:100dvh;overflow:auto}}@media(max-width:1150px){.grid,.flow{grid-template-columns:repeat(2,minmax(0,1fr))}.roadmap{grid-template-columns:repeat(3,minmax(0,1fr))}}@media(max-width:760px){header{padding:20px;align-items:flex-start}h1{font-size:23px}.local{display:none}.layout{display:block}.scenario-collapsed aside{padding:12px 18px}.scenario-collapsed .scenario-toggle{white-space:normal;text-align:left;font-size:14px;padding:9px 13px;margin:0}aside{border-right:0;border-bottom:1px solid var(--border);padding:20px}main{padding:18px}.roadmap{grid-template-columns:repeat(2,minmax(0,1fr))}.metric{font-size:21px}.card{padding:16px}.grid{gap:9px}.flow{gap:7px}.flow strong{font-size:15px}}
 @media print{@page{size:A4 landscape;margin:10mm}header,.layout{display:none!important}body{background:white;color:black;font:9pt sans-serif}#printReport{display:block}#printReport p{color:#333}#printReport table{font-size:7pt;table-layout:fixed}#printReport th,#printReport td{white-space:normal;overflow-wrap:anywhere;position:static;background:white;color:black;border:1px solid #bbb;padding:4px}#printReport tr{break-inside:avoid}#printReport thead{display:table-header-group}.print-section{break-before:page}}
 </style></head><body>
 <header><div><div class="overline" style="text-transform:none">FLOW STAGES</div><h1>Contribution Roadmap</h1><p>Build the base. Redirect recurring bills. See where every dollar goes.</p></div></header>
-<div class="layout" id="layout"><aside id="scenarioAside" aria-label="Scenario inputs"><button id="scenarioToggle" class="scenario-toggle" type="button" aria-expanded="true" aria-controls="scenarioPanel" aria-label="Hide scenario inputs" title="Hide scenario inputs">← Hide inputs</button><div id="scenarioPanel"><div class="row"><h2>Your scenario</h2><button id="reset">Reset sample</button></div><p class="caption">Synthetic examples, not recommended thresholds. Results update as you edit.</p><form id="parameters" novalidate></form><p class="caption">Starting cash and investments are separate balances. An upfront contribution transfers existing cash once; it is not new income.</p></div></aside><main>
-<div id="error" role="alert" hidden></div><div id="summary" class="banner" aria-live="polite"></div>
-<section aria-labelledby="roadmapTitle"><div class="row"><h2 id="roadmapTitle">Your contribution stages</h2><span class="caption">Stages may be skipped or revisited</span></div><div id="roadmap" class="roadmap"></div><p class="caption">Stages describe cash routing, not financial independence. Full bill financing and full-income contributions are different milestones.</p></section>
+<div class="layout" id="layout"><aside id="scenarioAside" aria-label="Scenario inputs"><button id="scenarioToggle" class="scenario-toggle" type="button" aria-expanded="true" aria-controls="scenarioPanel" aria-label="Hide scenario inputs" title="Hide scenario inputs">← Hide inputs</button><div id="scenarioPanel"><div class="row"><h2>Your scenario</h2><button id="reset">Reset sample</button></div><p class="caption">Synthetic examples, not recommended thresholds. Results update as you edit.</p><form id="parameters" novalidate></form><div id="scenarioNotes" class="caption" aria-live="polite" hidden></div><p class="caption">Starting cash and investments are separate balances. An upfront contribution transfers existing cash once; it is not new income.</p></div></aside><main>
+<div id="error" role="alert" hidden></div><div id="summary" class="simulation-count" aria-live="polite"></div>
+<section aria-labelledby="roadmapTitle"><div class="row"><h2 id="roadmapTitle">Your contribution stages</h2><span class="caption">Milestones may overlap, and bill financing can reverse. Stage 5 reflects your contribution choice.</span></div><div id="roadmap" class="roadmap"></div><p class="caption">Stages illustrate a modeled transition from wage-dependent living toward collateral-backed work optionality. Borrowing adds debt; these labels do not establish financial independence.</p></section>
 <div id="metrics" class="grid"></div>
+<!-- V4_JOURNEY_CARD_START -->
+<section id="wealthJourney" class="card section journey-card" aria-labelledby="journeyTitle"><div class="journey-heading"><svg class="journey-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="m16 8-2.5 5.5L8 16l2.5-5.5Z"/></svg><h2 id="journeyTitle">Your Wealth Engine Journey</h2></div><div id="journeyCopy" class="journey-copy"></div><div class="caption journey-note">Select a month to inspect the plan. This is a modeled path, not a forecast or proof of financial independence.<details><summary>How the story is measured</summary><p>Output crossover is the first month monthly reinvestment + distribution-funded principal repayment + net price change meets or exceeds actual paycheck investment in a separate continuous 100%-contribution reference. It is distinct from first full bill redirection and from full financing maintained through the horizon. A tapered path is simulated and checked separately. Price drops are included. Paid interest is not counted twice; unpaid interest added to debt is disclosed separately. A lasting lead or recovery means only the remainder of the modeled horizon, never a guarantee beyond it. Borrowing pays bills by adding debt; it is not investment income.</p></details></div></section>
+<!-- V4_JOURNEY_CARD_END -->
 <section class="card section"><div class="row"><h2>Month-by-month plan</h2><span id="monthLabel" class="caption"></span></div><div class="legend"><span style="--color:var(--green)">Investments</span><span style="--color:var(--red)">Debt</span><span style="--color:var(--blue)">Net equity including cash</span></div><p class="caption">Hover or tap the chart to inspect each month. You can also use the month slider and arrow keys below.</p><div class="chart-wrap" id="chartWrap"><svg id="chart" viewBox="0 0 1000 280" role="img" aria-labelledby="chartTitle chartDesc"></svg><div id="chartTooltip" class="chart-tooltip" hidden></div></div><div class="inspect"><label for="inspect">Inspect a completed month</label><input id="inspect" type="range" min="1" max="60" value="1"><div id="monthDetail" aria-live="polite"></div></div></section>
 <section class="card section"><div class="row"><div><h2>Monthly ledger</h2><p id="count" class="caption"></p></div><div class="toolbar"><button id="warningsOnly" aria-pressed="false">Warnings only</button><button id="csv">Download CSV</button><button id="pdf">Print / PDF</button></div></div><div class="table-wrap" tabindex="0" role="region" aria-label="Monthly ledger, horizontally scrollable"><table><caption class="caption">USD · Every completed month · Percentages rounded only for display</caption><thead id="ledgerHead"></thead><tbody id="ledgerBody"></tbody></table></div><div id="empty" class="empty" hidden></div><p class="caption">Exports include every completed month, all assumptions and any unfunded month, regardless of this filter.</p></section>
 <details class="card section"><summary>Model rules, constraints and limitations</summary>
@@ -25,15 +34,15 @@
 <li>The model applies any scheduled investment drop, then price growth, and calculates cash distributions from those investments.</li>
 <li>It borrows for recurring bills up to the limits you selected. This month's new pay contributions do not increase that month's borrowing capacity.</li>
 <li>Bills not covered by borrowing use take-home pay first, then existing cash if you allow it. If bills still cannot be paid, the projection stops before that month. Displayed balances include completed months only.</li>
-<li>From the pay left after bills, the model sets aside your requested cash amount if enough is available, then invests your chosen percentage of the remainder. Any pay not invested stays in cash, which earns no return here.</li>
-<li>Investment distributions pay loan interest first. Any remaining distributions reduce debt toward your target, then are reinvested. Unpaid interest is added to the debt.</li>
+<li>From the pay left after bills, the model sets aside your requested cash amount if enough is available, then invests your chosen percentage of the remainder. Before Stage 5, uninvested pay stays in cash. In Stage 5, uninvested pay after the requested cash allocation leaves FLOW and cannot fund later months. Cash inside FLOW earns no return, and results outside FLOW are not modeled.</li>
+<li>Investment distributions pay loan interest first. The remaining cash follows your debt band: above the ceiling, repay principal until the ceiling is reached and reinvest any residue; below the floor, reinvest all; inside the band, use your selected reinvestment/principal split. Unpaid interest is added to debt.</li>
 </ol>
 <p><strong>A simple pay example:</strong> suppose take-home pay is $5,000, bills are $3,500, and the model permits $1,000 of bill borrowing. The other $2,500 of bills comes from pay, leaving $2,500. If you set aside $500 in cash and invest 100% of the rest, $2,000 is contributed and $500 stays in cash. This illustrates pay routing only; distributions and loan interest are handled separately.</p>
 <h3>What the limits mean</h3>
 <ul>
 <li><strong>DTA means debt divided by investments.</strong> Cash is not included in this ratio. For example, $20,000 of debt against $100,000 of investments is 20% DTA.</li>
-<li><strong>DTA paydown target:</strong> guides how remaining distributions are split between debt repayment and reinvestment. The model does not borrow just to reach this target, and the target is not a guaranteed debt level.</li>
-<li><strong>DTA draw guardrail:</strong> limits new bill borrowing using investments before this month's pay contributions and before debt repayment, including any unpaid interest added to debt. It cannot guarantee that an existing balance stays below the limit.</li>
+<li><strong>Dynamic debt band:</strong> allocates distribution cash after interest using debt divided by investments, including the current wage contribution but before distribution reinvestment. The floor and ceiling are inclusive for the split. Repayment is capped at debt; any unused repayment cash is reinvested. The band does not guarantee that ending DTA remains inside it.</li>
+<li><strong>DTA draw guardrail:</strong> is independent of the distribution band and limits new bill borrowing using investments before this month's pay contributions and before debt repayment, including any unpaid interest added to debt. It cannot guarantee that an existing balance stays below the limit.</li>
 <li><strong>Cash-interest coverage floor:</strong> compares investment distributions with loan interest, not with household bills. A 3× floor means $3 of distributions for each $1 of interest. It is a limit you choose, not lender approval.</li>
 </ul>
 <h3>What the projection cannot tell you</h3>
@@ -55,12 +64,12 @@
 <script id="engine">
 'use strict';
 window.FlowSimV4=(()=>{
-  const defaults=Object.freeze({assets:25000,debt:0,cash:0,upfront:0,pay:6338,bills:5500,retain:0,contribution:100,financeStart:1,target:20,maxDta:25,minCoverage:3,yield:7,apr:5.25,growth:2,payGrowth:3.1,inflation:3.7,months:120,useCash:1,reduceStart:0,reduced:50,stressStart:0,shock:0,yieldCut:0,aprRise:0,payCut:0,payCutMonths:0});
-  const labels={assets:'Starting investments ($)',debt:'Starting debt ($)',cash:'Starting cash ($)',upfront:'Upfront contribution from cash ($)',pay:'Monthly take-home pay ($)',bills:'Monthly recurring bills ($)',retain:'Monthly pay allocation to cash ($)',contribution:'Contribute available pay (%)',financeStart:'Begin bill redirection (month; 0 disables)',target:'DTA paydown target (%)',maxDta:'DTA draw guardrail (%)',minCoverage:'Cash-interest coverage floor (×)',yield:'Annual distribution yield (%)',apr:'Annual margin APR (%)',growth:'Annual price growth (%)',payGrowth:'Annual pay growth (%)',inflation:'Annual bill inflation (%)',months:'Horizon (months)',useCash:'Allow cash to cover bill gaps (1 yes / 0 no)',reduceStart:'Reduced-contribution start (month; 0 disables)',reduced:'Stage 5 available-pay contribution (%)',stressStart:'Stress start (month; 0 disables)',shock:'One-time investment price drop (%)',yieldCut:'Ongoing distribution yield cut (%)',aprRise:'Ongoing APR increase (percentage points)',payCut:'Temporary pay cut (%)',payCutMonths:'Pay-cut duration (months)'};
+  const defaults=Object.freeze({assets:25000,debt:5000,cash:0,upfront:0,pay:5000,bills:3500,retain:0,contribution:100,financeStart:1,bandFloor:25,bandCeiling:30,bandSplit:70,maxDta:30,minCoverage:3,yield:7,apr:5.25,growth:2,payGrowth:2.5,inflation:3,months:120,useCash:1,reduceStart:0,reduced:50,stressStart:0,shock:0,yieldCut:0,aprRise:0,payCut:0,payCutMonths:0});
+  const labels={assets:'Starting investments ($)',debt:'Starting debt ($)',cash:'Starting cash ($)',upfront:'Upfront contribution from cash ($)',pay:'Monthly take-home pay ($)',bills:'Monthly recurring bills ($)',retain:'Monthly pay allocation to cash ($)',contribution:'Contribute available pay (%)',financeStart:'Begin bill redirection (month; 0 disables)',bandFloor:'DTA Target Band Floor (%)',bandCeiling:'DTA Target Band Ceiling (%)',bandSplit:'Band Reinvestment Split (%)',maxDta:'DTA draw guardrail (%)',minCoverage:'Cash-interest coverage floor (×)',yield:'Annual distribution yield (%)',apr:'Annual margin APR (%)',growth:'Annual price growth (%)',payGrowth:'Annual pay growth (%)',inflation:'Annual bill inflation (%)',months:'Horizon (months)',useCash:'Allow cash to cover bill gaps (1 yes / 0 no)',reduceStart:'Reduced-contribution start (month; 0 disables)',reduced:'Stage 5 available-pay contribution (%)',stressStart:'Stress start (month; 0 disables)',shock:'One-time investment price drop (%)',yieldCut:'Ongoing distribution yield cut (%)',aprRise:'Ongoing APR increase (percentage points)',payCut:'Temporary pay cut (%)',payCutMonths:'Pay-cut duration (months)'};
   const stages=['Foundation','Partial bill redirection','Full bill redirection','Full-income contributions','Reduced-contribution FLOW'];
-  const columns=[['month','Month','n'],['stage','Stage','s'],['pay','Take-home pay','$'],['bills','Bills','$'],['capacity','Draw capacity for bills','$'],['financed','Bills financed','$'],['payBills','Bills from pay','$'],['cashBills','Bills from cash','$'],['contributed','Pay contributed','$'],['retained','Pay retained as cash','$'],['allocationGap','Unmet requested cash allocation','$'],['distributions','Distributions','$'],['interest','Interest charged','$'],['paid','Interest paid','$'],['capitalized','Interest capitalized','$'],['principal','Principal repaid','$'],['reinvested','Distributions reinvested','$'],['assets','Ending investments','$'],['debt','Ending debt','$'],['cash','Ending cash','$'],['equity','Net equity','$'],['preDta','Pre-sweep DTA','%'],['dta','Ending DTA','%'],['coverage','Cash-interest coverage','x'],['constraint','Draw constraint','s'],['status','Status','s']];
-  function validate(c){const e={};for(const k of Object.keys(defaults)){if(typeof c[k]!=='number'||!Number.isFinite(c[k]))e[k]='Enter a finite number.';else if(c[k]<(['growth','payGrowth','inflation'].includes(k)?-100:0))e[k]='Value is below the supported minimum.';else if(c[k]>1e12)e[k]='Value is too large for this model.';}for(const k of ['contribution','reduced','shock','yieldCut','payCut'])if(c[k]>100)e[k]='Use 0–100%.';for(const k of ['yield','apr','aprRise','growth','payGrowth','inflation'])if(c[k]>100)e[k]='Use at most 100% for this assumption.';for(const k of ['months','financeStart','reduceStart','stressStart','payCutMonths'])if(!Number.isInteger(c[k])||c[k]>(k==='months'?600:600)||c[k]<(k==='months'?1:0))e[k]='Use whole months '+(k==='months'?'1–600.':'0–600.');if(c.maxDta>=100)e.maxDta='Use a guardrail below 100%.';if(c.target>c.maxDta)e.target='Target must not exceed the draw guardrail.';if(c.upfront>c.cash)e.upfront='Upfront contribution cannot exceed starting cash.';if(![0,1].includes(c.useCash))e.useCash='Choose Yes or No.';return e;}
-  // Capacity is independent of salary contributions and target sweeping. Its constraints
+  const columns=[['month','Month','n'],['stage','Stage','s'],['pay','Take-home pay','$'],['bills','Bills','$'],['capacity','Draw capacity for bills','$'],['financed','Bills financed','$'],['payBills','Bills from pay','$'],['cashBills','Bills from cash','$'],['contributed','Pay contributed','$'],['retained','Pay retained as cash','$'],['allocationGap','Unmet requested cash allocation','$'],['distributions','Distributions','$'],['interest','Interest charged','$'],['paid','Interest paid','$'],['capitalized','Interest capitalized','$'],['principal','Principal repaid','$'],['reinvested','Distributions reinvested','$'],['assets','Ending investments','$'],['debt','Ending debt','$'],['cash','Ending cash','$'],['equity','Net equity','$'],['preDta','Pre-sweep DTA','%'],['dta','Ending DTA','%'],['coverage','Cash-interest coverage','x'],['constraint','Draw constraint','s'],['status','Status','s'],['bandDta','DTA before band allocation','%'],['bandAction','Distribution routing','s'],['redirected','Pay redirected outside FLOW','$']];
+  function validate(c){const e={};for(const k of Object.keys(defaults)){if(typeof c[k]!=='number'||!Number.isFinite(c[k]))e[k]='Enter a finite number.';else if(c[k]<(['growth','payGrowth','inflation'].includes(k)?-100:0))e[k]='Value is below the supported minimum.';else if(c[k]>1e12)e[k]='Value is too large for this model.';}for(const k of ['contribution','reduced','shock','yieldCut','payCut','bandSplit'])if(c[k]>100)e[k]='Use 0–100%.';for(const k of ['yield','apr','aprRise','growth','payGrowth','inflation'])if(c[k]>100)e[k]='Use at most 100% for this assumption.';for(const k of ['months','financeStart','reduceStart','stressStart','payCutMonths'])if(!Number.isInteger(c[k])||c[k]>(k==='months'?600:600)||c[k]<(k==='months'?1:0))e[k]='Use whole months '+(k==='months'?'1–600.':'0–600.');if(c.maxDta>=100)e.maxDta='Use a guardrail below 100%.';if(c.bandFloor>=100)e.bandFloor='Use a band floor below 100%.';if(c.bandCeiling>=100)e.bandCeiling='Use a band ceiling below 100%.';if(c.bandFloor>c.bandCeiling)e.bandFloor='Band floor must not exceed the band ceiling.';if(c.upfront>c.cash)e.upfront='Upfront contribution cannot exceed starting cash.';if(![0,1].includes(c.useCash))e.useCash='Choose Yes or No.';return e;}
+  // Capacity is independent of salary contributions and debt-band allocation. Its constraints
   // are monotone in the new draw, so these closed-form bounds require no grid search.
   function capacity(c,a,d,dist,apr,bills,enabled){
     if(!enabled)return {value:0,reason:'Redirection disabled'};
@@ -72,60 +81,434 @@ window.FlowSimV4=(()=>{
     const value=Math.max(0,Math.min(bills,dtaRoom,coverageRoom));
     return {value,reason:value>=bills?'All recurring bills fit':dtaRoom<=coverageRoom?'DTA guardrail':'Coverage floor'};
   }
-  function simulate(input={}){
+  // Assess after the wage contribution and interest, before reinvesting distributions.
+  // Above the band, reach the ceiling by repayment FIRST, then reinvest any residue.
+  function allocateBand(c,investments,debt,surplus){
+    const bandDta=investments>0?debt/investments:null;
+    let principal=0,bandAction;
+    if(debt<=0){bandAction='No debt: reinvest';}
+    else if(investments<=0||bandDta>c.bandCeiling/100){
+      bandAction='Above ceiling: repay then reinvest';
+      principal=Math.min(surplus,Math.max(0,debt-investments*c.bandCeiling/100));
+    }else if(bandDta<c.bandFloor/100){bandAction='Below floor: reinvest';}
+    else{bandAction='Within band: split';principal=surplus*(1-c.bandSplit/100);}
+    principal=Math.max(0,Math.min(debt,surplus,principal));
+    return {principal,reinvested:surplus-principal,bandDta,bandAction};
+  }
+  function simulate(input={},options={}){
+    if(Object.hasOwn(input,'target'))throw Error('Use bandFloor, bandCeiling and bandSplit instead of the retired single DTA target.');
     const config={...defaults,...input},errors=validate(config);if(Object.keys(errors).length)throw Error(Object.entries(errors).map(([k,v])=>labels[k]+': '+v).join(' '));
+    const fromMonth=options.startMonth??1,redirectReduced=options.redirectReduced??false;
+    if(typeof redirectReduced!=='boolean'||!Number.isInteger(fromMonth)||fromMonth<1||fromMonth>config.months)throw Error('Invalid simulation routing or continuation options.');
+    if(fromMonth>1){const prior=options.baseline;if(!prior||prior.fromMonth!==1||prior.redirectReduced||prior.config.reduceStart!==0||prior.config.contribution!==config.contribution||prior.rows.length<fromMonth-1||config.reduceStart!==fromMonth||Object.keys(defaults).some(k=>!['reduceStart','reduced'].includes(k)&&prior.config[k]!==config[k]))throw Error('Continuation requires the matching untapered prefix.');}
     let a=config.assets+config.upfront,d=config.debt,cash=config.cash-config.upfront;
-    const initial={assets:a,debt:d,cash,equity:a+cash-d},rows=[],milestones={partial:null,fullBills:null,fullPay:null,reduced:null},totals={contributed:0,financed:0,bills:0,retained:0,cashBills:0,interest:0,paid:0,capitalized:0,principal:0},warnings=[];let failure=null;
+    if(fromMonth>1){const previous=options.baseline.rows[fromMonth-2];a=previous.assets;d=previous.debt;cash=previous.cash;}
+    const initial={assets:a,debt:d,cash,equity:a+cash-d},rows=[],milestones={partial:null,fullBills:null,fullPay:null,reduced:null},totals={contributed:0,financed:0,bills:0,retained:0,cashBills:0,interest:0,paid:0,capitalized:0,principal:0,redirected:0},warnings=[];let failure=null,rejection=null;
     if(config.reduceStart&&config.reduced>=config.contribution)warnings.push('Stage 5 is enabled, but its percentage is not lower than the normal contribution percentage.');
     for(const k of ['financeStart','reduceStart','stressStart'])if(config[k]>config.months)warnings.push(labels[k].split(' (')[0]+' is beyond this horizon.');
-    for(let month=1;month<=config.months;month++){
+    for(let month=fromMonth;month<=config.months;month++){
       const openingEquity=a+cash-d,stressed=!!config.stressStart&&month>=config.stressStart,shockLoss=month===config.stressStart?a*config.shock/100:0;
       const grown=(a-shockLoss)*(1+config.growth/1200),priceGain=grown-(a-shockLoss);
       const pay=config.pay*(1+config.payGrowth/1200)**(month-1)*(stressed&&month<config.stressStart+config.payCutMonths?1-config.payCut/100:1),bills=config.bills*(1+config.inflation/1200)**(month-1),apr=config.apr+(stressed?config.aprRise:0),dist=grown*config.yield/1200*(stressed?1-config.yieldCut/100:1);
       const cap=capacity(config,grown,d,dist,apr,bills,config.financeStart>0&&month>=config.financeStart),financed=cap.value,direct=Math.max(0,bills-financed),payBills=Math.min(pay,direct),cashBills=config.useCash?Math.min(cash,Math.max(0,direct-payBills)):0,shortfall=Math.max(0,direct-payBills-cashBills);
       if(shortfall>1e-7){failure={month,pay,bills,capacity:cap.value,minimumDraw:Math.max(0,bills-pay-(config.useCash?cash:0)),shortfall,reason:cap.reason};break;}
-      const available=Math.max(0,pay-payBills),allocated=Math.min(config.retain,available),allocationGap=Math.max(0,config.retain-allocated),reduced=config.reduceStart>0&&month>=config.reduceStart,share=reduced?config.reduced:config.contribution,contributed=(available-allocated)*share/100,retained=available-contributed;
-      const interest=(d+financed)*apr/1200,paid=Math.min(dist,interest),capitalized=Math.max(0,interest-paid),q=d+financed+capitalized,left=Math.max(0,dist-paid),base=grown+contributed,t=config.target/100;
-      const principal=Math.max(0,Math.min(q,left,(q-t*(base+left))/(1-t))),reinvested=left-principal;
+      const available=Math.max(0,pay-payBills),allocated=Math.min(config.retain,available),allocationGap=Math.max(0,config.retain-allocated),reduced=config.reduceStart>0&&month>=config.reduceStart,share=reduced?config.reduced:config.contribution,contributed=(available-allocated)*share/100,redirected=reduced&&redirectReduced?Math.max(0,available-allocated-contributed):0,retained=available-contributed-redirected;
+      const interest=(d+financed)*apr/1200,paid=Math.min(dist,interest),capitalized=Math.max(0,interest-paid),q=d+financed+capitalized,left=Math.max(0,dist-paid),base=grown+contributed;
+      const {principal,reinvested,bandDta,bandAction}=allocateBand(config,base,q,left);
       a=base+reinvested;d=q-principal;cash=cash-cashBills+retained;
       const equity=a+cash-d,preDta=grown>0?q/grown:null,dta=a>0?d/a:null,coverage=interest>0?dist/interest:null,breach=(preDta!==null&&preDta>config.maxDta/100+1e-10)||(dta!==null&&dta>config.maxDta/100+1e-10)||(coverage!==null&&coverage+1e-10<config.minCoverage),undefinedDta=dta===null;
       const fullBills=bills>0&&Math.abs(financed-bills)<1e-7,fullPay=pay>0&&Math.abs(contributed-pay)<1e-7;
       const stage=reduced?5:fullBills&&fullPay?4:fullBills?3:financed>1e-7?2:1;
       if(financed>1e-7&&!fullBills&&milestones.partial===null)milestones.partial=month;if(fullBills&&milestones.fullBills===null)milestones.fullBills=month;if(fullBills&&fullPay&&milestones.fullPay===null)milestones.fullPay=month;if(reduced&&milestones.reduced===null)milestones.reduced=month;
       const status=breach?'Guardrail warning':undefinedDta?'DTA undefined':allocationGap>1e-7?'Cash allocation not fully funded':'Within selected checks';
-      const row={month,stage,stageName:stages[stage-1],pay,bills,capacity:cap.value,financed,payBills,cashBills,contributed,retained,allocationGap,distributions:dist,interest,paid,capitalized,principal,reinvested,assets:a,debt:d,cash,equity,preDta,dta,coverage,constraint:cap.reason,status,warning:breach||undefinedDta||allocationGap>1e-7,priceGain,shockLoss,residual:equity-openingEquity-(pay-bills+priceGain-shockLoss+dist-interest)};
+      const row={month,stage,stageName:stages[stage-1],pay,bills,capacity:cap.value,financed,payBills,cashBills,contributed,retained,redirected,allocationGap,distributions:dist,interest,paid,capitalized,principal,reinvested,bandDta,bandAction,assets:a,debt:d,cash,equity,preDta,dta,coverage,constraint:cap.reason,status,warning:breach||undefinedDta||allocationGap>1e-7,priceGain,shockLoss,residual:equity-openingEquity-(pay-bills+priceGain-shockLoss+dist-interest-redirected)};
       if(Object.values(row).some(v=>typeof v==='number'&&!Number.isFinite(v)))throw Error('Numeric range exceeded in month '+month+'. Reduce extreme inputs.');
       rows.push(row);for(const k of Object.keys(totals))totals[k]+=row[k];
+      if(options.checkRow&&(rejection=options.checkRow(row,config)))break;
     }
-    return {config,initial,rows,final:rows.at(-1)||initial,totals,milestones,failure,warnings,warningMonths:rows.filter(r=>r.warning).length};
+    return {config,initial,fromMonth,redirectReduced,rejection,rows,final:rows.at(-1)||initial,totals,milestones,failure,warnings,warningMonths:rows.filter(r=>r.warning).length};
   }
   const currency=new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',maximumFractionDigits:2});
   const format=(v,type)=>v===null?'N/A':type==='$'?currency.format(v):type==='%'?(v*100).toFixed(2)+'%':type==='x'?v.toFixed(2)+'×':String(v);
-  function toCsv(r){const lines=[['FLOW V4 Contribution Roadmap'],['Generated',new Date().toISOString()],['Educational only; all completed months; USD'],...Object.entries(r.config).map(([k,v])=>[labels[k],v]),['Timing','Monthly annual/12; growth before distributions; distributions before new contributions; bills use draw, pay, then permitted cash; unpaid bills stop before that month.'],['Capacity','Pre-contribution collateral; pre-sweep DTA including unpaid interest and coverage; no lender approval or guarantee of long-term safety.'],['Completed months',r.rows.length],...(r.failure?[['Unfunded month',r.failure.month],['Unfunded bills (USD)',r.failure.shortfall],['Draw constraint',r.failure.reason]]:[]),[],columns.map(c=>c[1]+(c[2]==='$'?' (USD)':c[2]==='%'?' (%)':'')),...r.rows.map(row=>columns.map(([k,,type])=>row[k]===null?'N/A':type==='%'?row[k]*100:row[k]))];return '\uFEFF'+lines.map(line=>line.map(v=>'"'+String(v).replaceAll('"','""')+'"').join(',')).join('\r\n');}
-  return {defaults,labels,stages,columns,validate,capacity,simulate,format,toCsv};
+  function toCsv(r){const lines=[['FLOW STAGES Contribution Roadmap'],['Generated',new Date().toISOString()],['Educational only; all completed months; USD'],['Stage 5 uninvested pay destination',r.redirectReduced?'Outside FLOW; unavailable for future bill funding':'Retained inside FLOW'],['Cumulative pay redirected outside FLOW',r.totals.redirected],...Object.entries(r.config).map(([k,v])=>[labels[k],v]),['Timing','Monthly annual/12; growth before distributions; distribution amount calculated before wage contributions; band allocation after actual wage contribution and interest, before distribution reinvestment; bills use draw, pay, then permitted cash; unpaid bills stop before that month.'],['Capacity','Pre-contribution collateral; pre-sweep DTA including unpaid interest and coverage; no lender approval or guarantee of long-term safety.'],['Completed months',r.rows.length],...(r.failure?[['Unfunded month',r.failure.month],['Unfunded bills (USD)',r.failure.shortfall],['Draw constraint',r.failure.reason]]:[]),[],columns.map(c=>c[1]+(c[2]==='$'?' (USD)':c[2]==='%'?' (%)':'')),...r.rows.map(row=>columns.map(([k,,type])=>row[k]===null?'N/A':type==='%'?row[k]*100:row[k]))];return '\uFEFF'+lines.map(line=>line.map(v=>'"'+String(v).replaceAll('"','""')+'"').join(',')).join('\r\n');}
+  return {defaults,labels,stages,columns,validate,capacity,allocateBand,simulate,format,toCsv};
+})();
+</script>
+<!-- V4_JOURNEY_SCRIPT_START -->
+<script id="journey">
+'use strict';
+// Presentation-only analysis. The simulation, its precision and its ledger are unchanged.
+window.FlowJourneyV4=(()=>{
+  const EPS=1e-7;
+  const contribution=row=>row.reinvested+row.principal+row.priceGain-row.shockLoss;
+  const full=row=>row.bills>0&&Math.abs(row.financed-row.bills)<EPS;
+  function trailingStart(rows,predicate){
+    let first=null;
+    for(let i=rows.length-1;i>=0;i--){if(!predicate(rows[i]))break;first=rows[i];}
+    return first;
+  }
+  function analyze(result){
+    const rows=result.rows,complete=!result.failure&&rows.length===result.config.months;
+    const suffix=trailingStart(rows,row=>contribution(row)-row.contributed>EPS);
+    const firstFull=rows.find(full)||null,overflow=rows.find(row=>row.reinvested>EPS)||null;
+    return {
+      first:rows[0]||null,last:rows.at(-1)||null,
+      half:rows.find(row=>row.bills>0&&row.financed-row.bills/2>EPS)||null,
+      full:firstFull,
+      reversal:firstFull?rows.find(row=>row.month>firstFull.month&&!full(row))||null:null,
+      fullThroughHorizon:complete?trailingStart(rows,full):null,
+      friction:rows.find(row=>row.bills-row.financed>EPS&&['DTA guardrail','Coverage floor'].includes(row.constraint))||null,
+      overflow,
+      overflowReversal:overflow?rows.find(row=>row.month>overflow.month&&row.reinvested<=EPS)||null:null,
+      overflowThroughHorizon:complete?trailingStart(rows,row=>row.reinvested>EPS):null,
+      debtWork:rows.find(row=>row.principal>EPS)||null,
+      bandSplit:rows.find(row=>row.bandAction==='Within band: split'&&row.principal+row.reinvested>EPS)||null,
+      earlyReinvested:rows.slice(0,35).reduce((sum,row)=>sum+row.reinvested,0),
+      unpaid:rows.find(row=>row.capitalized>EPS)||null,
+      firstCross:rows.find(row=>contribution(row)-row.contributed>EPS)||null,
+      crossover:complete?suffix:null,completedSuffix:suffix,
+      shock:rows.find(row=>row.shockLoss>EPS)||null
+    };
+  }
+  function summarize(result){
+    const a=analyze(result),{first,last}=a,F=window.FlowSimV4,c=result.config;
+    const money=value=>F.format(Math.abs(value)<EPS?0:value,'$');
+    const percent=value=>new Intl.NumberFormat('en-US',{maximumFractionDigits:2}).format(value)+'%';
+    const month=row=>({month:row.month});
+    const headings=['The Launch & Early Friction','Cash Flow Overflow','The Heavy Lifting Crossover','The Terminal Position'];
+    const paragraphs=[];
+    if(!first){
+      paragraphs.push(['The launch stalls before month '+result.failure.month+': available funding cannot cover the bills. No monthly activity has been counted.']);
+      paragraphs.push(['There is no completed month to show distribution cash flowing back into investments.']);
+      paragraphs.push(['No crossover can be established. Resolve the funding gap before reading this as a working wealth engine.']);
+      paragraphs.push(['Net equity remains at its starting '+money(result.initial.equity)+'. The requested '+c.months+'-month destination has not been modeled.']);
+      return {analysis:a,headings,paragraphs};
+    }
+    const p1=['In ',month(first),', '];
+    if(first.pay>EPS&&Math.abs(first.contributed-first.pay)<EPS&&full(first))p1.push('you put your entire '+money(first.pay)+' paycheck to work while borrowing absorbs all entered recurring bills. ');
+    else{
+      p1.push('you put '+money(first.contributed)+' of your '+money(first.pay)+' paycheck to work. ');
+      if(first.bills<=EPS)p1.push('There are no recurring bills to finance. ');
+      else if(full(first))p1.push('Borrowing absorbs all entered recurring bills. ');
+      else if(first.financed>EPS)p1.push('Borrowing covers '+percent(first.financed/first.bills*100)+' of bills; '+(first.payBills>EPS?(first.cashBills>EPS?'wages and existing cash carry':'wages carry'):'existing cash carries')+' the rest. ');
+      else p1.push('Bills still depend on '+(first.payBills>EPS?(first.cashBills>EPS?'wages and existing cash':'wages'):'existing cash')+'. ');
+    }
+    if(a.half&&a.half.month>first.month&&(!a.full||a.half.month!==a.full.month))p1.push('Borrowing clears half the bills in ',month(a.half),'. ');
+    if(a.full&&a.full.month>first.month)p1.push('All bills first fit borrowing capacity in ',month(a.full),'. ');
+    if(a.reversal){
+      const row=a.reversal;
+      p1.push('In ',month(row),', '+(row.constraint==='DTA guardrail'?'your '+percent(c.maxDta)+' DTA draw limit taps the brakes':row.constraint==='Coverage floor'?'the interest-coverage floor taps the brakes':'full bill borrowing reverses'));
+      if(row.payBills>EPS)p1.push('; wages step back in for '+money(row.payBills)+' of bills. ');
+      else if(row.cashBills>EPS)p1.push('; existing cash fills the bill gap. ');
+      else p1.push('. ');
+    }else if(a.friction){
+      p1.push('The '+(a.friction.constraint==='DTA guardrail'?percent(c.maxDta)+' DTA draw limit':'interest-coverage floor')+' constrains borrowing in ',month(a.friction),'. ');
+    }
+    if(a.fullThroughHorizon){
+      const stable=a.fullThroughHorizon;
+      if(stable.month===last.month)p1.push('Full financing reaches the horizon end in ',month(stable),'; no later month tests its staying power.');
+      else if(a.reversal)p1.push('Full bill financing settles in from ',month(stable),' through the modeled horizon.');
+      else p1.push('Full bill financing holds from ',month(stable),' through the modeled horizon.');
+    }else if(a.reversal)p1.push(result.failure?'The plan stops before a lasting recovery can be established.':'Full financing does not recover for the remainder of this horizon.');
+    else if(!a.full&&c.bills>0)p1.push('Full bill financing is not reached in the completed months.');
+    else if(result.failure)p1.push('The projection stops early, so full-horizon financing is unproven.');
+    paragraphs.push(p1);
+
+    const p2=[],band=percent(c.bandFloor)+'–'+percent(c.bandCeiling);
+    if(c.bandSplit>0&&c.bandSplit<100)p2.push('Your '+band+' debt band balances paydown with compounding: inside it, '+percent(c.bandSplit)+' of surplus is reinvested and the rest reduces principal. ');
+    else if(c.bandSplit===100)p2.push('Your '+band+' debt band sends all in-band surplus to reinvestment; above the ceiling, debt repayment comes first. ');
+    else p2.push('Your '+band+' debt band sends in-band surplus to principal; reinvestment depends on falling below the floor or cash left after reaching the ceiling or fully repaying the debt. ');
+    if(a.bandSplit)p2.push('The split first operates in ',month(a.bandSplit),'. ');
+    if(a.overflow){
+      p2.push('Automatic reinvestment begins in ',month(a.overflow),' with '+money(a.overflow.reinvested)+'. ');
+      if(result.rows.length>1)p2.push('Across the first '+Math.min(35,result.rows.length)+' completed months, '+money(a.earlyReinvested)+' cycles back into investments. ');
+      if(a.overflowReversal)p2.push('Overflow stops in ',month(a.overflowReversal),', so the early surplus is not uninterrupted. ');
+      if(a.overflowThroughHorizon&&a.overflowReversal){
+        const stable=a.overflowThroughHorizon;
+        if(stable.month===last.month)p2.push('It returns in ',month(stable),', but no later month confirms persistence.');
+        else p2.push('Monthly reinvestment resumes from ',month(stable),' through the modeled horizon.');
+      }else if(a.overflowThroughHorizon?.month===last.month)p2.push('No later month tests whether this surplus lasts.');
+      else if(!a.overflowThroughHorizon)p2.push(result.failure?'The early stop prevents a full-horizon conclusion.':'A continuing reinvestment phase has not emerged by the end.');
+      else p2.push('Reinvestment remains positive through the modeled horizon.');
+    }else p2.push('No surplus reaches reinvestment in the completed months; earlier compounding is not achieved under these assumptions.');
+    if(a.unpaid)p2.push(' Interest is added to debt in ',month(a.unpaid),' because distributions do not cover it.');
+    paragraphs.push(p2);
+
+    const p3=[];
+    if(a.crossover){
+      const cross=a.crossover,unpaid=result.rows.filter(row=>row.month>=cross.month).reduce((sum,row)=>sum+row.capitalized,0);
+      if(unpaid>EPS)p3.push('In ',month(cross),', measured portfolio engine output reaches '+money(contribution(cross))+'/month versus '+money(cross.contributed)+' from your paycheck. The comparison excludes '+money(unpaid)+' of unpaid interest added to debt over the remaining months, so it is not a net-wealth crossover. ');
+      else p3.push('By ',month(cross),', your portfolio '+(cross.contributed>EPS?(cross.month===first.month?'already outworks your paycheck':'starts outworking your paycheck'):'generates wealth without a paycheck contribution')+': '+money(contribution(cross))+' in internal wealth generation that month, ahead of '+money(cross.contributed)+' contributed from wages. ');
+      if(first.month===last.month)p3.push('This is the only modeled month; there are no later months to test.');
+      else if(cross.month===last.month)p3.push('The lead starts in the final modeled month; no later months are modeled.');
+      else p3.push('That lead holds through the modeled horizon at ',month(last),'.');
+      if(cross.contributed<=EPS)p3.push(' A zero wage contribution is not proof of financial independence.');
+      if(cross.month>first.month&&cross.contributed<result.rows[cross.month-2].contributed-EPS)p3.push(' This also reflects a lower wage contribution at the crossover.');
+    }else if(result.failure)p3.push('The plan stops before month '+result.failure.month+'. A sustained handoff through the requested '+c.months+'-month horizon cannot be established.');
+    else{
+      p3.push('The portfolio has not taken a lasting lead by ',month(last),'. ');
+      if(a.firstCross)p3.push('An earlier lead reverses before the end. ');
+      const net=contribution(last)-last.capitalized;
+      if(net< -EPS)p3.push('Portfolio activity subtracts '+money(-net)+' from equity in that final month, before new bill borrowing.');
+      else if(last.contributed>net+EPS)p3.push('Your paycheck is still doing more of the work: '+money(last.contributed)+' contributed versus '+money(net)+' generated internally that month.');
+      else p3.push('There is no sustained crossover within this horizon.');
+    }
+    if(a.shock)p3.push(' The modeled price drop in ',month(a.shock),' is included in this assessment.');
+    paragraphs.push(p3);
+
+    const p4=[result.failure?'At your last completed month, ':'At the finish, ',month(last),', '+(last.equity<0?'net equity is negative at ':'net equity stands at ')+money(last.equity)+', including cash and after debt. The portfolio produces '+money(last.distributions)+' in distributions that month'];
+    if(last.reinvested>EPS)p4.push(', with '+money(last.reinvested)+' automatically feeding back into investments.');
+    else p4.push(', with no automatic reinvestment'+(last.principal>EPS?'; surplus cash is still paying down debt.':'.'));
+    if(last.contributed>EPS)p4.push(' You are also adding '+money(last.contributed)+' from wages.');
+    else if(last.reinvested>EPS)p4.push(' That reinvestment comes from portfolio cash flow, not a wage contribution.');
+    if(last.payBills>EPS)p4.push(' Wages still cover '+money(last.payBills)+' of bills.');
+    if(last.cashBills>EPS)p4.push(' Existing cash still covers '+money(last.cashBills)+' of bills.');
+    if(last.capitalized>EPS)p4.push(' Unpaid interest adds another '+money(last.capitalized)+' to debt that month.');
+    if(last.equity<0)p4.push(' Debt exceeds investments plus cash.');
+    paragraphs.push(p4);
+    return {analysis:a,headings,paragraphs};
+  }
+  return {contribution,analyze,summarize};
+})();
+</script>
+<!-- V4_JOURNEY_SCRIPT_END -->
+<script id="glidepath">
+'use strict';
+window.FlowGlidepathV4=(()=>{
+  const F=window.FlowSimV4,EPS=1e-7,RATIO_EPS=1e-10;
+  const output=row=>row.reinvested+row.principal+row.priceGain-row.shockLoss;
+  const fullyRedirected=row=>Math.abs(row.bills-row.financed)<=EPS&&row.payBills<=EPS&&row.cashBills<=EPS;
+  function financingDates(result){
+    const milestone=row=>row.bills>EPS&&fullyRedirected(row),first=result.rows.find(milestone)?.month??null;
+    let sustained=null;
+    if(!result.failure&&!result.rejection&&result.rows.length===result.config.months-(result.fromMonth??1)+1){
+      for(let i=result.rows.length-1;i>=0;i--){if(!milestone(result.rows[i]))break;sustained=result.rows[i].month;}
+    }
+    return {first,sustained};
+  }
+  const reasons={funding:'The projection stops before the horizon.',bills:'Some bills still need wages or existing cash.',dtaUndefined:'Debt-to-investments cannot be measured.',belowBand:'Ending DTA falls below the selected band floor.',aboveBand:'Ending DTA exceeds the selected band ceiling.',draw:'A draw guardrail is exceeded.',coverage:'Distributions do not meet the interest-coverage target.',interest:'Some interest is added to debt.',cash:'The requested cash allocation is not fully funded.',noReduction:'There is no positive earned cash available to redirect outside FLOW.',numeric:'The scenario exceeds the model’s numeric range.'};
+  function checkRow(row,c){
+    if(!fullyRedirected(row))return {code:'bills',month:row.month};
+    if(row.dta===null||!Number.isFinite(row.dta))return {code:'dtaUndefined',month:row.month};
+    if(row.dta<c.bandFloor/100-RATIO_EPS)return {code:'belowBand',month:row.month};
+    if(row.dta>c.bandCeiling/100+RATIO_EPS)return {code:'aboveBand',month:row.month};
+    if(row.preDta===null||!Number.isFinite(row.preDta)||row.preDta>c.maxDta/100+RATIO_EPS||row.dta>c.maxDta/100+RATIO_EPS)return {code:'draw',month:row.month};
+    if(row.capitalized>EPS)return {code:'interest',month:row.month};
+    // Zero interest has N/A coverage, not a fabricated infinite ratio.
+    if(row.interest>0&&(row.coverage===null||!Number.isFinite(row.coverage)||row.coverage<c.minCoverage-RATIO_EPS))return {code:'coverage',month:row.month};
+    if(row.allocationGap>EPS)return {code:'cash',month:row.month};
+    return null;
+  }
+  function check(result,start,requireReduction){
+    if(result.rejection)return result.rejection;
+    const from=result.fromMonth??1;
+    if(result.failure||result.rows.length!==result.config.months-from+1)return {code:'funding',month:result.failure?.month??from+result.rows.length};
+    const tail=result.rows.filter(row=>row.month>=start);
+    for(const row of tail){const block=checkRow(row,result.config);if(block)return block;}
+    if(requireReduction&&!tail.some(row=>row.redirected>EPS))return {code:'noReduction',month:start};
+    return null;
+  }
+  function startBlock(row,c){
+    // These quantities precede this month's contribution and are identical for
+    // every percentage at this start. Ending DTA and later baseline months are
+    // deliberately NOT used to rule out a start: band routing is nonmonotonic.
+    if(!fullyRedirected(row))return {code:'bills',month:row.month};
+    if(row.preDta===null||!Number.isFinite(row.preDta))return {code:'dtaUndefined',month:row.month};
+    if(row.preDta>c.maxDta/100+RATIO_EPS)return {code:'draw',month:row.month};
+    if(row.capitalized>EPS)return {code:'interest',month:row.month};
+    if(row.interest>0&&(row.coverage===null||!Number.isFinite(row.coverage)||row.coverage<c.minCoverage-RATIO_EPS))return {code:'coverage',month:row.month};
+    if(row.allocationGap>EPS)return {code:'cash',month:row.month};
+    return null;
+  }
+  const record=(map,block)=>{const prior=map.get(block.code);if(prior)prior.count++;else map.set(block.code,{...block,count:1});};
+  function analyze(input={}){
+    const config={...F.defaults,...input},errors=F.validate(config);
+    if(Object.keys(errors).length)throw Error('Enter valid scenario inputs before calculating the contribution plan.');
+    const baseline=F.simulate({...config,contribution:100,reduceStart:0});
+    const cross=baseline.rows.find(row=>output(row)-row.contributed>=-EPS)||null,dates=financingDates(baseline);
+    const report={baseline,fullRedirectionMonth:dates.first,sustainedFullRedirectionMonth:dates.sustained,crossoverMonth:cross?.month??null,crossover:cross,startMonth:null,endMonth:config.months,monthsChecked:0,taperPct:null,eligible:false,candidate:null,tested:0,testedStarts:0,skippedStarts:0,monthsEvaluated:0,step:1,gridStart:0,blockers:[],status:'no-feasible-taper',continuousPasses:false,firstMonthRedirected:null,firstMonthContribution:null,firstMonthCashAllocation:null,totalRedirected:0,firstPositiveRedirectMonth:null,wagesContinue:true};
+    const blockers=new Map(),skipped=new Map();
+    // A zero-pay scenario cannot have a real reduction, even when output >= 0.
+    if(config.pay===0){
+      if(!baseline.rows.length&&baseline.failure){report.status='baseline-stopped';report.blockers=[{code:'funding',month:baseline.failure.month,count:1}];}
+      else report.blockers=[{code:'noReduction',month:1,count:1}];
+      return report;
+    }
+    search:for(const baseRow of baseline.rows){
+      const start=baseRow.month,blocked=startBlock(baseRow,config);
+      if(blocked){report.skippedStarts++;record(skipped,blocked);continue;}
+      report.testedStarts++;
+      // Lexicographic objective: earliest feasible start, then lowest passing
+      // integer percentage. No binary search and no crossover prerequisite.
+      for(let pct=0;pct<100;pct++){
+        report.tested++;
+        const selected={...config,contribution:100,reduceStart:start,reduced:pct};
+        let suffix,block;
+        try{
+          suffix=F.simulate(selected,{redirectReduced:true,startMonth:start,baseline,checkRow:(row,c)=>{report.monthsEvaluated++;return checkRow(row,c);}});
+          block=check(suffix,start,true);
+        }catch(error){block={code:'numeric',month:start};}
+        if(block){record(blockers,block);continue;}
+        // Materialize the winning prefix plus suffix exactly once, using the
+        // same engine and actual outside-FLOW accounting used by the UI.
+        const candidate=start===1?suffix:F.simulate(selected,{redirectReduced:true});
+        const finalBlock=check(candidate,start,true);
+        if(finalBlock){record(blockers,finalBlock);continue;}
+        const first=candidate.rows[start-1],tail=candidate.rows.slice(start-1);
+        Object.assign(report,{startMonth:start,monthsChecked:config.months-start+1,taperPct:pct,eligible:true,candidate,actualFinancing:financingDates(candidate),status:'eligible',continuousPasses:!check(baseline,start,false),firstMonthRedirected:first.redirected,firstMonthContribution:first.contributed,firstMonthCashAllocation:first.retained,totalRedirected:tail.reduce((sum,row)=>sum+row.redirected,0),firstPositiveRedirectMonth:tail.find(row=>row.redirected>EPS)?.month??null});
+        break search;
+      }
+    }
+    if(!report.eligible&&baseline.failure&&report.tested===0)report.status='baseline-stopped';
+    report.blockers=Array.from(blockers.size?blockers.values():skipped.values()).sort((a,b)=>b.count-a.count||a.code.localeCompare(b.code));
+    if(!report.eligible&&!report.blockers.length&&baseline.failure)report.blockers=[{code:'funding',month:baseline.failure.month,count:1}];
+    report.skippedStartReasons=Array.from(skipped.values());
+    return report;
+  }
+  function narrative(report,on,result){
+    const money=n=>F.format(n,'$'),month=n=>({month:n}),cross=report.crossover,parts=[];
+    if(cross){
+      const value=output(cross),equal=Math.abs(value-cross.contributed)<=EPS;
+      parts.push('Portfolio output '+(equal?'first matches':'first exceeds')+' paycheck investment in the continuous 100% reference in ',month(cross.month),': '+money(value)+'/month versus '+money(cross.contributed)+'. This is an output comparison, not the contribution-reduction trigger. ');
+      if(cross.bills>EPS&&!fullyRedirected(cross))parts.push('Borrowing covers '+(cross.financed/cross.bills*100).toFixed(1)+'% of bills in that month ('+money(cross.financed)+' of '+money(cross.bills)+'), leaving '+money(cross.payBills)+' to wages'+(cross.cashBills>EPS?' and '+money(cross.cashBills)+' to existing cash':'')+'. ');
+      if(cross.capitalized>EPS)parts.push('That output excludes '+money(cross.capitalized)+' of unpaid interest added to debt. ');
+    }else parts.push('The continuous 100% reference has no portfolio/paycheck output crossover '+(report.baseline.failure?'before its funding stop':'within '+report.baseline.config.months+' months')+'. A contribution plan is tested separately. ');
+    if(report.eligible){
+      const active=on&&result?result:report.candidate,first=active.rows.find(row=>row.month===report.startMonth),tail=active.rows.filter(row=>row.month>=report.startMonth),redirected=tail.reduce((sum,row)=>sum+row.redirected,0);
+      parts.push('The earliest passing start is ',month(report.startMonth),', with '+report.taperPct+'% of available pay contributed, the lowest passing whole-percentage choice at that start. '+(on?'The active plan':'This calculated plan')+' invests '+money(first.contributed)+' and redirects '+money(first.redirected)+' outside FLOW in its first month');
+      if(first.retained>EPS)parts.push(', while keeping '+money(first.retained)+' of requested cash inside FLOW');
+      parts.push('. It fully finances all entered bills without wage or cash supplements from month '+report.startMonth+' through '+report.endMonth+' ('+report.monthsChecked+' month'+(report.monthsChecked===1?'':'s')+' checked), while meeting each selected monthly limit. '+money(redirected)+' is redirected over that period and cannot fund later FLOW bills. ');
+      if(report.firstPositiveRedirectMonth!==null&&report.firstPositiveRedirectMonth!==report.startMonth)parts.push('The first positive cash redirection occurs in ',month(report.firstPositiveRedirectMonth),'. ');
+      if(report.monthsChecked===1&&report.endMonth>1)parts.push('Only the final modeled month is checked; no later month tests persistence. ');
+    }else{
+      parts.push('No reduced-contribution plan passes all required months within this '+report.baseline.config.months+'-month horizon. ');
+      if(report.blockers[0])parts.push(reasons[report.blockers[0].code]+' First blocking example: month '+report.blockers[0].month+'. ');
+    }
+    if(report.baseline.config.months===1)parts.push('This is the only modeled month; no later months test persistence. ');
+    if(report.eligible&&!on)parts.push('Apply the calculated plan in Stage 5 to view its effect on the chart and ledger. ');
+    parts.push('Wages continue under the entered pay assumptions. Borrowing adds debt, and these checks do not establish financial independence or guarantee results beyond the tested period.');
+    return parts;
+  }
+  function exportCsv(result,report,on){
+    const csv=F.toCsv(result),activeDates=financingDates(result),meta=[['Contribution plan mode',on?'Automatic':'Manual or continuous reference'],['Automatic objective','Earliest passing start; lowest passing integer contribution at that start'],['Contribution reference','100% available-pay contribution; Stage 5 disabled'],['Baseline crossover month',report?.crossoverMonth??'Not reached'],['Baseline first full redirection month',report?.fullRedirectionMonth??'Not reached'],['Baseline sustained full redirection month',report?.sustainedFullRedirectionMonth??'Not reached'],['Calculated contribution start month',report?.startMonth??'None'],['Calculated contribution end month',report?.endMonth??result.config.months],['Calculated months checked',report?.monthsChecked??0],['Lowest qualifying grid contribution (%)',report?.taperPct??'None'],['Calculated first-month wage contribution',report?.firstMonthContribution??'None'],['Calculated first-month cash redirected outside FLOW',report?.firstMonthRedirected??'None'],['Calculated cumulative cash redirected outside FLOW',report?.eligible?report.totalRedirected:'None'],['Actual cumulative cash redirected outside FLOW',result.totals.redirected??0],['Active first full redirection month',activeDates.first??(result.config.bills<=EPS?'No recurring bills':'Not reached')],['Active sustained full redirection month',activeDates.sustained??(result.config.bills<=EPS?'No recurring bills':'Not reached')],['Search grid','Every modeled start month; 0–99% in 1 percentage point steps; not a continuous minimum'],['Validation window','Candidate start inclusive through horizon; all bills financed without wages or cash; ending DTA inside selected band; independent pre-sweep and ending draw guardrail; coverage; no capitalized interest; requested cash allocation fully funded'],['Wages','Continue under the entered pay and stress assumptions'],['Outside cash','Redirected cash leaves FLOW and is unavailable for future funding; external strategy balances and returns are not modeled'],['Scope','Only the stated months are tested; no future safety guarantee']];
+    return csv.replace('\r\n','\r\n'+meta.map(row=>row.map(v=>'"'+String(v).replaceAll('"','""')+'"').join(',')).join('\r\n')+'\r\n');
+  }
+  return {output,check,checkRow,analyze,narrative,exportCsv,financingDates,reasons,EPS,RATIO_EPS};
 })();
 </script>
 <script id="ui">
 'use strict';
-(()=>{const F=window.FlowSimV4,$=id=>document.getElementById(id);let result=null,filtered=false,precision={},chartScale=null,scenarioScrollTop=0;
-const groups=[['1 · Starting capital',['assets','debt','cash','upfront']],['2 · Pay, bills & contributions',['pay','bills','retain','contribution','useCash']],['3 · Bill-redirection rules',['financeStart','target','maxDta','minCoverage']],['4 · Forecast',['yield','apr','growth','payGrowth','inflation','months']],['Optional · Reduced contributions',['reduceStart','reduced']],['Optional · Stress assumptions',['stressStart','shock','yieldCut','aprRise','payCut','payCutMonths']]];
-const tips={assets:'Already invested. Do not include it again in starting cash or the upfront transfer.',debt:'Debt already outstanding. Existing breaches do not authorize new borrowing.',cash:'Uninvested cash available at the start; earns no modeled return.',upfront:'Moves this amount from starting cash to investments once, before month 1. No external funds are added.',pay:'Spendable pay, after tax. It continues in stage 5.',bills:'Recurring living costs only. Borrowed bill funding remains spending, not income.',retain:'Pay reserved as cash each month after bills. If not fully available, the unmet allocation is flagged; it is not a new source of money.',contribution:'Percentage of pay remaining after direct bills and the cash allocation to invest. Uncontributed pay is retained in cash.',useCash:'If enabled, accumulated cash may pay bills that pay and permitted financing cannot cover. No assets are sold.',financeStart:'First month to consider bill financing. 0 disables it. Capacity is recomputed monthly, not promised.',target:'Soft distribution-paydown aim. After interest, pay principal toward this ending debt-to-investments ratio, then reinvest residual cash. No borrowing to reach a target.',maxDta:'Hard model draw limit, checked before distributions and new contributions; includes any unpaid interest. This is not lender maintenance or a broker credit limit.',minCoverage:'Cash distributions divided by this month’s interest, excluding wages. Zero interest is N/A, not a breach.',yield:'Distribution yield on price-grown opening investments. All distributions are available for interest first. Yield is not guaranteed profit.',apr:'Full-month simplified interest on opening debt plus current bill financing. Actual broker interest timing differs.',growth:'Price-only return, excluding distributions. Annual percentage divided by 12.',payGrowth:'Pay grows from month 2; negative values are permitted.',inflation:'Bills grow from month 2; negative values are permitted.',months:'1–600 whole months. Unfunded bills stop the projection before that month.',reduceStart:'0 disables stage 5. From this month, change the contribution percentage. No automatic retirement or loss of wages.',reduced:'Percentage of available pay contributed in stage 5. Retained wages accumulate as cash.',stressStart:'0 disables stress. Selected sensitivity only, not a forecast or prescribed stress standard.',shock:'Price decline applied once before monthly growth in the stress month. This is a valuation shock, not a purchase or transaction.',yieldCut:'Distribution yield is reduced by this percentage from the stress month onward.',aprRise:'Add these percentage points to APR from the stress month onward.',payCut:'Reduce baseline pay by this percentage during the selected duration; then resume the grown pay path.',payCutMonths:'Number of months of reduced pay, beginning at stress start.'};
+(()=>{const F=window.FlowSimV4,G=window.FlowGlidepathV4,$=id=>document.getElementById(id);let result=null,filtered=false,precision={},chartScale=null,scenarioScrollTop=0,glideOn=false,glideReport=null,glideKey=null,savedManual=null,glidePause=false;
+const groups=[['1 · Starting capital',['assets','debt','cash','upfront']],['2 · Pay, bills & cash',['pay','bills','retain','useCash']],['3 · Debt band & draw limits',['financeStart','bandFloor','bandCeiling','bandSplit','maxDta','minCoverage']],['4 · Forecast',['yield','apr','growth','payGrowth','inflation','months']],['Optional · Manual contribution comparison',['contribution','reduceStart','reduced']],['Optional · Stress assumptions',['stressStart','shock','yieldCut','aprRise','payCut','payCutMonths']]];
+const tips={assets:'Already invested. Do not include it again in starting cash or the upfront transfer.',debt:'Debt already outstanding. Existing breaches do not authorize new borrowing.',cash:'Uninvested cash available at the start; earns no modeled return.',upfront:'Moves this amount from starting cash to investments once, before month 1. No external funds are added.',pay:'Spendable pay, after tax. It continues in stage 5.',bills:'Recurring living costs only. Borrowed bill funding remains spending, not income.',retain:'Pay reserved as cash each month after bills. If not fully available, the unmet allocation is flagged; it is not a new source of money.',contribution:'Advanced comparison: percentage of pay remaining after direct bills and the cash allocation to invest before Stage 5. Uncontributed pay before Stage 5 stays inside FLOW.',useCash:'If enabled, cash held inside FLOW may cover bills that pay and permitted financing cannot fund. Redirected outside cash is never available. No assets are sold.',financeStart:'First month to consider bill financing. 0 disables it. Capacity is recomputed monthly, not promised.',bandFloor:'Below this debt-to-investments ratio, reinvest all distribution cash left after interest. The ratio includes this month’s actual wage contribution, before distribution reinvestment.',bandCeiling:'Above this ratio, pay principal until the ceiling is reached, then reinvest any cash left. This is separate from the draw guardrail and does not authorize more borrowing.',bandSplit:'Inside the inclusive band, this percentage of post-interest distribution cash is reinvested; the rest repays principal. Repayment cannot exceed debt; any unused repayment allocation is reinvested.',maxDta:'Hard model draw limit, checked before distributions and new contributions; includes any unpaid interest. This is not lender maintenance or a broker credit limit.',minCoverage:'Cash distributions divided by this month’s interest, excluding wages. Zero interest is N/A, not a breach.',yield:'Distribution yield on price-grown opening investments. All distributions are available for interest first. Yield is not guaranteed profit.',apr:'Full-month simplified interest on opening debt plus current bill financing. Actual broker interest timing differs.',growth:'Price-only return, excluding distributions. Annual percentage divided by 12.',payGrowth:'Pay grows from month 2; negative values are permitted.',inflation:'Bills grow from month 2; negative values are permitted.',months:'1–600 whole months. Unfunded bills stop the projection before that month.',reduceStart:'0 disables stage 5. From this month, change the contribution percentage. No automatic retirement or loss of wages.',reduced:'Manual comparison: percentage of available pay invested in Stage 5. The rest leaves FLOW after the requested cash allocation; it cannot fund later months.',stressStart:'0 disables stress. Selected sensitivity only, not a forecast or prescribed stress standard.',shock:'Price decline applied once before monthly growth in the stress month. This is a valuation shock, not a purchase or transaction.',yieldCut:'Distribution yield is reduced by this percentage from the stress month onward.',aprRise:'Add these percentage points to APR from the stress month onward.',payCut:'Reduce baseline pay by this percentage during the selected duration; then resume the grown pay path.',payCutMonths:'Number of months of reduced pay, beginning at stress start.'};
 const monthKeys=['months','financeStart','reduceStart','stressStart','payCutMonths'],moneyKeys=['assets','debt','cash','upfront','pay','bills','retain'];
 for(const [title,keys]of groups){const field=document.createElement('fieldset');field.innerHTML='<legend>'+title+'</legend>';for(const k of keys)field.insertAdjacentHTML('beforeend',`<label for="${k}">${F.labels[k]}</label>${k==='useCash'?'<select id="useCash"><option value="1">Yes · use available cash</option><option value="0">No · preserve cash</option></select>':`<input id="${k}" type="number" step="${monthKeys.includes(k)?1:'any'}" inputmode="decimal" required aria-describedby="help-${k} err-${k}">`}<span id="err-${k}" class="error"></span><details><summary>About ${F.labels[k].split(' (')[0].toLowerCase()}</summary><p class="field-help" id="help-${k}">${tips[k]}</p></details>`);if(title.startsWith('Optional')){const d=document.createElement('details');d.innerHTML='<summary>'+title+'</summary>';d.append(field);$('parameters').append(d);}else $('parameters').append(field);}
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-function calculate(){hideTooltip();chartScale=null;const config=Object.fromEntries(Object.keys(F.defaults).map(k=>[k,Object.hasOwn(precision,k)?precision[k]:$(k).value.trim()===''?NaN:Number($(k).value)]));const e=F.validate(config);for(const k of Object.keys(config)){$('err-'+k).textContent=e[k]||'';$(k).setAttribute('aria-invalid',String(!!e[k]));}try{result=F.simulate(config);$('error').hidden=true;$('csv').disabled=false;$('pdf').disabled=false;render();}catch(err){result=null;$('error').hidden=false;$('error').className='notice';$('error').textContent=err.message;for(const k of ['summary','roadmap','metrics','chart','monthDetail','ledgerBody','printReport'])$(k).innerHTML='';$('count').textContent='No valid projection';$('monthLabel').textContent='';$('inspect').disabled=true;$('csv').disabled=true;$('pdf').disabled=true;$('empty').hidden=true;}}
-function render(){const r=result,c=r.config,end=r.final;$('summary').className='banner'+(r.failure?' fail':r.warningMonths?' warn':'');$('summary').innerHTML='<h2>'+(r.failure?'Projection stops before month '+r.failure.month:r.rows.length+' months modeled')+'</h2><p>'+(r.failure?`${F.format(r.failure.shortfall,'$')} of bills cannot be funded from permitted draws, pay and allowed cash. No activity from that month is included in balances.`:`${r.warningMonths} month(s) have a guardrail, undefined-DTA or cash-allocation warning. Capacity is hypothetical, not lender approval or a long-term safe borrowing budget.`)+'</p>'+r.warnings.map(w=>'<p>'+esc(w)+'</p>').join('');
-const stageInfo=[['Foundation',1,'Contribute only available pay. Existing cash funds the upfront transfer.'],['Partial redirection',r.milestones.partial,'Some recurring bills move from wages to modeled financing.'],['Full bill redirection',r.milestones.fullBills,'All recurring bills fit the month’s modeled draw constraints.'],['Full-income contributions',r.milestones.fullPay,'All bills are financed and the entire paycheck is contributed.'],['Reduced-contribution FLOW',r.milestones.reduced,'Optional contribution change; retained pay remains visible.']];$('roadmap').innerHTML=stageInfo.map(([title,m,description],i)=>{
-  // Full redirection can be reached without any partial month. Keep the actual
-  // partial milestone intact, including when it occurs after a full month.
+function setManaged(values){for(const [key,value]of Object.entries(values)){if(monthKeys.includes(key)){delete precision[key];$(key).value=value;}else{precision[key]=Number(value);$(key).value=Number(value).toFixed(2);}}}
+function glideAnalysis(config){const key=JSON.stringify(Object.keys(F.defaults).filter(k=>!['contribution','reduceStart','reduced'].includes(k)).map(k=>[k,config[k]]));if(key!==glideKey){glideReport=G.analyze(config);glideKey=key;}return glideReport;}
+function glidePanel(){
+  const report=glideReport,available=!!report?.eligible,start=report?.startMonth,preview=report?.candidate,first=preview?.rows[(start??1)-1];
+  let message=glidePause?'Automatic plan switched off: the updated assumptions no longer pass every required month. ':'';
+  if(!report)message+='Enter valid inputs to calculate the plan.';
+  else if(available)message+='Earliest tested start: month '+start+'. Invest '+report.taperPct+'% of available pay. All bills fit modeled financing from month '+start+' through '+result.config.months+' ('+report.monthsChecked+' months tested).';
+  else message+='No reduced-contribution plan passes the full bill-financing checks within '+result.config.months+' months. '+(report.blockers[0]?G.reasons[report.blockers[0].code]+' Example: month '+report.blockers[0].month+'.':'');
+  const figures=first?'<div class="flow glide-results"><div>Pay invested at start<strong>'+F.format(first.contributed,'$')+'</strong></div><div>Pay redirected at start<strong>'+F.format(first.redirected,'$')+'</strong></div><div>Total redirected in tested period<strong>'+F.format(preview.totals.redirected,'$')+'</strong></div></div><p class="caption">'+(glideOn?'Applied plan.':'Preview only; switch on to apply.')+' Redirected pay leaves FLOW. Requested cash allocations remain inside it. No return or spendability outside FLOW is modeled.</p>':'';
+  return '<div id="glidepathPanel" class="glide-panel" aria-labelledby="glideTitle"><h3 id="glideTitle">Automatic cash-redirection plan</h3><label class="glide-switch" for="glideToggle"><input id="glideToggle" type="checkbox" role="switch" aria-describedby="glideStatus" '+(glideOn?'checked ':'')+(!available&&!glideOn?'disabled ':'')+'> Apply calculated redirection plan</label><p id="glideStatus" aria-live="polite">'+esc(message)+'</p>'+figures+'<p class="caption">'+(glideOn?'Automatic mode controls the advanced contribution schedule.':'Turning it off sets continuous 100% available-pay investment. Manual comparisons are optional.')+' Wages continue. This does not establish that employment can stop.</p>'+(savedManual?'<button id="restoreManual" type="button" '+(glideOn?'disabled':'')+'>Restore manual contribution settings</button>':'')+'<details><summary>How this plan is tested</summary><p>The search checks start months in order, then contribution percentages 0–99 in 1-point steps. It selects the earliest passing start and the lowest passing grid percentage at that start, not a continuous optimum. Output crossover is informational, not an activation rule. Every month from the selected start through the horizon must finance all entered bills without wages or existing cash, keep ending DTA inside both band limits, respect the independent draw and coverage limits, fully service interest, and fund the requested cash allocation. Zero-interest coverage is N/A. Remaining uninvested pay leaves FLOW and cannot support later funding. A lower band floor can rule out low-debt paths. Only the stated number of months is tested; market uncertainty, taxes, lender rules and results elsewhere are not modeled.</p></details></div>';
+}
+function calculate(){
+  hideTooltip();chartScale=null;
+  const config=Object.fromEntries(Object.keys(F.defaults).map(k=>[k,Object.hasOwn(precision,k)?precision[k]:$(k).value.trim()===''?NaN:Number($(k).value)]));
+  const errors=F.validate(config);
+  for(const k of Object.keys(config)){$('err-'+k).textContent=errors[k]||'';$(k).setAttribute('aria-invalid',String(!!errors[k]));}
+  try{
+    if(Object.keys(errors).length)throw Error(Object.entries(errors).map(([k,v])=>F.labels[k]+': '+v).join(' '));
+    const report=glideAnalysis(config);
+    if(glideOn&&!report.eligible){glideOn=false;glidePause=true;setManaged({contribution:100,reduceStart:0,reduced:savedManual?.reduced??config.reduced});config.contribution=100;config.reduceStart=0;config.reduced=savedManual?.reduced??config.reduced;}
+    if(glideOn){setManaged({contribution:100,reduceStart:report.startMonth,reduced:report.taperPct});result=report.candidate;}
+    else result=F.simulate(config,{redirectReduced:true});
+    for(const key of ['contribution','reduceStart','reduced'])$(key).disabled=glideOn;
+    $('error').hidden=true;$('csv').disabled=false;$('pdf').disabled=false;render();
+  }catch(error){
+    result=null;$('error').hidden=false;$('error').className='notice';$('error').textContent=error.message;
+    for(const key of ['summary','scenarioNotes','roadmap','metrics','chart','monthDetail','ledgerBody','printReport'])$(key).innerHTML='';
+    $('summary').className='simulation-count';$('scenarioNotes').hidden=true;
+    /* V4_JOURNEY_ERROR_START */$('journeyCopy').replaceChildren();$('wealthJourney').hidden=true;/* V4_JOURNEY_ERROR_END */
+    $('count').textContent='No valid projection';$('monthLabel').textContent='';$('inspect').disabled=true;$('csv').disabled=true;$('pdf').disabled=true;$('empty').hidden=true;
+  }
+}
+$('roadmap').addEventListener('change',event=>{
+  if(event.target.id!=='glideToggle')return;
+  glidePause=false;
+  if(event.target.checked){if(!glideReport?.eligible)return;if(!savedManual)savedManual=Object.fromEntries(['contribution','reduceStart','reduced'].map(key=>[key,Object.hasOwn(precision,key)?precision[key]:Number($(key).value)]));glideOn=true;}
+  else{glideOn=false;setManaged({contribution:100,reduceStart:0,reduced:savedManual?.reduced??50});}
+  calculate();$('glideToggle')?.focus({preventScroll:true});
+});
+$('roadmap').addEventListener('click',event=>{if(event.target.id==='restoreManual'&&savedManual&&!glideOn){setManaged(savedManual);savedManual=null;glidePause=false;calculate();($('scenarioPanel').hidden?$('scenarioToggle'):$('contribution')).focus();}});
+
+function renderStatus(r){
+  const completed=r.rows.length,n=r.warningMonths,monthWord=count=>count===1?'Month':'Months';
+  $('scenarioNotes').hidden=!r.warnings.length;
+  $('scenarioNotes').innerHTML=r.warnings.map(w=>'<p>'+esc(w)+'</p>').join('');
+  if(!r.failure&&!n){
+    $('summary').className='simulation-count';
+    $('summary').innerHTML='<p class="caption">'+completed+' '+monthWord(completed).toLowerCase()+' modeled</p>';
+    return;
+  }
+  $('summary').className='banner'+(r.failure?' fail':' warn');
+  const heading=r.failure?'Projection stops before month '+r.failure.month:n+' '+monthWord(n)+(n===1?' Needs':' Need')+' Attention';
+  const subtitle=r.failure?F.format(r.failure.shortfall,'$')+' of bills cannot be funded from permitted draws, pay and allowed cash. No activity from that month is included in balances.':'Borrowing limits, coverage or cash allocations need attention in '+n+' '+monthWord(n).toLowerCase()+'. Check the ledger below to adjust.';
+  $('summary').innerHTML='<h2'+(r.failure?'':' id="simulationStatus"')+'>'+heading+'</h2><p>'+subtitle+'</p>'+(n?'<div class="status-actions"><button id="summaryWarningsOnly" aria-controls="ledgerBody" aria-pressed="'+filtered+'">View Flagged Months</button></div>':'');
+}
+function toggleWarnings(){filtered=!filtered;$('warningsOnly').setAttribute('aria-pressed',String(filtered));const quick=$('summaryWarningsOnly');if(quick)quick.setAttribute('aria-pressed',String(filtered));if(result)ledger();}
+$('summary').addEventListener('click',event=>{if(event.target.closest('#summaryWarningsOnly'))toggleWarnings();});
+function render(){const r=result,c=r.config,end=r.final;renderStatus(r);
+const stageInfo=[
+  ['Foundation',1,'Without bill borrowing, wages fund living costs and selected residual pay is invested. Existing cash may bridge gaps.','Wage Dependent','Living costs still need wages or existing cash.'],
+  ['Partial redirection',r.milestones.partial,'Borrowing absorbs some recurring bills within the modeled draw limits; wages or cash cover the rest.','Collateral Assisted','Assets support part of bill funding through debt.'],
+  ['Full bill redirection',r.milestones.fullBills,'All entered recurring bills fit modeled borrowing, with no bills paid from wages or cash that month.','Lifestyle Decoupled','Decoupled from wage bill payments, not from debt obligations.'],
+  ['Full-income contributions',r.milestones.fullPay,'All entered bills are financed and the entire positive paycheck is invested.','Maximum Compounding Velocity','All earned income is deployed into assets at this milestone.'],
+  ['Reduced-contribution FLOW',r.milestones.reduced,'The selected available-pay investment percentage changes. Uninvested Stage 5 pay leaves FLOW after the requested cash allocation.','Work Optional','Modeled goal, not financial independence verified.']
+];
+const previousStage5=$('stage5Card'),stage5Relevant=!!(r.milestones.reduced!==null||glideReport?.eligible||glidePause),stage5Open=previousStage5?.dataset.relevant===String(stage5Relevant)?previousStage5.open:stage5Relevant;
+$('roadmap').innerHTML=stageInfo.map(([title,m,description,badge,autonomy],i)=>{
   const reachedFullWithoutPartial=i===1&&m===null&&r.milestones.fullBills!==null;
   const reached=(m!==null||reachedFullWithoutPartial)&&(i!==0||r.rows.length);
-  const status=i===0?'Starting plan':m!==null?'First reached: month '+m:reachedFullWithoutPartial?'Reached: full redirection reached in month '+r.milestones.fullBills:i===4&&!c.reduceStart?'Disabled':'Not reached';
-  return `<div class="step ${reached?'reached':''}"><b>STAGE ${i+1}</b><strong>${title}</strong><p>${description}</p><span class="caption">${status}</span></div>`;
+  const status=i===0?'Starting plan':m!==null?'First reached: month '+m:reachedFullWithoutPartial?'Reached: full redirection reached in month '+r.milestones.fullBills:i===4&&!c.reduceStart?'Disabled':i===3&&r.milestones.reduced!==null?'Contribution taper active from month '+r.milestones.reduced:'Not reached';
+  const body=`<p><span class="stage-dimension">Routing</span>${description}</p><p><span class="stage-dimension">Autonomy lens</span><span class="autonomy-badge">${badge}</span>${autonomy}</p><span class="caption">${status}</span>`;
+  if(i!==4)return `<div class="step ${reached?'reached':''}"><b>STAGE ${i+1}</b><strong>${title}</strong>${body}</div>`;
+  const first=m===null?null:r.rows[m-1],compactStatus=first?(glideOn?'Plan active':'Manual schedule')+' from month '+m:glidePause?'Review changed assumptions':glideReport?.eligible?'Contribution scenario available':'Coming later';
+  const detail=first?(glideOn?'Applied automatic plan. ':'Manual comparison, not an automatically passing plan. ')+'At month '+m+', '+F.format(first.contributed,'$')+' of pay is invested and '+F.format(first.retained,'$')+' stays as cash inside FLOW, and '+F.format(first.redirected,'$')+' leaves FLOW.'+(first.payBills>1e-7?' Wages still cover '+F.format(first.payBills,'$')+' of bills.':'')+(first.cashBills>1e-7?' Existing cash also covers '+F.format(first.cashBills,'$')+' of bills.':''):'You can inspect these options now. A manual schedule is only a comparison, not evidence that the automatic full-bill-financing checks pass. Coming later means not active in this projection, not a promise of future eligibility.';
+  return `<details id="stage5Card" class="step stage5-card ${reached?'reached':''}" data-relevant="${stage5Relevant}" ${stage5Open?'open':''}><summary id="stage5Summary" aria-controls="stage5Body"><span class="stage5-heading"><b>STAGE 5</b><strong>${title}</strong></span><span class="stage5-status">${compactStatus}</span></summary><div id="stage5Body" class="stage5-body">${body}<p class="stage5-actual">${detail}</p>${glidePanel()}</div></details>`;
 }).join('');
-const metric=(label,value,note)=>`<div class="card"><div class="caption">${label}</div><div class="metric">${value}</div><div class="caption">${note}</div></div>`;$('metrics').innerHTML=metric('Net equity · investments + cash − debt',F.format(end.equity,'$'),'At '+(r.rows.length?'completed month '+r.rows.length:'start; no completed months'))+metric('Actual pay contributions',F.format(r.totals.contributed,'$'),'Upfront transfer separately: '+F.format(c.upfront,'$'))+metric('Recurring bills redirected',F.format(r.totals.financed,'$'),r.totals.bills?F.format(r.totals.financed/r.totals.bills,'%')+' of completed-month bills':'No completed-month bills')+metric('Cash retained in the model',F.format(end.cash,'$'),'Wages retained: '+F.format(r.totals.retained,'$')+' · Cash used for bills: '+F.format(r.totals.cashBills,'$'));
-$('inspect').disabled=!r.rows.length;$('inspect').max=Math.max(1,r.rows.length);$('inspect').value=Math.min(Number($('inspect').value)||1,Math.max(1,r.rows.length));chart();inspect();ledger();}
-function chart(){const rows=result.rows;if(!rows.length){$('chart').innerHTML='<title id="chartTitle">No completed months</title><desc id="chartDesc">The first month could not be funded.</desc>';return;}const vals=rows.flatMap(r=>[r.assets,r.debt,r.equity]),lo=Math.min(0,...vals),hi=Math.max(1,...vals),x=m=>75+(m-1)/Math.max(1,rows.length-1)*900,y=v=>235-(v-lo)/(hi-lo)*210,compact=v=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',notation:'compact',maximumFractionDigits:1}).format(v);let svg='<title id="chartTitle">Monthly balance sheet</title><desc id="chartDesc">Investments, debt and net equity including retained cash. Hover or tap for each month’s balances. Use the month slider and arrow keys or ledger for exact values.</desc>';for(let i=0;i<5;i++){const v=lo+(hi-lo)*i/4;svg+=`<line x1="75" x2="975" y1="${y(v)}" y2="${y(v)}" stroke="#2b3b52"/><text x="65" y="${y(v)+4}" text-anchor="end" fill="#b0bfd3" font-size="12">${compact(v)}</text>`;}for(const [k,color]of [['assets','#65e1bd'],['debt','#ffa7b0'],['equity','#86b8ff']]){svg+=`<polyline fill="none" stroke="${color}" stroke-width="2.5" points="${rows.map(r=>x(r.month)+','+y(r[k])).join(' ')}"/>`;if(rows.length===1)svg+=`<circle cx="75" cy="${y(rows[0][k])}" r="4" fill="${color}"/>`;}for(const m of [...new Set([1,Math.max(1,Math.round(rows.length/2)),rows.length])])svg+=`<text x="${x(m)}" y="260" fill="#b0bfd3" font-size="12" text-anchor="middle">Month ${m}</text>`;$('chart').innerHTML=svg+'<g id="chartSelection" pointer-events="none"></g>';chartScale={x,y};}
+const metric=(label,value,note)=>`<div class="card"><div class="caption">${label}</div><div class="metric">${value}</div><div class="caption">${note}</div></div>`;$('metrics').innerHTML=metric('Net equity · investments + cash − debt',F.format(end.equity,'$'),'At '+(r.rows.length?'completed month '+r.rows.length:'start; no completed months')+(r.totals.redirected>0?'; excludes redirected pay':''))+metric('Actual pay contributions',F.format(r.totals.contributed,'$'),'Upfront transfer separately: '+F.format(c.upfront,'$'))+metric('Recurring bills redirected',F.format(r.totals.financed,'$'),r.totals.bills?F.format(r.totals.financed/r.totals.bills,'%')+' of completed-month bills':'No completed-month bills')+metric('Cash held inside FLOW',F.format(end.cash,'$'),'Wages retained: '+F.format(r.totals.retained,'$')+' · Cash used for bills: '+F.format(r.totals.cashBills,'$')+' · Pay redirected outside FLOW: '+F.format(r.totals.redirected,'$'));
+$('inspect').disabled=!r.rows.length;$('inspect').max=Math.max(1,r.rows.length);$('inspect').value=Math.min(Number($('inspect').value)||1,Math.max(1,r.rows.length));chart();inspect();ledger();/* V4_JOURNEY_RENDER_START */renderJourney();/* V4_JOURNEY_RENDER_END */}
+/* V4_JOURNEY_UI_START */
+function renderJourney(){
+  const summary=window.FlowJourneyV4.summarize(result);summary.paragraphs[2]=G.narrative(glideReport,glideOn,result);if(result.totals.redirected>0)summary.paragraphs[3].push(' Another '+F.format(result.totals.redirected,'$')+' of pay has left FLOW. It is excluded from FLOW equity and cannot fund later months; results elsewhere are not modeled.');
+  $('wealthJourney').hidden=false;
+  $('journeyCopy').replaceChildren(...summary.paragraphs.map((parts,index)=>{
+    const section=document.createElement('section');section.className='journey-phase';
+    const heading=document.createElement('h3');heading.textContent=summary.headings[index];
+    const p=document.createElement('p');
+    for(const part of parts){
+      if(typeof part==='string')p.append(document.createTextNode(part));
+      else if(!result.rows.some(row=>row.month===part.month))p.append(document.createTextNode('Month '+part.month+' (reference only)'));
+      else{const button=document.createElement('button');button.type='button';button.className='journey-month';button.dataset.month=part.month;button.textContent='Month '+part.month;button.setAttribute('aria-label','Inspect month '+part.month+' in the month-by-month plan');button.setAttribute('aria-controls','inspect monthDetail');p.append(button);}
+    }
+    section.append(heading,p);return section;
+  }));
+}
+$('journeyCopy').addEventListener('click',event=>{
+  const button=event.target.closest('button[data-month]');
+  if(!button||!result?.rows.length)return;
+  const month=Number(button.dataset.month);
+  if(!result.rows.some(row=>row.month===month))return;
+  $('inspect').value=month;inspect();selectChartMonth(true);
+  $('inspect').focus({preventScroll:true});
+  if($('inspect').scrollIntoView)$('inspect').scrollIntoView({block:'center',behavior:'auto'});
+});
+/* V4_JOURNEY_UI_END */
+function chart(){const rows=result.rows;if(!rows.length){$('chart').innerHTML='<title id="chartTitle">No completed months</title><desc id="chartDesc">The first month could not be funded.</desc>';return;}const vals=rows.flatMap(r=>[r.assets,r.debt,r.equity]),lo=Math.min(0,...vals),hi=Math.max(1,...vals),x=m=>75+(m-1)/Math.max(1,rows.length-1)*900,y=v=>235-(v-lo)/(hi-lo)*210,compact=v=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',notation:'compact',maximumFractionDigits:1}).format(v);let svg='<title id="chartTitle">Monthly balance sheet</title><desc id="chartDesc">Investments, debt and FLOW net equity, excluding redirected pay. Hover or tap for each month’s balances. Use the month slider and arrow keys or ledger for exact values.</desc>';for(let i=0;i<5;i++){const v=lo+(hi-lo)*i/4;svg+=`<line x1="75" x2="975" y1="${y(v)}" y2="${y(v)}" stroke="#2b3b52"/><text x="65" y="${y(v)+4}" text-anchor="end" fill="#b0bfd3" font-size="12">${compact(v)}</text>`;}for(const [k,color]of [['assets','#65e1bd'],['debt','#ffa7b0'],['equity','#86b8ff']]){svg+=`<polyline fill="none" stroke="${color}" stroke-width="2.5" points="${rows.map(r=>x(r.month)+','+y(r[k])).join(' ')}"/>`;if(rows.length===1)svg+=`<circle cx="75" cy="${y(rows[0][k])}" r="4" fill="${color}"/>`;}for(const m of [...new Set([1,Math.max(1,Math.round(rows.length/2)),rows.length])])svg+=`<text x="${x(m)}" y="260" fill="#b0bfd3" font-size="12" text-anchor="middle">Month ${m}</text>`;$('chart').innerHTML=svg+'<g id="chartSelection" pointer-events="none"></g>';chartScale={x,y};}
 function hideTooltip(){$('chartTooltip').hidden=true;}
 function selectChartMonth(showTooltip=false){
   if(!result?.rows.length||!chartScale)return;
@@ -152,9 +535,9 @@ $('chart').addEventListener('pointercancel',hideTooltip);
 $('inspect').addEventListener('focus',()=>selectChartMonth(true));
 $('inspect').addEventListener('blur',hideTooltip);
 $('inspect').addEventListener('keydown',event=>{if(event.key==='Escape')hideTooltip();});
-function inspect(){if(!result.rows.length){$('monthLabel').textContent='No completed months';$('monthDetail').textContent='Review the unfunded-month explanation above.';return;}selectChartMonth();const r=result.rows[Number($('inspect').value)-1];$('monthLabel').textContent='Month '+r.month+' · Stage '+r.stage+' · '+r.stageName;$('monthDetail').innerHTML='<div class="flow">'+[['Pay contributed',r.contributed],['Pay retained',r.retained],['Bills financed',r.financed],['Bills from pay + cash',r.payBills+r.cashBills]].map(([label,v])=>'<div><span class="caption">'+label+'</span><strong>'+F.format(v,'$')+'</strong></div>').join('')+'</div><p>'+esc(r.constraint)+' · '+esc(r.status)+'</p><p class="caption">Pay '+F.format(r.pay,'$')+' = bills from pay '+F.format(r.payBills,'$')+' + contributions '+F.format(r.contributed,'$')+' + retained pay '+F.format(r.retained,'$')+'. Bills '+F.format(r.bills,'$')+' = financing '+F.format(r.financed,'$')+' + pay '+F.format(r.payBills,'$')+' + cash '+F.format(r.cashBills,'$')+'.</p>';}
+function inspect(){if(!result.rows.length){$('monthLabel').textContent='No completed months';$('monthDetail').textContent='Review the unfunded-month explanation above.';return;}selectChartMonth();const r=result.rows[Number($('inspect').value)-1];$('monthLabel').textContent='Month '+r.month+' · Stage '+r.stage+' · '+r.stageName;$('monthDetail').innerHTML='<div class="flow">'+[['Pay contributed',r.contributed],['Cash kept inside FLOW',r.retained],['Pay redirected outside FLOW',r.redirected],['Bills financed',r.financed],['Bills from pay + cash',r.payBills+r.cashBills]].map(([label,v])=>'<div><span class="caption">'+label+'</span><strong>'+F.format(v,'$')+'</strong></div>').join('')+'</div><p>'+esc(r.constraint)+' · '+esc(r.status)+'</p><p class="caption">Pay '+F.format(r.pay,'$')+' = bills from pay '+F.format(r.payBills,'$')+' + contributions '+F.format(r.contributed,'$')+' + retained pay '+F.format(r.retained,'$')+' + redirected pay '+F.format(r.redirected,'$')+'. Bills '+F.format(r.bills,'$')+' = financing '+F.format(r.financed,'$')+' + pay '+F.format(r.payBills,'$')+' + cash '+F.format(r.cashBills,'$')+'.</p>';}
 function ledger(){const rows=filtered?result.rows.filter(r=>r.warning):result.rows;$('ledgerHead').innerHTML='<tr>'+F.columns.map(c=>'<th scope="col">'+c[1]+'</th>').join('')+'</tr>';$('ledgerBody').innerHTML=rows.map(r=>'<tr class="'+(r.warning?'warn':'')+'">'+F.columns.map(([k,,type])=>'<td>'+esc(k==='stage'?r.stage+' · '+r.stageName:F.format(r[k],type))+'</td>').join('')+'</tr>').join('');$('count').textContent=rows.length+' shown · '+result.rows.length+' completed of '+result.config.months+' requested months';$('empty').hidden=rows.length>0;$('empty').textContent=result.rows.length?'No completed months match this filter.':'No months completed. Starting balances are shown above.';}
-function printable(){const r=result;let html='<h1>FLOW V4 · Contribution Roadmap</h1><p>'+esc(new Date().toLocaleString())+' · Educational scenario · All completed months</p><p>'+esc($('summary').textContent)+'</p><h2>Assumptions</h2><table>'+Object.entries(r.config).map(([k,v])=>'<tr><th>'+esc(F.labels[k])+'</th><td>'+v+'</td></tr>').join('')+'</table><p>Capacity uses price-grown opening investments before new salary. Distributions pay interest, principal toward target, then reinvest. Unfunded bills stop before the failed month. No lender approval, automatic margin transfers or independence conclusion.</p>';for(const [title,cols]of [['Pay and bills',F.columns.slice(0,11)],['Distributions',F.columns.filter(c=>['month','distributions','interest','paid','capitalized','principal','reinvested'].includes(c[0]))],['Ending balances and checks',F.columns.filter(c=>['month','assets','debt','cash','equity','preDta','dta','coverage','constraint','status'].includes(c[0]))]])html+='<section class="print-section"><h2>'+title+'</h2><table><thead><tr>'+cols.map(c=>'<th>'+c[1]+'</th>').join('')+'</tr></thead><tbody>'+r.rows.map(row=>'<tr>'+cols.map(([k,,t])=>'<td>'+esc(F.format(row[k],t))+'</td>').join('')+'</tr>').join('')+'</tbody></table></section>';$('printReport').innerHTML=html;}
+function printable(){const r=result,glideText=$('glideStatus')?.textContent||'',summaryText=Array.from(document.querySelectorAll('#summary h2,#summary p,#scenarioNotes p'),element=>element.textContent).join(' ');let html='<h1>FLOW STAGES · Contribution Roadmap</h1><p>'+esc(new Date().toLocaleString())+' · Educational scenario · All completed months</p><p>'+esc(summaryText)+'</p><h2>Automatic cash-redirection plan</h2><p>'+esc((glideOn?'On. ':'Off. ')+glideText)+'</p><p>Earliest full-bill-financing start; 1-percentage-point contribution grid. Wages continue. Redirected pay leaves FLOW and is excluded from equity and later funding; returns elsewhere are not modeled.</p><h2>Assumptions</h2><table>'+Object.entries(r.config).map(([k,v])=>'<tr><th>'+esc(F.labels[k])+'</th><td>'+v+'</td></tr>').join('')+'</table><p>Capacity uses price-grown opening investments before new salary. Distributions pay interest, then follow the selected debt band. Above the ceiling: repay to the ceiling, then reinvest; below the floor: reinvest all; inside: apply the selected split. The band uses investments after the wage contribution and before distribution reinvestment. Unfunded bills stop before the failed month. No lender approval, automatic margin transfers or independence conclusion.</p>';for(const [title,cols]of [['Pay and bills',F.columns.slice(0,11).concat(F.columns.filter(c=>c[0]==='redirected'))],['Distributions',F.columns.filter(c=>['month','distributions','interest','paid','capitalized','principal','reinvested','bandDta','bandAction'].includes(c[0]))],['Ending balances and checks',F.columns.filter(c=>['month','assets','debt','cash','equity','preDta','dta','coverage','constraint','status'].includes(c[0]))]])html+='<section class="print-section"><h2>'+title+'</h2><table><thead><tr>'+cols.map(c=>'<th>'+c[1]+'</th>').join('')+'</tr></thead><tbody>'+r.rows.map(row=>'<tr>'+cols.map(([k,,t])=>'<td>'+esc(F.format(row[k],t))+'</td>').join('')+'</tr>').join('')+'</tbody></table></section>';$('printReport').innerHTML=html;}
 $('scenarioToggle').addEventListener('click',()=>{
   const collapsed=$('scenarioToggle').getAttribute('aria-expanded')==='true';
   if(collapsed)scenarioScrollTop=$('scenarioAside').scrollTop;
@@ -172,5 +555,5 @@ window.addEventListener('resize',()=>{
   hideTooltip();
   if($('scenarioToggle').getAttribute('aria-expanded')==='false')$('scenarioToggle').textContent=window.matchMedia&&window.matchMedia('(max-width:760px)').matches?'→ Show inputs':'→\nInputs';
 });
-$('parameters').addEventListener('submit',e=>e.preventDefault());$('parameters').addEventListener('input',e=>{delete precision[e.target.id];calculate();});$('parameters').addEventListener('focusout',e=>{const k=e.target.id;if(k in F.defaults&&!monthKeys.includes(k)&&!moneyKeys.includes(k)&&k!=='useCash'&&e.target.value!==''&&Number.isFinite(Number(e.target.value))){precision[k]=Number(e.target.value);e.target.value=Number(precision[k].toFixed(2));}});$('parameters').addEventListener('focusin',e=>{if(Object.hasOwn(precision,e.target.id))e.target.value=precision[e.target.id];});$('parameters').addEventListener('change',e=>{if(e.target.tagName==='SELECT')calculate();});$('reset').onclick=()=>{precision={};for(const [k,v]of Object.entries(F.defaults))$(k).value=monthKeys.includes(k)||moneyKeys.includes(k)||k==='useCash'?v:v.toFixed(2);filtered=false;$('warningsOnly').setAttribute('aria-pressed','false');$('inspect').value=1;calculate();};$('warningsOnly').onclick=()=>{filtered=!filtered;$('warningsOnly').setAttribute('aria-pressed',String(filtered));if(result)ledger();};$('inspect').addEventListener('input',()=>{inspect();selectChartMonth(true);});$('csv').onclick=()=>{if(!result)return;const url=URL.createObjectURL(new Blob([F.toCsv(result)],{type:'text/csv;charset=utf-8'})),a=document.createElement('a');a.href=url;a.download='FLOW-V4-roadmap.csv';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};$('pdf').onclick=()=>{if(result){printable();window.print();}};window.addEventListener('beforeprint',()=>{if(result)printable();});$('reset').click();})();
+$('parameters').addEventListener('submit',e=>e.preventDefault());$('parameters').addEventListener('input',e=>{delete precision[e.target.id];if(!glideOn&&['contribution','reduceStart','reduced'].includes(e.target.id))savedManual=null;glidePause=false;calculate();});$('parameters').addEventListener('focusout',e=>{const k=e.target.id;if(k in F.defaults&&!monthKeys.includes(k)&&!moneyKeys.includes(k)&&k!=='useCash'&&e.target.value!==''&&Number.isFinite(Number(e.target.value))){precision[k]=Number(e.target.value);e.target.value=Number(precision[k].toFixed(2));}});$('parameters').addEventListener('focusin',e=>{if(Object.hasOwn(precision,e.target.id))e.target.value=precision[e.target.id];});$('parameters').addEventListener('change',e=>{if(e.target.tagName==='SELECT')calculate();});$('reset').onclick=()=>{$('stage5Card')?.removeAttribute('open');glideOn=false;glidePause=false;savedManual=null;glideKey=null;glideReport=null;for(const key of ['contribution','reduceStart','reduced'])$(key).disabled=false;precision={};for(const [k,v]of Object.entries(F.defaults))$(k).value=monthKeys.includes(k)||moneyKeys.includes(k)||k==='useCash'?v:v.toFixed(2);filtered=false;$('warningsOnly').setAttribute('aria-pressed','false');$('inspect').value=1;calculate();};$('warningsOnly').onclick=toggleWarnings;$('inspect').addEventListener('input',()=>{inspect();selectChartMonth(true);});$('csv').onclick=()=>{if(!result)return;const url=URL.createObjectURL(new Blob([G.exportCsv(result,glideReport,glideOn)],{type:'text/csv;charset=utf-8'})),a=document.createElement('a');a.href=url;a.download='FLOW-Stages-roadmap.csv';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};$('pdf').onclick=()=>{if(result){printable();window.print();}};window.addEventListener('beforeprint',()=>{if(result)printable();});$('reset').click();})();
 </script></body></html>

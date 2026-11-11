@@ -3,7 +3,7 @@ const path = require('node:path');
 const assert = require('node:assert/strict');
 const { JSDOM } = require('jsdom');
 
-// Keep the unapproved Flow Stages defaults pinned separately.
+// Keep the pre-sync Flow Stages backup defaults pinned separately.
 const legacyExpected = {
   assets: 25000, debt: 0, cash: 0, upfront: 0, pay: 6338, bills: 5500,
   retain: 0, contribution: 100, financeStart: 1, target: 20, maxDta: 25,
@@ -18,9 +18,9 @@ const baselineExpected = {...legacyExpected, debt: 5000, pay: 5000, bills: 3500,
 delete baselineExpected.target;
 
 (async () => {
-for (const filename of ['FlowSimV4.html', 'flow-stages.html']) {
+for (const filename of ['FlowSimV4.html', 'flow-stages.html', 'flow-stages-backup-2026-11-11.html']) {
   const source = fs.readFileSync(path.join(__dirname, '..', filename), 'utf8');
-  const expected = filename === 'FlowSimV4.html' ? baselineExpected : legacyExpected;
+  const expected = filename === 'flow-stages-backup-2026-11-11.html' ? legacyExpected : baselineExpected;
   let cleanSnapshot;
   // A fresh document on each pass exercises initial load and a fresh reload.
   for (let load = 0; load < 2; load++) {
@@ -32,7 +32,7 @@ for (const filename of ['FlowSimV4.html', 'flow-stages.html']) {
     w.HTMLAnchorElement.prototype.click = () => {};
     w.print = () => prints++;
     const set = (key, value) => { $(key).value = value; $(key).dispatchEvent(new w.Event('input', {bubbles:true})); };
-    const snapshot = () => Object.fromEntries(['ledgerBody','chart','metrics','roadmap','monthDetail',...(filename==='FlowSimV4.html'?['journeyCopy']:[])].map(id=>[id,$(id).innerHTML]));
+    const snapshot = () => Object.fromEntries(['ledgerBody','chart','metrics','roadmap','monthDetail',...(filename!=='flow-stages-backup-2026-11-11.html'?['journeyCopy']:[])].map(id=>[id,$(id).innerHTML]));
     function checkDefaults() {
       assert.deepEqual({ ...F.defaults }, expected, filename + ': exact defaults');
       assert.deepEqual({ ...F.simulate({}).config }, expected, 'Omitted simulation inputs use the same defaults');
@@ -51,7 +51,7 @@ for (const filename of ['FlowSimV4.html', 'flow-stages.html']) {
       assert.equal($('apr').value, '5.25');
       assert.equal($('payGrowth').value, expected.payGrowth.toFixed(2));
       assert.equal($('inflation').value, expected.inflation.toFixed(2));
-      if (filename === 'FlowSimV4.html') {
+      if (filename !== 'flow-stages-backup-2026-11-11.html') {
         // Independently worked first month: $25,000 grows to $25,041.6667;
         // 30% draw room minus $5,000 debt is $2,512.50. $987.50 of bills
         // use wages, leaving $4,012.50 contributed. Interest is paid first,
@@ -76,7 +76,7 @@ for (const filename of ['FlowSimV4.html', 'flow-stages.html']) {
         assert.notEqual($('chart').innerHTML, initial.chart);
         for (const [key, value] of Object.entries(expected)) $(key).value = value + 1;
         // Cached fractional values must not survive reset either.
-        for (const key of ['apr', 'payGrowth', 'inflation', ...(filename==='FlowSimV4.html'?['bandSplit']:[])]) {
+        for (const key of ['apr', 'payGrowth', 'inflation', ...(filename!=='flow-stages-backup-2026-11-11.html'?['bandSplit']:[])]) {
           $(key).value = '8.123456';
           $(key).dispatchEvent(new w.FocusEvent('focusout', { bubbles: true }));
         }
@@ -96,12 +96,12 @@ for (const filename of ['FlowSimV4.html', 'flow-stages.html']) {
       $('pdf').click();
       assert.equal(prints, 1);
       assert.equal($('printReport').querySelectorAll('.print-section tbody tr').length, 360);
-      assert.match($('printReport').textContent, new RegExp(filename==='FlowSimV4.html'?'390,602\\.38':'[0-9]'));
+      assert.match($('printReport').textContent, new RegExp(filename!=='flow-stages-backup-2026-11-11.html'?'390,602\\.38':'[0-9]'));
       // Leave edited state before closing, so the next load cannot inherit it.
       set('pay', 1234);
       set('months', 7);
     } finally { w.close(); }
   }
 }
-console.log('V4 defaults PASS: exact independent baselines, initial/fresh reload, repeated reset, cached precision, charts, slider bounds, Stage 5 disabled, narrative, CSV and print.');
+console.log('V4 defaults PASS: synced active defaults and preserved backup baseline, initial/fresh reload, repeated reset, cached precision, charts, slider bounds, Stage 5 disabled, narrative, CSV and print.');
 })().catch(error=>{console.error(error);process.exitCode=1;});

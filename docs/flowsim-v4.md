@@ -105,16 +105,24 @@ Hover over or tap the plot to inspect the nearest individual completed month. A 
 
 ## Published URLs and synchronization
 
-Review the current V4 features at `https://rovocapitalmanagement.llc/FlowSimV4.html`. The separate `https://rovocapitalmanagement.llc/flow-stages.html` retains its previously approved static-target model.
+The reviewed features are synchronized at `https://rovocapitalmanagement.llc/FlowSimV4.html` and `https://rovocapitalmanagement.llc/flow-stages.html` after the user's explicit approval on November 11, 2026. Flow Stages carries its own browser title, CSV heading/filename and print heading; all other bytes, including the engine, defaults, narrative, automatic plan and UI, match V4. The release test enforces this exact, narrowly normalized parity. V4 itself remains unchanged from commit `be3d1a689c9f871f7f51b199cce77fb82f00d2b9` (SHA-256 `5fdcfee715a28ed8ab98b3b631b163f0eb8b2cda593ad16af72b491718d98b07`). CI runs when either active HTML file changes.
 
-The Wealth Engine Journey is an intentionally V4-only review feature. Do **not** copy `FlowSimV4.html` over `flow-stages.html`: applying this feature to Flow Stages requires separate user approval. V4 now has its own authorized debt-band allocator, inputs and narrative. Flow Stages retains the previous static-target engine and every original byte. The scope test pins the Flow Stages file hash and requires the shared draw-capacity, wage-allocation and balance/stage accounting code to remain unchanged. CI runs when either HTML file changes.
+### Verified pre-sync backup and restoration
+
+Before editing Flow Stages, its entire live public HTML was copied without modification to `flow-stages-backup-2026-11-11.html`, committed separately in `d3e3194cefc42853dc5617fb492456238ece0da1`, and read back from the remote repository. Its SHA-256 is `315ccb49c8f0c78da17c5dcce1e3538fdcd7f0ae11357a5e114175b35b1725c2`. This is a standalone, runnable copy of the former static-target model, including its original defaults, title and exports. It contains app code and synthetic defaults, not any visitor's entered scenario.
+
+- Repository backup: `https://github.com/mrjromero/rovocapitalmanagement/blob/d3e3194cefc42853dc5617fb492456238ece0da1/flow-stages-backup-2026-11-11.html`
+- Runnable backup: `https://rovocapitalmanagement.llc/flow-stages-backup-2026-11-11.html`
+- Restoration: copy the verified backup's exact bytes over `flow-stages.html`, reconcile the active-page parity/default tests for the intentionally restored legacy model, run the full checks, then publish and verify the live checksum. Restoring is a separate authorized change, not an automatic action.
+
+The backup is immutable in the regression checks. It retains `noindex,nofollow` and is not added to site navigation or the robots crawl exceptions. It remains publicly accessible, not password protected. Default/reload/reset and historical debt-band comparison tests continue exercising the preserved old model.
 
 ## Search-engine indexing
 
 The original `flowsim.html`, V2, V3 and both V4 URLs use a static `noindex,nofollow` robots meta tag. `robots.txt` keeps its site-wide crawl block and allows only these exact page paths and their query-string variants, so compliant search crawlers can read the noindex instruction. Other site paths remain blocked. Existing search results may take time to disappear after recrawling; this does not guarantee removal by every search engine. These are public links, not password-protected or private pages.
 
 
-## Your Wealth Engine Journey (V4-only review)
+## Your Wealth Engine Journey
 
 A dark card directly above the month-by-month plan derives four concise executive sections from every simulation result: The Launch & Early Friction, Cash Flow Overflow, The Heavy Lifting Crossover, and The Terminal Position. It covers actual initial wage allocation, bill-financing milestones and reversals, the first and sustained reinvestment surplus, the first output crossover in a separate 100%-contribution reference, and the final completed month's equity, distributions, reinvestment and continued wage dependence. Zero completed months retain the four headings with blocked-plan fallbacks. All month pills select the existing slider, chart marker/tooltip and inspector, then focus and scroll to the slider. Scenario edits and reset rebuild the story; invalid inputs hide it rather than leave stale milestones. Ledger filtering does not change it.
 
@@ -141,7 +149,7 @@ node tests/flowsim-v4-journey-browser.js
 
 The ledger and CSV retain the full-precision `Principal repaid` and `Distributions reinvested` amounts and add the actual `DTA before band allocation` and `Distribution routing` for each completed month. The print report includes these allocation fields. Inputs, validation, reset and retained full precision cover all three band controls.
 
-With the original debt-band fixture (pay $6,338, bills $5,500, no starting debt, 23%–26% band, 50% split and 25% draw guardrail), the band reinvests in all of months 1–35, totaling $4,973.22, compared with $122.01 in only month 1 under the unchanged Flow Stages sample's static 20% target. This is a checked sample comparison, not a promise of earlier reinvestment or better outcomes for other assumptions. The narrative reports the selected band's split, its first actual use, actual initial reinvestment and actual first-35-month total. It does not guarantee acceleration, debt freedom or uninterrupted future overflow.
+With the original debt-band fixture (pay $6,338, bills $5,500, no starting debt, 23%–26% band, 50% split and 25% draw guardrail), the band reinvests in all of months 1–35, totaling $4,973.22, compared with $122.01 in only month 1 under the preserved pre-sync Flow Stages sample's static 20% target. This is a checked sample comparison, not a promise of earlier reinvestment or better outcomes for other assumptions. The narrative reports the selected band's split, its first actual use, actual initial reinvestment and actual first-35-month total. It does not guarantee acceleration, debt freedom or uninterrupted future overflow.
 
 `node --test --test-isolation=none tests/flowsim-v4-band.test.cjs` covers boundaries, sequential above-ceiling repayment, residual reinvestment, split endpoints, debt caps, zero denominators, wage timing, capitalized interest, independent draw capacity, validation, exports and 200 varied paths against an independent allocation/accounting oracle. `node tests/flowsim-v4-band-dom.cjs` covers input/display/reset/precision, ledger and narrative integration, and invalid-state clearing.
 
@@ -208,4 +216,4 @@ The unchanged 120-month default has no passing automatic plan. At 240 months:
 
 At 600 months, no candidate passes the complete remaining period under the selected band floor and other constraints. The exhaustive implementation evaluates all necessary start/percentage pairs without freezing the UI for repeated full-prefix reruns. On the test machine, the 600-month case takes roughly half a second; this is a measured example, not a cross-device timing guarantee.
 
-Tests cover an independent exhaustive full-rerun oracle, later feasible starts, output crossover independence, 100%-only cases, nonmonotonic band behavior, prefix equality, no reuse of exported cash, conservation, requested cash allocation, zero inputs/interest, shocks and later funding failures, every-month validation, horizon edge cases, invalid inputs, manual restoration, toggles, compact disclosure, reset, CSV and print. Flow Stages remains frozen byte-for-byte.
+Tests cover an independent exhaustive full-rerun oracle, later feasible starts, output crossover independence, 100%-only cases, nonmonotonic band behavior, prefix equality, no reuse of exported cash, conservation, requested cash allocation, zero inputs/interest, shocks and later funding failures, every-month validation, horizon edge cases, invalid inputs, manual restoration, toggles, compact disclosure, reset, CSV and print. The synchronized Flow Stages app is tested for complete source parity except its explicit title/export branding. The pre-sync backup and V4 are pinned byte-for-byte for this release.

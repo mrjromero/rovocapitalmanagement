@@ -3,9 +3,9 @@ GitHub Pages
 
 ## FlowSim V4 · Contribution Roadmap
 
-[Standalone app](FlowSimV4.html) · [Rules, assumptions and verification](docs/flowsim-v4.md)
+[V4 review app](FlowSimV4.html) · [Flow Stages](flow-stages.html) · [Rules, assumptions and verification](docs/flowsim-v4.md)
 
-Plans contributions, partial/full recurring-bill redirection and optional reduced contributions. Tracks retained wages and cash explicitly. Monthly modeled capacity is not lender approval or a sustainable borrowing guarantee. No account connections, boosters or high-ticket transactions.
+Plans contributions, partial/full recurring-bill redirection and tested optional cash redirection. Tracks cash retained inside FLOW separately from pay redirected outside it. The two active apps are synchronized except for export/title branding. The pre-sync Flow Stages app is preserved as `flow-stages-backup-2026-11-11.html`; see the verification guide for its checksum and restoration steps. Monthly modeled capacity is not lender approval or a sustainable borrowing guarantee. No account connections, boosters or high-ticket transactions.
 
 ## FlowSim V3 · Fixed Financing Simulator
 

@@ -11,7 +11,7 @@ const base = {
   months: 3, useCash: 0, reduceStart: 0, stressStart: 0
 };
 
-for (const filename of ['FlowSimV4.html', 'flow-stages.html']) {
+for (const filename of ['FlowSimV4.html', 'flow-stages.html', 'flow-stages-backup-2026-11-11.html']) {
   const dom = new JSDOM(fs.readFileSync(path.join(__dirname, '..', filename), 'utf8'), {
     runScripts: 'dangerously', url: 'http://localhost/' + filename
   });
@@ -20,7 +20,7 @@ for (const filename of ['FlowSimV4.html', 'flow-stages.html']) {
   const caption = index => cards()[index].querySelector('.caption').textContent;
   function configure(overrides = {}) {
     const config = { ...F.defaults, ...base, ...overrides };
-    if(filename==='flow-stages.html'){delete config.bandFloor;delete config.bandCeiling;delete config.bandSplit;config.target=0;}
+    if(filename==='flow-stages-backup-2026-11-11.html'){delete config.bandFloor;delete config.bandCeiling;delete config.bandSplit;config.target=0;}
     for (const [key, value] of Object.entries(config)) d.getElementById(key).value = value;
     d.getElementById('months').dispatchEvent(new w.Event('input', { bubbles: true }));
     assert(d.getElementById('error').hidden, filename + ': valid scenario');
@@ -62,11 +62,11 @@ for (const filename of ['FlowSimV4.html', 'flow-stages.html']) {
     assert(!d.getElementById('error').hidden);
     assert.equal(cards().length, 0, 'Invalid input clears the previous milestone');
     d.getElementById('reset').click();
-    assert.equal(caption(1), filename === 'FlowSimV4.html' ? 'First reached: month 1' : 'First reached: month 2');
+    assert.equal(caption(1), filename === 'flow-stages-backup-2026-11-11.html' ? 'First reached: month 2' : 'First reached: month 1');
     assert(cards()[1].classList.contains('reached'));
     assert.equal(d.querySelector('meta[name="robots"]').content, 'noindex,nofollow');
   } finally {
     w.close();
   }
 }
-console.log('V4 roadmap PASS: both URLs; immediate/later full redirection, partial-only, neither, reversed stages, no completed months, zero bills, repeated horizon changes, validation and reset.');
+console.log('V4 roadmap PASS: both active URLs and preserved backup; immediate/later full redirection, partial-only, neither, reversed stages, no completed months, zero bills, repeated horizon changes, validation and reset.');
