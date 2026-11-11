@@ -23,7 +23,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict'),path
   await page.locator('#warningsOnly').click();assert.equal(await page.locator('#journeyCopy').innerText(),defaultStory);
   await page.locator('#reset').click();
   await page.locator('#assets').fill('1000000');assert.notEqual(await page.locator('#journeyCopy').innerText(),defaultStory);
-  assert((await page.locator('#journeyCopy').innerText()).includes('That lead holds through the modeled horizon'));
+  assert((await page.locator('#journeyCopy').innerText()).includes('100%-contribution reference'));
   await page.locator('#wealthJourney').screenshot({path:path.join(out,'journey-crossover-desktop.png')});
   await page.locator('#months').fill('1');assert((await page.locator('#journeyCopy').innerText()).includes('only modeled month'));
   await page.locator('#months').fill('');assert(await page.locator('#wealthJourney').isHidden());

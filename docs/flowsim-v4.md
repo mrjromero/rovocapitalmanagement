@@ -116,15 +116,17 @@ The original `flowsim.html`, V2, V3 and both V4 URLs use a static `noindex,nofol
 
 ## Your Wealth Engine Journey (V4-only review)
 
-A dark card directly above the month-by-month plan derives four concise executive sections from every simulation result: The Launch & Early Friction, Cash Flow Overflow, The Heavy Lifting Crossover, and The Terminal Position. It covers actual initial wage allocation, bill-financing milestones and reversals, the first and sustained reinvestment surplus, the sustained contribution crossover, and the final completed month's equity, distributions, reinvestment and continued wage dependence. Zero completed months retain the four headings with blocked-plan fallbacks. All month pills select the existing slider, chart marker/tooltip and inspector, then focus and scroll to the slider. Scenario edits and reset rebuild the story; invalid inputs hide it rather than leave stale milestones. Ledger filtering does not change it.
+A dark card directly above the month-by-month plan derives four concise executive sections from every simulation result: The Launch & Early Friction, Cash Flow Overflow, The Heavy Lifting Crossover, and The Terminal Position. It covers actual initial wage allocation, bill-financing milestones and reversals, the first and sustained reinvestment surplus, the first output crossover in a separate 100%-contribution reference, and the final completed month's equity, distributions, reinvestment and continued wage dependence. Zero completed months retain the four headings with blocked-plan fallbacks. All month pills select the existing slider, chart marker/tooltip and inspector, then focus and scroll to the slider. Scenario edits and reset rebuild the story; invalid inputs hide it rather than leave stale milestones. Ledger filtering does not change it.
 
 The requested monthly crossover measure is:
 
-`reinvested + principal + priceGain - shockLoss > contributed + 1e-7`
+`reinvested + principal + priceGain - shockLoss >= contributed`
 
-Principal is paid only from distributions. Price change includes both negative growth and the separately recorded one-time shock. Paid interest is already removed before principal and reinvestment and must not be subtracted twice. Capitalized unpaid interest is **not silently added to this user-defined measure**: when a qualifying interval contains it, the narrative states the total added to debt and explicitly says this is not a net-wealth crossover. Actual net investment-side equity contribution would subtract capitalized interest as well. Neither comparison represents total household equity change, because it excludes wages retained in cash, bills, and new bill debt.
+The comparison uses a $0.0000001 tolerance and the first qualifying month in the continuous 100%-available-pay reference, regardless of manual contribution settings. It is not an unconditional contribution-stop signal.
 
-Independent backward scans find the first month in the final uninterrupted qualifying suffix for crossover, full bill financing and reinvestment, not the first temporary crossing. It is labeled as holding only **through the modeled horizon**, never forever. A one-month or final-month crossover states that no later months are tested. Early funding failure prevents a requested-horizon crossover claim. Zero bills do not generate financing milestones, and zero contributions do not imply independence. The visible prose aggregates the crossover into internal wealth generation or portfolio engine output; the expandable methodology retains its exact definition. First reinvestment is never described as debt freedom or comfortable self-servicing. Lower contributions at crossover are disclosed. The terminal section reports monthly distributions and automatic reinvestment, alongside any continuing wage contribution, wage/cash bill payments and unpaid interest.
+Principal is paid only from distributions. Price change includes both negative growth and the separately recorded one-time shock. Paid interest is already removed before principal and reinvestment and must not be subtracted twice. Capitalized unpaid interest is **not silently added to this user-defined measure**: the crossover narrative discloses any unpaid interest at the trigger. Automatic candidates must fully service interest in every remaining month. Actual net investment-side equity contribution would subtract capitalized interest as well. Neither comparison represents total household equity change, because it excludes wages retained in cash, bills, and new bill debt.
+
+The visible output crossover is the **first** qualifying month, not a sustained-output claim. Separate backward scans find the final uninterrupted suffix for full bill financing and reinvestment. The original journey helper remains available for its historical presentation-only analysis; the live Heavy Lifting section uses the dedicated glidepath report. It is labeled as holding only **through the modeled horizon**, never forever. A one-month or final-month crossover states that no later months are tested. Early funding failure prevents a requested-horizon crossover claim. Zero bills do not generate financing milestones, and zero contributions do not imply independence. The visible prose aggregates the crossover into internal wealth generation or portfolio engine output; the expandable methodology retains its exact definition. First reinvestment is never described as debt freedom or comfortable self-servicing. Lower contributions at crossover are disclosed. The terminal section reports monthly distributions and automatic reinvestment, alongside any continuing wage contribution, wage/cash bill payments and unpaid interest.
 
 Additional verification:
 
@@ -148,3 +150,52 @@ With the original debt-band fixture (pay $6,338, bills $5,500, no starting debt,
 A completed run without monthly warnings shows only a small “X months modeled” count. There is no clean-run card, badge or subtitle. When warnings exist, an amber banner directly above the Stages section shows “N Months Need Attention,” neutral wording about borrowing limits, coverage or cash allocations, and a “View Flagged Months” button. Undefined DTA and unfunded cash allocations are not mislabeled as borrowing breaches. The banner contains no legal or capacity disclaimer. Optional-stage configuration notes appear beside the input form and remain in print exports.
 
 The banner’s quick filter and the ledger filter stay synchronized; filtering never changes model totals, milestone dates or exports. Unfunded bills take priority: a stopped projection retains its red failure banner and explanation, including when no months completed or all completed months were otherwise clear. Invalid input clears the previous status and configuration notes. Reset restores the simple baseline count and clears the filter.
+
+
+## V4 work-optional contribution scenarios
+
+The five cards pair cash routing with the requested autonomy labels: Wage Dependent, Collateral Assisted, Lifestyle Decoupled, Maximum Compounding Velocity, and Work Optional. Each label has a qualified explanation. In particular, financing is debt, and Stage 5 preserves earned income rather than stopping it. Stage 4 remains descriptive when a contribution taper prevents its 100%-pay milestone. These are hypothetical routing stages, not verified financial independence.
+
+The Stage 5 **Work-Optional Glidepath** switch calculates a separate continuous-100%-available-pay reference and exposes three distinct reference dates:
+
+- `crossoverMonth`: first internal-output month meeting or exceeding actual wage investment.
+- `fullRedirectionMonth`: first positive-bill month fully financed without wages or existing cash.
+- `sustainedFullRedirectionMonth`: start of the final uninterrupted full-financing suffix, only for a completed horizon.
+
+A zero-bill scenario has no financing milestone, but its zero bill gap can satisfy candidate eligibility. First full financing can reverse; none of these dates promises persistence outside the modeled horizon. The active candidate has its **own** first and sustained financing dates, shown in the narrative and CSV, and is never represented by an untapered date. A reference milestone beyond an active stopped projection is text rather than a nonfunctional inspector button.
+
+### Deterministic candidate search
+
+The first reference crossover is fixed before taper testing. Beginning at that month, search ascending integer contribution percentages on a 1-percentage-point grid, 0 through 99. This finds the lowest passing **grid** percentage, not a mathematically exact continuous minimum. Do not use binary search: debt-band branches can make feasibility nonmonotonic. A baseline that fails the lower DTA floor does not by itself exclude a lower-contribution candidate. The candidate must actually reduce at least one wage investment; zero wages do not create a fictitious reduction.
+
+A positive taper may retain partial wage-funded bills. A 0% taper is excluded if the trigger precedes the reference's first full financing (except zero-bill scenarios), and must maintain full financing in **every** remaining candidate month. The engine never silently moves the trigger to a later month or creates an unrequested second-phase schedule. Manual Stage 5 settings remain available for exploring other dates.
+
+Each candidate reruns the original deterministic engine with the selected assumptions and is validated from the trigger **inclusive through the entire horizon**, not only its final balance:
+
+1. Every modeled month completes. No use of existing cash to bridge bills after the trigger.
+2. Wages fund any bill gap. Additionally require `pay × (1 − candidate percentage / 100) >= bills − financed`, the user's conservative whole-pay reserve check.
+3. For a 0% candidate, no bills use wages or existing cash at any point in the remaining horizon.
+4. Ending DTA stays within both selected band bounds, and pre-sweep/ending DTA respects the independent draw guardrail. Undefined DTA fails.
+5. Distributions fully service interest and meet the selected coverage minimum. Zero interest is N/A and does not require a fabricated infinite ratio.
+6. The requested cash allocation is funded.
+
+The unchanged simulation pays direct bills first, reserves requested cash, then applies the contribution percentage to **remaining available pay**. The reserve check does not change that allocation, subtract bills twice, or invent more retained cash. Ratios use 1e-10 and cash uses 1e-7 numerical tolerances. A lower band floor may reject otherwise low-debt paths; the app reports that result rather than borrowing to manufacture eligibility or overriding the user's bound. No candidate is labeled safe or a guarantee of employment independence.
+
+### State, narrative and export behavior
+
+ON applies `contribution=100`, `reduceStart=crossoverMonth`, and `reduced=lowest passing grid percentage`, then displays the exact validated candidate in all charts and ledger rows. Those three fields are temporarily disabled. Other scenario changes recompute eligibility. If no candidate remains, automatic mode pauses and returns to continuous 100% contributions with an explanation. OFF likewise sets `contribution=100` and `reduceStart=0`.
+
+The prior three manual settings, including exact fractional precision, are preserved in memory and can be restored with an explicit button while OFF. Editing a manual contribution field replaces the saved snapshot. Reset and page reload return to the unchanged 120-month baseline with automatic mode disabled; no browser persistence is introduced. The disabled/no-trigger switch still explains the reason. Keyboard focus survives switch and restore rerenders, including a collapsed input panel.
+
+The Heavy Lifting section reports reference output versus actual contribution, reference borrowing coverage and wage-funded bill gap, separate full-financing dates, and an actionable switch clue. While ON it reports actual first-month and remaining-horizon retained wages, active bill drag, and candidate financing dates/reversals. Dollar amounts at the trigger are not represented as constant future gaps. Wages continue, and retained wages are not passive income. CSV includes reference and active dates, mode, grid and actual applied parameters. Print includes mode, checks and complete rows regardless of filtering.
+
+### Checked baseline extensions and edge cases
+
+The default 120-month horizon has no output crossover. Extending the unchanged defaults gives crossover month 182, with $7,089.84 internal output versus $7,083.45 invested from wages. Borrowing covers $5,295.91 of $5,499.73 in bills (96.3%); wages cover $203.82. First and sustained full financing in the untapered reference are both **month 188**, not the illustrative month 207.
+
+- Through 240 months, the minimum grid contribution is 1%. At the trigger, $7,287.27 pay equals $203.82 bills + $70.83 invested + $7,012.62 retained. This candidate never fully finances bills within 240 months.
+- Through 540 months, the minimum is also 1%, but active first and sustained full financing move to month 410.
+- Through 600 months, no tested taper passes. The 1% candidate falls below the selected DTA floor in month 543; higher contributions fail sooner or fail the reserve check. The model does not relax the lower bound.
+- A manually selected 0% contribution beginning at month 207 initially finances all bills but loses full financing in month 211, and therefore fails automatic zero-taper validation.
+
+New tests `flowsim-v4-glidepath.test.cjs` and `flowsim-v4-glidepath-dom.cjs` cover an independently computed exhaustive-grid oracle, partial bill gaps, zero-taper reversals, first/sustained dates, horizon edge cases, no candidate, only 100% passing, nonmonotonic baseline eligibility, zero wage/debt/assets/interest, unpaid interest, shocks, cash allocation, per-month validation, exact manual restoration, invalid-input recovery, repeated toggles, reset, synchronized exports and filtering. They run under the existing sequential CI glob. The base simulation engine and Flow Stages file remain byte-identical.
