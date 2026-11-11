@@ -5,7 +5,7 @@ GitHub Pages
 
 [V4 review app](FlowSimV4.html) · [Flow Stages](flow-stages.html) · [Rules, assumptions and verification](docs/flowsim-v4.md)
 
-Plans contributions, partial/full recurring-bill redirection and tested optional cash redirection. Tracks cash retained inside FLOW separately from pay redirected outside it. The financial engine and defaults match in both apps. V4 now adds a view-only ledger column picker, unclipped chart endpoint labels and bill-funding inspector details; Flow Stages retains the reviewed November 11 sync version. The pre-sync Flow Stages app is preserved as `flow-stages-backup-2026-11-11.html`; see the verification guide for its checksum and restoration steps. Monthly modeled capacity is not lender approval or a sustainable borrowing guarantee. No account connections, boosters or high-ticket transactions.
+Plans contributions, partial/full recurring-bill redirection and tested optional cash redirection. Tracks cash retained inside FLOW separately from pay redirected outside it. Both apps now include the reviewed view-only ledger column picker, unclipped chart endpoint labels and bill-funding inspector details. The complete apps match except their title/export branding. The pre-sync Flow Stages app is preserved as `flow-stages-backup-2026-11-11.html`; see the verification guide for its checksum and restoration steps. Monthly modeled capacity is not lender approval or a sustainable borrowing guarantee. No account connections, boosters or high-ticket transactions.
 
 ## FlowSim V3 · Fixed Financing Simulator
 

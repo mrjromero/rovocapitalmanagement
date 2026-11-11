@@ -1,6 +1,8 @@
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict'),{JSDOM}=require('jsdom');
-const source=fs.readFileSync(path.join(__dirname,'../FlowSimV4.html'),'utf8');
+
 (async()=>{
+ for(const filename of ['FlowSimV4.html','flow-stages.html']){
+ const source=fs.readFileSync(path.join(__dirname,'..',filename),'utf8');
  const dom=new JSDOM(source,{runScripts:'dangerously'}),w=dom.window,d=w.document,$=id=>d.getElementById(id),F=w.FlowSimV4;
  const set=(key,value)=>{$(key).value=value;$(key).dispatchEvent(new w.Event('input',{bubbles:true}));};
  const input=key=>$('ledger-column-'+key),columns=()=>Array.from($('ledgerHead').querySelectorAll('th'),th=>th.dataset.column);
@@ -36,7 +38,8 @@ const source=fs.readFileSync(path.join(__dirname,'../FlowSimV4.html'),'utf8');
   // No matching warning rows still retain the selected headings.
   set('assets',1000000);$('warningsOnly').click();assert.equal($('ledgerBody').rows.length,0);assert(!$('empty').hidden);input('pay').click();assert(!columns().includes('pay'));
   $('reset').click();set('assets',0);set('cash',0);set('pay',0);assert.equal($('ledgerBody').rows.length,0);$('columnsNone').click();aligned(['month']);
-  console.log('V4 ledger PASS: 29 labeled controls, stable row alignment, bulk/individual choices, repeated dismissal and focus, view preferences across rerenders/reset, empty/invalid states, and complete unchanged CSV/print/engine data.');
+  console.log(filename+' ledger PASS: 29 labeled controls, stable row alignment, bulk/individual choices, repeated dismissal and focus, view preferences across rerenders/reset, empty/invalid states, and complete unchanged CSV/print/engine data.');
  }finally{w.close();}
  const fresh=new JSDOM(source,{runScripts:'dangerously'});try{assert.equal(fresh.window.document.querySelectorAll('#ledgerHead th').length,29);}finally{fresh.window.close();}
+ }
 })().catch(error=>{console.error(error);process.exitCode=1;});
