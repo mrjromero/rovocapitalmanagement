@@ -20,7 +20,10 @@ delete baselineExpected.target;
 (async () => {
 for (const filename of ['FlowSimV4.html', 'flow-stages.html', 'flow-stages-backup-2026-11-11.html']) {
   const source = fs.readFileSync(path.join(__dirname, '..', filename), 'utf8');
-  const expected = filename === 'flow-stages-backup-2026-11-11.html' ? legacyExpected : baselineExpected;
+  const principalFirst = filename === 'flow-stages.html';
+  const expected = filename === 'flow-stages-backup-2026-11-11.html' ? legacyExpected :
+    principalFirst ? {...baselineExpected, bandSplit: 0} : baselineExpected;
+  const endingEquity = principalFirst ? /\$389,480\.39/ : /\$390,602\.38/;
   let cleanSnapshot;
   // A fresh document on each pass exercises initial load and a fresh reload.
   for (let load = 0; load < 2; load++) {
@@ -55,14 +58,14 @@ for (const filename of ['FlowSimV4.html', 'flow-stages.html', 'flow-stages-backu
         // Independently worked first month: $25,000 grows to $25,041.6667;
         // 30% draw room minus $5,000 debt is $2,512.50. $987.50 of bills
         // use wages, leaving $4,012.50 contributed. Interest is paid first,
-        // then the 25.8569% in-band ratio sends 70% of surplus to reinvestment.
+        // then the 25.8569% in-band ratio applies each page's default split.
         const row = $('ledgerBody').rows[0];
-        for (const [column, value] of [[2,'$5,000.00'],[3,'$3,500.00'],[4,'$2,512.50'],[6,'$987.50'],[8,'$4,012.50'],[12,'$32.87'],[15,'$33.96'],[16,'$79.25'],[17,'$29,133.41'],[18,'$7,478.54']]) assert.equal(row.cells[column].textContent, value);
+        for (const [column, value] of [[2,'$5,000.00'],[3,'$3,500.00'],[4,'$2,512.50'],[6,'$987.50'],[8,'$4,012.50'],[12,'$32.87'],[15,principalFirst?'$113.21':'$33.96'],[16,principalFirst?'$0.00':'$79.25'],[17,principalFirst?'$29,054.17':'$29,133.41'],[18,principalFirst?'$7,399.29':'$7,478.54']]) assert.equal(row.cells[column].textContent, value);
         assert.match($('journeyCopy').textContent, /25%–30% debt band/);
-        assert.match($('journeyCopy').textContent, /70% of surplus/);
+        assert.match($('journeyCopy').textContent, principalFirst ? /sends in-band surplus to principal/ : /70% of surplus/);
         assert.match($('journeyCopy').textContent, /\$4,012\.50 of your \$5,000\.00 paycheck/);
-        assert.match($('journeyCopy').textContent, /\$390,602\.38/);
-        assert.match($('metrics').textContent, /\$390,602\.38/);
+        assert.match($('journeyCopy').textContent, endingEquity);
+        assert.match($('metrics').textContent, endingEquity);
       }
     }
     try {
@@ -96,12 +99,12 @@ for (const filename of ['FlowSimV4.html', 'flow-stages.html', 'flow-stages-backu
       $('pdf').click();
       assert.equal(prints, 1);
       assert.equal($('printReport').querySelectorAll('.print-section tbody tr').length, 360);
-      assert.match($('printReport').textContent, new RegExp(filename!=='flow-stages-backup-2026-11-11.html'?'390,602\\.38':'[0-9]'));
+      assert.match($('printReport').textContent, filename!=='flow-stages-backup-2026-11-11.html' ? endingEquity : /[0-9]/);
       // Leave edited state before closing, so the next load cannot inherit it.
       set('pay', 1234);
       set('months', 7);
     } finally { w.close(); }
   }
 }
-console.log('V4 defaults PASS: synced active defaults and preserved backup baseline, initial/fresh reload, repeated reset, cached precision, charts, slider bounds, Stage 5 disabled, narrative, CSV and print.');
+console.log('V4 defaults PASS: page-specific active defaults and preserved backup baseline, initial/fresh reload, repeated reset, cached precision, charts, slider bounds, Stage 5 disabled, narrative, CSV and print.');
 })().catch(error=>{console.error(error);process.exitCode=1;});
