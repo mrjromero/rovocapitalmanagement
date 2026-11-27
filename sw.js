@@ -1,5 +1,5 @@
 const CACHE_PREFIX = 'joses-toolbox-';
-const CACHE_NAME = `${CACHE_PREFIX}v9`;
+const CACHE_NAME = `${CACHE_PREFIX}v10`;
 
 const ASSETS_TO_CACHE = [
     './toolbox',
