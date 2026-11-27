@@ -1,5 +1,5 @@
 const CACHE_PREFIX = 'joses-toolbox-';
-const CACHE_NAME = `${CACHE_PREFIX}v8`;
+const CACHE_NAME = `${CACHE_PREFIX}v9`;
 
 const ASSETS_TO_CACHE = [
     './toolbox',
@@ -13,6 +13,7 @@ const ASSETS_TO_CACHE = [
     './portfolio-visualizer',
     './cfa',
     './ecp',
+    './flow-stages',
     './positive-carry-simulator',
     './cashflow-stacker',
     './freedom-date-calc',
