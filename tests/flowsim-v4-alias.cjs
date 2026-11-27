@@ -25,8 +25,9 @@ for(const filename of ['FlowSimV4.html','flow-stages.html']){
   assert.equal(w.FlowSimV4.defaults.bandSplit,defaultSplit);
   assert.equal(Number($('bandSplit').value),defaultSplit);
   const inBand=w.FlowSimV4.allocateBand(w.FlowSimV4.defaults,100000,27000,1000);
-  assert.equal(inBand.reinvested,defaultSplit/100*1000);
-  assert.equal(inBand.principal,1000-inBand.reinvested);
+  assert.equal(Math.round(inBand.reinvested*100),defaultSplit*1000);
+  // Verify both modeled amounts at currency precision (floating point can leave fractional cents).
+  assert.equal(Math.round(inBand.principal*100),(100-defaultSplit)*1000);
   const back=d.querySelectorAll('header a.toolbox-back');
   assert.equal(back.length,filename==='flow-stages.html'?1:0);
   if(back.length){assert.equal(back[0].href,'https://rovocapitalmanagement.llc/toolbox');assert.match(back[0].textContent,/Back to Toolbox/);}
