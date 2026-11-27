@@ -4,7 +4,13 @@ const hash=s=>crypto.createHash('sha256').update(s).digest('hex');
 // The user approved synchronization only after an exact, durable legacy backup.
 assert.equal(hash(backup),'315ccb49c8f0c78da17c5dcce1e3538fdcd7f0ae11357a5e114175b35b1725c2','Preserve every byte of the pre-sync Flow Stages backup.');
 assert.equal(hash(source),'8bfb42854796045e321d5a911df70f39b4e94850cbcd5b68d38b94cf03f104b5','Syncing reviewed UI improvements must not change V4.');
-assert.equal(shared,source.replaceAll('FLOW V4','FLOW STAGES').replace('FLOW-V4-roadmap.csv','FLOW-Stages-roadmap.csv'),'Only the existing title/export branding may differ between the synchronized apps.');
+const navigationStyle="/* Flow Stages Toolbox navigation */\nheader{flex-wrap:wrap;gap:12px 20px}.toolbox-back{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:8px 12px;border:1px solid #416970;border-radius:8px;color:var(--green);text-decoration:none;white-space:nowrap}.toolbox-back:hover{text-decoration:underline;background:#172b3b}\n";
+const navigationLink="<a class=\"toolbox-back\" href=\"/toolbox\"><span aria-hidden=\"true\">←</span> Back to Toolbox</a>";
+assert.equal(shared,
+ source.replaceAll('FLOW V4','FLOW STAGES').replace('FLOW-V4-roadmap.csv','FLOW-Stages-roadmap.csv')
+  .replace('</style></head><body>',navigationStyle+'</style></head><body>')
+  .replace('</p></div></header>','</p></div>'+navigationLink+'</header>'),
+ 'Only the reviewed Toolbox navigation and title/export branding may differ; preserve all simulator logic.');
 assert.equal((source.match(/FLOW V4/g)||[]).length,3);
 assert(source.includes('id="wealthJourney"')&&shared.includes('bandFloor:25,bandCeiling:30,bandSplit:70'));
 assert(!backup.includes('id="wealthJourney"')&&!backup.includes('bandFloor'),'The backup retains its original static-target implementation.');
@@ -14,6 +20,9 @@ for(const filename of ['FlowSimV4.html','flow-stages.html']){
  const dom=new JSDOM(read(filename),{runScripts:'dangerously',url:'https://rovocapitalmanagement.llc/'+filename}),w=dom.window,d=w.document,$=id=>d.getElementById(id);
  try{
   const brand=filename==='FlowSimV4.html'?'FLOW V4':'FLOW STAGES';
+  const back=d.querySelectorAll('header a.toolbox-back');
+  assert.equal(back.length,filename==='flow-stages.html'?1:0);
+  if(back.length){assert.equal(back[0].href,'https://rovocapitalmanagement.llc/toolbox');assert.match(back[0].textContent,/Back to Toolbox/);}
   assert.equal(d.title,brand+' · Contribution Roadmap');assert.equal(d.querySelector('header .overline').textContent,'FLOW STAGES');assert.equal(d.querySelectorAll('#ledgerBody tr').length,120);
   $('scenarioToggle').click();assert($('scenarioPanel').hidden);$('scenarioToggle').click();assert(!$('scenarioPanel').hidden);
   $('inspect').value=58;$('inspect').dispatchEvent(new w.Event('input',{bubbles:true}));assert.equal(d.querySelector('#chartTooltip strong').textContent,'Month 58');
@@ -34,4 +43,4 @@ for(const filename of ['FlowSimV4.html','flow-stages.html']){
   $('reset').click();assert.equal($('months').value,'120');assert.equal($('stage5Card').open,false);assert.equal($('ledgerBody').rows.length,120);
  }finally{w.close();}
 }
-console.log('Flow Stages sync PASS: exact preserved V4 and backup; full source parity except branding; both live routes, defaults, chart, compact Stage 5, automatic plan, restore/reset, CSV and print.');
+console.log('Flow Stages sync PASS: exact preserved V4 and backup; full source parity except branding and Toolbox navigation; both app variants, defaults, chart, compact Stage 5, automatic plan, restore/reset, CSV and print.');
