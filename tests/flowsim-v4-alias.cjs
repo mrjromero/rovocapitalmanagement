@@ -9,10 +9,11 @@ const navigationLink="<a class=\"toolbox-back\" href=\"/toolbox\"><span aria-hid
 assert.equal(shared,
  source.replaceAll('FLOW V4','FLOW STAGES').replace('FLOW-V4-roadmap.csv','FLOW-Stages-roadmap.csv')
   .replace('</style></head><body>',navigationStyle+'</style></head><body>')
-  .replace('</p></div></header>','</p></div>'+navigationLink+'</header>'),
- 'Only the reviewed Toolbox navigation and title/export branding may differ; preserve all simulator logic.');
+  .replace('</p></div></header>','</p></div>'+navigationLink+'</header>')
+  .replace('bandFloor:25,bandCeiling:30,bandSplit:70','bandFloor:25,bandCeiling:30,bandSplit:0'),
+ 'Only Toolbox navigation, branding, and the default band split may differ; preserve simulator logic.');
 assert.equal((source.match(/FLOW V4/g)||[]).length,3);
-assert(source.includes('id="wealthJourney"')&&shared.includes('bandFloor:25,bandCeiling:30,bandSplit:70'));
+assert(source.includes('id="wealthJourney"')&&shared.includes('bandFloor:25,bandCeiling:30,bandSplit:0'));
 assert(!backup.includes('id="wealthJourney"')&&!backup.includes('bandFloor'),'The backup retains its original static-target implementation.');
 const robots=read('robots.txt');assert(!robots.includes('flow-stages-backup-2026-11-11.html'),'Do not add a backup crawl exception.');
 assert(backup.includes('<meta name="robots" content="noindex,nofollow">'));
@@ -20,6 +21,12 @@ for(const filename of ['FlowSimV4.html','flow-stages.html']){
  const dom=new JSDOM(read(filename),{runScripts:'dangerously',url:'https://rovocapitalmanagement.llc/'+filename}),w=dom.window,d=w.document,$=id=>d.getElementById(id);
  try{
   const brand=filename==='FlowSimV4.html'?'FLOW V4':'FLOW STAGES';
+  const defaultSplit=filename==='flow-stages.html'?0:70;
+  assert.equal(w.FlowSimV4.defaults.bandSplit,defaultSplit);
+  assert.equal(Number($('bandSplit').value),defaultSplit);
+  const inBand=w.FlowSimV4.allocateBand(w.FlowSimV4.defaults,100000,27000,1000);
+  assert.equal(inBand.reinvested,defaultSplit/100*1000);
+  assert.equal(inBand.principal,1000-inBand.reinvested);
   const back=d.querySelectorAll('header a.toolbox-back');
   assert.equal(back.length,filename==='flow-stages.html'?1:0);
   if(back.length){assert.equal(back[0].href,'https://rovocapitalmanagement.llc/toolbox');assert.match(back[0].textContent,/Back to Toolbox/);}
@@ -35,12 +42,14 @@ for(const filename of ['FlowSimV4.html','flow-stages.html']){
   assert.equal($('stage5Card').open,false);assert.match($('stage5Summary').textContent,/Coming later/);
   assert.match(w.FlowSimV4.toCsv(w.FlowSimV4.simulate()),new RegExp('^\\uFEFF"'+brand+' Contribution Roadmap"'));
   let printCount=0;w.print=()=>printCount++;$('pdf').click();assert.equal(printCount,1);assert.equal(d.querySelector('#printReport h1').textContent,brand+' · Contribution Roadmap');
+  // Keep the existing 70/30 Stage 5 regression fixture independent of page defaults.
+  $('bandSplit').value=70;$('bandSplit').dispatchEvent(new w.Event('input',{bubbles:true}));
   $('months').value=240;$('months').dispatchEvent(new w.Event('input',{bubbles:true}));assert($('stage5Card').open);assert(!$('glideToggle').disabled);
   $('glideToggle').checked=true;$('glideToggle').dispatchEvent(new w.Event('change',{bubbles:true}));
   assert.equal($('reduceStart').value,'188');assert.equal(Number($('reduced').value),97);assert.equal($('ledgerBody').rows[187].cells[28].textContent,'$221.37');assert.equal($('ledgerBody').rows[187].cells[19].textContent,'$0.00');
   $('glideToggle').checked=false;$('glideToggle').dispatchEvent(new w.Event('change',{bubbles:true}));assert.equal($('reduceStart').value,'0');assert.equal(Number($('contribution').value),100);assert($('restoreManual'));
   $('restoreManual').click();assert.equal(Number($('reduced').value),50);assert(!$('restoreManual'));
-  $('reset').click();assert.equal($('months').value,'120');assert.equal($('stage5Card').open,false);assert.equal($('ledgerBody').rows.length,120);
+  $('reset').click();assert.equal(Number($('bandSplit').value),defaultSplit);assert.equal($('months').value,'120');assert.equal($('stage5Card').open,false);assert.equal($('ledgerBody').rows.length,120);
  }finally{w.close();}
 }
-console.log('Flow Stages sync PASS: exact preserved V4 and backup; full source parity except branding and Toolbox navigation; both app variants, defaults, chart, compact Stage 5, automatic plan, restore/reset, CSV and print.');
+console.log('Flow Stages sync PASS: exact preserved V4 and backup; source parity except branding, Toolbox navigation, and default band split; both app variants, defaults, chart, compact Stage 5, automatic plan, restore/reset, CSV and print.');
